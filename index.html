@@ -703,56 +703,64 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="mk-section-header"><div class="mk-sh-icon">&#128230;</div><div class="mk-sh-text"><h2>Inventario</h2><p>Gestiona tu stock de productos</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="manekiExportar('inventario')"
-                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background: linear-gradient(135deg,#10B981,#059669)">
-                            <i class="fas fa-file-excel"></i> Exportar Excel
-                        </button>
-                        <button onclick="imprimirInventario()"
-                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:#6366f1">
-                            <i class="fas fa-print"></i> Imprimir
-                        </button>
-                        <button onclick="toggleMovimientosInventario()"
-                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:#8B5CF6">
-                            <i class="fas fa-history"></i> Movimientos
-                        </button>
-                        <button onclick="abrirReporteRentabilidad()"
-                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:linear-gradient(135deg,#f59e0b,#92400e)">
-                            <i class="fas fa-chart-bar"></i> Rentabilidad
-                        </button>
+
+                        <!-- ── + Agregar ▾ ── -->
+                        <div style="position:relative;">
+                            <button onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                                class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
+                                style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+                                <i class="fas fa-plus"></i> Agregar <span style="font-size:.7rem;opacity:.8;">▾</span>
+                            </button>
+                            <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
+                                <button onclick="openPtModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">📦 Producto Terminado</button>
+                                <button onclick="openVariableProductModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🎨 Producto Variable</button>
+                                <button onclick="openMpModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🏭 Materia Prima</button>
+                                <button onclick="openSvcModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">⚙️ Servicio</button>
+                                <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
+                                <label class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold cursor-pointer">
+                                    📥 Importar CSV
+                                    <input type="file" id="invCsvImportInput" accept=".csv" style="display:none;" onchange="importarInventarioCSV(this)">
+                                </label>
+                                <button onclick="descargarTemplateCSV();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📋 Descargar template CSV</button>
+                            </div>
+                        </div>
+
+                        <!-- ── Lista de compras (siempre visible) ── -->
                         <button onclick="mostrarListaCompras()"
-                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
+                                class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background:linear-gradient(135deg,#f59e0b,#d97706)">
                             <i class="fas fa-shopping-cart"></i> Lista de compras
                         </button>
-                        <button onclick="openAddProductModal()"
-                                class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
-                            <i class="fas fa-plus"></i> Agregar Producto
-                        </button>
-                        <label title="Importar productos desde CSV"
-                               class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2 cursor-pointer"
-                               style="background:#059669">
-                            📥 Importar CSV
-                            <input type="file" id="invCsvImportInput" accept=".csv" style="display:none;" onchange="importarInventarioCSV(this)">
-                        </label>
-                        <button onclick="descargarTemplateCSV()" title="Descargar plantilla CSV"
-                                class="px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
-                                style="background:#6b7280;color:#fff">
-                            📋 Template
-                        </button>
-                        <button onclick="guardarSnapshotInventario()" title="Guardar fotografía del inventario actual"
-                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:#4f46e5">
-                            📸 Snapshot
-                        </button>
-                        <button onclick="verSnapshotsInventario()" title="Ver snapshots guardados"
-                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:#374151">
-                            📅 Historial
-                        </button>
+
+                        <!-- ── Reportes ▾ ── -->
+                        <div style="position:relative;">
+                            <button onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                                class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
+                                style="background:linear-gradient(135deg,#f59e0b,#92400e);">
+                                <i class="fas fa-chart-bar"></i> Reportes <span style="font-size:.7rem;opacity:.8;">▾</span>
+                            </button>
+                            <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:180px;padding:6px;">
+                                <button onclick="abrirReporteRentabilidad();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-chart-bar"></i> Rentabilidad</button>
+                                <button onclick="manekiExportar('inventario');document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+                                <button onclick="imprimirInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-print"></i> Imprimir</button>
+                            </div>
+                        </div>
+
+                        <!-- ── Herramientas ▾ ── -->
+                        <div style="position:relative;">
+                            <button onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                                class="px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
+                                style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;">
+                                <i class="fas fa-cog"></i> Herramientas <span style="font-size:.7rem;opacity:.7;">▾</span>
+                            </button>
+                            <div class="inv-hdr-dd" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
+                                <button onclick="toggleMovimientosInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history"></i> Movimientos de stock</button>
+                                <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
+                                <button onclick="guardarSnapshotInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2">📸 Guardar snapshot</button>
+                                <button onclick="verSnapshotsInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📅 Ver snapshots</button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
