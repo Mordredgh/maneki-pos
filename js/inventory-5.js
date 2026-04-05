@@ -294,7 +294,10 @@ function renderInventoryTable() {
             ? tabla.map(r => `<span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 7px;border-radius:99px;white-space:nowrap;">${r.cantidadMin} pzas = $${Number(r.precio).toFixed(2)}</span>`).join(' ')
             : '<span style="font-size:10px;color:#9ca3af;">Sin rangos</span>';
         const nMps = (product.mpComponentes || []).length;
-        // Calcular margen estimado del PV usando el rango de menor cantidad
+        // Categoría
+        const catObj = (window.categories||[]).find(c => String(c.id) === String(product.category));
+        const catName = catObj ? `${catObj.emoji||''} ${catObj.name}` : '—';
+        // Margen estimado del PV usando el rango de menor cantidad
         const _pvTabla = (product.tablaPreciosVariable || []).slice().sort((a,b) => a.cantidadMin - b.cantidadMin);
         const _pvPrecioMin = _pvTabla.length ? _pvTabla[0].precio / (_pvTabla[0].cantidadMin || 1) : 0;
         const _pvCostoComp = (product.mpComponentes || []).reduce((s, c) => s + (parseFloat(c.costUnit)||0) * (parseFloat(c.qty)||1), 0);
@@ -302,6 +305,13 @@ function renderInventoryTable() {
         const _pvCostoUnit = _pvRph > 0 ? _pvCostoComp / _pvRph : _pvCostoComp;
         const _pvMargen = _pvPrecioMin > 0 ? Math.round((_pvPrecioMin - _pvCostoUnit) / _pvPrecioMin * 100) : 0;
         const _pvMargenColor = _pvMargen >= 40 ? '#16a34a' : _pvMargen >= 20 ? '#d97706' : '#dc2626';
+        const margenHTML = _pvPrecioMin > 0
+            ? `<div style="min-width:48px;">
+                <div style="font-weight:700;font-size:13px;color:${_pvMargenColor};">${_pvMargen}%</div>
+                <div style="height:4px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:2px;">
+                    <div style="height:100%;width:${Math.min(100,_pvMargen)}%;background:${_pvMargenColor};border-radius:99px;"></div>
+                </div></div>`
+            : '<span style="color:#9ca3af;font-size:.8rem;">—</span>';
         return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-sky-50">
             <td class="px-2 py-3" style="width:32px;">
@@ -320,17 +330,18 @@ function renderInventoryTable() {
                 </div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
+            <td class="px-4 py-3 text-gray-600 text-sm">${_esc(catName)}</td>
             <td class="px-4 py-3">
                 <div style="display:flex;flex-wrap:wrap;gap:3px;">${tablaHTML}</div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs">${nMps} MP${nMps !== 1 ? 's' : ''}</td>
-            <td style="padding:10px 16px;">
-                ${_pvPrecioMin > 0 ? `<span style="color:${_pvMargenColor};font-weight:700;font-size:.85rem;">${_pvMargen}%</span>` : '<span style="color:#9ca3af;font-size:.8rem;">—</span>'}
-            </td>
+            <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     <button onclick="editProduct('${pid}')" title="Editar"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
+                    <button onclick="duplicarProducto('${pid}')" title="Duplicar"
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
                     <button onclick="deleteProduct('${pid}')" title="Eliminar"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
@@ -505,6 +516,7 @@ function renderInventoryTable() {
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku'},
+                {label:'Categoría', sortKey:'category'},
                 {label:'Tabla de precios'},
                 {label:'Materiales'},
                 {label:'Margen'},
