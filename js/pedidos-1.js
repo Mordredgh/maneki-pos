@@ -269,7 +269,22 @@ function calcPedidoTotal() {
     const dispTotal = document.getElementById('pedidoTotalDisplay');
     const dispSaldo = document.getElementById('pedidoSaldo');
     const dispGan = document.getElementById('pedidoGananciaEstimada');
-    if (dispTotal) dispTotal.textContent = '$' + total.toFixed(2);
+    if (dispTotal) {
+        dispTotal.textContent = '$' + total.toFixed(2);
+        // Mostrar texto informativo cuando el precio viene de productos del inventario
+        let _calcHint = document.getElementById('_pedidoCalcHint');
+        if (items.length > 0) {
+            if (!_calcHint) {
+                _calcHint = document.createElement('span');
+                _calcHint.id = '_pedidoCalcHint';
+                _calcHint.style.cssText = 'display:block;font-size:.68rem;color:#7c3aed;margin-top:2px;';
+                dispTotal.parentElement && dispTotal.parentElement.appendChild(_calcHint);
+            }
+            _calcHint.textContent = '💡 Precio calculado desde los productos agregados';
+        } else if (_calcHint) {
+            _calcHint.textContent = '';
+        }
+    }
     if (dispSaldo) dispSaldo.value = '$' + saldo.toFixed(2);
     if (dispGan) {
         dispGan.value = costoMat > 0 ? '$' + ganancia.toFixed(2) + (total > 0 ? ' (' + Math.round(ganancia/total*100) + '%)' : '') : '—';
@@ -375,7 +390,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     _pedidoGuardando = true;
     // FIX C7: deshabilitar botón guardar durante el proceso para evitar doble envío
     const _btnSubmit = document.getElementById('pedidoSubmitBtn');
-    if (_btnSubmit) { _btnSubmit.disabled = true; _btnSubmit.style.opacity = '0.6'; }
+    if (_btnSubmit) { _btnSubmit.disabled = true; _btnSubmit.style.opacity = '0.6'; _btnSubmit.innerHTML = '⏳ Guardando...'; }
     if (!window.pedidos) window.pedidos = [];
 
     if (editId) {
@@ -395,7 +410,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
             if (anticipo < sumAbonos) {
                 manekiToastExport(`El anticipo no puede ser menor a los abonos ya registrados ($${sumAbonos.toFixed(2)})`, 'warn');
                 _pedidoGuardando = false;
-                if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; }
+                if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = editId ? 'Actualizar Pedido' : 'Guardar Pedido'; }
                 return;
             }
             // Nuevo monto del anticipo: lo que el usuario declaró menos los abonos posteriores
@@ -430,7 +445,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
         if (!folio) {
             manekiToastExport('⚠️ Error al generar folio. Intenta de nuevo.', 'err');
             _pedidoGuardando = false;
-            if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; }
+            if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = 'Guardar Pedido'; }
             return;
         }
         const pedido = {
@@ -463,7 +478,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     }
     _pedidoGuardando = false;
     // FIX C7: re-habilitar botón guardar al terminar (éxito o error)
-    if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; }
+    if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = editId ? 'Actualizar Pedido' : 'Guardar Pedido'; }
     closeModal('pedidoModal');
     renderPedidosTable();
     updatePedidosStats();
@@ -686,16 +701,21 @@ function kanbanCardHTML(p) {
             </span>
         </div>
         ${diff !== null ? `<div class="kanban-urgency-bar ${diff < 0 ? 'urgency-overdue' : diff === 0 ? 'urgency-urgent' : diff <= 2 ? 'urgency-soon' : 'urgency-ok'}" style="width:${diff < 0 ? 100 : Math.max(8, Math.min(100, 100 - (diff / 14 * 100)))}%"></div>` : ''}
-        <div class="flex gap-1 mt-2">
+        <div class="flex gap-1 mt-2 items-center" style="position:relative;">
             <button onclick="openPedidoStatusModal('${p.id}')" class="flex-1 text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">⚡ Estado</button>
             <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">✏️</button>
             <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
-            <button onclick="abrirFotoReferencia('${p.id}')" class="px-2 py-1 rounded-lg border text-xs ${(p.referenciasUrls||[]).length||(p.referenciaUrl) ? 'border-blue-200 bg-blue-50 text-blue-500' : 'border-gray-200 hover:bg-blue-50 text-gray-400'}" title="Fotos de referencia">📷${(p.referenciasUrls||[]).length ? `<span style="font-size:.6rem;margin-left:1px;">${(p.referenciasUrls||[]).length}</span>` : p.referenciaUrl ? '<span style="font-size:.6rem;margin-left:1px;">1</span>' : ''}</button>
             <button onclick="abrirWhatsAppPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
-            <button onclick="duplicarPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-purple-50 text-xs text-purple-500" title="Duplicar pedido">⧉</button>
-            <button onclick="generarTicketPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-orange-50 text-xs text-orange-500" title="Ticket PDF">🧾</button>
-            <button onclick="imprimirEtiquetaPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-indigo-50 text-xs text-indigo-500" title="Etiqueta imprimible">🏷️</button>
             <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-red-50 text-xs text-red-500">🗑</button>
+            <div style="position:relative;">
+                <button onclick="(function(btn){var m=btn.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);})(this)" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-100 text-xs text-gray-500 font-bold" title="Más acciones">⋯</button>
+                <div style="display:none;position:absolute;right:0;top:100%;margin-top:4px;z-index:100;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:140px;padding:4px;">
+                    <button onclick="abrirFotoReferencia('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 rounded-lg text-gray-700">📷 Fotos ref.${(p.referenciasUrls||[]).length ? ' ('+((p.referenciasUrls||[]).length)+')' : p.referenciaUrl ? ' (1)' : ''}</button>
+                    <button onclick="duplicarPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">⧉ Duplicar</button>
+                    <button onclick="generarTicketPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 rounded-lg text-gray-700">🧾 Ticket PDF</button>
+                    <button onclick="imprimirEtiquetaPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700">🏷️ Etiqueta</button>
+                </div>
+            </div>
         </div>
     </div>`;
 }

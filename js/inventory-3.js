@@ -465,11 +465,9 @@ async function guardarServicio() {
 
     if (!nombre) { manekiToastExport('El nombre es requerido.', 'warn'); return; }
 
-    // BUG-INV-SKU FIX: Date.now().slice(-5) solo da 5 dígitos → colisión frecuente.
-    // Usar crypto.randomUUID() o un fallback más largo para garantizar unicidad.
     const _skuSuffix = (typeof crypto !== 'undefined' && crypto.randomUUID)
         ? crypto.randomUUID().split('-')[0].toUpperCase()
-        : String(Date.now()).slice(-8) + Math.random().toString(36).slice(2,5).toUpperCase();
+        : Math.random().toString(36).slice(2,7).toUpperCase();
     const sku = skuInput || `SVC-${_skuSuffix}`;
     if (!window.products) window.products = [];
 

@@ -116,7 +116,7 @@ function confirmarCancelPedido() {
     if (!pedido) return;
 
     const motivo = document.getElementById('cancelMotivo').value.trim();
-    const fecha = new Date().toISOString().split('T')[0];
+    const fecha = (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0];
     const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
     const cancelacion = {

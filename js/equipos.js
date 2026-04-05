@@ -280,7 +280,7 @@ function confirmarRoiEquipos() {
 
     // Save to historial
     roiHistorial.push({
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0],
         folio: pedido.folio,
         pedidoId: pedido.id,
         equiposIds,

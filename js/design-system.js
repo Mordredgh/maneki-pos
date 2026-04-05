@@ -476,7 +476,7 @@ const _WORKER_SRC = `
 self.onmessage = function(ev) {
     var d = ev.data, sh = d.salesHistory||[], period = d.period, orden = d.orden,
         desde = d.desde||'', hasta = d.hasta||'';
-    var today = new Date().toISOString().split('T')[0];
+    var today = (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0];
     var fom = today.substring(0,7);
     var d30 = new Date(); d30.setDate(d30.getDate()-30); var s30=d30.toISOString().split('T')[0];
     var d90 = new Date(); d90.setDate(d90.getDate()-90); var s90=d90.toISOString().split('T')[0];
@@ -608,6 +608,9 @@ function _patchShowSection() {
             if (window._posSearchTimeout) { clearTimeout(window._posSearchTimeout); window._posSearchTimeout = null; }
             _morphTo(name);
             _orig.call(this, name);
+            if (name==='dashboard' || name==='home') {
+                if (typeof updateDashboard === 'function') setTimeout(updateDashboard, 50);
+            }
             if (name==='dashboard') setTimeout(_animateKPIs, 220);
             _lazyLoad(name);
             if (name==='inventory' && window.patchInventoryButtons) {

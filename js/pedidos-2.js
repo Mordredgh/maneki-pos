@@ -433,7 +433,7 @@ function setPedidoStatus(status) {
                 );
                 if (cli) {
                     cli.totalPurchases = (Number(cli.totalPurchases) || 0) + Number(p.total || 0);
-                    const fechaHoy = new Date().toISOString().split('T')[0];
+                    const fechaHoy = _fechaHoy();
                     if (!cli.lastPurchase || fechaHoy > cli.lastPurchase) cli.lastPurchase = fechaHoy;
                     // Promover a VIP si supera $5,000 en compras acumuladas
                     if (!cli.isVIP && cli.totalPurchases >= 5000) {

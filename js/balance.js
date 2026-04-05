@@ -255,10 +255,11 @@ function procesarGastosRecurrentes() {
     let huboNuevos = false;
 
     gastosRecurrentes.forEach(gr => {
-        const yaExiste = expenses.some(e => 
-            e.concept === gr.concept && 
-            e.date && e.date.startsWith(mesActual) &&
-            e.recurrenteAuto === true
+        // FIX-REC-01: verificar por concepto+mes sin requerir recurrenteAuto,
+        // para que si el usuario borró el gasto auto y navega de nuevo no se duplique.
+        const yaExiste = expenses.some(e =>
+            e.concept === gr.concept &&
+            e.date && e.date.startsWith(mesActual)
         );
         if (!yaExiste) {
             // FIX 3: clamp day to last day of month (handles day 29-31 in short months)
@@ -622,6 +623,11 @@ function eliminarRecurrente(idx) {
             _txForm.addEventListener('submit', function(e) {
     e.preventDefault();
 
+    // FIX-SPINNER: deshabilitar botón mientras se guarda
+    const submitBtn = e.target.querySelector('[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Guardando...'; }
+    const _restoreBtn = () => { if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '💾 Guardar'; } };
+
     const modal = document.getElementById('transactionModal');
     const editId = modal.dataset.editId ? modal.dataset.editId : null;
     const editType = modal.dataset.editType || null;
@@ -632,9 +638,9 @@ function eliminarRecurrente(idx) {
     const date = document.getElementById('transactionDate').value;
     const client = document.getElementById('transactionClient')?.value || '';
 
-    if (!concept) { manekiToastExport('⚠️ Escribe un concepto para la transacción.', 'warn'); return; }
-    if (!Number.isFinite(amount) || amount <= 0) { manekiToastExport('⚠️ Ingresa un monto válido mayor a $0.', 'warn'); return; }
-    if (!date) { manekiToastExport('⚠️ Selecciona una fecha.', 'warn'); return; }
+    if (!concept) { _restoreBtn(); manekiToastExport('⚠️ Escribe un concepto para la transacción.', 'warn'); return; }
+    if (!Number.isFinite(amount) || amount <= 0) { _restoreBtn(); manekiToastExport('⚠️ Ingresa un monto válido mayor a $0.', 'warn'); return; }
+    if (!date) { _restoreBtn(); manekiToastExport('⚠️ Selecciona una fecha.', 'warn'); return; }
 
     // ── MODO EDICIÓN ──
     if (editId && editType) {
@@ -654,6 +660,7 @@ function eliminarRecurrente(idx) {
         if (editType === 'income') saveIncomes();
         else saveExpenses();
 
+        _restoreBtn();
         closeTransactionModal();
         renderBalance();
         updateDashboard();
@@ -695,6 +702,7 @@ function eliminarRecurrente(idx) {
         savePayables();
     }
 
+    _restoreBtn();
     closeTransactionModal();
     renderBalance();
     updateDashboard();

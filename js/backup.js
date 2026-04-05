@@ -59,7 +59,7 @@ function exportarBackupJSON() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Maneki_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `Maneki_Backup_${(typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
 }

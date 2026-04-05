@@ -1023,7 +1023,7 @@ function mostrarBannerConexion(connected, msg) {
 window.mostrarBannerConexion = mostrarBannerConexion;
 
 function actualizarBadgePOS() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = _fechaHoy();
     const hoy   = (window.salesHistory||[]).filter(s => s.date===today).length;
     const btnPos = document.querySelector('[data-section="pos"]');
     if (!btnPos) return;
@@ -1059,7 +1059,7 @@ async function cambiarPIN() {
 window.cambiarPIN = cambiarPIN;
 
 function mostrarResumenDia() {
-    const hoy    = new Date().toISOString().split('T')[0];
+    const hoy    = _fechaHoy();
     const ventas = (window.salesHistory||[]).filter(v=>v.date===hoy&&v.method!=='Cancelado');
     const total  = ventas.reduce((s,v)=>s+(v.total||0),0);
     const pHoy   = (window.pedidos||[]).filter(p=>p.entrega===hoy&&!['cancelado'].includes(p.status||''));

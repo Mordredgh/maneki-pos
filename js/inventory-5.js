@@ -99,7 +99,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3">
                 <div>
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
-                    ${product.historialCostos && product.historialCostos.length ? `<span title="Historial de costos:\n${product.historialCostos.slice(-3).map(h=>`${h.fecha.split('T')[0]}: $${h.costoAntes||0}→$${h.costoNuevo||0}`).join('\n')}" style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialCostos.length} cambio${product.historialCostos.length>1?'s':''}</span>` : ''}
+                    ${product.historialCostos && product.historialCostos.length ? `<span title="Este producto ha tenido ${product.historialCostos.length} modificaciones de precio o stock" style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialCostos.length} cambio${product.historialCostos.length>1?'s':''}</span>` : ''}
                     ${product.compraPaquete ? `<div style="font-size:10px;color:#7c3aed;margin-top:2px;">📦 Paquete: ${product.compraPaquete.cantidad} uds · $${Number(product.compraPaquete.precio).toFixed(2)}</div>` : ''}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ''}
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#f3e8ff;color:#7c3aed;border:1px solid #e9d5ff;">${_esc(t)}</span>`).join('')}</div>` : ''}
@@ -201,8 +201,8 @@ function renderInventoryTable() {
                     : '<span class="badge-success">Disponible</span>';
         } else {
             // Sin MPs configuradas → sin stock relevante
-            stockCell = `<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin MPs</span>`;
-            badgeCell = `<span style="font-size:11px;background:#f3f4f6;color:#9ca3af;padding:2px 8px;border-radius:99px;">Sin MPs</span>`;
+            stockCell = `<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin MP config.</span>`;
+            badgeCell = `<span style="font-size:11px;background:#f3f4f6;color:#9ca3af;padding:2px 8px;border-radius:99px;">Sin MP config.</span>`;
         }
 
         const varsHTML = product.variants && product.variants.length > 0
@@ -234,7 +234,7 @@ function renderInventoryTable() {
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
                     ${product.tipo === 'pack' ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;margin-left:4px;font-weight:700;border:1px solid #fde68a;">🎁 Pack</span>` : ''}
                     ${product.tipo === 'pack' && product.packComponentes && product.packComponentes.length ? `<div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">${product.packComponentes.map(c=>`${c.qty > 1 ? c.qty+'× ' : ''}${_esc(c.nombre)}`).join(' + ')}</div>` : ''}
-                    ${product.historialPrecios && product.historialPrecios.length ? `<span title="Historial de precios:\n${product.historialPrecios.slice(-3).map(h=>`${h.fecha.split('T')[0]}: $${h.precioAntes||0}→$${h.precioNuevo||0}`).join('\n')}" style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialPrecios.length} cambio${product.historialPrecios.length>1?'s':''}</span>` : ''}
+                    ${product.historialPrecios && product.historialPrecios.length ? `<span title="Este producto ha tenido ${product.historialPrecios.length} modificaciones de precio o stock" style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialPrecios.length} cambio${product.historialPrecios.length>1?'s':''}</span>` : ''}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ''}
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">${_esc(t)}</span>`).join('')}</div>` : ''}
                 </div>
@@ -276,6 +276,14 @@ function renderInventoryTable() {
             ? tabla.map(r => `<span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 7px;border-radius:99px;white-space:nowrap;">${r.cantidadMin} pzas = $${Number(r.precio).toFixed(2)}</span>`).join(' ')
             : '<span style="font-size:10px;color:#9ca3af;">Sin rangos</span>';
         const nMps = (product.mpComponentes || []).length;
+        // Calcular margen estimado del PV usando el rango de menor cantidad
+        const _pvTabla = (product.tablaPreciosVariable || []).slice().sort((a,b) => a.cantidadMin - b.cantidadMin);
+        const _pvPrecioMin = _pvTabla.length ? _pvTabla[0].precio / (_pvTabla[0].cantidadMin || 1) : 0;
+        const _pvCostoComp = (product.mpComponentes || []).reduce((s, c) => s + (parseFloat(c.costUnit)||0) * (parseFloat(c.qty)||1), 0);
+        const _pvRph = product.rendimientoPorHoja || 1;
+        const _pvCostoUnit = _pvRph > 0 ? _pvCostoComp / _pvRph : _pvCostoComp;
+        const _pvMargen = _pvPrecioMin > 0 ? Math.round((_pvPrecioMin - _pvCostoUnit) / _pvPrecioMin * 100) : 0;
+        const _pvMargenColor = _pvMargen >= 40 ? '#16a34a' : _pvMargen >= 20 ? '#d97706' : '#dc2626';
         return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-sky-50">
             <td class="px-4 py-3">${imgHTML}</td>
@@ -292,6 +300,9 @@ function renderInventoryTable() {
                 <div style="display:flex;flex-wrap:wrap;gap:3px;">${tablaHTML}</div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs">${nMps} MP${nMps !== 1 ? 's' : ''}</td>
+            <td style="padding:10px 16px;">
+                ${_pvPrecioMin > 0 ? `<span style="color:${_pvMargenColor};font-weight:700;font-size:.85rem;">${_pvMargen}%</span>` : '<span style="color:#9ca3af;font-size:.8rem;">—</span>'}
+            </td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     <button onclick="editProduct('${pid}')" title="Editar"
@@ -421,6 +432,7 @@ function renderInventoryTable() {
                 {label:'SKU', sortKey:'sku'},
                 {label:'Tabla de precios'},
                 {label:'Materiales'},
+                {label:'Margen'},
                 {label:'Acciones'},
             ],
             emptyMsg: 'Sin productos variables. Agrega stickers, tarjetas u otros con precio por cantidad.'

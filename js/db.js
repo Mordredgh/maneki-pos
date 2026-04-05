@@ -858,7 +858,7 @@ function saveStockMovimientos() { (async () => { await sbSave('stockMovimientos'
 function registrarMovimiento(productoId, productoNombre, tipo, cantidad, motivo) {
     stockMovimientos.push({
         id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: _fechaHoy(),
         hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}),
         productoId, productoNombre, tipo, cantidad, motivo
     });

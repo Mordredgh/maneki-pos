@@ -638,7 +638,7 @@
                 id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + '-' + Math.random().toString(36).slice(2)),
                 folio: `COT-${String(quotes.reduce((max, q) => { const n = parseInt((q.folio || '').replace('COT-', '')) || 0; return n > max ? n : max; }, 0) + 1).padStart(6, '0')}`,
                 customer: customer,
-                date: new Date().toISOString().split('T')[0],
+                date: _fechaHoy(),
                 validUntil: validUntil,
                 products: quoteProducts,
                 notes: notes,

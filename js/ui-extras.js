@@ -400,6 +400,17 @@ function manekiToastExport(msg, tipo) {
         </div>
         <div class="mk-toast-progress"></div>`;
 
+    // Deduplicación: si ya hay un toast con el mismo mensaje activo, solo resetea su timer
+    const existingToasts = container.querySelectorAll('.mk-toast:not(.out)');
+    for (const existing of existingToasts) {
+        if (existing.querySelector('.mk-toast-msg')?.textContent === msg) {
+            if (existing._timer) clearTimeout(existing._timer);
+            existing._timer = setTimeout(() => dismissToast(existing), 3600);
+            existing.classList.remove('out');
+            return; // no crear duplicado
+        }
+    }
+
     toast.addEventListener('click', () => dismissToast(toast));
     container.appendChild(toast);
 
@@ -407,9 +418,9 @@ function manekiToastExport(msg, tipo) {
     const timer = setTimeout(() => dismissToast(toast), 3600);
     toast._timer = timer;
 
-    // Max 4 toasts visible
+    // Max 3 toasts visibles — elimina el más antiguo si se supera
     const toasts = container.querySelectorAll('.mk-toast:not(.out)');
-    if (toasts.length > 4) dismissToast(toasts[0]);
+    if (toasts.length > 3) dismissToast(toasts[0]);
 }
 
 function dismissToast(toast) {
