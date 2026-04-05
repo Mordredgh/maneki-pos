@@ -391,6 +391,15 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     // FIX C7: deshabilitar botón guardar durante el proceso para evitar doble envío
     const _btnSubmit = document.getElementById('pedidoSubmitBtn');
     if (_btnSubmit) { _btnSubmit.disabled = true; _btnSubmit.style.opacity = '0.6'; _btnSubmit.innerHTML = '⏳ Guardando...'; }
+    // FIX: safety timeout — liberar lock si el guardado tarda más de 30 segundos
+    const _lockTimeout = setTimeout(() => {
+        if (_pedidoGuardando) {
+            _pedidoGuardando = false;
+            const _btn = document.getElementById('pedidoSubmitBtn');
+            if (_btn) { _btn.disabled = false; _btn.style.opacity = ''; _btn.innerHTML = 'Guardar Pedido'; }
+            manekiToastExport('⚠️ El guardado tardó demasiado. Intenta de nuevo.', 'warn');
+        }
+    }, 30000);
     if (!window.pedidos) window.pedidos = [];
 
     if (editId) {
@@ -409,6 +418,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
             // VALIDACIÓN: el anticipo no puede ser menor a los abonos ya registrados
             if (anticipo < sumAbonos) {
                 manekiToastExport(`El anticipo no puede ser menor a los abonos ya registrados ($${sumAbonos.toFixed(2)})`, 'warn');
+                clearTimeout(_lockTimeout);
                 _pedidoGuardando = false;
                 if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = editId ? 'Actualizar Pedido' : 'Guardar Pedido'; }
                 return;
@@ -444,6 +454,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
         const folio = generarFolioPedido();
         if (!folio) {
             manekiToastExport('⚠️ Error al generar folio. Intenta de nuevo.', 'err');
+            clearTimeout(_lockTimeout);
             _pedidoGuardando = false;
             if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = 'Guardar Pedido'; }
             return;
@@ -476,6 +487,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
         if (window.MKS) MKS.sale();
         manekiToastExport('✅ Pedido creado: ' + pedido.folio, 'ok');
     }
+    clearTimeout(_lockTimeout);
     _pedidoGuardando = false;
     // FIX C7: re-habilitar botón guardar al terminar (éxito o error)
     if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = editId ? 'Actualizar Pedido' : 'Guardar Pedido'; }
@@ -528,6 +540,10 @@ function filterPedidos(status, btn) {
 
 // ── Render principal ──
 function normalizarResta() {
+    // Guard: evitar recalcular si nada ha cambiado (misma cantidad de pedidos y pagos)
+    const _hash = (window.pedidos||[]).length + '_' + (window.pedidos||[]).reduce((s,p)=>s+(p.pagos||[]).length,0);
+    if (window._normalizarRestaHash === _hash) return;
+    window._normalizarRestaHash = _hash;
     // FUENTE DE VERDAD: p.pagos[] contiene TODOS los pagos (anticipo inicial + abonos)
     // p.anticipo y p.resta se CALCULAN siempre — nunca se leen de Supabase/SQLite
     // Esto evita que versiones inconsistentes guardadas den valores distintos en cada carga.
@@ -618,14 +634,14 @@ function renderKanbanBoard() {
     }
 
     let totalVisible = 0;
+    const _nsKanban = window._normSearch || (s => String(s||'').toLowerCase());
     cols.forEach(col => {
         const el = document.getElementById('kCol-' + col);
         const badge = document.getElementById('kBadge-' + col);
         if (!el) return;
         const items = lista.filter(p => (p.status||'').toLowerCase() === col && (
-            !q || (p.cliente||'').toLowerCase().includes(q) ||
-            (p.folio||'').toLowerCase().includes(q) ||
-            (p.concepto||'').toLowerCase().includes(q)
+            !q || [p.folio, p.cliente, p.clienteNombre, p.telefono, p.whatsapp, p.concepto, p.notas, p.descripcion]
+                .some(v => v && _nsKanban(String(v)).includes(_nsKanban(q)))
         ));
         totalVisible += items.length;
         if (badge) badge.textContent = items.length;
@@ -681,8 +697,27 @@ function kanbanCardHTML(p) {
     const _thumbHtml = _thumbUrl
         ? `<img src="${_thumbUrl}" onclick="abrirFotoReferencia('${p.id}')" class="w-full h-14 object-cover rounded-lg mb-1 cursor-pointer" onerror="this.style.display='none'" alt="Ref">`
         : '';
+    // MEJORA 3: alerta visual de pedido retrasado
+    const _hoyStr = (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const _retrasado = p.entrega && p.entrega < _hoyStr && !['finalizado','cancelado','retirar','salida'].includes(p.status||'');
+    const _retrasadoHTML = _retrasado
+        ? `<div style="background:#fee2e2;border-radius:8px;padding:3px 8px;margin-bottom:4px;font-size:.72rem;font-weight:700;color:#dc2626;">
+               ⏰ RETRASADO — venció ${p.entrega}
+           </div>`
+        : '';
+    // MEJORA 2B: mini-timeline de historial de estados
+    const _ESTADOS_LABEL = {confirmado:'Conf.',pago:'Pago',produccion:'Prod.',envio:'Envío',salida:'Salió',retirar:'Retirar'};
+    const _timelineHTML = (p.historialEstados && p.historialEstados.length > 0)
+        ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin:4px 0;">
+            ${p.historialEstados.slice(-4).map(h => `
+                <span style="font-size:9px;background:#f3f4f6;color:#6b7280;padding:1px 5px;border-radius:99px;">
+                    ${_ESTADOS_LABEL[h.estado]||h.estado} ${h.fecha ? h.fecha.slice(5) : ''}
+                </span>`).join('→')}
+           </div>`
+        : '';
     return `<div class="kanban-card bg-white rounded-xl p-3 shadow-sm border border-gray-100 select-none"
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
+        ${_retrasadoHTML}
         <div class="flex justify-between items-start mb-1">
             <div class="flex items-center flex-wrap gap-1">
                 <span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
@@ -691,6 +726,7 @@ function kanbanCardHTML(p) {
             ${alertaHtml}
         </div>
         <p class="font-semibold text-gray-800 text-sm leading-tight mb-1">${_e(p.cliente)}</p>
+        ${_timelineHTML}
         ${_thumbHtml}
         <p class="text-xs text-gray-500 mb-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${_e(p.concepto)}</p>
         ${p.lugarEntrega ? `<p class="text-xs mb-1 truncate" style="color:#7c3aed;">📍 ${_e(p.lugarEntrega)}</p>` : ''}
@@ -735,13 +771,26 @@ function renderTablaPedidos() {
         ? [...(window.pedidos || [])].reverse()
         : (window.pedidos || []).filter(p => (p.status||'').toLowerCase() === _pedidoFiltroActivo.toLowerCase()).reverse();
     if (q) {
+        const _nsTabla = window._normSearch || (s => String(s||'').toLowerCase());
+        const qN = _nsTabla(q);
         lista = lista.filter(p =>
-            (p.cliente||'').toLowerCase().includes(q) ||
-            (p.folio||'').toLowerCase().includes(q) ||
-            (p.concepto||'').toLowerCase().includes(q) ||
+            _nsTabla(p.cliente||'').includes(qN) ||
+            _nsTabla(p.folio||'').includes(qN) ||
+            _nsTabla(p.concepto||'').includes(qN) ||
             (p.telefono||'').includes(q) ||
             (p.whatsapp||'').includes(q)
         );
+        _pedidosTablePage = 1;
+    }
+    const desde = document.getElementById('pedidoFechaDesde')?.value || '';
+    const hasta = document.getElementById('pedidoFechaHasta')?.value || '';
+    if (desde || hasta) {
+        lista = lista.filter(p => {
+            const fe = p.entrega || '';
+            if (desde && fe < desde) return false;
+            if (hasta && fe > hasta) return false;
+            return true;
+        });
         _pedidosTablePage = 1;
     }
     const totalItems = lista.length;
@@ -936,8 +985,9 @@ function imprimirListaProduccion() {
 // ────────────────────────────────────────────────────────────────────────────
 
 function eliminarPedido(id) {
-    const pedido = (window.pedidos || []).find(p => String(p.id) === String(id));
-    if (!pedido) return;
+    const pedidoAEliminar = (window.pedidos || []).find(p => String(p.id) === String(id));
+    if (!pedidoAEliminar) return;
+    const pedido = pedidoAEliminar; // alias para compatibilidad con el resto de la función
 
     const tieneInventario = pedido.inventarioDescontado && (pedido.productosInventario || []).length > 0;
 
@@ -946,6 +996,25 @@ function eliminarPedido(id) {
         if (window.MKS) MKS.del();
         window.pedidos = (window.pedidos || []).filter(p => String(p.id) !== String(id));
         savePedidos();
+
+        // FIX: Limpiar abonos/anticipos del balance que pertenecían a este pedido
+        const folioElim = pedidoAEliminar.folio || pedidoAEliminar.id;
+        if (window.incomes && folioElim) {
+            const antes = window.incomes.length;
+            window.incomes = window.incomes.filter(i =>
+                !(i.folioOrigen === folioElim || i.pedidoId === String(id))
+            );
+            if (window.incomes.length < antes) saveIncomes();
+        }
+
+        // FIX: Limpiar historial de ventas POS del pedido
+        if (window.salesHistory && folioElim) {
+            const antes = window.salesHistory.length;
+            window.salesHistory = window.salesHistory.filter(s =>
+                !(s.folio === folioElim || s.pedidoId === String(id))
+            );
+            if (window.salesHistory.length < antes) saveSalesHistory();
+        }
         try {
             await db.from('orders').delete().eq('id', String(id));
         } catch(e) {

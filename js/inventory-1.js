@@ -76,6 +76,13 @@ if (typeof window.showSection === 'undefined') {
     };
 })();
 
+// ── Helper: normalizar texto para búsquedas sin problema de acentos/diacríticos ──
+window._normSearch = function _normSearch(str) {
+    return String(str || '').toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, ''); // quita diacríticos
+};
+
 // ── Helper financiero: redondeo correcto de dinero (evita 0.1+0.2=0.30000000000004) ──
 // Usa "multiply-round-divide" para operar siempre en centavos enteros.
 // Uso: _money(precio * cantidad) en lugar de precio * cantidad directamente.

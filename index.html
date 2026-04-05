@@ -1626,7 +1626,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div id="vistaKanban">
             <div class="mb-4 flex flex-wrap gap-2 items-center">
-                <input type="text" id="kanbanBuscar" placeholder="🔍 Buscar cliente, folio, concepto o teléfono..."
+                <input type="text" id="kanbanBuscar" placeholder="Buscar por folio, cliente o teléfono..."
                     oninput="(function(){clearTimeout(window._pedT);window._pedT=setTimeout(renderPedidosTable,160)})()"
                     class="w-full sm:w-80 px-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2">
                 <button onclick="verificarEntregasProximas()" title="Ver entregas próximas y vencidas"
@@ -1727,6 +1727,15 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <button onclick="filterPedidos('envio',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">📦 Envío</button>
                 <button onclick="filterPedidos('salida',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🚚 Salió</button>
                 <button onclick="filterPedidos('retirar',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🏪 Retirar</button>
+                <input type="date" id="pedidoFechaDesde" onchange="renderPedidosTable()"
+                    class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none"
+                    title="Fecha de entrega desde">
+                <input type="date" id="pedidoFechaHasta" onchange="renderPedidosTable()"
+                    class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none"
+                    title="Fecha de entrega hasta">
+                <button onclick="document.getElementById('pedidoFechaDesde').value='';document.getElementById('pedidoFechaHasta').value='';renderPedidosTable()"
+                    class="px-3 py-2 rounded-xl text-sm text-gray-500 border border-gray-200 hover:bg-gray-50"
+                    title="Limpiar fechas">✕ Fechas</button>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                 <div class="overflow-x-auto">

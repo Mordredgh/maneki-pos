@@ -45,14 +45,17 @@ function renderInventoryTable() {
     const provQ = (document.getElementById('inventoryProveedorFilter') ||{}).value?.trim().toLowerCase() || '';
 
     function applyFilters(list) {
+        const _ns = window._normSearch || (s => String(s||'').toLowerCase());
+        const qN = _ns(q);
+        const provQN = _ns(provQ);
         return list.filter(p => {
-            const nombreMatch = !q || p.name.toLowerCase().includes(q)
-                || (p.sku||'').toLowerCase().includes(q)
-                || (p.proveedor||'').toLowerCase().includes(q)
-                || (p.notas||'').toLowerCase().includes(q)
-                || (p.tags||[]).some(t => t.toLowerCase().includes(q));
+            const nombreMatch = !q || _ns(p.name).includes(qN)
+                || _ns(p.sku||'').includes(qN)
+                || _ns(p.proveedor||'').includes(qN)
+                || _ns(p.notas||'').includes(qN)
+                || (p.tags||[]).some(t => _ns(t).includes(qN));
             const tagMatch  = !tagQ  || (p.tags && p.tags.includes(tagQ));
-            const provMatch = !provQ || (p.proveedor||'').toLowerCase().includes(provQ);
+            const provMatch = !provQ || _ns(p.proveedor||'').includes(provQN);
             return nombreMatch && tagMatch && provMatch;
         });
     }
@@ -250,6 +253,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3">
                 <div>
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
+                    ${product._tieneComponentesHuerfanos ? `<span style="font-size:10px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;" title="Tiene componentes de inventario eliminados. Edita el producto para corregir.">⚠️ MP faltante</span>` : ''}
                     ${product.tipo === 'pack' ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;margin-left:4px;font-weight:700;border:1px solid #fde68a;">🎁 Pack</span>` : ''}
                     ${product.tipo === 'pack' && product.packComponentes && product.packComponentes.length ? `<div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">${product.packComponentes.map(c=>`${c.qty > 1 ? c.qty+'× ' : ''}${_esc(c.nombre)}`).join(' + ')}</div>` : ''}
                     ${product.historialPrecios && product.historialPrecios.length ? `<span title="Este producto ha tenido ${product.historialPrecios.length} modificaciones de precio o stock" style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialPrecios.length} cambio${product.historialPrecios.length>1?'s':''}</span>` : ''}

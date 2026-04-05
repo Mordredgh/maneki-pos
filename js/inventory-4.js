@@ -139,6 +139,24 @@ function _cascadeCostMP(mpId, nuevoCosto) {
     });
     if (actualizados.length)
         manekiToastExport(`💰 Costo recalculado en: ${actualizados.join(', ')}`, 'ok');
+
+    // Advertir si algún pedido activo usa los PT cuyo costo acaba de cambiar
+    const ptActualizados = (window.products||[])
+        .filter(p => (p.mpComponentes||[]).some(c => String(c.id) === String(mpId)));
+    const ptIds = new Set(ptActualizados.map(p => String(p.id)));
+
+    const pedidosAfectados = (window.pedidos||[]).filter(p =>
+        !['cancelado','finalizado'].includes(p.status||'') &&
+        (p.productosInventario||[]).some(item => ptIds.has(String(item.id)))
+    );
+
+    if (pedidosAfectados.length > 0) {
+        const folios = pedidosAfectados.map(p => p.folio||p.id).join(', ');
+        manekiToastExport(
+            `💡 ${pedidosAfectados.length} pedido(s) activo(s) usan productos afectados por este cambio de costo (${folios}). Revisa sus precios.`,
+            'warn'
+        );
+    }
 }
 window._cascadeCostMP = _cascadeCostMP;
 
@@ -627,6 +645,20 @@ function cambiarTipoProducto(id) {
     const esMat = (p.tipo||'producto') === 'materia_prima';
     const nuevoTipo = esMat ? 'producto' : 'materia_prima';
     const label = esMat ? 'Producto Terminado 📦' : 'Materia Prima 🏭';
+
+    // Si va a convertirse a MP, verificar pedidos activos donde esté como PT/PV
+    if (!esMat) {
+        const pedidosConEsteProducto = (window.pedidos||[]).filter(ped =>
+            !['cancelado','finalizado'].includes(ped.status||'') &&
+            (ped.productosInventario||[]).some(item => String(item.id) === String(id))
+        );
+        if (pedidosConEsteProducto.length > 0) {
+            const folios = pedidosConEsteProducto.map(ped => ped.folio||ped.id).join(', ');
+            const forzar = confirm(`⚠️ "${p.name}" está en ${pedidosConEsteProducto.length} pedido(s) activo(s):\n${folios}\n\nConvertirlo a Materia Prima puede romper esos pedidos. ¿Continuar de todas formas?`);
+            if (!forzar) return;
+        }
+    }
+
     showConfirm(
         `¿Cambiar "${p.name}" a ${label}?\n\n${esMat ? 'Se habilitará precio de venta y variantes.' : 'Se ocultará precio de venta. Solo se usará el costo.'}`,
         `Convertir a ${label}`
@@ -653,12 +685,21 @@ window.cambiarTipoProducto = cambiarTipoProducto;
 function deleteProduct(id) {
     const p = (window.products||[]).find(x => String(x.id) === String(id));
     if (!p) return;
+
+    // Verificar pedidos activos ANTES de confirmar eliminación
+    const pedidosConEsteProducto = (window.pedidos||[]).filter(p =>
+        !['cancelado','finalizado'].includes(p.status||'') &&
+        (p.productosInventario||[]).some(item => String(item.id) === String(id))
+    );
+    if (pedidosConEsteProducto.length > 0) {
+        const folios = pedidosConEsteProducto.map(p => p.folio||p.id).join(', ');
+        const forzar = confirm(`⚠️ Este producto está en ${pedidosConEsteProducto.length} pedido(s) activo(s):\n${folios}\n\nEliminar puede romper esos pedidos. ¿Continuar de todas formas?`);
+        if (!forzar) return;
+    }
+
     const kits = (window.products||[]).filter(k =>
         k.isKit && k.kitComponentes && k.kitComponentes.some(c => String(c.id) === String(id)));
-    const pedidosActivos = (window.pedidos || []).filter(o =>
-        o.status !== 'cancelado' &&
-        (o.productosInventario || []).some(item => String(item.id) === String(id))
-    );
+    const pedidosActivos = pedidosConEsteProducto;
     let msg = `¿Eliminar "${p.name}"?`;
     if (p.stock > 0) msg += `\n\nTiene ${p.stock} unidades en stock.`;
     if (kits.length) msg += `\n\n⚠️ Es componente de ${kits.length} kit(s): ${kits.map(k=>k.name).join(', ')}.`;
@@ -697,6 +738,11 @@ function calcularDisponibilidadDesdeMP(product) {
     for (const comp of product.mpComponentes) {
         const mp = (window.products||[]).find(p => String(p.id) === String(comp.id));
         if (mp && mp.tipo === 'servicio') continue; // servicios no limitan disponibilidad
+        if (!mp) {
+            // Componente huérfano — MP fue eliminada
+            product._tieneComponentesHuerfanos = true;
+            continue;
+        }
         const stockMp = mp ? getStockEfectivo(mp) : 0;
         const qtyNecesaria = comp.qty || 1;
         const piezasPosibles = Math.floor(stockMp / qtyNecesaria);

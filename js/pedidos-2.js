@@ -528,6 +528,13 @@ function setPedidoStatus(status) {
         }
         window.pedidos[idx].status = status;
         window.pedidos[idx].fechaUltimoEstado = new Date().toISOString();
+        // MEJORA 2A: registrar historial de estados con timestamp
+        if (!window.pedidos[idx].historialEstados) window.pedidos[idx].historialEstados = [];
+        window.pedidos[idx].historialEstados.push({
+            estado: status,
+            fecha: (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0],
+            hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'})
+        });
         savePedidos();
         if (window.MKS) MKS.tick();
         closePedidoStatusModal();
@@ -551,12 +558,30 @@ function openAbonoPedido(id) {
     const p = (window.pedidos || []).find(x => String(x.id) === String(id));
     if (!p) return;
     document.getElementById('abonoPedidoId').value = id;
+    // Historial de pagos registrados
+    const _pagosHist = (p.pagos || []).slice().reverse();
+    const _historialHTML = _pagosHist.length > 0 ? `
+        <div style="margin-bottom:16px;background:#f9fafb;border-radius:12px;padding:12px;border:1px solid #e5e7eb;">
+            <div style="font-size:.75rem;font-weight:700;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Pagos registrados</div>
+            ${_pagosHist.map(pg => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f3f4f6;">
+                    <div>
+                        <span style="font-size:.82rem;color:#374151;font-weight:600;">$${Number(pg.monto||pg.amount||0).toFixed(2)}</span>
+                        <span style="font-size:.72rem;color:#9ca3af;margin-left:6px;">${pg.metodo||pg.method||''}</span>
+                    </div>
+                    <span style="font-size:.72rem;color:#9ca3af;">${pg.fecha||pg.date||''}</span>
+                </div>`).join('')}
+            <div style="text-align:right;font-size:.78rem;font-weight:700;color:#059669;margin-top:6px;">
+                Total pagado: $${_pagosHist.reduce((s,pg)=>s+(Number(pg.monto||pg.amount||0)),0).toFixed(2)}
+            </div>
+        </div>` : '';
     document.getElementById('abonoPedidoInfo').innerHTML = `
         <p><b>Cliente:</b> ${p.cliente}</p>
         <p><b>Folio:</b> ${p.folio}</p>
         <p><b>Total:</b> $${Number(p.total||0).toFixed(2)}</p>
         <p><b>Anticipo:</b> $${Number(p.anticipo||0).toFixed(2)}</p>
-        <p class="font-bold text-red-600"><b>Saldo:</b> $${Number(p.resta||0).toFixed(2)}</p>`;
+        <p class="font-bold text-red-600"><b>Saldo:</b> $${Number(p.resta||0).toFixed(2)}</p>
+        ${_historialHTML}`;
     document.getElementById('abonoPedidoMonto').value = '';
     document.getElementById('abonoPedidoNota').value = '';
     _abonoPedidoMetodo = 'cash';
@@ -586,6 +611,16 @@ async function confirmarAbonoPedido() {
     const btn = document.querySelector('#abonoModal button[onclick*="confirmarAbono"]') ||
                 document.querySelector('[onclick="confirmarAbonoPedido()"]');
     if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    // FIX: safety timeout — liberar lock si el abono tarda más de 30 segundos
+    const _abonoLockTimeout = setTimeout(() => {
+        if (_abonoEnProceso) {
+            _abonoEnProceso = false;
+            const _btn = document.querySelector('#abonoModal button[onclick*="confirmarAbono"]') ||
+                         document.querySelector('[onclick="confirmarAbonoPedido()"]');
+            if (_btn) { _btn.disabled = false; _btn.style.opacity = ''; }
+            manekiToastExport('⚠️ El guardado tardó demasiado. Intenta de nuevo.', 'warn');
+        }
+    }, 30000);
     try {
     const id = document.getElementById('abonoPedidoId').value;
     const monto = parseFloat(document.getElementById('abonoPedidoMonto').value);
@@ -678,6 +713,7 @@ async function confirmarAbonoPedido() {
     manekiToastExport(`✅ Abono de $${monto.toFixed(2)} registrado.`, 'ok');
     } finally {
         // BUG-PED-001 FIX: liberar el lock siempre, incluso si hubo excepción
+        clearTimeout(_abonoLockTimeout);
         _abonoEnProceso = false;
         if (btn) { btn.disabled = false; btn.style.opacity = ''; }
     }
