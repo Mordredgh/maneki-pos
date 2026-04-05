@@ -289,29 +289,60 @@ function renderInventoryTable() {
         const imgHTML = product.imageUrl
             ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'🎯'}</span>`;
+
+        // Tabla de precios como pills
         const tabla = (product.tablaPreciosVariable || []).slice().sort((a,b) => a.cantidadMin - b.cantidadMin);
         const tablaHTML = tabla.length
             ? tabla.map(r => `<span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 7px;border-radius:99px;white-space:nowrap;">${r.cantidadMin} pzas = $${Number(r.precio).toFixed(2)}</span>`).join(' ')
             : '<span style="font-size:10px;color:#9ca3af;">Sin rangos</span>';
+
         const nMps = (product.mpComponentes || []).length;
+
         // Categoría
         const catObj = (window.categories||[]).find(c => String(c.id) === String(product.category));
         const catName = catObj ? `${catObj.emoji||''} ${catObj.name}` : '—';
-        // Margen estimado del PV usando el rango de menor cantidad
-        const _pvTabla = (product.tablaPreciosVariable || []).slice().sort((a,b) => a.cantidadMin - b.cantidadMin);
+
+        // Precio mínimo por pieza (primer rango, menor cantidad)
+        const _pvTabla = tabla;
         const _pvPrecioMin = _pvTabla.length ? _pvTabla[0].precio / (_pvTabla[0].cantidadMin || 1) : 0;
+        const precioCell = _pvPrecioMin > 0
+            ? `<div><span class="font-semibold text-gray-800" style="font-size:.95rem;">$${_pvPrecioMin.toFixed(2)}</span><div style="font-size:10px;color:#9ca3af;">por pieza</div></div>`
+            : '<span style="color:#9ca3af;font-size:.8rem;">—</span>';
+
+        // Disponible: piezas fabricables desde MP (misma lógica que PT)
+        const disp = calcularDisponibilidadDesdeMP(product);
+        let stockCell, badgeCell;
+        if (disp !== null) {
+            const piezas = disp.piezas;
+            const clr   = piezas === 0 ? '#ef4444' : piezas <= 3 ? '#f59e0b' : '#10b981';
+            const bgClr = piezas === 0 ? '#fee2e2' : piezas <= 3 ? '#fef3c7' : '#d1fae5';
+            const tooltip = disp.detalle.map(d => `${d.nombre}: ${d.stock}÷${d.qty}=${d.posibles}pzs`).join(' | ');
+            stockCell = `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
+                <span title="${_esc(tooltip)}" style="padding:3px 12px;border-radius:8px;background:${bgClr};color:${clr};font-weight:700;font-size:.95rem;border:1px solid ${clr}33;cursor:help;">${piezas}</span>
+                <span style="font-size:10px;color:#6b7280;">desde MP</span>
+            </div>`;
+            badgeCell = piezas === 0 ? '<span class="badge-danger">Sin stock MP</span>'
+                : piezas <= 3 ? '<span class="badge-warning">MP bajo</span>'
+                : '<span class="badge-success">Disponible</span>';
+        } else {
+            stockCell = `<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin MP config.</span>`;
+            badgeCell = `<span style="font-size:11px;background:#f3f4f6;color:#9ca3af;padding:2px 8px;border-radius:99px;">Sin MP config.</span>`;
+        }
+
+        // Margen
         const _pvCostoComp = (product.mpComponentes || []).reduce((s, c) => s + (parseFloat(c.costUnit)||0) * (parseFloat(c.qty)||1), 0);
         const _pvRph = product.rendimientoPorHoja || 1;
         const _pvCostoUnit = _pvRph > 0 ? _pvCostoComp / _pvRph : _pvCostoComp;
         const _pvMargen = _pvPrecioMin > 0 ? Math.round((_pvPrecioMin - _pvCostoUnit) / _pvPrecioMin * 100) : 0;
-        const _pvMargenColor = _pvMargen >= 40 ? '#16a34a' : _pvMargen >= 20 ? '#d97706' : '#dc2626';
+        const _pvMargenColor = _pvMargen >= 40 ? '#10b981' : _pvMargen >= 20 ? '#f59e0b' : '#ef4444';
         const margenHTML = _pvPrecioMin > 0
             ? `<div style="min-width:48px;">
-                <div style="font-weight:700;font-size:13px;color:${_pvMargenColor};">${_pvMargen}%</div>
+                <div style="font-weight:600;font-size:13px;color:${_pvMargenColor};">${_pvMargen}%</div>
                 <div style="height:4px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:2px;">
                     <div style="height:100%;width:${Math.min(100,_pvMargen)}%;background:${_pvMargenColor};border-radius:99px;"></div>
                 </div></div>`
-            : '<span style="color:#9ca3af;font-size:.8rem;">—</span>';
+            : '<span class="text-gray-300 text-xs">—</span>';
+
         return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-sky-50">
             <td class="px-2 py-3" style="width:32px;">
@@ -324,17 +355,17 @@ function renderInventoryTable() {
                 <div>
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
                     <span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 8px;border-radius:99px;margin-left:4px;font-weight:700;border:1px solid #bae6fd;">Variable</span>
-                    ${product.rendimientoPorHoja ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;">🗒️ ${product.rendimientoPorHoja} uds/hoja</div>` : ''}
+                    ${product.rendimientoPorHoja ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;">🗒️ ${product.rendimientoPorHoja} uds/hoja · ${nMps} MP${nMps!==1?'s':''}</div>` : (nMps > 0 ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;">${nMps} MP${nMps!==1?'s':''}</div>` : '')}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ''}
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;">${_esc(t)}</span>`).join('')}</div>` : ''}
                 </div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm">${_esc(catName)}</td>
-            <td class="px-4 py-3">
-                <div style="display:flex;flex-wrap:wrap;gap:3px;">${tablaHTML}</div>
-            </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${nMps} MP${nMps !== 1 ? 's' : ''}</td>
+            <td class="px-4 py-3"><div style="display:flex;flex-wrap:wrap;gap:3px;">${tablaHTML}</div></td>
+            <td class="px-4 py-3">${precioCell}</td>
+            <td class="px-4 py-3">${stockCell}</td>
+            <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
@@ -518,8 +549,10 @@ function renderInventoryTable() {
                 {label:'SKU', sortKey:'sku'},
                 {label:'Categoría', sortKey:'category'},
                 {label:'Tabla de precios'},
-                {label:'Materiales'},
-                {label:'Margen'},
+                {label:'Precio/pza', sortKey:'price'},
+                {label:'Disponible'},
+                {label:'Estado'},
+                {label:'Margen', sortKey:'margen'},
                 {label:'Acciones'},
             ],
             emptyMsg: 'Sin productos variables. Agrega stickers, tarjetas u otros con precio por cantidad.'
