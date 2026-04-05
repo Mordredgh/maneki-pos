@@ -562,6 +562,17 @@ function normalizarResta() {
 }
 window.normalizarResta = normalizarResta;
 
+// ── Template chips para el campo de notas ──────────────────────────────────
+function pedidoInsertarTemplate(texto) {
+    const ta = document.getElementById('pedidoNotas');
+    if (!ta) return;
+    const actual = ta.value.trim();
+    ta.value = actual ? actual + '\n' + texto : texto;
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+window.pedidoInsertarTemplate = pedidoInsertarTemplate;
+
 function renderPedidosTable() {
     normalizarResta();
     updatePedidosStats();

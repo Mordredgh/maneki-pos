@@ -274,10 +274,16 @@ function mostrarListaCompras(esRerender) {
                     ? 'background:#f0fdf4;text-decoration:line-through;color:#6b7280;'
                     : 'background:#fef3c7;';
                 const escapedKey = key.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+                const prod = (window.products || []).find(p => String(p.id) === String(r.id));
+                const provUrl = prod && prod.proveedorUrl ? prod.proveedorUrl.trim() : '';
+                const buyBtn = provUrl
+                    ? `<a href="${_esc(provUrl)}" target="_blank" style="display:inline-block;margin-top:3px;font-size:.65rem;padding:2px 6px;border-radius:999px;background:#dbeafe;color:#1d4ed8;text-decoration:none;font-weight:700;">🛒 Comprar</a>`
+                    : '';
                 html += `<tr style="${rowStyle}border-bottom:1px solid #fde68a;">
                     <td style="padding:8px 8px;">
                         <span style="font-weight:700;">${_esc(r.nombre)}</span>${r.variante ? ` <span style="font-weight:400;color:#92400e;font-size:.7rem;">(${_esc(r.variante)})</span>` : ''}
                         <div style="font-size:.65rem;color:#9ca3af;">Pedidos: ${[...new Set(r.pedidosRef)].join(', ')}</div>
+                        ${buyBtn}
                     </td>
                     <td style="text-align:center;padding:8px 6px;">${r.disponible}</td>
                     <td style="text-align:center;padding:8px 6px;">${r.necesario}</td>

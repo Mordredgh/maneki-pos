@@ -808,6 +808,30 @@ function toggleKanbanCompacto() {
     renderKanbanBoard();
 }
 
+// ── Reactivar pedido finalizado → volver a activo ──────────────────────────
+function reactivarPedido(id) {
+    const idx = (window.pedidosFinalizados || []).findIndex(x => String(x.id) === String(id));
+    if (idx === -1) { manekiToastExport('⚠️ Pedido no encontrado.', 'warn'); return; }
+    const p = window.pedidosFinalizados[idx];
+    showConfirm(
+        `¿Reactivar el pedido <strong>${p.folio || p.id}</strong> de <strong>${p.cliente || '—'}</strong>?<br><small style="color:#6b7280;">Volverá al kanban como "Confirmado".</small>`,
+        '↩ Reactivar pedido'
+    ).then(ok => {
+        if (!ok) return;
+        const reactivado = { ...p, status: 'confirmado', inventarioDescontado: false, _inventarioYaFinalizado: false };
+        delete reactivado.fechaFinalizado;
+        if (!window.pedidos) window.pedidos = [];
+        window.pedidos.push(reactivado);
+        window.pedidosFinalizados.splice(idx, 1);
+        savePedidos();
+        savePedidosFinalizados();
+        renderHistorialPedidos();
+        renderPedidosTable();
+        manekiToastExport(`↩ Pedido ${p.folio || p.id} reactivado.`, 'ok');
+    });
+}
+window.reactivarPedido = reactivarPedido;
+
 // ── Historial finalizados ──
 // NTH-06: Paginación para historial de pedidos finalizados
 let _histPage = 1;
@@ -877,6 +901,7 @@ function renderHistorialPedidos() {
                 <p class="text-xs text-green-600">✅ Finalizado</p>
                 <div class="flex gap-2 justify-end mt-1">
                     <button onclick="imprimirTicketPedido('${p.id}')" class="text-xs text-gray-400 hover:text-gray-600" title="Imprimir comprobante">🖨️</button>
+                    <button onclick="reactivarPedido('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700" title="Mover de nuevo al kanban">↩ Reactivar</button>
                     <button onclick="editarPedidoFinalizado('${p.id}')" class="text-xs text-amber-500 hover:text-amber-700">✏️ Editar</button>
                     <button onclick="eliminarPedidoFinalizado('${p.id}')" class="text-xs text-red-400 hover:text-red-600">🗑 Eliminar</button>
                 </div>
