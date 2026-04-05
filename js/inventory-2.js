@@ -271,6 +271,37 @@ function toggleTagPt(tag) {
 }
 window.toggleTagPt = toggleTagPt;
 
+// ── Helpers PV: categorías y tags ──────────────────────────────────────────
+function poblarCategoriasPv() {
+    const sel = document.getElementById('pvCategory');
+    if (!sel) return;
+    const cats = window.categories || [];
+    const optsCats = cats.map(c => `<option value="${_esc(c.id)}">${c.emoji||''} ${_esc(c.name)}</option>`).join('');
+    sel.innerHTML = '<option value="">Sin categoría</option>' + optsCats;
+}
+window.poblarCategoriasPv = poblarCategoriasPv;
+
+function renderTagsPv() {
+    const grid = document.getElementById('pvTagsGrid');
+    if (!grid) return;
+    grid.innerHTML = TAGS_PT.map(tag => {
+        const active = (window._pvTagsActuales||[]).includes(tag);
+        return `<button type="button" onclick="toggleTagPv('${tag}')"
+            style="padding:5px 14px;border-radius:99px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;
+            border:1.5px solid ${active?'#7c3aed':'#e5e7eb'};background:${active?'#f5f3ff':'#fff'};color:${active?'#7c3aed':'#6b7280'};">
+            ${tag}</button>`;
+    }).join('');
+}
+window.renderTagsPv = renderTagsPv;
+
+function toggleTagPv(tag) {
+    window._pvTagsActuales = window._pvTagsActuales || [];
+    const i = window._pvTagsActuales.indexOf(tag);
+    if (i > -1) window._pvTagsActuales.splice(i, 1); else window._pvTagsActuales.push(tag);
+    renderTagsPv();
+}
+window.toggleTagPv = toggleTagPv;
+
 // ── Variantes PT ───────────────────────────────────────────────────────────
 function agregarVariantePt() {
     const tipo  = (document.getElementById('ptVarTipo')?.value||'').trim();
@@ -1366,6 +1397,16 @@ function injectVariableProductModal() {
         <form id="pvForm" onsubmit="guardarProductoVariable(event)" style="display:flex;flex-direction:column;gap:16px;">
             <input type="hidden" id="pvEditId" value="">
 
+            <!-- IMAGEN -->
+            <div>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">📷 Imagen del Producto</label>
+                <input type="file" id="pvProductImage" accept="image/*"
+                    style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;box-sizing:border-box;">
+                <div id="pvImagePreview" class="hidden" style="margin-top:10px;text-align:center;">
+                    <img id="pvPreviewImg" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:2px solid #e5e7eb;margin:auto;" src="" alt="">
+                </div>
+            </div>
+
             <!-- Nombre -->
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">📝 Nombre del producto *</label>
@@ -1415,6 +1456,28 @@ function injectVariableProductModal() {
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Código SKU <span class="text-gray-400 font-normal">(opcional)</span></label>
                 <input type="text" id="pvSku" placeholder="Se genera automáticamente si lo dejas vacío"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none text-sm">
+            </div>
+
+            <!-- CATEGORÍA -->
+            <div>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Categoría</label>
+                <select id="pvCategory"
+                    style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;background:#fff;box-sizing:border-box;">
+                    <option value="">Sin categoría</option>
+                </select>
+            </div>
+
+            <!-- TAGS -->
+            <div>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">🏷️ Tags / Etiquetas</label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;" id="pvTagsGrid"></div>
+            </div>
+
+            <!-- NOTAS -->
+            <div>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">📋 Notas internas <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+                <textarea id="pvNotas" rows="2" placeholder="Especificaciones, materiales, observaciones..."
+                    style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
             </div>
 
             <button type="submit" id="pvSubmitBtn"
@@ -1557,20 +1620,60 @@ function openVariableProductModal(editId) {
     injectVariableProductModal();
     window._pvMpComponentes = [];
     window._pvTablaPreciosVariable = [];
+    window._pvTagsActuales = [];
+    window._pvProductImage = null;
+    window._pvProductImageFile = null;
+
+    // Configurar listener de imagen
+    setTimeout(() => {
+        const imgInput = document.getElementById('pvProductImage');
+        if (imgInput && !imgInput._mkBound) {
+            imgInput._mkBound = true;
+            imgInput.addEventListener('change', function(e) {
+                const file = e.target.files[0]; if (!file) return;
+                window._pvProductImageFile = file;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const img = document.getElementById('pvPreviewImg');
+                    const pre = document.getElementById('pvImagePreview');
+                    if (img) img.src = ev.target.result;
+                    if (pre) pre.classList.remove('hidden');
+                    window._pvProductImage = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        poblarCategoriasPv();
+        renderTagsPv();
+    }, 80);
 
     if (editId) {
         const p = (window.products || []).find(x => String(x.id) === String(editId));
         if (p) {
             window._pvMpComponentes = (p.mpComponentes || []).map(c => ({...c}));
             window._pvTablaPreciosVariable = (p.tablaPreciosVariable || []).map(r => ({...r}));
+            window._pvTagsActuales = [...(p.tags || [])];
+            window._pvProductImage = p.imageUrl || null;
             setTimeout(() => {
                 const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
                 set('pvNombre', p.name);
                 set('pvSku', p.sku || '');
                 set('pvRendimiento', p.rendimientoPorHoja || '');
                 set('pvEditId', editId);
+                set('pvNotas', p.notas || '');
+                // Categoría
+                const catSel = document.getElementById('pvCategory');
+                if (catSel && p.category) catSel.value = p.category;
+                // Imagen previa
+                if (p.imageUrl) {
+                    const img = document.getElementById('pvPreviewImg');
+                    const pre = document.getElementById('pvImagePreview');
+                    if (img) img.src = p.imageUrl;
+                    if (pre) pre.classList.remove('hidden');
+                }
                 pvRenderMpList();
                 pvRenderTablaPreciosList();
+                renderTagsPv();
                 const title = document.querySelector('#pvModal h3');
                 if (title) title.textContent = '🎨 Editar Producto Variable';
                 const btn = document.getElementById('pvSubmitBtn');
@@ -1594,27 +1697,45 @@ async function guardarProductoVariable(e) {
     const sku = gv('pvSku').trim();
     const rendimiento = parseFloat(gv('pvRendimiento')) || 0;
     const editId = gv('pvEditId');
+    const category = gv('pvCategory') || '';
+    const notas = gv('pvNotas').trim();
+    const tags = [...(window._pvTagsActuales || [])];
 
     if (!nombre) { manekiToastExport('⚠️ El nombre es requerido', 'warn'); return; }
     const tabla = (window._pvTablaPreciosVariable || []).filter(r => r.cantidadMin > 0 && r.precio > 0);
     if (!tabla.length) { manekiToastExport('⚠️ Agrega al menos un rango de precio', 'warn'); return; }
 
+    // Spinner
+    const _btn = document.getElementById('pvSubmitBtn');
+    if (_btn) { _btn.disabled = true; _btn.textContent = '⏳ Guardando...'; }
+    const _restore = () => { if (_btn) { _btn.disabled = false; _btn.textContent = editId ? '💾 Guardar Cambios' : '✅ Guardar Producto Variable'; } };
+
+    // Subir imagen si hay archivo nuevo
+    let imageUrl = window._pvProductImage || '';
+    if (window._pvProductImageFile) {
+        manekiToastExport('⏳ Subiendo imagen...', 'ok');
+        const uploaded = await subirImagenStorage(window._pvProductImageFile).catch(() => null);
+        if (uploaded) imageUrl = uploaded;
+        window._pvProductImageFile = null;
+    }
+
     // Ordenar tabla por cantidadMin ascendente
     tabla.sort((a, b) => a.cantidadMin - b.cantidadMin);
     const mpComps = (window._pvMpComponentes || []).map(c => ({...c}));
-    // Calcular costo unitario por hoja (para mostrar en ficha)
     const costoHoja = mpComps.reduce((s, c) => s + (parseFloat(c.costUnit)||0) * (parseFloat(c.qty)||1), 0);
 
-    const finalSku = sku || ('PV-' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().split('-')[0].toUpperCase() : Date.now().toString(36).toUpperCase()));
+    const finalSku = sku || ('PV-' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().split('-')[0].toUpperCase() : Math.random().toString(36).slice(2,7).toUpperCase()));
 
     if (editId) {
         const idx = (window.products || []).findIndex(x => String(x.id) === String(editId));
-        if (idx === -1) { manekiToastExport('Producto no encontrado', 'err'); return; }
+        if (idx === -1) { manekiToastExport('Producto no encontrado', 'err'); _restore(); return; }
         window.products[idx] = Object.assign({}, window.products[idx], {
             name: nombre, tipo: 'producto_variable',
             sku: finalSku, rendimientoPorHoja: rendimiento,
             mpComponentes: mpComps, tablaPreciosVariable: tabla,
             cost: costoHoja, price: tabla[tabla.length - 1].precio,
+            category, tags, notas,
+            imageUrl: imageUrl || window.products[idx].imageUrl || '',
         });
         manekiToastExport('✅ Producto variable actualizado', 'ok');
     } else {
@@ -1623,12 +1744,13 @@ async function guardarProductoVariable(e) {
             sku: finalSku, rendimientoPorHoja: rendimiento,
             mpComponentes: mpComps, tablaPreciosVariable: tabla,
             cost: costoHoja, price: tabla[tabla.length - 1].precio,
-            stock: 0, image: '🎨',
+            stock: 0, image: '🎨', category, tags, notas, imageUrl,
         };
         window.products.unshift(np);
         manekiToastExport('✅ Producto variable creado', 'ok');
     }
 
+    _restore();
     saveProducts();
     renderInventoryTable();
     if (typeof renderProducts === 'function') renderProducts();

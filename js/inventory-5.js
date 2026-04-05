@@ -293,6 +293,7 @@ function renderInventoryTable() {
                     <span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 8px;border-radius:99px;margin-left:4px;font-weight:700;border:1px solid #bae6fd;">Variable</span>
                     ${product.rendimientoPorHoja ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;">🗒️ ${product.rendimientoPorHoja} uds/hoja</div>` : ''}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ''}
+                    ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;">${_esc(t)}</span>`).join('')}</div>` : ''}
                 </div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
