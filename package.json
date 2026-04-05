@@ -1,0 +1,52 @@
+{
+  "name": "maneki-store",
+  "version": "1.0.0",
+  "description": "Sistema POS Maneki",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "author": "MordredGH",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.mordredgh.manekipos",
+    "productName": "Maneki Store POS",
+    "files": [
+      "main.js",
+      "index.html",
+      "login.html",
+      "splash.html",
+      "logo.png",
+      "icon.ico",
+      "icon.png",
+      "js/**/*",
+      "css/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Maneki Store POS"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "npmRebuild": true
+  },
+  "dependencies": {
+    "run": "^1.5.0",
+    "sqlite3": "^5.0.2"
+  }
+}

@@ -1,0 +1,22 @@
+# Dependencias
+node_modules/
+
+# Build de Electron
+dist/
+
+# Backups locales
+_backup_*/
+*.bak.old
+*.bak
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Variables de entorno
+.env
+.env.local
