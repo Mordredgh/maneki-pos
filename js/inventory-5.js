@@ -16,6 +16,9 @@ function renderInventoryTable() {
 
     const allProducts = window.products || [];
 
+    // Poblar filtro de proveedores cada vez que se renderiza
+    if (typeof poblarFiltroProveedores === 'function') poblarFiltroProveedores();
+
     if (allProducts.length === 0) {
         dualContainer.innerHTML = `
         <div class="mk-empty" style="padding:48px 24px;text-align:center;">
@@ -95,6 +98,11 @@ function renderInventoryTable() {
         const catName = cat ? cat.name : (product.category||'');
         return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-purple-50">
+            <td class="px-2 py-3" style="width:32px;">
+              <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
+                style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;"
+                onchange="invBulkToggle(this)">
+            </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
                 <div>
@@ -144,6 +152,11 @@ function renderInventoryTable() {
         const imgHTML = `<span style="font-size:1.6rem;">${product.image||'⚙️'}</span>`;
         return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-indigo-50">
+            <td class="px-2 py-3" style="width:32px;">
+              <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
+                style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;"
+                onchange="invBulkToggle(this)">
+            </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
                 <div>
@@ -228,6 +241,11 @@ function renderInventoryTable() {
 
         return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-amber-50">
+            <td class="px-2 py-3" style="width:32px;">
+              <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
+                style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;"
+                onchange="invBulkToggle(this)">
+            </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
                 <div>
@@ -243,7 +261,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
             <td class="px-4 py-3 text-gray-800 font-semibold" style="font-size:.95rem;">$${Number(product.price||0).toFixed(2)}</td>
-            <td class="px-4 py-3">${stockCell}</td>
+            <td class="px-4 py-3" ondblclick="invInlineEditStock('${pid}', this)" style="cursor:pointer;" title="Doble-click para editar stock">${stockCell}</td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
@@ -286,6 +304,11 @@ function renderInventoryTable() {
         const _pvMargenColor = _pvMargen >= 40 ? '#16a34a' : _pvMargen >= 20 ? '#d97706' : '#dc2626';
         return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-sky-50">
+            <td class="px-2 py-3" style="width:32px;">
+              <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
+                style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;"
+                onchange="invBulkToggle(this)">
+            </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
                 <div>
@@ -317,6 +340,10 @@ function renderInventoryTable() {
 
     // ── Construir HTML de cada sección ────────────────────────────────────────
     function buildSection({ id, title, titleColor, titleBg, btnLabel, btnOnclick, btnColor, extraBtnHTML, products: list, renderFila, headers, emptyMsg }) {
+        // Si la lista está vacía y hay búsqueda activa, colapsar sección
+        const _searchActive = (document.getElementById('inventorySearch')?.value?.trim() || '').length > 0;
+        if (list.length === 0 && _searchActive) return '';
+
         const sorted = applySortInventory(list);
 
         // Paginación propia por sección
@@ -391,6 +418,51 @@ function renderInventoryTable() {
         </div>`;
     }
 
+    // ── KPI Bar ────────────────────────────────────────────────────────────────
+    const activeProds = allProducts.filter(p => !p.deletedAt);
+    const totalProductos = activeProds.length;
+    const valorInventario = activeProds.reduce((s, p) => {
+        const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0);
+        return s + (Number(p.cost)||0) * Math.max(0, stk);
+    }, 0);
+    const bajoStock = activeProds.filter(p => {
+        const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0);
+        return stk <= (p.stockMin||5);
+    }).length;
+    const ptConPrecio = activeProds.filter(p => (!p.tipo || p.tipo === 'producto' || p.tipo === 'producto_interno' || p.tipo === 'pack') && Number(p.price) > 0);
+    const margenProm = ptConPrecio.length
+        ? ptConPrecio.reduce((s, p) => {
+            const pr = Number(p.price)||0, co = Number(p.cost)||0;
+            return s + (pr > 0 ? (pr - co) / pr * 100 : 0);
+        }, 0) / ptConPrecio.length
+        : 0;
+
+    let kpiBar = document.getElementById('invKpiBar');
+    if (!kpiBar) {
+        kpiBar = document.createElement('div');
+        kpiBar.id = 'invKpiBar';
+        dualContainer.parentNode.insertBefore(kpiBar, dualContainer);
+    }
+    kpiBar.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+        <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 18px;box-shadow:0 1px 6px #0000000a;">
+            <div style="font-size:1.6rem;font-weight:800;color:#374151;">${totalProductos}</div>
+            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">Total productos</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 18px;box-shadow:0 1px 6px #0000000a;">
+            <div style="font-size:1.4rem;font-weight:800;color:#7c3aed;">$${valorInventario.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">Valor inventario</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 18px;box-shadow:0 1px 6px #0000000a;">
+            <div style="font-size:1.6rem;font-weight:800;color:${bajoStock > 0 ? '#ef4444' : '#10b981'};">${bajoStock}</div>
+            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">Bajo stock / agotado</div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 18px;box-shadow:0 1px 6px #0000000a;">
+            <div style="font-size:1.6rem;font-weight:800;color:${margenProm >= 40 ? '#10b981' : margenProm >= 20 ? '#f59e0b' : '#ef4444'};">${margenProm.toFixed(1)}%</div>
+            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">Margen promedio (PT)</div>
+        </div>
+    </div>`;
+
     dualContainer.innerHTML =
         buildSection({
             id: 'pt',
@@ -404,6 +476,7 @@ function renderInventoryTable() {
             products: pts,
             renderFila: renderFilaPT,
             headers: [
+                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
                 {label:''},
                 {label:'Producto', sortKey:'name'},
                 {label:'SKU', sortKey:'sku'},
@@ -428,6 +501,7 @@ function renderInventoryTable() {
             products: pvs,
             renderFila: renderFilaVariable,
             headers: [
+                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku'},
@@ -449,6 +523,7 @@ function renderInventoryTable() {
             products: mps,
             renderFila: renderFilaMP,
             headers: [
+                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku'},
@@ -472,6 +547,7 @@ function renderInventoryTable() {
             products: svcs,
             renderFila: renderFilaServicio,
             headers: [
+                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku'},
@@ -630,9 +706,75 @@ function renderMovimientos() {
     const containerId = 'movimientosLista';
     const container = document.getElementById(containerId);
     if (!container) return;
+
     const q = (document.getElementById('movBuscar')||{}).value?.trim().toLowerCase() || '';
+    // B1: Filtro por tipo
+    const tipoFiltro = (document.getElementById('movTipoFilter')||{}).value || '';
+
     let movs = window.stockMovements || [];
     if (q) movs = movs.filter(m => m.productoNombre?.toLowerCase().includes(q) || (m.motivo||'').toLowerCase().includes(q));
+    if (tipoFiltro) movs = movs.filter(m => (m.tipo||'') === tipoFiltro);
+
+    // B3: Resumen visual por tipo — sólo movimientos de hoy
+    const hoy = _fechaHoy ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const movsHoy = (window.stockMovements || []).filter(m => {
+        try { return new Date(m.fecha).toISOString().split('T')[0] === hoy; } catch(e) { return false; }
+    });
+    const resumenTipos = {};
+    movsHoy.forEach(m => { resumenTipos[m.tipo] = (resumenTipos[m.tipo] || 0) + 1; });
+    const tipoIconos = { entrada:'🟢', salida:'🔴', ajuste:'🟡', creacion:'🔵', venta:'🟠', merma:'🟤' };
+    const tipoLabels = { entrada:'Entradas', salida:'Salidas', ajuste:'Ajustes', creacion:'Creaciones', venta:'Ventas', merma:'Mermas' };
+
+    // Inyectar resumen arriba del contenedor (buscar o crear elemento)
+    let resumenEl = document.getElementById('movResumenHoy');
+    if (!resumenEl) {
+        resumenEl = document.createElement('div');
+        resumenEl.id = 'movResumenHoy';
+        container.parentNode.insertBefore(resumenEl, container);
+    }
+    const resumenParts = Object.keys(resumenTipos).map(t =>
+        `${tipoIconos[t]||'⚪'} ${tipoLabels[t]||t}: <strong>${resumenTipos[t]}</strong>`
+    );
+    resumenEl.innerHTML = resumenParts.length
+        ? `<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:8px 14px;font-size:.75rem;color:#374151;margin-bottom:8px;">
+            <span style="font-weight:700;color:#6b7280;margin-right:8px;">Hoy:</span>${resumenParts.join('&nbsp;&nbsp;')}
+           </div>`
+        : '';
+
+    // B2: Botón exportar CSV (inyectar una sola vez)
+    let exportBtn = document.getElementById('movExportCSVBtn');
+    if (!exportBtn) {
+        exportBtn = document.createElement('button');
+        exportBtn.id = 'movExportCSVBtn';
+        exportBtn.textContent = '📥 Exportar historial CSV';
+        exportBtn.style.cssText = 'background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:.78rem;font-weight:700;cursor:pointer;margin-bottom:10px;';
+        exportBtn.onclick = function() {
+            const allMovs = window.stockMovements || [];
+            const headers = ['Fecha','Producto','Tipo','Cantidad','Motivo','Stock antes','Stock después'];
+            let csv = headers.join(',') + '\n';
+            allMovs.forEach(m => {
+                const row = [
+                    new Date(m.fecha).toLocaleString('es-MX'),
+                    m.productoNombre||'',
+                    m.tipo||'',
+                    m.cantidad,
+                    m.motivo||'',
+                    m.stockAntes ?? '',
+                    m.stockDespues ?? ''
+                ];
+                csv += row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + '\n';
+            });
+            const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `movimientos-${hoy}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+        container.parentNode.insertBefore(exportBtn, container);
+    }
+
     if (!movs.length) {
         container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Sin movimientos registrados</p>';
         return;
@@ -795,3 +937,93 @@ function abrirReporteRentabilidad() {
     modal.style.display = 'flex';
 }
 window.abrirReporteRentabilidad = abrirReporteRentabilidad;
+
+// ── Bulk Operations ────────────────────────────────────────────────────────
+function invBulkToggle(cb) {
+  invUpdateBulkBar();
+}
+window.invBulkToggle = invBulkToggle;
+
+function invBulkToggleAll(masterCb) {
+  const cbs = document.querySelectorAll('.inv-bulk-cb');
+  cbs.forEach(cb => { cb.checked = masterCb.checked; });
+  invUpdateBulkBar();
+}
+window.invBulkToggleAll = invBulkToggleAll;
+
+function invGetSelectedIds() {
+  return [...document.querySelectorAll('.inv-bulk-cb:checked')].map(cb => cb.dataset.id);
+}
+window.invGetSelectedIds = invGetSelectedIds;
+
+function invUpdateBulkBar() {
+  const ids = invGetSelectedIds();
+  let bar = document.getElementById('invBulkBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'invBulkBar';
+    bar.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:500;background:#1a0533;color:white;border-radius:16px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.3);transition:all .2s;';
+    document.body.appendChild(bar);
+  }
+  if (ids.length === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  bar.innerHTML = `
+    <span style="font-weight:700;font-size:.9rem;">${ids.length} seleccionado${ids.length>1?'s':''}</span>
+    <button onclick="invBulkExportar()" style="padding:6px 14px;border-radius:10px;border:none;background:#7c3aed;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">📥 Exportar</button>
+    <button onclick="invBulkCambiarCategoria()" style="padding:6px 14px;border-radius:10px;border:none;background:#0369a1;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">📁 Categoría</button>
+    <button onclick="invBulkEliminar()" style="padding:6px 14px;border-radius:10px;border:none;background:#dc2626;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">🗑 Eliminar</button>
+    <button onclick="invBulkDesseleccionar()" style="padding:6px 14px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:white;font-size:.8rem;cursor:pointer;">✕ Cancelar</button>
+  `;
+}
+window.invUpdateBulkBar = invUpdateBulkBar;
+
+function invBulkDesseleccionar() {
+  document.querySelectorAll('.inv-bulk-cb, .inv-bulk-all').forEach(cb => cb.checked = false);
+  invUpdateBulkBar();
+}
+window.invBulkDesseleccionar = invBulkDesseleccionar;
+
+function invBulkEliminar() {
+  const ids = invGetSelectedIds();
+  if (!ids.length) return;
+  if (!confirm(`¿Eliminar ${ids.length} producto(s)? Esta acción no se puede deshacer.`)) return;
+  window.products = (window.products||[]).filter(p => !ids.includes(String(p.id)));
+  saveProducts();
+  renderInventoryTable();
+  invUpdateBulkBar();
+  manekiToastExport(`🗑 ${ids.length} producto(s) eliminados`, 'ok');
+}
+window.invBulkEliminar = invBulkEliminar;
+
+function invBulkExportar() {
+  const ids = invGetSelectedIds();
+  const selected = (window.products||[]).filter(p => ids.includes(String(p.id)));
+  const headers = 'tipo,nombre,sku,costo,precio,stock,stock_min,proveedor,notas';
+  const rows = selected.map(p => [
+    p.tipo||'pt', p.name, p.sku||'', p.cost||0, p.price||0, p.stock||0, p.stockMin||5, p.proveedor||'', p.notas||''
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv = '\ufeff' + headers + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'inventario_seleccion.csv'; a.click();
+  URL.revokeObjectURL(url);
+  manekiToastExport(`📥 ${selected.length} productos exportados`, 'ok');
+}
+window.invBulkExportar = invBulkExportar;
+
+function invBulkCambiarCategoria() {
+  const ids = invGetSelectedIds();
+  if (!ids.length) return;
+  const catId = prompt(`Selecciona categoría (ingresa el ID o nombre):\n\n${(window.categories||[]).map(c=>`${c.id}: ${c.emoji||''} ${c.name}`).join('\n')}`);
+  if (!catId) return;
+  const cat = (window.categories||[]).find(c => String(c.id) === catId.trim() || c.name.toLowerCase().includes(catId.toLowerCase()));
+  if (!cat) { manekiToastExport('Categoría no encontrada', 'warn'); return; }
+  (window.products||[]).forEach(p => { if (ids.includes(String(p.id))) p.category = cat.id; });
+  saveProducts();
+  renderInventoryTable();
+  manekiToastExport(`📁 Categoría actualizada en ${ids.length} producto(s)`, 'ok');
+}
+window.invBulkCambiarCategoria = invBulkCambiarCategoria;

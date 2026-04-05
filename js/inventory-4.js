@@ -507,6 +507,8 @@ function ajustarStock(id) {
     if (a) a.textContent = getStockEfectivo(p);
     if (c) { c.value = ''; setTimeout(() => c.focus && c.focus(), 250); }
     if (m) m.value = '';
+    const prEl = document.getElementById('ajusteStockPuntoReorden');
+    if (prEl) prEl.value = p.puntoReorden != null ? p.puntoReorden : '';
 
     // Guardar id en data attribute del modal como respaldo adicional
     const modal = document.getElementById('ajustarStockModal');
@@ -568,6 +570,13 @@ function confirmarAjusteStock() {
         cantidad: delta, motivo,
         stockAntes: antes, stockDespues: despues
     });
+
+    // Guardar punto de reorden si se ingresó
+    const prEl = document.getElementById('ajusteStockPuntoReorden');
+    if (prEl && prEl.value.trim() !== '') {
+        const pr = parseInt(prEl.value);
+        if (!isNaN(pr) && pr >= 0) p.puntoReorden = pr;
+    }
 
     saveProducts();
     renderInventoryTable();

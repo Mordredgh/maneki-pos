@@ -732,15 +732,45 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
                             <i class="fas fa-plus"></i> Agregar Producto
                         </button>
+                        <label title="Importar productos desde CSV"
+                               class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2 cursor-pointer"
+                               style="background:#059669">
+                            📥 Importar CSV
+                            <input type="file" id="invCsvImportInput" accept=".csv" style="display:none;" onchange="importarInventarioCSV(this)">
+                        </label>
+                        <button onclick="descargarTemplateCSV()" title="Descargar plantilla CSV"
+                                class="px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
+                                style="background:#6b7280;color:#fff">
+                            📋 Template
+                        </button>
+                        <button onclick="guardarSnapshotInventario()" title="Guardar fotografía del inventario actual"
+                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
+                                style="background:#4f46e5">
+                            📸 Snapshot
+                        </button>
+                        <button onclick="verSnapshotsInventario()" title="Ver snapshots guardados"
+                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
+                                style="background:#374151">
+                            📅 Historial
+                        </button>
                     </div>
                 </div>
 
                 <div id="movimientosPanel" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-gray-800 text-lg">📋 Historial de Movimientos</h3>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 flex-wrap">
                             <input type="text" id="movBuscar" placeholder="Buscar producto..." oninput="(function(){clearTimeout(window._movT);window._movT=setTimeout(renderMovimientos,160)})()"
                                 class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none">
+                            <select id="movTipoFilter" onchange="renderMovimientos()" class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none bg-white">
+                                <option value="">Todos los tipos</option>
+                                <option value="creacion">Creaciones</option>
+                                <option value="ajuste">Ajustes</option>
+                                <option value="merma">Mermas</option>
+                                <option value="venta">Ventas</option>
+                                <option value="entrada">Entradas</option>
+                                <option value="salida">Salidas</option>
+                            </select>
                             <button onclick="limpiarMovimientosInventario()" class="px-3 py-2 rounded-xl text-sm text-red-500 border border-red-200 hover:bg-red-50">🗑️ Limpiar</button>
                         </div>
                     </div>
@@ -767,6 +797,10 @@ input:focus, select:focus, textarea:focus, button:focus {
     <option value="Destacado">Destacado</option>
     <option value="Agotado">Agotado</option>
     <option value="Favorito">Favorito</option>
+  </select>
+  <select id="inventoryProveedorFilter" onchange="renderInventoryTable()"
+    class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
+    <option value="">🏪 Todos los proveedores</option>
   </select>
 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -3100,6 +3134,13 @@ input:focus, select:focus, textarea:focus, button:focus {
             <label class="block text-sm font-semibold text-gray-600 mb-1">Motivo (opcional)</label>
             <input type="text" id="ajustarStockMotivo" placeholder="Ej: Compra a proveedor, Merma..."
               class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl outline-none focus:border-amber-400 text-sm">
+          </div>
+          <div style="margin-top:12px;">
+            <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">🔔 Punto de reorden (alerta cuando baje de este stock)</label>
+            <input type="number" id="ajusteStockPuntoReorden" min="0" step="1"
+              style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;"
+              placeholder="Ej: 5">
+            <p style="font-size:.72rem;color:#9ca3af;margin-top:3px;">Dejar vacío para usar el stock mínimo actual</p>
           </div>
         </div>
         <div class="flex gap-3 mt-5">
