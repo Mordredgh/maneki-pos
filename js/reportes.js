@@ -138,7 +138,7 @@ function renderValorInventario() {
 
 let comparativaMesesChart = null;
 let topProductosChart = null;
-let categoryChart = null;
+// categoryChart ya declarado en app-data.js — no redeclarar (causaría SyntaxError)
 let margenCategoriaChart = null;
 
 // ── MEJORA 4: Exportar gráfica como PNG ──────────────────────────────────────

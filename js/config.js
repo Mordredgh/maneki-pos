@@ -666,7 +666,7 @@ async function initApp() {
         if (td) td.value = today;
 
         // ── Setups sin DOM pesado — ejecutar antes de los renders ──
-        setupSearchFilter();
+        if (typeof setupSearchFilter === 'function') setupSearchFilter();
         // FIX BUG-011: clientes.js puede no haber cargado si tiene un SyntaxError en producción.
         // Llamar con guard para que un fallo aquí no aborte toda la inicialización de la app.
         try { if (typeof setupClientSearch === 'function') setupClientSearch(); } catch(e) { console.warn('setupClientSearch error:', e); }
