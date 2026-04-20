@@ -51,20 +51,20 @@ function renderBalanceMensual() {
         s.type !== 'abono'  &&   // BUG-S07 FIX: abonos ya están en ingresos o en pedido.total
         s.type !== 'anticipo'    // BUG-S07 FIX: anticipos sintéticos no son ventas POS
     );
-    const totalVentas = window._money ? _money(ventasMes.reduce((s, v) => s + Math.round((Number(v.total)||0)*100), 0) / 100)
-        : ventasMes.reduce((s, v) => s + (Number(v.total) || 0), 0);
+    // BUG-BAL-01 FIX: calcular como números puros; _money solo en display
+    const totalVentas = ventasMes.reduce((s, v) => s + (Number(v.total) || 0), 0);
 
     // Pedidos finalizados del mes (total cobrado real, no solo anticipo)
     const pedidosFinMes = (window.pedidosFinalizados||[])
         .filter(p => ((p.fechaFinalizado||p.fecha||'')).startsWith(mesStr));
-    const totalPedidos = window._money ? _money(pedidosFinMes.reduce((s, p) => s + Math.round((Number(p.total)||0)*100), 0) / 100)
-        : pedidosFinMes.reduce((s, p) => s + (Number(p.total) || 0), 0);
+    // BUG-BAL-01 FIX: calcular como números puros; _money solo en display
+    const totalPedidos = pedidosFinMes.reduce((s, p) => s + (Number(p.total) || 0), 0);
     const numPedidos = pedidosFinMes.length;
 
     // Gastos del mes (excluir los que vinieron de cuentas por pagar ya pagadas — se contaron en totalPayables en su momento)
     const gastosMes = (window.expenses||[]).filter(e => e.date && e.date.startsWith(mesStr) && !e.fromPayable);
-    const totalGastos = window._money ? _money(gastosMes.reduce((s, e) => s + Math.round((Number(e.amount)||0)*100), 0) / 100)
-        : gastosMes.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    // BUG-BAL-01 FIX: calcular como números puros; _money solo en display
+    const totalGastos = gastosMes.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
     // Neto
     const neto = totalVentas + totalPedidos - totalGastos;
@@ -255,9 +255,10 @@ function procesarGastosRecurrentes() {
     let huboNuevos = false;
 
     gastosRecurrentes.forEach(gr => {
-        // FIX-REC-01: verificar por concepto+mes sin requerir recurrenteAuto,
-        // para que si el usuario borró el gasto auto y navega de nuevo no se duplique.
+        // BUG-BAL-03 FIX: verificar solo gastos auto-generados (recurrenteAuto===true),
+        // para que gastos manuales con el mismo nombre no bloqueen el recurrente.
         const yaExiste = expenses.some(e =>
+            e.recurrenteAuto === true &&
             e.concept === gr.concept &&
             e.date && e.date.startsWith(mesActual)
         );
@@ -530,6 +531,8 @@ function eliminarRecurrente(idx) {
         }
         
         function openIncomeModal() {
+            // BUG-BAL-04 FIX: reset primero para que no borre los valores asignados después
+            document.getElementById('transactionForm').reset();
             document.getElementById('transactionModalTitle').textContent = 'Nuevo Ingreso';
             document.getElementById('transactionType').value = 'income';
             document.getElementById('clientFieldContainer').classList.add('hidden');
@@ -538,12 +541,13 @@ function eliminarRecurrente(idx) {
             const modal = document.getElementById('transactionModal');
             modal.dataset.editId = '';
             modal.dataset.editType = '';
-            document.getElementById('transactionForm').reset();
             _toggleCatField(false);
             openModal(modal);
         }
         
         function openExpenseModal() {
+            // BUG-BAL-04 FIX: reset primero para que no borre los valores asignados después
+            document.getElementById('transactionForm').reset();
             document.getElementById('transactionModalTitle').textContent = 'Nuevo Egreso';
             document.getElementById('transactionType').value = 'expense';
             document.getElementById('clientFieldContainer').classList.add('hidden');
@@ -553,7 +557,6 @@ function eliminarRecurrente(idx) {
             const modal = document.getElementById('transactionModal');
             modal.dataset.editId = '';
             modal.dataset.editType = '';
-            document.getElementById('transactionForm').reset();
             // NTH-13: mostrar selector de categoría solo para egresos
             _toggleCatField(true);
             openModal(modal);

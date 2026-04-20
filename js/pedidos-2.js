@@ -245,12 +245,24 @@ function _regresarInventarioPedido(pedido) {
     });
     // Restaurar materias primas también
     items.forEach(item => {
-        const comps = item.mpComponentes || [];
+        const prod = (window.products || []).find(p => String(p.id) === String(item.id));
+        const comps = (prod && prod.mpComponentes) ? prod.mpComponentes : [];
+        const cantidad = item.quantity || item.cantidad || 1;
         comps.forEach(c => {
             const mp = (window.products || []).find(p => String(p.id) === String(c.id));
-            if (!mp) return;
+            if (!mp || mp.tipo === 'servicio') return;
+            const _rph = prod.rendimientoPorHoja || 0;
+            const cantMP = _rph > 0
+                ? Math.ceil(cantidad / _rph) * (parseFloat(c.qty) || 1)
+                : (parseFloat(c.qty) || 1) * cantidad;
             const antes = mp.stock || 0;
-            mp.stock = antes + Number(c.qty || c.cantidad || 1);
+            mp.stock = antes + cantMP;
+            if (typeof registrarMovimiento === 'function') {
+                registrarMovimiento({ productoId: mp.id, productoNombre: mp.name,
+                    tipo: 'entrada', cantidad: cantMP,
+                    motivo: `Devolución MP cancelación ${pedido.folio}`,
+                    stockAntes: antes, stockDespues: mp.stock });
+            }
         });
     });
     if (typeof saveProducts === 'function') saveProducts();
@@ -806,6 +818,12 @@ async function kanbanDrop(event, newStatus) {
         }
         window.pedidos[idx].status = newStatus;
         window.pedidos[idx].fechaUltimoEstado = new Date().toISOString();
+        if (!window.pedidos[idx].historialEstados) window.pedidos[idx].historialEstados = [];
+        window.pedidos[idx].historialEstados.push({
+            estado: newStatus,
+            fecha: typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0],
+            hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'})
+        });
         savePedidos();
         renderPedidosTable();
     }
@@ -891,7 +909,7 @@ function renderHistorialPedidos() {
 
     lista.innerHTML = pageItems.length === 0
         ? '<p class="text-center text-gray-400 py-6 text-sm">Sin pedidos finalizados</p>'
-        : items.map(p => {
+        : pageItems.map(p => {
             // FIX PE-0013: si total = 0 pero hay ítems, recalcular para mostrar correctamente
             let _totalMostrar = Number(p.total || 0);
             if (!_totalMostrar && (p.productosInventario || []).length > 0) {
@@ -938,7 +956,7 @@ function renderGraficaROI() {
         data: {
             labels: equiposList.map(e => e.nombre),
             datasets: [
-                { label: 'Acumulado ROI', data: equiposList.map(e => e.acumulado||0), backgroundColor: 'rgba(197,165,114,0.85)', borderRadius: 6 },
+                { label: 'Acumulado ROI', data: equiposList.map(e => e.recuperado||0), backgroundColor: 'rgba(197,165,114,0.85)', borderRadius: 6 },
                 { label: 'Meta', data: equiposList.map(e => e.metaReemplazo||e.costoOriginal||0), backgroundColor: 'rgba(216,191,216,0.5)', borderRadius: 6 }
             ]
         },
@@ -952,7 +970,7 @@ function mostrarResumenMensual() {
     const nombre = mp.toLocaleString('es-MX', {month:'long', year:'numeric'});
     const m = mp.getMonth(), y = mp.getFullYear();
     const fin = (window.pedidosFinalizados||[]).filter(p => { const f=new Date(p.fechaFinalizado||p.fechaPedido||''); return f.getMonth()===m&&f.getFullYear()===y; });
-    const ventas = (typeof salesHistory!=='undefined'?salesHistory:[]).filter(v => { const f=new Date(v.date||''); return f.getMonth()===m&&f.getFullYear()===y; });
+    const ventas = (typeof salesHistory!=='undefined'?salesHistory:[]).filter(v => { const f=new Date(v.date||''); return f.getMonth()===m&&f.getFullYear()===y && v.type !== 'pedido'; });
     const tv = ventas.reduce((s,v)=>s+(v.total||0),0);
     const tp = fin.reduce((s,p)=>s+(p.total||0),0);
 
@@ -984,9 +1002,9 @@ function renderTopClientes() {
         mapa[nombre].pedidos++;
         mapa[nombre].total += total||0;
     };
-    // Only count finalized pedidos and active ones (not salesHistory which duplicates pedidosFinalizados)
+    // Only count finalized pedidos — active ones are not yet paid (real revenue only)
     (window.pedidosFinalizados||[]).forEach(p => addEntry(p.cliente, p.total));
-    (window.pedidos||[]).filter(p => p.status !== 'cancelado').forEach(p => addEntry(p.cliente, p.total));
+    // Eliminar la línea de pedidos activos — solo contar cobros reales
     const top = Object.values(mapa).sort((a,b)=>b.total-a.total).slice(0,3);
     el.innerHTML = top.length===0
         ? '<p class="text-xs text-gray-400 text-center py-2">Sin datos aún</p>'

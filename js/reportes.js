@@ -138,6 +138,7 @@ function renderValorInventario() {
 
 let comparativaMesesChart = null;
 let topProductosChart = null;
+let categoryChart = null;
 
 function initComparativaMeses() {
     const canvas = document.getElementById('comparativaMesesChart');
@@ -623,9 +624,10 @@ function initChart() {
         last7Days.push(dateStr); salesByDay[dateStr] = 0;
     }
     const _idsContados = new Set();
-    // Fuente 1: salesHistory
+    // Fuente 1: salesHistory (excluir anticipos/abonos para evitar doble conteo)
     (window.salesHistory||[]).forEach(sale => {
-        if (salesByDay.hasOwnProperty(sale.date) && sale.method !== 'Cancelado') {
+        if (salesByDay.hasOwnProperty(sale.date) && sale.method !== 'Cancelado'
+            && sale.type !== 'anticipo' && sale.type !== 'abono') {
             salesByDay[sale.date] += Number(sale.total || 0);
         }
         if (sale.id) _idsContados.add(String(sale.id));
@@ -805,17 +807,22 @@ window.setAnalisisPeriodo = setAnalisisPeriodo;
 
 function getAnalisisFechas() {
     const hoy = new Date();
-    const hoyStr = hoy.toISOString().split('T')[0];
+    const _fh = typeof _fechaHoy === 'function' ? _fechaHoy : () => hoy.toISOString().split('T')[0];
+    const hoyStr = _fh();
     if (analisisPeriodoActual === 'mes') {
-        return { desde: new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0], hasta: hoyStr, label: 'Este mes' };
+        const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        const _fp = `${primerDia.getFullYear()}-${String(primerDia.getMonth()+1).padStart(2,'0')}-01`;
+        return { desde: _fp, hasta: hoyStr, label: 'Este mes' };
     }
     if (analisisPeriodoActual === '30') {
         const d = new Date(hoy); d.setDate(d.getDate()-30);
-        return { desde: d.toISOString().split('T')[0], hasta: hoyStr, label: 'Últimos 30 días' };
+        const _fd = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return { desde: _fd, hasta: hoyStr, label: 'Últimos 30 días' };
     }
     if (analisisPeriodoActual === '90') {
         const d = new Date(hoy); d.setDate(d.getDate()-90);
-        return { desde: d.toISOString().split('T')[0], hasta: hoyStr, label: 'Últimos 90 días' };
+        const _fd = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return { desde: _fd, hasta: hoyStr, label: 'Últimos 90 días' };
     }
     if (analisisPeriodoActual === 'todo') return { desde: '2000-01-01', hasta: hoyStr, label: 'Todo el historial' };
     if (analisisPeriodoActual === 'custom') {

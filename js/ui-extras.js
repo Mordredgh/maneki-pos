@@ -751,7 +751,18 @@ document.addEventListener('keydown', function(e) {
         });
         if (visibleModals.length > 0) {
             e.preventDefault();
-            closeModal(visibleModals[visibleModals.length - 1]);
+            const topModal = visibleModals[visibleModals.length - 1];
+            // BUG-IDX-10 FIX: confirmModal necesita pasar por confirmModalResolve(false)
+            // para limpiar _confirmBusy y procesar la cola de confirms pendientes.
+            if (topModal.id === 'confirmModal') {
+                if (typeof confirmModalResolve === 'function') {
+                    confirmModalResolve(false);
+                } else {
+                    closeModal('confirmModal');
+                }
+                return;
+            }
+            closeModal(topModal);
         }
         return;
     }
@@ -776,8 +787,7 @@ document.addEventListener('keydown', function(e) {
     // R — recargar dashboard
     if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
-        if (typeof _updateDashboard === 'function') _updateDashboard();
-        else if (typeof renderDashboard === 'function') renderDashboard();
+        if (typeof updateDashboard === 'function') updateDashboard();
         return;
     }
 });

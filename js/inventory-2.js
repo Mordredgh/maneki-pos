@@ -570,7 +570,7 @@ async function guardarProductoTerminado() {
 
     if (!nombre) { manekiToastExport('⚠️ El nombre es requerido','warn'); document.getElementById('ptNombre')?.focus(); return; }
     if (!precio||precio<=0) { manekiToastExport('⚠️ El precio de venta debe ser mayor a $0','warn'); document.getElementById('ptPrecio')?.focus(); return; }
-    if (precio<=costo) { manekiToastExport('⚠️ El precio debe ser mayor al costo','warn'); document.getElementById('ptPrecio')?.focus(); return; }
+    if (precio<costo) { manekiToastExport('⚠️ El precio no puede ser menor al costo','warn'); document.getElementById('ptPrecio')?.focus(); return; }
     // GUARD: detectar nombre duplicado (no solo SKU)
     const _excludeIdPt = window.modoEdicion ? window.edicionProductoId : null;
     const _nombreDupPt = (window.products||[]).find(p =>

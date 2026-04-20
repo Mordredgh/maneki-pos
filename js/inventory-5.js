@@ -216,9 +216,16 @@ function renderInventoryTable() {
                     ? '<span class="badge-warning">MP bajo</span>'
                     : '<span class="badge-success">Disponible</span>';
         } else {
-            // Sin MPs configuradas → sin stock relevante
-            stockCell = `<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin MP config.</span>`;
-            badgeCell = `<span style="font-size:11px;background:#f3f4f6;color:#9ca3af;padding:2px 8px;border-radius:99px;">Sin MP config.</span>`;
+            const _stEf = typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : (product.stock || 0);
+            const _stMin = product.stockMin || 5;
+            const _clr = _stEf === 0 ? '#ef4444' : _stEf <= _stMin ? '#f59e0b' : '#10b981';
+            const _bgClr = _stEf === 0 ? '#fee2e2' : _stEf <= _stMin ? '#fef3c7' : '#d1fae5';
+            stockCell = `<span style="padding:3px 12px;border-radius:8px;background:${_bgClr};color:${_clr};font-weight:700;font-size:.95rem;">${_stEf}</span>`;
+            badgeCell = _stEf === 0
+                ? '<span style="background:#fee2e2;color:#ef4444;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">Agotado</span>'
+                : _stEf <= _stMin
+                ? '<span style="background:#fef3c7;color:#f59e0b;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">Bajo Stock</span>'
+                : '<span style="background:#d1fae5;color:#10b981;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">Disponible</span>';
         }
 
         const varsHTML = product.variants && product.variants.length > 0
@@ -618,7 +625,7 @@ function invSectionPage(sectionId, page) {
         ? allProducts.filter(p => p.tipo === 'servicio')
         : sectionId === 'pv'
         ? allProducts.filter(p => p.tipo === 'producto_variable')
-        : allProducts.filter(p => !p.tipo || p.tipo === 'producto' || p.tipo === 'producto_interno');
+        : allProducts.filter(p => !p.tipo || p.tipo === 'producto' || p.tipo === 'producto_interno' || p.tipo === 'pack');
     // Apply active filters (same logic as renderInventoryTable) before computing totalPgs
     const q     = (document.getElementById('inventorySearch')         ||{}).value?.trim().toLowerCase() || '';
     const tagQ  = (document.getElementById('inventoryTagFilter')       ||{}).value || '';
@@ -1038,6 +1045,15 @@ window.invBulkDesseleccionar = invBulkDesseleccionar;
 function invBulkEliminar() {
   const ids = invGetSelectedIds();
   if (!ids.length) return;
+  // Verificar pedidos activos que usen estos productos
+  const _pedAfectados = (window.pedidos||[]).filter(ped =>
+      !['cancelado','finalizado'].includes(ped.status||'') &&
+      (ped.productosInventario||[]).some(item => ids.includes(String(item.id)))
+  );
+  if (_pedAfectados.length > 0) {
+      const _folios = _pedAfectados.map(p => p.folio||p.id).slice(0,5).join(', ');
+      if (!confirm(`⚠️ ${_pedAfectados.length} pedido(s) activo(s) usan estos productos (${_folios}). ¿Eliminar de todas formas?`)) return;
+  }
   if (!confirm(`¿Eliminar ${ids.length} producto(s)? Esta acción no se puede deshacer.`)) return;
   window.products = (window.products||[]).filter(p => !ids.includes(String(p.id)));
   saveProducts();

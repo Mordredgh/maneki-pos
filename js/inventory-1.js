@@ -524,8 +524,9 @@ function exportarInventarioCSV() {
     const rows = (window.products||[]).map(p => {
         const cat    = ((window.categories||[]).find(c => c.id === p.category)||{}).name || p.category;
         const margen = (p.cost && p.price) ? (((p.price-p.cost)/p.price)*100).toFixed(0)+'%' : '';
-        const estado = p.stock===0 ? 'Agotado' : p.stock<=(p.stockMin||5) ? 'Bajo Stock' : 'Disponible';
-        return [p.sku, p.name, cat, p.tipo||'producto', p.cost||0, p.price||0, p.stock||0, p.stockMin||5,
+        const _stExport = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (p.stock || 0);
+        const estado = _stExport===0 ? 'Agotado' : _stExport<=(p.stockMin||5) ? 'Bajo Stock' : 'Disponible';
+        return [p.sku, p.name, cat, p.tipo||'producto', p.cost||0, p.price||0, _stExport, p.stockMin||5,
                 margen, p.proveedor||'', estado, (p.tags||[]).join('; '),
                 (p.variants||[]).map(v=>`${v.type}:${v.value}(${v.qty??0})`).join('; ')]
             .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
@@ -881,6 +882,8 @@ function closePtModal() {
     window.currentVariants = []; window.currentProductImage = null; window.currentProductImageFile = null;
     window._ptMpComponentes = [];
     window._tagsActuales = [];
+    window._ptGaleriaUrls = [];
+    window._ptGaleriaFiles = [];
 }
 window.closePtModal = closePtModal;
 // Alias para compatibilidad

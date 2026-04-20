@@ -1022,7 +1022,8 @@ function checkAlertasCobro() {
 
     // Pedidos con saldo pendiente y entrega vencida o proxima (<=5 dias)
     const pendientes = pedidos.filter(p => {
-        if (!p.resta || Number(p.resta) <= 0) return false;
+        const _saldoAlert = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - (p.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0));
+        if (_saldoAlert <= 0) return false;
         if (!p.entrega) return false;
         const fe = new Date(p.entrega + 'T00:00:00');
         const diff = Math.round((fe - hoy) / 86400000);
@@ -1048,6 +1049,7 @@ function checkAlertasCobro() {
 
     const _e = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;'));
     lista.innerHTML = pendientes.map(p => {
+        const _saldoAlert = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - (p.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0));
         const fe = new Date(p.entrega + 'T00:00:00');
         const diff = Math.round((fe - hoy) / 86400000);
         let etiquetaDiff = '';
@@ -1060,7 +1062,7 @@ function checkAlertasCobro() {
         const msgWA = encodeURIComponent(
             'Hola ' + (p.cliente||'') + ' \uD83D\uDC4B, te recordamos que tu pedido *' + (p.folio||'') + '* '
             + (p.concepto ? '(' + p.concepto + ') ' : '')
-            + 'tiene un saldo pendiente de *$' + Number(p.resta).toFixed(2) + '* con fecha de entrega el *' + (p.entrega||'') + '*. '
+            + 'tiene un saldo pendiente de *$' + _saldoAlert.toFixed(2) + '* con fecha de entrega el *' + (p.entrega||'') + '*. '
             + '\u00a1Cualquier duda estamos para ayudarte! \uD83D\uDC31'
         );
         const waHref = tel ? 'https://wa.me/52' + tel + '?text=' + msgWA : '#';
@@ -1073,7 +1075,7 @@ function checkAlertasCobro() {
             + '<p style="font-size:.68rem;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _e(p.concepto||'') + '</p>'
             + '</div></div>'
             + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">'
-            + '<span style="font-size:.78rem;font-weight:800;color:#dc2626;">$' + Number(p.resta).toFixed(2) + '</span>'
+            + '<span style="font-size:.78rem;font-weight:800;color:#dc2626;">$' + _saldoAlert.toFixed(2) + '</span>'
             + (tel
                 ? '<a href="' + waHref + '" target="_blank" style="display:flex;align-items:center;gap:3px;background:#25D366;color:#fff;border-radius:8px;padding:4px 8px;font-size:.7rem;font-weight:700;text-decoration:none;">\uD83D\uDCF2 Cobrar</a>'
                 : '<button onclick="openPedidoModal(\'' + p.id + '\')" style="background:#e5e7eb;color:#374151;border-radius:8px;padding:4px 8px;font-size:.7rem;font-weight:700;border:none;cursor:pointer;">Ver</button>'

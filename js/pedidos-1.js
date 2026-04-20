@@ -1014,10 +1014,16 @@ function eliminarPedido(id) {
     if (!pedidoAEliminar) return;
     const pedido = pedidoAEliminar; // alias para compatibilidad con el resto de la función
 
-    const tieneInventario = pedido.inventarioDescontado && (pedido.productosInventario || []).length > 0;
+    const tieneInventario = (pedido.inventarioDescontado && (pedido.productosInventario || []).length > 0)
+        || (pedido.empaquesDescontados && (pedido.empaques || []).length > 0);
 
     const _ejecutarEliminar = async (regresarInv) => {
-        if (regresarInv) _regresarInventarioCompleto(pedido);
+        if (regresarInv) {
+            _regresarInventarioCompleto(pedido);
+            if (pedido.empaquesDescontados && typeof _regresarEmpaquesInventario === 'function') {
+                _regresarEmpaquesInventario(pedido);
+            }
+        }
         if (window.MKS) MKS.del();
         window.pedidos = (window.pedidos || []).filter(p => String(p.id) !== String(id));
         savePedidos();

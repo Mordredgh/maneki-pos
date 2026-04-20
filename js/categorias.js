@@ -189,8 +189,14 @@
             ).join('');
 
             // Poblar todos los selects de categoría que existan en el DOM
+            // BUG-CAT-03 FIX: preservar el valor seleccionado antes de remplazar options
             ['productCategory', 'ptCategory', 'mpCategory'].forEach(id => {
                 const select = document.getElementById(id);
-                if (select) select.innerHTML = optionsHTML;
+                if (!select) return;
+                const valorActual = select.value;
+                select.innerHTML = optionsHTML;
+                if (valorActual && select.querySelector(`option[value="${CSS.escape ? CSS.escape(valorActual) : valorActual}"]`)) {
+                    select.value = valorActual;
+                }
             });
         }

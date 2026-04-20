@@ -283,6 +283,8 @@ function closeAddClientModal() {
                 clients = clients.filter(c => String(c.id) !== String(id));
                 saveClients();
                 renderClientsTable();
+                // BUG-CLI-03 FIX: actualizar dashboard al eliminar cliente
+                if (typeof updateDashboard === 'function') updateDashboard();
             });
         }
         
@@ -292,11 +294,13 @@ function closeAddClientModal() {
             document.getElementById('searchClient').addEventListener('input', function(e) {
                 clearTimeout(window._clientSearchT);
                 window._clientSearchT = setTimeout(() => {
-                const searchTerm = (e.target.value || '').toLowerCase();
+                // BUG-CLI-01 FIX: normalizar acentos en búsqueda de clientes
+                const _normC = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+                const q = _normC(e.target.value || '');
                 const filteredClients = clients.filter(c =>
-                    (c.name  || '').toLowerCase().includes(searchTerm) ||
-                    (c.email || '').toLowerCase().includes(searchTerm) ||
-                    (c.phone || '').includes(searchTerm)
+                    _normC(c.name).includes(q) ||
+                    _normC(c.email || '').includes(q) ||
+                    (c.phone || c.telefono || '').includes(q)
                 );
                 
                 const tbody = document.getElementById('clientsTable');
