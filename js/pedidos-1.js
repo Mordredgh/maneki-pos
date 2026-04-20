@@ -330,6 +330,8 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     // FIX SUBMIT-SYNC: leer valores actuales de los inputs inline de precio y cantidad
     // del DOM antes de calcular. Esto cubre el caso donde el usuario edita un campo
     // y hace click en Guardar sin salir del input (onchange no se dispara en ese caso).
+    // SAFETY: solo sobreescribir precio si el valor del DOM es un número positivo válido
+    // (evita sobrescribir precios correctos con 0 cuando el input queda vacío).
     if (items.length > 0) {
         const list = document.getElementById('pedidoProductosList');
         if (list) {
@@ -339,18 +341,25 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
                 const match = (inp.getAttribute('onchange') || '').match(/editarPrecioPedidoProducto\((\d+)/);
                 if (match) {
                     const idx = parseInt(match[1]);
-                    if (items[idx] !== undefined) items[idx].price = parseFloat(inp.value) || 0;
+                    const parsed = parseFloat(inp.value);
+                    // Solo sobreescribir si el DOM tiene un número válido ≥ 0
+                    if (items[idx] !== undefined && !isNaN(parsed) && inp.value.trim() !== '') {
+                        items[idx].price = parsed;
+                    }
                 }
             });
             qtyInputs.forEach(inp => {
                 const match = (inp.getAttribute('onchange') || '').match(/editarCantidadPedidoProducto\((\d+)/);
                 if (match) {
                     const idx = parseInt(match[1]);
-                    if (items[idx] !== undefined) items[idx].quantity = parseInt(inp.value) || 1;
+                    const parsed = parseInt(inp.value);
+                    if (items[idx] !== undefined && !isNaN(parsed) && parsed > 0) {
+                        items[idx].quantity = parsed;
+                    }
                 }
             });
         }
-        // También sincronizar el array fuente para que calcPedidoTotal() sea consistente
+        // Sincronizar array fuente para que calcPedidoTotal() sea consistente
         window.pedidoProductosSeleccionados = items;
     }
 
@@ -370,17 +379,22 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     const costo = total;
     const resta = Math.max(0, total - anticipo);
 
-    if (!cliente || !concepto) {
-        manekiToastExport('Por favor completa los campos requeridos (cliente y concepto).', 'warn');
+    if (!cliente) {
+        manekiToastExport('Por favor escribe el nombre del cliente.', 'warn');
         return;
     }
     // A7: validar que montos no sean negativos
     if (Number(total) < 0) { manekiToastExport('El monto no puede ser negativo', 'warn'); return; }
     if (Number(anticipo) < 0) { manekiToastExport('El monto no puede ser negativo', 'warn'); return; }
-    // GUARD-1: bloquear pedido sin precio — evita el bug PE-0013
-    if (total === 0) {
+    // GUARD-1: advertir si no hay precio, pero solo bloquear cuando tampoco hay productos
+    // (si hay items en el array, el total podría ser 0 por producto sin precio asignado — dejar pasar con aviso)
+    if (total === 0 && items.length === 0) {
         manekiToastExport('⚠️ El pedido no tiene precio. Agrega productos del inventario o escribe el precio en el campo amarillo.', 'warn');
         return;
+    }
+    if (total === 0 && items.length > 0) {
+        manekiToastExport('⚠️ Los productos tienen precio $0. Verifica los precios antes de guardar.', 'warn');
+        // No bloqueamos — dejamos guardar con advertencia
     }
     // GUARD-1 ya cubre total === 0, GUARD-2 es redundante (eliminado en FIX #14)
     if (total > 0 && anticipo > total) {
