@@ -22,6 +22,7 @@
 
   <!-- Estilos -->
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive.css">
 
   <!-- Scripts de la app (orden importa) -->
   <script src="js/icons.js"></script>
@@ -96,6 +97,15 @@ input:focus, select:focus, textarea:focus, button:focus {
   </style>
 </head>
 <body class="bg-gray-50">
+
+<!-- Mobile Topbar -->
+<div id="mobileTopbar" style="display:none" class="fixed top-0 left-0 right-0 z-[198] flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
+  <button id="hamburgerBtn" onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;padding:4px;font-size:22px;">☰</button>
+  <span style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Maneki Store</span>
+  <button onclick="typeof _abrirBusquedaOverlay === 'function' && _abrirBusquedaOverlay()" style="background:none;border:none;cursor:pointer;padding:4px;font-size:18px;">🔍</button>
+</div>
+<!-- Overlay para cerrar sidebar en mobile -->
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
     <aside id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 shadow-xl z-50 flex flex-col">
         <div class="p-3 border-b border-gray-200">
@@ -3410,5 +3420,24 @@ input:focus, select:focus, textarea:focus, button:focus {
       aria-label="Crear nuevo pedido">
       ✚
   </button>
+
+<!-- Mobile Bottom Navigation -->
+<nav id="mobileBottomNav" style="display:none" class="fixed bottom-0 left-0 right-0 z-[198] flex items-center justify-around bg-white border-t border-gray-200 shadow-lg" style="height:60px;">
+  <button onclick="showSection('dashboard');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+    <span style="font-size:20px;">🏠</span><span>Inicio</span>
+  </button>
+  <button onclick="showSection('pedidos');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+    <span style="font-size:20px;">📦</span><span>Pedidos</span>
+  </button>
+  <button onclick="showSection('inventory');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+    <span style="font-size:20px;">🏷️</span><span>Inventario</span>
+  </button>
+  <button onclick="showSection('balance');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+    <span style="font-size:20px;">💰</span><span>Balance</span>
+  </button>
+  <button onclick="toggleSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+    <span style="font-size:20px;">☰</span><span>Más</span>
+  </button>
+</nav>
 </body>
 </html>

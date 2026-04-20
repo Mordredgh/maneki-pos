@@ -1264,6 +1264,7 @@ function _abrirErrorLog() {
         initBusquedaGlobal();
         initModoCompacto();
         initErrorLog();
+        initResponsive();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', _run);
@@ -1286,5 +1287,127 @@ function confirmarResetTotal() {
             if (!ok2) return;
             clearAllData();
         });
+    });
+}
+
+// ══════════════════════════════════════════
+// SISTEMA RESPONSIVE — Detección de dispositivo
+// ══════════════════════════════════════════
+
+window._dispositivoActual = 'desktop'; // 'desktop' | 'tablet' | 'mobile'
+
+function detectarDispositivo() {
+    const w = window.innerWidth;
+    if (w < 768) return 'mobile';
+    if (w < 1024) return 'tablet';
+    return 'desktop';
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+    const isOpen = sidebar.classList.contains('sidebar-open');
+    if (isOpen) { closeSidebar(); } else { openSidebar(); }
+}
+
+function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) sidebar.classList.add('sidebar-open');
+    if (overlay) overlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) sidebar.classList.remove('sidebar-open');
+    if (overlay) overlay.classList.remove('visible');
+    document.body.style.overflow = '';
+}
+
+// Exponer globalmente
+window.toggleSidebar = toggleSidebar;
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
+
+function _aplicarModoDispositivo() {
+    const dispositivo = detectarDispositivo();
+    const anterior = window._dispositivoActual;
+    window._dispositivoActual = dispositivo;
+
+    document.body.classList.remove('device-desktop', 'device-tablet', 'device-mobile');
+    document.body.classList.add('device-' + dispositivo);
+
+    // En mobile: activar compact mode automáticamente
+    if (dispositivo === 'mobile') {
+        document.body.classList.add('compact-mode');
+        try { localStorage.setItem('maneki_compactMode', '1'); } catch(e) {}
+    } else if (anterior === 'mobile' && dispositivo !== 'mobile') {
+        // Al pasar de mobile a desktop: respetar preferencia guardada
+        const pref = localStorage.getItem('maneki_compactMode');
+        if (!pref) document.body.classList.remove('compact-mode');
+    }
+
+    // En desktop: siempre cerrar sidebar overlay
+    if (dispositivo === 'desktop') {
+        closeSidebar();
+    }
+
+    // Actualizar topbar mobile: agregar padding-top al main cuando topbar visible
+    const mainEls = document.querySelectorAll('.ml-64, main, #mainContent, .main-content');
+    mainEls.forEach(el => {
+        if (dispositivo !== 'desktop') {
+            el.style.paddingTop = el.style.paddingTop || '56px';
+        } else {
+            el.style.paddingTop = '';
+        }
+    });
+
+    // Cerrar sidebar si cambió a desktop mientras estaba abierto
+    if (dispositivo === 'desktop') {
+        document.body.style.overflow = '';
+    }
+}
+
+function initResponsive() {
+    // Aplicar modo inicial
+    _aplicarModoDispositivo();
+
+    // Listener de resize con debounce
+    let _resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(_resizeTimer);
+        _resizeTimer = setTimeout(_aplicarModoDispositivo, 150);
+    });
+
+    // Cerrar sidebar al navegar en mobile (parchear showSection)
+    const _origShowSection = window.showSection;
+    if (typeof _origShowSection === 'function') {
+        window.showSection = function(...args) {
+            if (window._dispositivoActual !== 'desktop') closeSidebar();
+            return _origShowSection.apply(this, args);
+        };
+    }
+
+    // Swipe derecha para abrir sidebar (touch)
+    let _touchStartX = 0;
+    document.addEventListener('touchstart', (e) => {
+        _touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - _touchStartX;
+        if (_touchStartX < 30 && dx > 60) openSidebar();   // swipe desde borde izquierdo
+        if (dx < -60) closeSidebar();                        // swipe izquierda cierra
+    }, { passive: true });
+
+    // Actualizar bottom nav según sección activa
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#mobileBottomNav button');
+        if (!btn) return;
+        document.querySelectorAll('#mobileBottomNav button').forEach(b => {
+            b.style.color = '#6b7280';
+        });
+        btn.style.color = '#C9933A';
     });
 }
