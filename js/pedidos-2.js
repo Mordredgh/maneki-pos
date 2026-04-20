@@ -23,13 +23,11 @@ function _descontarInventarioPedido(pedido) {
         // FIX 3: null check on item.variante before any .indexOf() call
         if (!item.variante && item.variante !== 0) { /* no variant — skip variant parsing below */ }
 
-        // GUARD: si el stock es insuficiente, NO descontar — registrar advertencia y saltar ítem
-        // Para PT con mpComponentes, calcular stock fabricable desde materias primas
-        // (getStockEfectivo solo mira variantes del PT, que pueden estar en 0 si el stock real es MP)
-        let _stockDisponible;
+        // INFO: calcular stock disponible solo para avisar — no bloquear el descuento
+        // (stock insuficiente puede ocurrir por reposición pendiente; la usuaria decide)
         const _tieneMpComp = Array.isArray(prod.mpComponentes) && prod.mpComponentes.length > 0;
+        let _stockDisponible;
         if (prod.tipo === 'producto_variable' && _tieneMpComp) {
-            // Producto variable: stock = hojas disponibles × rendimientoPorHoja
             const _rph = prod.rendimientoPorHoja || 1;
             let _minHojas = Infinity;
             for (const comp of prod.mpComponentes) {
@@ -41,7 +39,6 @@ function _descontarInventarioPedido(pedido) {
             }
             _stockDisponible = (_minHojas === Infinity ? 0 : _minHojas) * _rph;
         } else if (_tieneMpComp && Array.isArray(prod.variants) && prod.variants.length > 0) {
-            // PT con variantes + componentes: stock = variantes PT + fabricable desde MP
             const _stockVariantes = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
             let _minFabricable = Infinity;
             for (const comp of prod.mpComponentes) {
@@ -53,32 +50,47 @@ function _descontarInventarioPedido(pedido) {
                 }
             }
             _stockDisponible = _stockVariantes + (_minFabricable === Infinity ? 0 : _minFabricable);
+        } else if (prod.tipo === 'producto_variable') {
+            // PV sin mpComponentes: usa su propio stock numérico
+            _stockDisponible = parseInt(prod.stock) || 0;
         } else {
             _stockDisponible = typeof getStockEfectivo === 'function' ? getStockEfectivo(prod) : (prod.stock || 0);
         }
+        // Solo avisar si el stock es insuficiente, pero proceder con el descuento de todas formas
         if (_stockDisponible < cantidad) {
-            console.warn(`[Inventario] Stock insuficiente para "${prod.name}": disponible=${_stockDisponible}, requerido=${cantidad} — inventario no descontado`);
-            manekiToastExport(`⚠️ Stock insuficiente para "${prod.name}" — no se descontó inventario`, 'warn');
-            continue; // Skip deduction for this item; pedido sigue guardándose
+            console.warn(`[Inventario] Stock insuficiente para "${prod.name}": disponible=${_stockDisponible}, requerido=${cantidad} — se descuenta de todas formas`);
+            manekiToastExport(`⚠️ Stock bajo de "${prod.name}" (disponible: ${_stockDisponible})`, 'warn');
         }
 
         // Descontar stock del producto terminado (PT)
         const antesPT = prod.stock || 0;
         // FIX 1: record rollback BEFORE modifying stock
         _rollback.push({ id: prod.id, stockBefore: antesPT });
-        prod.stock = Math.max(0, antesPT - cantidad);
 
-        // FIX PE-0013: también descontar la variante específica del PT
-        // para que getStockEfectivo() refleje el stock real actualizado
-        if (item.variante && Array.isArray(prod.variants) && prod.variants.length > 0) {
-            const _colIdx = item.variante.indexOf(':');
-            const _vType  = _colIdx !== -1 ? item.variante.slice(0, _colIdx).trim() : item.variante;
-            const _vValue = _colIdx !== -1 ? item.variante.slice(_colIdx + 1).trim() : '';
-            const _ptVar  = prod.variants.find(v =>
-                (v.type || v.tipo || '') === _vType && (v.value || v.valor || '') === _vValue
-            );
-            if (_ptVar) { _ptVar.qty = Math.max(0, (_ptVar.qty || 0) - cantidad); }
+        if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+            // Producto CON variantes: descontar de la variante correspondiente
+            // y dejar que syncStockFromVariants recalcule prod.stock.
+            // NO tocar prod.stock directamente (syncStockFromVariants lo sobreescribiría).
+            if (item.variante) {
+                // Variante conocida: descontar directo
+                const _colIdx = item.variante.indexOf(':');
+                const _vType  = _colIdx !== -1 ? item.variante.slice(0, _colIdx).trim() : item.variante;
+                const _vValue = _colIdx !== -1 ? item.variante.slice(_colIdx + 1).trim() : '';
+                const _ptVar  = prod.variants.find(v =>
+                    (v.type || v.tipo || '') === _vType && (v.value || v.valor || '') === _vValue
+                );
+                if (_ptVar) { _ptVar.qty = Math.max(0, (_ptVar.qty || 0) - cantidad); }
+            } else {
+                // Sin variante especificada: descontar de la variante con mayor stock disponible
+                const _varMayor = prod.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0];
+                if (_varMayor) { _varMayor.qty = Math.max(0, (parseInt(_varMayor.qty)||0) - cantidad); }
+            }
+            // Recalcular prod.stock desde la suma de variantes actualizadas
             if (typeof syncStockFromVariants === 'function') syncStockFromVariants(prod);
+            else prod.stock = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+        } else {
+            // Producto SIN variantes: descontar prod.stock directamente
+            prod.stock = Math.max(0, antesPT - cantidad);
         }
 
         if (typeof registrarMovimiento === 'function') {
