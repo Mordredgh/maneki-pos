@@ -729,11 +729,24 @@ function irAReportes() {
 // ── Ctrl+K / Cmd+K — enfocar buscador global ──────────────────────────────
 // ── NTH-19: N = nuevo, Esc = cerrar modal, R = recargar dashboard ─────────
 document.addEventListener('keydown', function(e) {
-    // Ctrl+K / Cmd+K — global search
+    // Ctrl+Shift+L — abrir log de errores
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'L') {
+        e.preventDefault();
+        if (typeof _abrirErrorLog === 'function') _abrirErrorLog();
+        return;
+    }
+
+    // Ctrl+K / Cmd+K — global search overlay
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        const searchInput = document.getElementById('globalSearchInput');
-        if (searchInput) { searchInput.focus(); searchInput.select(); }
+        // Intentar abrir overlay modal primero, fallback al input inline
+        const overlay = document.getElementById('busquedaGlobalOverlay');
+        if (overlay) {
+            _abrirBusquedaOverlay();
+        } else {
+            const searchInput = document.getElementById('globalSearchInput');
+            if (searchInput) { searchInput.focus(); searchInput.select(); }
+        }
         return;
     }
 
@@ -743,8 +756,20 @@ document.addEventListener('keydown', function(e) {
     // Skip if a modal is open (except Esc which should close it)
     const anyModal = document.querySelector('.modal-overlay[style*="flex"], .modal-overlay.active, [id$="Modal"][style*="flex"]');
 
-    // Esc — cerrar el modal visible más reciente
+    // Esc — cerrar overlay de búsqueda o modal visible más reciente
     if (e.key === 'Escape') {
+        const overlay = document.getElementById('busquedaGlobalOverlay');
+        if (overlay && overlay.style.display !== 'none') {
+            e.preventDefault();
+            _cerrarBusquedaOverlay();
+            return;
+        }
+        const errorModal = document.getElementById('errorLogModal');
+        if (errorModal && errorModal.style.display !== 'none') {
+            e.preventDefault();
+            errorModal.style.display = 'none';
+            return;
+        }
         const visibleModals = Array.from(document.querySelectorAll('[id$="Modal"]')).filter(m => {
             const s = window.getComputedStyle(m);
             return s.display !== 'none' && s.visibility !== 'hidden';
@@ -765,6 +790,16 @@ document.addEventListener('keydown', function(e) {
             closeModal(topModal);
         }
         return;
+    }
+
+    // "/" — abrir búsqueda global overlay (cuando no hay input activo)
+    if (e.key === '/') {
+        const overlay = document.getElementById('busquedaGlobalOverlay');
+        if (overlay) {
+            e.preventDefault();
+            _abrirBusquedaOverlay();
+            return;
+        }
     }
 
     // If a modal is open, don't trigger N or R
@@ -791,6 +826,451 @@ document.addEventListener('keydown', function(e) {
         return;
     }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── MEJORA 1: BÚSQUEDA GLOBAL OVERLAY (Ctrl+K / "/") ─────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+
+function _normSearch(texto) {
+    if (!texto) return '';
+    return String(texto).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function _matchBusqueda(valor, q) {
+    if (!valor || !q) return false;
+    return _normSearch(valor).includes(q);
+}
+
+function _abrirBusquedaOverlay() {
+    const overlay = document.getElementById('busquedaGlobalOverlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    const input = document.getElementById('busquedaGlobalInput');
+    if (input) { input.value = ''; input.focus(); }
+    document.getElementById('busquedaGlobalResultados').innerHTML = '';
+}
+
+function _cerrarBusquedaOverlay() {
+    const overlay = document.getElementById('busquedaGlobalOverlay');
+    if (overlay) overlay.style.display = 'none';
+    const input = document.getElementById('busquedaGlobalInput');
+    if (input) input.value = '';
+    const resultados = document.getElementById('busquedaGlobalResultados');
+    if (resultados) resultados.innerHTML = '';
+}
+
+function _busquedaOverlayRender(q) {
+    const contenedor = document.getElementById('busquedaGlobalResultados');
+    if (!contenedor) return;
+    if (!q || q.trim().length < 2) { contenedor.innerHTML = ''; return; }
+    const qn = _normSearch(q.trim());
+
+    let html = '';
+    let hayResultados = false;
+
+    // ── Pedidos activos + finalizados ──
+    const todosLosPedidos = [
+        ...(window.pedidos || []),
+        ...(window.pedidosFinalizados || [])
+    ];
+    const pedidosFiltrados = todosLosPedidos.filter(p =>
+        _matchBusqueda(p.folio, qn) ||
+        _matchBusqueda(p.cliente, qn) ||
+        _matchBusqueda(p.concepto, qn)
+    ).slice(0, 5);
+
+    if (pedidosFiltrados.length > 0) {
+        hayResultados = true;
+        const statusColors = { pendiente:'#f59e0b', confirmado:'#3b82f6', produccion:'#8b5cf6', finalizado:'#10b981', cancelado:'#ef4444' };
+        html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6">📦 Pedidos</div>`;
+        pedidosFiltrados.forEach((p, i) => {
+            const color = statusColors[p.status] || '#6b7280';
+            html += `<div class="busq-resultado" data-tipo="pedido" data-folio="${_esc(p.folio||'')}" data-cliente="${_esc(p.cliente||'')}" data-idx="${i}" tabindex="-1"
+                style="padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #f9fafb">
+                <span style="font-size:18px">🛍️</span>
+                <div style="flex:1; min-width:0">
+                    <div style="font-weight:600; color:#111827; font-size:13px">${_esc(p.folio||'—')} — ${_esc(p.cliente||'Sin nombre')}</div>
+                    <div style="font-size:11px; color:#9ca3af; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${_esc(p.concepto||'Sin descripción')}</div>
+                </div>
+                <div style="text-align:right; flex-shrink:0">
+                    <div style="font-weight:700; font-size:13px; color:#374151">$${Number(p.total||0).toFixed(2)}</div>
+                    <div style="font-size:11px; color:${color}; text-transform:capitalize">${_esc(p.status||'—')}</div>
+                </div>
+            </div>`;
+        });
+    }
+
+    // ── Productos ──
+    const productosFiltrados = (window.products || []).filter(p =>
+        _matchBusqueda(p.name, qn) ||
+        _matchBusqueda(p.sku, qn) ||
+        _matchBusqueda(p.codigo, qn)
+    ).slice(0, 5);
+
+    if (productosFiltrados.length > 0) {
+        hayResultados = true;
+        html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6; border-top:1px solid #f3f4f6; margin-top:4px">🏷️ Productos</div>`;
+        productosFiltrados.forEach((p, i) => {
+            const stock = p.stock ?? '—';
+            html += `<div class="busq-resultado" data-tipo="producto" data-id="${_esc(String(p.id||''))}" data-idx="${i}" tabindex="-1"
+                style="padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #f9fafb">
+                <span style="font-size:18px">${p.image||'📦'}</span>
+                <div style="flex:1; min-width:0">
+                    <div style="font-weight:600; color:#111827; font-size:13px">${_esc(p.name||'Sin nombre')}</div>
+                    <div style="font-size:11px; color:#9ca3af">SKU: ${_esc(p.sku||'—')} · Stock: ${stock}</div>
+                </div>
+                <div style="font-weight:700; font-size:13px; color:#b45309; flex-shrink:0">$${Number(p.price||0).toFixed(2)}</div>
+            </div>`;
+        });
+    }
+
+    // ── Clientes (usa window.clients según nombre real del array) ──
+    const clientesFiltrados = (window.clients || []).filter(c =>
+        _matchBusqueda(c.name, qn) ||
+        _matchBusqueda(c.phone, qn) ||
+        _matchBusqueda(c.telefono, qn)
+    ).slice(0, 5);
+
+    if (clientesFiltrados.length > 0) {
+        hayResultados = true;
+        html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6; border-top:1px solid #f3f4f6; margin-top:4px">👤 Clientes</div>`;
+        clientesFiltrados.forEach((c, i) => {
+            html += `<div class="busq-resultado" data-tipo="cliente" data-nombre="${_esc(c.name||'')}" data-idx="${i}" tabindex="-1"
+                style="padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #f9fafb">
+                <span style="font-size:18px">👤</span>
+                <div style="flex:1; min-width:0">
+                    <div style="font-weight:600; color:#111827; font-size:13px">${_esc(c.name||'Sin nombre')}</div>
+                    <div style="font-size:11px; color:#9ca3af">${_esc(c.phone||c.telefono||'Sin teléfono')}</div>
+                </div>
+                <div style="font-size:11px; color:#6b7280; flex-shrink:0">Ver →</div>
+            </div>`;
+        });
+    }
+
+    if (!hayResultados) {
+        html = `<div style="padding:32px 16px; text-align:center; color:#9ca3af; font-size:14px">Sin resultados para "<b>${_esc(q)}</b>"</div>`;
+    }
+
+    contenedor.innerHTML = html;
+
+    // Evento click en resultados
+    contenedor.querySelectorAll('.busq-resultado').forEach(el => {
+        el.addEventListener('mousedown', function(ev) {
+            ev.preventDefault();
+            _seleccionarResultadoBusqueda(this);
+        });
+        el.addEventListener('mouseover', function() {
+            _resaltarResultado(this);
+        });
+    });
+}
+
+function _seleccionarResultadoBusqueda(el) {
+    const tipo = el.dataset.tipo;
+    _cerrarBusquedaOverlay();
+    if (tipo === 'pedido') {
+        if (typeof showSection === 'function') showSection('pedidos');
+        const folio = el.dataset.folio;
+        const cliente = el.dataset.cliente;
+        setTimeout(() => {
+            const buscarEl = document.getElementById('kanbanBuscar');
+            if (buscarEl && folio) {
+                buscarEl.value = folio;
+                buscarEl.dispatchEvent(new Event('input', { bubbles: true }));
+            } else if (buscarEl && cliente) {
+                buscarEl.value = cliente;
+                buscarEl.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }, 200);
+    } else if (tipo === 'producto') {
+        if (typeof showSection === 'function') showSection('inventario');
+        const id = el.dataset.id;
+        setTimeout(() => {
+            if (id && typeof editProduct === 'function') editProduct(id);
+        }, 300);
+    } else if (tipo === 'cliente') {
+        if (typeof showSection === 'function') showSection('clientes');
+        const nombre = el.dataset.nombre;
+        setTimeout(() => {
+            const searchInput = document.getElementById('searchClient');
+            if (searchInput && nombre) {
+                searchInput.value = nombre;
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }, 200);
+    }
+}
+
+function _resaltarResultado(el) {
+    const contenedor = document.getElementById('busquedaGlobalResultados');
+    if (!contenedor) return;
+    contenedor.querySelectorAll('.busq-resultado').forEach(r => r.style.background = '');
+    el.style.background = '#f0f9ff';
+    el._resaltado = true;
+}
+
+function _navResultados(direccion) {
+    const contenedor = document.getElementById('busquedaGlobalResultados');
+    if (!contenedor) return;
+    const items = Array.from(contenedor.querySelectorAll('.busq-resultado'));
+    if (!items.length) return;
+    const actual = items.findIndex(i => i.style.background === 'rgb(240, 249, 255)' || i._resaltado);
+    items.forEach(i => { i.style.background = ''; i._resaltado = false; });
+    let siguiente = actual + direccion;
+    if (siguiente < 0) siguiente = items.length - 1;
+    if (siguiente >= items.length) siguiente = 0;
+    items[siguiente].style.background = '#f0f9ff';
+    items[siguiente]._resaltado = true;
+    items[siguiente].scrollIntoView({ block: 'nearest' });
+}
+
+function initBusquedaGlobal() {
+    if (document.getElementById('busquedaGlobalOverlay')) return; // ya existe
+
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'busquedaGlobalOverlay';
+    overlay.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:flex-start; justify-content:center; padding-top:10vh';
+    overlay.innerHTML = `
+        <div style="background:white; border-radius:12px; width:600px; max-width:90vw; max-height:70vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 50px rgba(0,0,0,0.3)">
+            <div style="padding:16px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; gap:8px">
+                <span>🔍</span>
+                <input id="busquedaGlobalInput" type="text" placeholder="Buscar pedidos, productos, clientes..."
+                    style="flex:1; border:none; outline:none; font-size:16px">
+                <kbd style="background:#f3f4f6; padding:2px 6px; border-radius:4px; font-size:12px; color:#6b7280; border:1px solid #e5e7eb">ESC</kbd>
+            </div>
+            <div id="busquedaGlobalResultados" style="overflow-y:auto; flex:1; padding:8px"></div>
+        </div>`;
+    document.body.appendChild(overlay);
+
+    // Cerrar al hacer clic en el fondo
+    overlay.addEventListener('mousedown', function(e) {
+        if (e.target === overlay) _cerrarBusquedaOverlay();
+    });
+
+    // Input con debounce 250ms
+    let _bgTimer = null;
+    const input = document.getElementById('busquedaGlobalInput');
+    input.addEventListener('input', function() {
+        clearTimeout(_bgTimer);
+        _bgTimer = setTimeout(() => _busquedaOverlayRender(this.value), 250);
+    });
+
+    // Navegación con teclado dentro del overlay
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { _cerrarBusquedaOverlay(); return; }
+        if (e.key === 'ArrowDown') { e.preventDefault(); _navResultados(1); return; }
+        if (e.key === 'ArrowUp') { e.preventDefault(); _navResultados(-1); return; }
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const contenedor = document.getElementById('busquedaGlobalResultados');
+            const resaltado = contenedor && contenedor.querySelector('.busq-resultado[style*="rgb(240, 249, 255)"]');
+            if (resaltado) _seleccionarResultadoBusqueda(resaltado);
+            return;
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── MEJORA 2: MODO COMPACTO ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initModoCompacto() {
+    // Inyectar estilos CSS del modo compacto
+    if (!document.getElementById('maneki-compact-styles')) {
+        const style = document.createElement('style');
+        style.id = 'maneki-compact-styles';
+        style.textContent = `
+            body.compact-mode table td,
+            body.compact-mode table th { padding: 4px 8px !important; font-size: 12px !important; }
+            body.compact-mode .card { padding: 8px !important; }
+            body.compact-mode .kanban-card { padding: 6px 8px !important; }
+            body.compact-mode .stat-card { padding: 8px !important; }
+            body.compact-mode h2 { font-size: 1rem !important; }
+            body.compact-mode .text-sm { font-size: 11px !important; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Crear botón si no existe
+    if (document.getElementById('compactModeBtn')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'compactModeBtn';
+    btn.title = 'Modo compacto';
+    btn.style.cssText = 'background:none; border:1px solid #d1d5db; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:16px; color:#6b7280; display:flex; align-items:center; gap:4px; line-height:1';
+
+    const compactoActivo = localStorage.getItem('maneki_compactMode') === '1';
+    if (compactoActivo) {
+        document.body.classList.add('compact-mode');
+        btn.textContent = '⊡';
+        btn.title = 'Modo compacto activo — clic para desactivar';
+    } else {
+        btn.textContent = '⊟';
+        btn.title = 'Activar modo compacto';
+    }
+
+    btn.addEventListener('click', function() {
+        const activo = document.body.classList.toggle('compact-mode');
+        btn.textContent = activo ? '⊡' : '⊟';
+        btn.title = activo ? 'Modo compacto activo — clic para desactivar' : 'Activar modo compacto';
+        localStorage.setItem('maneki_compactMode', activo ? '1' : '0');
+        manekiToastExport(activo ? '⊡ Modo compacto activado' : '⊟ Modo normal', 'info');
+    });
+
+    // Inyectar en la barra de navegación
+    const destino = document.querySelector('nav') ||
+                    document.getElementById('topbar') ||
+                    document.querySelector('[id*="topbar"]') ||
+                    document.querySelector('header') ||
+                    document.querySelector('.navbar') ||
+                    document.querySelector('.topnav');
+
+    if (destino) {
+        // Intentar poner al final de la nav
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex; align-items:center; margin-left:auto; padding:0 8px';
+        wrapper.appendChild(btn);
+        destino.appendChild(wrapper);
+    } else {
+        // Fallback: esquina superior derecha fija
+        btn.style.cssText += '; position:fixed; top:8px; right:8px; z-index:8888; background:white; box-shadow:0 1px 4px rgba(0,0,0,0.15)';
+        document.body.appendChild(btn);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── MEJORA 3: LOG DE ERRORES (Ctrl+Shift+L) ──────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initErrorLog() {
+    // Captura de errores globales
+    window._errorLog = window._errorLog || [];
+
+    window.onerror = function(msg, src, line, col, err) {
+        window._errorLog.unshift({
+            ts: new Date().toISOString(),
+            tipo: 'error',
+            msg: String(msg),
+            src: src,
+            line: line,
+            stack: err && err.stack ? err.stack : null
+        });
+        if (window._errorLog.length > 50) window._errorLog.pop();
+    };
+
+    window.addEventListener('unhandledrejection', function(e) {
+        window._errorLog.unshift({
+            ts: new Date().toISOString(),
+            tipo: 'promise',
+            msg: String(e.reason),
+            stack: e.reason && e.reason.stack ? e.reason.stack : null
+        });
+        if (window._errorLog.length > 50) window._errorLog.pop();
+    });
+
+    // Crear modal si no existe
+    if (document.getElementById('errorLogModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'errorLogModal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center';
+    modal.innerHTML = `
+        <div style="background:#1e1e1e; border-radius:12px; width:800px; max-width:95vw; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 60px rgba(0,0,0,0.5); color:#d4d4d4; font-family:monospace">
+            <div style="padding:14px 18px; border-bottom:1px solid #333; display:flex; align-items:center; gap:8px; background:#252526">
+                <span style="font-size:16px">🐛</span>
+                <span style="font-weight:700; font-size:14px; color:#e9e9e9">Log de Errores</span>
+                <span id="errorLogCount" style="background:#ef4444; color:white; border-radius:999px; padding:1px 7px; font-size:11px; margin-left:4px"></span>
+                <div style="margin-left:auto; display:flex; gap:8px">
+                    <button id="errorLogCopyBtn"
+                        style="background:#0e639c; border:none; border-radius:6px; padding:5px 10px; color:white; cursor:pointer; font-size:12px">📋 Copiar log</button>
+                    <button id="errorLogClearBtn"
+                        style="background:#5a1d1d; border:none; border-radius:6px; padding:5px 10px; color:#f87171; cursor:pointer; font-size:12px">🗑️ Limpiar</button>
+                    <button id="errorLogCloseBtn"
+                        style="background:#3c3c3c; border:none; border-radius:6px; padding:5px 10px; color:#9ca3af; cursor:pointer; font-size:12px">✕ Cerrar</button>
+                </div>
+            </div>
+            <div id="errorLogLista" style="overflow-y:auto; flex:1; padding:12px"></div>
+        </div>`;
+    document.body.appendChild(modal);
+
+    // Eventos del modal
+    modal.querySelector('#errorLogCloseBtn').addEventListener('click', () => { modal.style.display = 'none'; });
+    modal.querySelector('#errorLogCopyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(JSON.stringify(window._errorLog, null, 2))
+            .then(() => manekiToastExport('📋 Log copiado al portapapeles', 'ok'))
+            .catch(() => manekiToastExport('❌ No se pudo copiar', 'err'));
+    });
+    modal.querySelector('#errorLogClearBtn').addEventListener('click', () => {
+        window._errorLog = [];
+        _renderErrorLog();
+        manekiToastExport('🗑️ Log limpiado', 'info');
+    });
+    // Cerrar al clic en fondo
+    modal.addEventListener('mousedown', function(e) {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+}
+
+function _renderErrorLog() {
+    const lista = document.getElementById('errorLogLista');
+    const countEl = document.getElementById('errorLogCount');
+    if (!lista) return;
+    const log = window._errorLog || [];
+    if (countEl) {
+        countEl.textContent = log.length;
+        countEl.style.display = log.length ? 'inline' : 'none';
+    }
+    if (!log.length) {
+        lista.innerHTML = '<div style="padding:40px; text-align:center; color:#6b7280; font-size:14px">✅ No hay errores registrados</div>';
+        return;
+    }
+    lista.innerHTML = log.map((entry, i) => {
+        const ts = entry.ts ? entry.ts.replace('T', ' ').split('.')[0] : '—';
+        const tipoBadge = entry.tipo === 'error'
+            ? '<span style="background:#ef4444; color:white; border-radius:4px; padding:1px 6px; font-size:10px">ERROR</span>'
+            : '<span style="background:#f59e0b; color:white; border-radius:4px; padding:1px 6px; font-size:10px">PROMISE</span>';
+        const srcInfo = entry.src ? `${entry.src}:${entry.line||'?'}` : '';
+        const stackHtml = entry.stack
+            ? `<pre style="margin:6px 0 0; padding:8px; background:#111; border-radius:4px; font-size:10px; color:#9ca3af; overflow-x:auto; white-space:pre-wrap; word-break:break-all">${_esc(entry.stack)}</pre>`
+            : '';
+        return `<div style="margin-bottom:10px; padding:10px 12px; background:#252526; border-radius:8px; border-left:3px solid ${entry.tipo==='error'?'#ef4444':'#f59e0b'}">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap">
+                <span style="color:#6b7280; font-size:10px">${_esc(ts)}</span>
+                ${tipoBadge}
+                ${srcInfo ? `<span style="color:#4ec9b0; font-size:10px">${_esc(srcInfo)}</span>` : ''}
+            </div>
+            <div style="color:#ce9178; font-size:12px; word-break:break-word">${_esc(String(entry.msg||''))}</div>
+            ${stackHtml}
+        </div>`;
+    }).join('');
+}
+
+function _abrirErrorLog() {
+    const modal = document.getElementById('errorLogModal');
+    if (!modal) { initErrorLog(); }
+    const m = document.getElementById('errorLogModal');
+    if (!m) return;
+    m.style.display = 'flex';
+    _renderErrorLog();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Inicializar todas las mejoras al cargar el DOM ────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+
+(function _initMejoras() {
+    function _run() {
+        initBusquedaGlobal();
+        initModoCompacto();
+        initErrorLog();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _run);
+    } else {
+        _run();
+    }
+})();
 
 // ── FM-06: confirmarResetTotal — movido de script inline en index.html ────
 function confirmarResetTotal() {

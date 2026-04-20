@@ -37,11 +37,211 @@ function _sortArrow(col) {
     return `<span style="font-size:.65rem;color:#C5A572">${_clientesSortDir === 'asc' ? '↑' : '↓'}</span>`;
 }
 
+// ── MEJORA 1: Stats del cliente ───────────────────────────────────────────────
+function _calcClienteStats(clienteNombreOrId) {
+    const todos = [...(window.pedidos || []), ...(window.pedidosFinalizados || [])];
+    const normQ = String(clienteNombreOrId || '').toLowerCase().trim();
+
+    // Todos los pedidos del cliente (activos + finalizados)
+    const pedidosCliente = todos.filter(p => {
+        const nombre = (p.cliente || '').toLowerCase().trim();
+        return nombre === normQ || String(p.clienteId || '') === normQ;
+    });
+
+    // Solo finalizados para dinero
+    const finalizados = (window.pedidosFinalizados || []).filter(p => {
+        const nombre = (p.cliente || '').toLowerCase().trim();
+        return nombre === normQ || String(p.clienteId || '') === normQ;
+    });
+
+    const totalPedidos = pedidosCliente.length;
+    const totalGastado = finalizados.reduce((s, p) => s + (Number(p.total) || 0), 0);
+    const ticketPromedio = finalizados.length > 0 ? totalGastado / finalizados.length : 0;
+
+    const fechas = pedidosCliente
+        .map(p => p.fechaPedido)
+        .filter(Boolean)
+        .sort()
+        .reverse();
+    const ultimoPedido = fechas[0] || null;
+
+    return { totalPedidos, totalGastado, ticketPromedio, ultimoPedido };
+}
+window._calcClienteStats = _calcClienteStats;
+
+// ── MEJORA 2: Tags de actividad automáticos ───────────────────────────────────
+const _tagStyles = {
+    'nuevo':    'background:#dbeafe;color:#1e40af',
+    'activo':   'background:#dcfce7;color:#15803d',
+    'en-riesgo':'background:#fed7aa;color:#c2410c',
+    'inactivo': 'background:#fee2e2;color:#dc2626'
+};
+
+function _tagActividad(cliente) {
+    const stats = _calcClienteStats(cliente.nombre || cliente.name || '');
+
+    if (!stats.ultimoPedido) {
+        return { label: 'Nuevo', color: _tagStyles['nuevo'], clase: 'nuevo' };
+    }
+
+    const hoy = new Date();
+    const ultimo = new Date(stats.ultimoPedido);
+    const diffDias = Math.floor((hoy - ultimo) / (1000 * 60 * 60 * 24));
+
+    if (diffDias <= 60) {
+        return { label: 'Activo', color: _tagStyles['activo'], clase: 'activo' };
+    } else if (diffDias <= 120) {
+        return { label: 'En riesgo', color: _tagStyles['en-riesgo'], clase: 'en-riesgo' };
+    } else {
+        return { label: 'Inactivo', color: _tagStyles['inactivo'], clase: 'inactivo' };
+    }
+}
+window._tagActividad = _tagActividad;
+
+// ── MEJORA 3: Botón WhatsApp ──────────────────────────────────────────────────
+function _abrirWhatsApp(telefono) {
+    let num = String(telefono || '').replace(/[\s\-\(\)]/g, '');
+    let url;
+    if (num.startsWith('+') || num.startsWith('52')) {
+        url = `https://wa.me/${num.replace('+', '')}`;
+    } else {
+        url = `https://wa.me/521${num}`;
+    }
+    if (window.electron?.shell?.openExternal) {
+        window.electron.shell.openExternal(url);
+    } else {
+        window.open(url, '_blank');
+    }
+}
+window._abrirWhatsApp = _abrirWhatsApp;
+
+// ── MEJORA 5: Historial de pedidos en ficha del cliente ───────────────────────
+function renderHistorialClienteModal(clienteNombre) {
+    const normQ = String(clienteNombre || '').toLowerCase().trim();
+    const todos = [...(window.pedidos || []), ...(window.pedidosFinalizados || [])];
+
+    const pedidosCliente = todos.filter(p => {
+        const nombre = (p.cliente || '').toLowerCase().trim();
+        return nombre === normQ;
+    });
+
+    // Ordenar por fecha desc, tomar 8 últimos
+    const ultimos = pedidosCliente
+        .slice()
+        .sort((a, b) => (b.fechaPedido || '').localeCompare(a.fechaPedido || ''))
+        .slice(0, 8);
+
+    if (ultimos.length === 0) {
+        return '<p class="text-gray-400 text-center py-4 text-sm">Sin pedidos registrados</p>';
+    }
+
+    const statusEmoji = s => {
+        const st = (s || '').toLowerCase();
+        if (st === 'entregado' || st === 'finalizado') return '✅';
+        if (st === 'cancelado') return '❌';
+        if (st === 'en proceso' || st === 'produccion' || st === 'producción') return '🔄';
+        if (st === 'pendiente') return '⏳';
+        if (st === 'listo') return '📦';
+        return '🔵';
+    };
+
+    const filas = ultimos.map(p => {
+        const saldo = typeof window.calcSaldoPendiente === 'function'
+            ? window.calcSaldoPendiente(p)
+            : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
+        const saldoHtml = saldo > 0
+            ? `<span style="color:#dc2626">$${saldo.toFixed(2)}</span>`
+            : `<span style="color:#15803d">Pagado ✓</span>`;
+        return `<tr style="border-bottom:1px solid #f3f4f6">
+            <td style="padding:6px 8px;font-size:.75rem;font-weight:600;color:#374151">${_esc(p.folio || '—')}</td>
+            <td style="padding:6px 8px;font-size:.75rem;color:#6b7280">${p.fechaPedido || '—'}</td>
+            <td style="padding:6px 8px;font-size:.75rem;font-weight:600;color:#111827">$${Number(p.total || 0).toFixed(2)}</td>
+            <td style="padding:6px 8px;font-size:.75rem">${saldoHtml}</td>
+            <td style="padding:6px 8px;font-size:.75rem">${statusEmoji(p.status)} ${_esc(p.status || '—')}</td>
+        </tr>`;
+    }).join('');
+
+    return `<table style="width:100%;border-collapse:collapse">
+        <thead>
+            <tr style="background:#f9fafb">
+                <th style="padding:6px 8px;font-size:.7rem;font-weight:700;color:#6b7280;text-align:left">Folio</th>
+                <th style="padding:6px 8px;font-size:.7rem;font-weight:700;color:#6b7280;text-align:left">Fecha</th>
+                <th style="padding:6px 8px;font-size:.7rem;font-weight:700;color:#6b7280;text-align:left">Total</th>
+                <th style="padding:6px 8px;font-size:.7rem;font-weight:700;color:#6b7280;text-align:left">Saldo</th>
+                <th style="padding:6px 8px;font-size:.7rem;font-weight:700;color:#6b7280;text-align:left">Status</th>
+            </tr>
+        </thead>
+        <tbody>${filas}</tbody>
+    </table>`;
+}
+window.renderHistorialClienteModal = renderHistorialClienteModal;
+
+// ── MEJORA 6: Estado activo de filtro de actividad ────────────────────────────
+window._clienteFiltroTag = '';
+
+// ── Helper: obtener clientes a renderizar según filtro activo ─────────────────
+function _clientesFiltrados() {
+    const tag = window._clienteFiltroTag || '';
+    if (!tag) return [...clients];
+    return clients.filter(c => {
+        const t = _tagActividad(c);
+        return t.clase === tag;
+    });
+}
+
+// ── MEJORA 6: Render de botones de filtro de actividad ────────────────────────
+function _renderFiltrosActividad() {
+    const searchWrap = document.getElementById('searchClient')?.parentElement?.parentElement;
+    if (!searchWrap) return;
+
+    // No duplicar
+    if (document.getElementById('_mkFiltrosActividad')) return;
+
+    const filtros = [
+        { tag: '',         label: 'Todos',     bg: '#f3f4f6', color: '#374151' },
+        { tag: 'activo',   label: 'Activos',   bg: '#dcfce7', color: '#15803d' },
+        { tag: 'en-riesgo',label: 'En riesgo', bg: '#fed7aa', color: '#c2410c' },
+        { tag: 'inactivo', label: 'Inactivos', bg: '#fee2e2', color: '#dc2626' },
+        { tag: 'nuevo',    label: 'Nuevos',    bg: '#dbeafe', color: '#1e40af' },
+    ];
+
+    const wrapper = document.createElement('div');
+    wrapper.id = '_mkFiltrosActividad';
+    wrapper.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;padding:12px 24px 0;';
+
+    filtros.forEach(f => {
+        const btn = document.createElement('button');
+        btn.dataset.filtroTag = f.tag;
+        btn.textContent = f.label;
+        const isActive = (window._clienteFiltroTag || '') === f.tag;
+        btn.style.cssText = `padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:2px solid ${isActive ? f.color : 'transparent'};background:${f.bg};color:${f.color};transition:border .15s;`;
+        btn.onclick = () => {
+            window._clienteFiltroTag = f.tag;
+            // Actualizar estilos activos
+            wrapper.querySelectorAll('button').forEach(b => {
+                const bf = filtros.find(x => x.tag === b.dataset.filtroTag);
+                if (!bf) return;
+                const activo = b.dataset.filtroTag === f.tag;
+                b.style.border = `2px solid ${activo ? bf.color : 'transparent'}`;
+            });
+            renderClientsTable();
+        };
+        wrapper.appendChild(btn);
+    });
+
+    // Insertar antes del div del buscador
+    searchWrap.parentElement.insertBefore(wrapper, searchWrap);
+}
+
 // ============== CLIENTS MODULE ==============
-        
+
         function renderClientsTable() {
+            // MEJORA 6: inicializar filtros si no existen
+            _renderFiltrosActividad();
+
             const tbody = document.getElementById('clientsTable');
-            
+            const listaClientes = _clientesFiltrados();
+
             if (clients.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7">
   <div class="mk-empty">
@@ -55,6 +255,12 @@ function _sortArrow(col) {
     </div>
   </div>
 </td></tr>`;
+                updateClientStats();
+                return;
+            }
+
+            if (listaClientes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7"><p style="text-align:center;padding:32px;color:#9ca3af;font-size:.9rem">Sin clientes con ese filtro</p></td></tr>`;
                 updateClientStats();
                 return;
             }
@@ -76,18 +282,31 @@ function _sortArrow(col) {
                     : `<th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">${c.label}</th>`
                 ).join('');
             }
-            
+
             // NTH-12: colores de avatar por inicial
             const _avatarColors = ['#C5A572','#7C3AED','#0891B2','#16A34A','#DC2626','#D97706','#9333EA','#0284C7','#059669','#E11D48'];
             function _avatarColor(name) {
                 const c = (name||'A').toUpperCase().charCodeAt(0) - 65;
                 return _avatarColors[((c % _avatarColors.length) + _avatarColors.length) % _avatarColors.length];
             }
-            tbody.innerHTML = _getSortedClients().map((client, rowIndex) => {
+
+            // Aplicar ordenamiento a la lista filtrada
+            const col = _clientesSortCol;
+            const dir = _clientesSortDir === 'asc' ? 1 : -1;
+            const listaOrdenada = [...listaClientes].sort((a, b) => {
+                let va, vb;
+                if (col === 'totalPurchases') { va = Number(a.totalPurchases||0); vb = Number(b.totalPurchases||0); return dir * (va - vb); }
+                if (col === 'lastPurchase')   { va = a.lastPurchase||''; vb = b.lastPurchase||''; return dir * va.localeCompare(vb); }
+                va = (a.name||'').toLowerCase(); vb = (b.name||'').toLowerCase();
+                return dir * va.localeCompare(vb);
+            });
+
+            tbody.innerHTML = listaOrdenada.map((client, rowIndex) => {
                 const esVIP = client.isVIP || client.type === 'vip';
                 // NTH-12: inicial coloreada
                 const inicial = (client.name || '?').trim().charAt(0).toUpperCase();
                 const avatarColor = _avatarColor(client.name);
+
                 // NTH-11: snippet de nota más reciente vinculada a este cliente
                 const notasCliente = (window.notas || []).filter(n =>
                     n.cliente && n.cliente.toLowerCase() === (client.name||'').toLowerCase()
@@ -95,6 +314,30 @@ function _sortArrow(col) {
                 const snippetNota = notasCliente.length > 0
                     ? `<div class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]" title="${_escAttr(notasCliente[0].texto)}">📝 ${_esc((notasCliente[0].texto||'').substring(0,40))}${(notasCliente[0].texto||'').length>40?'…':''}</div>`
                     : '';
+
+                // MEJORA 4: notas del cliente en la tarjeta
+                const notasClienteSnippet = client.notas
+                    ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? '…' : ''}</div>`
+                    : '';
+
+                // MEJORA 1: stats del cliente
+                const stats = _calcClienteStats(client.nombre || client.name || '');
+                const statsHtml = `<div style="font-size:.7rem;color:#6b7280;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+                    <span title="Total pedidos">📦 ${stats.totalPedidos}</span>
+                    <span title="Total gastado">💰 $${stats.totalGastado.toFixed(0)}</span>
+                    <span title="Ticket promedio">🎯 $${stats.ticketPromedio.toFixed(0)}</span>
+                    ${stats.ultimoPedido ? `<span title="Último pedido">🕐 ${stats.ultimoPedido}</span>` : ''}
+                </div>`;
+
+                // MEJORA 2: tag de actividad
+                const tag = _tagActividad(client);
+                const tagBadge = `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:.68rem;font-weight:700;${tag.color}">${tag.label}</span>`;
+
+                // MEJORA 3: botón WhatsApp
+                const waBtn = client.phone
+                    ? `<button onclick="_abrirWhatsApp('${_escAttr(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer" title="Abrir WhatsApp">📱 WhatsApp</button>`
+                    : '';
+
                 return `
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">
@@ -103,13 +346,21 @@ function _sortArrow(col) {
                                 ${inicial}
                             </div>
                             <div>
-                                <span class="font-semibold text-gray-800">${_esc(client.name)}</span>
+                                <div style="display:flex;align-items:center;gap:6px">
+                                    <span class="font-semibold text-gray-800">${_esc(client.name)}</span>
+                                    ${tagBadge}
+                                </div>
                                 ${snippetNota}
+                                ${notasClienteSnippet}
+                                ${statsHtml}
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-gray-600">
-    ${client.phone ? `<a href="https://wa.me/52${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>` : ''}
+    ${client.phone ? `<div style="display:flex;flex-direction:column;gap:4px">
+        <a href="https://wa.me/52${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
+        ${waBtn}
+    </div>` : ''}
 ${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(client.facebook) : 'https://'+_esc(client.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ''}
 ${!client.phone && !client.facebook ? '—' : ''}
 </td>
@@ -137,14 +388,14 @@ ${!client.phone && !client.facebook ? '—' : ''}
 
             updateClientStats();
         }
-        
+
         function updateClientStats() {
             document.getElementById('totalClients').textContent = clients.length;
             document.getElementById('vipClients').textContent = clients.filter(c => c.isVIP || c.type === 'vip').length;
             const totalPurchases = clients.reduce((sum, c) => sum + (Number(c.totalPurchases)||0), 0);
             document.getElementById('totalPurchases').textContent = `$${totalPurchases.toFixed(2)}`;
         }
-        
+
         let selectedClientType = 'regular';
 
 function selectClientType(type) {
@@ -186,6 +437,8 @@ function closeAddClientModal() {
     const facebook = document.getElementById('clientFacebook').value.trim();
     const email = document.getElementById('clientEmail').value.trim();
     const type = document.getElementById('clientType').value || 'regular';
+    // MEJORA 4: leer notas del cliente
+    const notas = (document.getElementById('clientNotas')?.value || '').trim();
 
     if (editId) {
         // ── EDITAR ──
@@ -197,7 +450,7 @@ function closeAddClientModal() {
             client.email = email;
             client.type = type;
             client.isVIP = type === 'vip'; // keep both fields in sync
-            client.notas = document.getElementById('clientNotas').value.trim();
+            client.notas = notas;
         }
     } else {
         // ── CREAR ──
@@ -213,8 +466,8 @@ function closeAddClientModal() {
             email,
             type,
             isVIP: type === 'vip', // keep both fields in sync
-                    notas: document.getElementById('clientNotas').value.trim(),
-                    totalPurchases: 0,
+            notas,
+            totalPurchases: 0,
             lastPurchase: null // BA-05 FIX: null para clientes nuevos sin compras aún
         };
         // FIX M2: detectar posibles duplicados antes de guardar
@@ -243,7 +496,7 @@ function closeAddClientModal() {
     renderClientsTable();
     updateDashboard();
 });
-        
+
         function editClient(clientId) {
     // BUG-CLI-01 FIX: usar String() para comparar — clientId puede llegar como string desde HTML
     // pero c.id puede ser número si vino de datos legacy, causando c.id===clientId siempre false.
@@ -256,11 +509,14 @@ function closeAddClientModal() {
     document.getElementById('clientPhone').value = client.phone || '';
     document.getElementById('clientFacebook').value = client.facebook || '';
     document.getElementById('clientEmail').value = client.email || '';
-    document.getElementById('clientNotas').value = client.notas || '';
+    // MEJORA 4: cargar notas en el formulario
+    if (document.getElementById('clientNotas')) {
+        document.getElementById('clientNotas').value = client.notas || '';
+    }
     selectClientType(client.type || 'regular');
     openModal('addClientModal');
 }
-        
+
         function deleteClient(id) {
             const c = clients.find(x => String(x.id) === String(id));
 
@@ -287,7 +543,7 @@ function closeAddClientModal() {
                 if (typeof updateDashboard === 'function') updateDashboard();
             });
         }
-        
+
         function setupClientSearch() {
             // BUG #7 FIX: c.email.toLowerCase() y c.phone.includes() crashean si el campo
             // es undefined (campos opcionales). Usar optional chaining y coalescencia nula.
@@ -297,15 +553,34 @@ function closeAddClientModal() {
                 // BUG-CLI-01 FIX: normalizar acentos en búsqueda de clientes
                 const _normC = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
                 const q = _normC(e.target.value || '');
-                const filteredClients = clients.filter(c =>
+                // Aplicar filtro de tag activo también en la búsqueda
+                const baseList = _clientesFiltrados();
+                const filteredClients = baseList.filter(c =>
                     _normC(c.name).includes(q) ||
                     _normC(c.email || '').includes(q) ||
                     (c.phone || c.telefono || '').includes(q)
                 );
-                
+
                 const tbody = document.getElementById('clientsTable');
+
+                if (filteredClients.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7"><p style="text-align:center;padding:32px;color:#9ca3af;font-size:.9rem">Sin resultados</p></td></tr>`;
+                    return;
+                }
+
                 tbody.innerHTML = filteredClients.map(client => {
                     const esVIP = client.isVIP || client.type === 'vip';
+                    // MEJORA 2: tag actividad en búsqueda
+                    const tag = _tagActividad(client);
+                    const tagBadge = `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:.68rem;font-weight:700;${tag.color}">${tag.label}</span>`;
+                    // MEJORA 4: notas en búsqueda
+                    const notasSnippet = client.notas
+                        ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? '…' : ''}</div>`
+                        : '';
+                    // MEJORA 3: WhatsApp en búsqueda
+                    const waBtn = client.phone
+                        ? `<button onclick="_abrirWhatsApp('${_escAttr(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;margin-top:4px">📱 WhatsApp</button>`
+                        : '';
                     return `
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
@@ -313,11 +588,20 @@ function closeAddClientModal() {
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(197,151,59,0.18) !important;">
                                     <i class="fas fa-user" style="color: #C5A572 !important;"></i>
                                 </div>
-                                <span class="font-semibold text-gray-800">${_esc(client.name)}</span>
+                                <div>
+                                    <div style="display:flex;align-items:center;gap:6px">
+                                        <span class="font-semibold text-gray-800">${_esc(client.name)}</span>
+                                        ${tagBadge}
+                                    </div>
+                                    ${notasSnippet}
+                                </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-gray-600">
-    ${client.phone ? `<a href="https://wa.me/52${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>` : ''}
+    ${client.phone ? `<div style="display:flex;flex-direction:column;gap:2px">
+        <a href="https://wa.me/52${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
+        ${waBtn}
+    </div>` : ''}
 ${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(client.facebook) : 'https://'+_esc(client.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ''}
 ${!client.phone && !client.facebook ? '—' : ''}
 </td>

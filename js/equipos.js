@@ -28,6 +28,11 @@ function openEquipoModal(id) {
     const search = document.getElementById('equipoEmojiSearch');
     if (search) search.value = '';
 
+    // MEJ-4: campo metaMensual — crear dinámicamente si no existe en el modal
+    _ensureMetaMensualField();
+    const metaMensualInput = document.getElementById('equipoMetaMensual');
+    if (metaMensualInput) metaMensualInput.value = '';
+
     if (id) {
         const eq = equipos.find(e => e.id === id);
         if (eq) {
@@ -37,11 +42,27 @@ function openEquipoModal(id) {
             if (display) display.textContent = eq.emoji || '🔧';
             document.getElementById('equipoCostoOriginal').value = eq.costoOriginal;
             document.getElementById('equipoMetaReemplazo').value = eq.metaReemplazo;
+            if (metaMensualInput) metaMensualInput.value = eq.metaMensual || '';
             document.getElementById('equipoModalTitle').textContent = 'Editar Equipo';
         }
     }
     openModal(modal);
     setTimeout(() => renderEquipoEmojiGrid(), 50);
+}
+
+// Crea el campo metaMensual en el modal si no existe aún
+function _ensureMetaMensualField() {
+    if (document.getElementById('equipoMetaMensual')) return;
+    // Buscar el contenedor de los campos numéricos (grid de 2 cols) para agregar el campo después
+    const gridCols = document.querySelector('#equipoModal .grid.grid-cols-2');
+    if (!gridCols) return;
+    const div = document.createElement('div');
+    div.style.marginTop = '4px';
+    div.innerHTML = `<label class="block text-sm font-semibold text-gray-600 mb-1" for="equipoMetaMensual">Meta mensual ($)</label>
+        <input type="number" id="equipoMetaMensual" placeholder="Ej: 5000" min="0"
+               class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-400 focus:outline-none">
+        <p class="text-xs text-gray-400 mt-1">Cuánto quieres recuperar por mes con este equipo</p>`;
+    gridCols.insertAdjacentElement('afterend', div);
 }
 function closeEquipoModal() { closeModal('equipoModal'); }
 
@@ -50,6 +71,8 @@ function saveEquipo() {
     const emoji = document.getElementById('equipoEmoji').value.trim() || '🔧';
     const costoOriginal = parseFloat(document.getElementById('equipoCostoOriginal').value) || 0;
     const metaReemplazo = parseFloat(document.getElementById('equipoMetaReemplazo').value) || costoOriginal;
+    // MEJ-4: leer metaMensual (campo creado dinámicamente)
+    const metaMensual = parseFloat(document.getElementById('equipoMetaMensual')?.value) || 0;
     if (!nombre) { manekiToastExport('⚠️ Ingresa el nombre del equipo', 'warn'); return; }
     if (!costoOriginal) { manekiToastExport('⚠️ Ingresa el costo original del equipo', 'warn'); return; }
 
@@ -57,11 +80,16 @@ function saveEquipo() {
     if (editId) {
         const idx = equipos.findIndex(e => String(e.id) === String(editId));
         if (idx !== -1) {
-            equipos[idx] = { ...equipos[idx], nombre, emoji, costoOriginal, metaReemplazo };
+            equipos[idx] = { ...equipos[idx], nombre, emoji, costoOriginal, metaReemplazo, metaMensual };
         }
         manekiToastExport('✅ Equipo actualizado', 'ok');
     } else {
-        equipos.push({ id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())), nombre, emoji, costoOriginal, metaReemplazo, recuperado: 0 });
+        equipos.push({
+            id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+            nombre, emoji, costoOriginal, metaReemplazo, metaMensual,
+            recuperado: 0,
+            historialPagos: []  // MEJ-5: historial de pagos
+        });
         manekiToastExport('✅ Equipo agregado', 'ok');
     }
     saveEquipos();
@@ -94,6 +122,9 @@ function renderEquiposGrid() {
         return;
     }
     grid.innerHTML = equipos.map(eq => {
+        // Migrar: asegurar que historialPagos exista
+        if (!eq.historialPagos) eq.historialPagos = [];
+
         const pctRecuperado = eq.costoOriginal > 0 ? Math.min(100, (eq.recuperado / eq.costoOriginal) * 100) : 0;
         const pctMeta = eq.metaReemplazo > 0 ? Math.min(100, (eq.recuperado / eq.metaReemplazo) * 100) : 0;
         const faltaInversion = Math.max(0, eq.costoOriginal - eq.recuperado);
@@ -102,6 +133,44 @@ function renderEquiposGrid() {
 
         const barColorInv = invertida ? '#10B981' : '#C5A572';
         const barColorMeta = pctMeta >= 100 ? '#10B981' : '#8B5CF6';
+
+        // MEJ-4: barra de progreso metaMensual
+        // Calcular recuperado este mes (suma de pagos del mes actual en historialPagos)
+        const mesActual = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+        const recuperadoMes = (eq.historialPagos || [])
+            .filter(h => h.fecha && h.fecha.startsWith(mesActual))
+            .reduce((s, h) => s + Number(h.monto || 0), 0);
+        const metaMensual = Number(eq.metaMensual) || 0;
+        let metaMensualHTML = '';
+        if (metaMensual > 0) {
+            const pctMensual = Math.min(100, (recuperadoMes / metaMensual) * 100);
+            const barColorMensual = pctMensual < 50 ? '#ef4444' : pctMensual < 80 ? '#f59e0b' : '#10b981';
+            metaMensualHTML = `
+            <!-- MEJ-4: Meta mensual -->
+            <div class="mb-3" style="padding-top:8px;border-top:1px solid #f3f4f6;">
+                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>📅 Meta mensual</span>
+                    <span class="font-semibold" style="color:${barColorMensual}">${pctMensual.toFixed(1)}%</span>
+                </div>
+                <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500" style="width:${pctMensual}%;background:${barColorMensual};"></div>
+                </div>
+                <p class="text-xs mt-1" style="color:${barColorMensual};">Meta: $${metaMensual.toLocaleString('es-MX')} | Recuperado: $${recuperadoMes.toLocaleString('es-MX')} (${pctMensual.toFixed(0)}%)</p>
+            </div>`;
+        }
+
+        // MEJ-5: lista de últimos 5 pagos del historial
+        const ultimos5 = [...(eq.historialPagos || [])].reverse().slice(0, 5);
+        const pagosHTML = ultimos5.length === 0
+            ? '<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px 0;">Sin pagos registrados aún</p>'
+            : ultimos5.map(h => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f9fafb;font-size:.72rem;">
+                    <div>
+                        <span style="color:#374151;font-weight:600;">$${Number(h.monto||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+                        ${h.concepto ? `<span style="color:#9ca3af;margin-left:6px;">${_esc(h.concepto)}</span>` : ''}
+                    </div>
+                    <span style="color:#9ca3af;">${h.fecha||''}</span>
+                </div>`).join('');
 
         return `<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start mb-4">
@@ -144,9 +213,46 @@ function renderEquiposGrid() {
                 </div>
                 <p class="text-xs mt-1 text-right" style="color:${barColorMeta}">${faltaMeta > 0 ? 'Falta $' + faltaMeta.toLocaleString('es-MX') + ' para equipo nuevo' : '✅ ¡Ya puedes comprar equipo nuevo!'}</p>
             </div>
+
+            ${metaMensualHTML}
+
+            <!-- MEJ-5: botón Ver pagos + historial -->
+            <div style="margin-top:10px;border-top:1px solid #f3f4f6;padding-top:8px;">
+                <button onclick="_togglePagosEquipo('${eq.id}')"
+                        style="font-size:.72rem;color:#6b7280;background:none;border:1px solid #e5e7eb;border-radius:8px;padding:3px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                    📋 Ver pagos <span id="pagosCount_${eq.id}" style="background:#f3f4f6;border-radius:99px;padding:1px 6px;">${eq.historialPagos.length}</span>
+                </button>
+                <div id="pagosHistorial_${eq.id}" style="display:none;margin-top:8px;">${pagosHTML}</div>
+            </div>
         </div>`;
     }).join('');
 }
+
+// MEJ-5: toggle visibilidad del historial de pagos de un equipo
+function _togglePagosEquipo(eqId) {
+    const div = document.getElementById('pagosHistorial_' + eqId);
+    if (!div) return;
+    div.style.display = div.style.display === 'none' ? 'block' : 'none';
+}
+window._togglePagosEquipo = _togglePagosEquipo;
+
+// MEJ-5: registrar un pago en el historial de un equipo
+// Llamar desde confirmarRoiEquipos y confirmarRoiManual para mantener el historial
+function _registrarPagoEquipo(eqId, monto, concepto) {
+    const idx = equipos.findIndex(e => e.id === eqId);
+    if (idx === -1) return;
+    if (!equipos[idx].historialPagos) equipos[idx].historialPagos = [];
+    const fecha = (typeof window._fechaHoy === 'function') ? window._fechaHoy()
+        : new Date().toISOString().split('T')[0];
+    equipos[idx].historialPagos.push({
+        id: Date.now(),
+        fecha,
+        monto: Number(monto) || 0,
+        concepto: concepto || '',
+        tipo: 'pago'
+    });
+}
+window._registrarPagoEquipo = _registrarPagoEquipo;
 
 function renderRoiHistorial() {
     const tbody = document.getElementById('roiHistorialBody');
@@ -198,8 +304,27 @@ function abrirRoiEquiposModal(pedido) {
         </label>
     `).join('');
 
+    // MEJ-5: inyectar campo "Concepto del pago" si no existe
+    _ensureRoiConceptoField();
+    const roiConceptoEl = document.getElementById('roiConceptoPago');
+    if (roiConceptoEl) roiConceptoEl.value = `ROI pedido ${pedido.folio || ''}`.trim();
+
     actualizarCalculoRoi();
     openModal('roiEquiposModal');
+}
+
+// Inyecta campo concepto en el modal ROI si no existe
+function _ensureRoiConceptoField() {
+    if (document.getElementById('roiConceptoPago')) return;
+    const lista = document.getElementById('roiEquiposLista');
+    if (!lista) return;
+    const div = document.createElement('div');
+    div.style.marginBottom = '12px';
+    div.innerHTML = `<label style="font-size:.78rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Concepto del pago (opcional)</label>
+        <input type="text" id="roiConceptoPago" placeholder="Ej: ROI pedido MAN-045"
+               style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;box-sizing:border-box;"
+               onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">`;
+    lista.insertAdjacentElement('afterend', div);
 }
 
 function cerrarRoiEquiposModal() {
@@ -269,11 +394,14 @@ function confirmarRoiEquipos() {
     const porEquipo = totalRoi / checks.length;
     const equiposIds = checks.map(ch => ch.value); // IDs son UUID strings, no números
 
-    // Add to each equipment's recuperado
+    // MEJ-5: leer concepto del campo inyectado en el modal
+    const conceptoPago = document.getElementById('roiConceptoPago')?.value.trim() || `ROI pedido ${pedido.folio || ''}`.trim();
     equiposIds.forEach(id => {
         const idx = equipos.findIndex(e => e.id === id);
         if (idx !== -1) {
             equipos[idx].recuperado = (equipos[idx].recuperado || 0) + porEquipo;
+            // MEJ-5: registrar pago en historial del equipo
+            _registrarPagoEquipo(id, porEquipo, conceptoPago);
         }
     });
     saveEquipos();
@@ -350,7 +478,11 @@ function confirmarRoiManual() {
 
     equiposIds.forEach(id => {
         const idx = equipos.findIndex(e => e.id === id);
-        if (idx !== -1) equipos[idx].recuperado = (equipos[idx].recuperado || 0) + porEquipo;
+        if (idx !== -1) {
+            equipos[idx].recuperado = (equipos[idx].recuperado || 0) + porEquipo;
+            // MEJ-5: registrar pago en historial del equipo
+            _registrarPagoEquipo(id, porEquipo, concepto);
+        }
     });
     saveEquipos();
 

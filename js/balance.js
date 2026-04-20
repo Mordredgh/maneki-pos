@@ -25,6 +25,19 @@ const _escBal = (s) => {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 };
 
+// MEJORA-3: Etiquetas de movimientos — definidas temprano para uso en renders
+const _ETIQUETAS = [
+    { valor: 'produccion',  label: 'Producción',  color: '#7c3aed', bg: '#ede9fe' },
+    { valor: 'marketing',   label: 'Marketing',   color: '#db2777', bg: '#fce7f3' },
+    { valor: 'envios',      label: 'Envíos',      color: '#0284c7', bg: '#e0f2fe' },
+    { valor: 'servicios',   label: 'Servicios',   color: '#0f766e', bg: '#ccfbf1' },
+    { valor: 'materiales',  label: 'Materiales',  color: '#b45309', bg: '#fef3c7' },
+    { valor: 'ventas',      label: 'Ventas',      color: '#16a34a', bg: '#dcfce7' },
+    { valor: 'nomina',      label: 'Nómina',      color: '#dc2626', bg: '#fee2e2' },
+    { valor: 'otro',        label: 'Otro',        color: '#6b7280', bg: '#f3f4f6' },
+];
+window._ETIQUETAS = _ETIQUETAS;
+
 let _balanceMesOffset = 0;
 
 function cambiarMesBalance(dir) {
@@ -84,8 +97,12 @@ function renderBalanceMensual() {
 
     // NTH-13: Gráfica de categorías de gastos
     _renderGraficaCategorias(gastosMes, mesStr);
-    // NTH-14: Botón exportar balance
-    _renderExportarBalanceBtn(mesStr, label, totalVentas, totalPedidos, totalGastos, neto, gastosMes);
+    // NTH-14: Botón exportar balance (CSV mejorado)
+    _renderExportarBalanceBtn(mesStr);
+    // MEJORA-4: Utilidad neta prominente
+    _renderUtilidadNeta(totalVentas + totalPedidos, totalGastos);
+    // MEJORA-1: Proyección de cashflow
+    renderProyeccionCashflow();
 }
 
 // NTH-13: Gráfica de categorías de gastos ─────────────────────────────────
@@ -138,8 +155,8 @@ function _renderGraficaCategorias(gastosMes, mesStr) {
 
 window._GASTO_CATEGORIAS = _GASTO_CATEGORIAS;
 
-// NTH-14: Botón exportar balance ──────────────────────────────────────────
-function _renderExportarBalanceBtn(mesStr, label, totalVentas, totalPedidos, totalGastos, neto, gastosMes) {
+// MEJORA-5: Botón exportar CSV mejorado ──────────────────────────────────────────
+function _renderExportarBalanceBtn(mesStr) {
     let btn = document.getElementById('btnExportarBalance');
     if (!btn) {
         const labelEl = document.getElementById('balanceMesLabel');
@@ -147,46 +164,34 @@ function _renderExportarBalanceBtn(mesStr, label, totalVentas, totalPedidos, tot
         btn = document.createElement('button');
         btn.id = 'btnExportarBalance';
         btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors';
-        btn.innerHTML = '📥 Exportar Excel';
+        btn.innerHTML = '📥 Exportar mes';
         labelEl.parentElement.appendChild(btn);
     }
-    btn.onclick = () => exportarBalanceMes(mesStr, label, totalVentas, totalPedidos, totalGastos, neto, gastosMes);
+    btn.onclick = () => exportarBalanceMesCSV(mesStr);
 }
 
-function exportarBalanceMes(mesStr, label, totalVentas, totalPedidos, totalGastos, neto, gastosMes) {
-    if (typeof XLSX === 'undefined') { manekiToastExport('⚠️ La librería de Excel no está disponible. Recarga la app e intenta de nuevo.', 'err'); return; }
-    const hoy = (()=>{ const d=new Date(); return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; })();
-    try {
-        const wb = XLSX.utils.book_new();
-        // Hoja 1: Resumen
-        const resumen = [
-            ['Reporte de Balance', label],
-            [],
-            ['Concepto', 'Monto ($)'],
-            ['Ventas POS', totalVentas.toFixed(2)],
-            ['Pedidos finalizados', totalPedidos.toFixed(2)],
-            ['Total ingresos', (totalVentas + totalPedidos).toFixed(2)],
-            ['Total gastos', totalGastos.toFixed(2)],
-            ['Neto', neto.toFixed(2)],
-        ];
-        const wsRes = XLSX.utils.aoa_to_sheet(resumen);
-        wsRes['!cols'] = [{ wch: 28 }, { wch: 16 }];
-        XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
-        // Hoja 2: Detalle de gastos con categoría
-        const filas = [['Fecha', 'Concepto', 'Categoría', 'Monto ($)']];
-        gastosMes.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(e => {
-            filas.push([e.date||'', e.concept||'', e.categoria||'Sin categoría', Number(e.amount||0).toFixed(2)]);
-        });
-        const wsGastos = XLSX.utils.aoa_to_sheet(filas);
-        wsGastos['!cols'] = [{ wch:14 },{ wch:32 },{ wch:18 },{ wch:14 }];
-        XLSX.utils.book_append_sheet(wb, wsGastos, 'Gastos');
-        XLSX.writeFile(wb, `Balance_${mesStr}_${hoy}.xlsx`);
-        manekiToastExport(`✅ Balance de ${label} exportado`, 'ok');
-    } catch(err) {
-        manekiToastExport('❌ Error al exportar: ' + (err.message||''), 'err');
-    }
+function exportarBalanceMesCSV(mesStr) {
+    // Reunir movimientos del mes: ingresos + egresos
+    const filas = [['Fecha', 'Tipo', 'Concepto', 'Monto', 'Etiqueta', 'Recurrente']];
+    const ingMes = (window.incomes||[]).filter(i => (i.date||'').startsWith(mesStr));
+    const expMes = (window.expenses||[]).filter(e => (e.date||'').startsWith(mesStr) && !e.fromPayable);
+    const todos = [
+        ...ingMes.map(i => ({ fecha: i.date||'', tipo: 'ingreso', concepto: i.concept||'', monto: Number(i.amount||0), etiqueta: i.etiqueta||'', recurrente: i.recurrente ? 'sí' : 'no' })),
+        ...expMes.map(e => ({ fecha: e.date||'', tipo: 'gasto', concepto: e.concept||'', monto: Number(e.amount||0), etiqueta: e.etiqueta||'', recurrente: (e.recurrente||e.recurrenteAuto) ? 'sí' : 'no' }))
+    ].sort((a,b) => a.fecha.localeCompare(b.fecha));
+    todos.forEach(r => filas.push([r.fecha, r.tipo, r.concepto, r.monto.toFixed(2), r.etiqueta, r.recurrente]));
+    // Generar CSV
+    const csv = filas.map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `balance_${mesStr}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    manekiToastExport(`✅ CSV balance_${mesStr}.csv descargado`, 'ok');
 }
-window.exportarBalanceMes = exportarBalanceMes;
+window.exportarBalanceMesCSV = exportarBalanceMesCSV;
 function toggleMovimientos() {
     const panel = document.getElementById('movimientosPanel');
     panel.classList.toggle('hidden');
@@ -322,6 +327,7 @@ function eliminarRecurrente(idx) {
 }
         function renderBalance() {
             procesarGastosRecurrentes();
+            procesarIngresosRecurrentes();
 
             // BUG-BAL-01 FIX: excluir incomes marcados con fromPOS:true para no duplicar con totalPOS.
             // BUG-BAL-02 FIX: excluir incomes de abonos de pedidos (tienen folio de pedido guardado)
@@ -372,15 +378,19 @@ function eliminarRecurrente(idx) {
         
      function renderIncomeList() {
     const q = _norm(document.getElementById('buscarIngresos')?.value || '');
+    // MEJORA-3: filtro por etiqueta
+    const etqFiltro = document.getElementById('filtroEtiquetaIngresos')?.value || '';
+    _ensureEtiquetaFiltro('incomeList', 'filtroEtiquetaIngresos', 'renderIncomeList');
     const container = document.getElementById('incomeList');
-    const listaInc = q ? incomes.filter(i => _norm(i.concept).includes(q) || (i.date||'').includes(q)) : incomes;
+    let listaInc = q ? incomes.filter(i => _norm(i.concept).includes(q) || (i.date||'').includes(q)) : incomes;
+    if (etqFiltro) listaInc = listaInc.filter(i => (i.etiqueta||'') === etqFiltro);
     container.innerHTML = listaInc.length === 0
         ? '<div class="mk-empty"><div class="mk-empty-icon">💰</div><div class="mk-empty-title">Sin ingresos</div><div class="mk-empty-sub">No hay ingresos registrados aún</div></div>'
         : listaInc.slice().reverse().map(income => `
             <div class="flex justify-between items-center p-3 bg-green-50 rounded-xl mb-2">
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(income.concept)}</p>
-                    <p class="text-xs text-gray-500">${_esc(income.date)}</p>
+                    <p class="text-xs text-gray-500">${_esc(income.date)}${income.etiqueta ? ' ' + _etiquetaBadge(income.etiqueta) : ''}${income.recurrente ? ' <span class="text-xs text-blue-500 font-semibold">↺</span>' : ''}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="font-bold text-green-600">+$${Number(income.amount||0).toFixed(2)}</span>
@@ -397,15 +407,19 @@ function eliminarRecurrente(idx) {
         
         function renderExpenseList() {
     const q = _norm(document.getElementById('buscarEgresos')?.value || '');
+    // MEJORA-3: filtro por etiqueta en egresos
+    const etqFiltro = document.getElementById('filtroEtiquetaEgresos')?.value || '';
+    _ensureEtiquetaFiltro('expenseList', 'filtroEtiquetaEgresos', 'renderExpenseList');
     const container = document.getElementById('expenseList');
-    const listaExp = q ? expenses.filter(e => _norm(e.concept).includes(q) || (e.date||'').includes(q)) : expenses;
+    let listaExp = q ? expenses.filter(e => _norm(e.concept).includes(q) || (e.date||'').includes(q)) : expenses;
+    if (etqFiltro) listaExp = listaExp.filter(e => (e.etiqueta||'') === etqFiltro);
     container.innerHTML = listaExp.length === 0
         ? '<div class="mk-empty"><div class="mk-empty-icon">🧾</div><div class="mk-empty-title">Sin egresos</div><div class="mk-empty-sub">No hay egresos registrados aún</div></div>'
         : listaExp.slice().reverse().map(expense => `
             <div class="flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(expense.concept)}</p>
-                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#C5A572;font-weight:600">${_esc(expense.categoria)}</span>` : ''}</p>
+                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#C5A572;font-weight:600">${_esc(expense.categoria)}</span>` : ''}${expense.etiqueta ? ' ' + _etiquetaBadge(expense.etiqueta) : ''}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">↺</span>' : ''}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="font-bold text-red-600">-$${Number(expense.amount||0).toFixed(2)}</span>
@@ -536,11 +550,15 @@ function eliminarRecurrente(idx) {
             document.getElementById('transactionModalTitle').textContent = 'Nuevo Ingreso';
             document.getElementById('transactionType').value = 'income';
             document.getElementById('clientFieldContainer').classList.add('hidden');
-            document.getElementById('recurrenteContainer').classList.add('hidden');
+            // MEJORA-2: mostrar checkbox recurrente también para ingresos
+            document.getElementById('recurrenteContainer').classList.remove('hidden');
+            document.getElementById('transactionRecurrente').checked = false;
             document.getElementById('transactionSubmitBtn').textContent = '💾 Guardar';
             const modal = document.getElementById('transactionModal');
             modal.dataset.editId = '';
             modal.dataset.editType = '';
+            // MEJORA-3: mostrar etiqueta para ingresos (categoría de movimiento)
+            _toggleEtiquetaField(true);
             _toggleCatField(false);
             openModal(modal);
         }
@@ -559,6 +577,8 @@ function eliminarRecurrente(idx) {
             modal.dataset.editType = '';
             // NTH-13: mostrar selector de categoría solo para egresos
             _toggleCatField(true);
+            // MEJORA-3: mostrar etiqueta para egresos
+            _toggleEtiquetaField(true);
             openModal(modal);
         }
         
@@ -619,6 +639,8 @@ function eliminarRecurrente(idx) {
         window.renderReceivablesList = renderReceivablesList;
         window.renderPayablesList = renderPayablesList;
         window.renderCxCPedidos = renderCxCPedidos;
+        window.renderBalanceMensual = renderBalanceMensual;
+        window.cambiarMesBalance = cambiarMesBalance;
         
         const _txForm = document.getElementById('transactionForm');
         if (_txForm && !_txForm._mkBound) {
@@ -659,6 +681,8 @@ function eliminarRecurrente(idx) {
             item.client = client;
             item.cliente = client;
             if (editType === 'expense') item.categoria = document.getElementById('transactionCategoria')?.value || item.categoria || '';
+            // MEJORA-3: guardar etiqueta en edición
+            item.etiqueta = document.getElementById('transactionEtiqueta')?.value || item.etiqueta || '';
         }
         if (editType === 'income') saveIncomes();
         else saveExpenses();
@@ -681,10 +705,19 @@ function eliminarRecurrente(idx) {
         fecha: date,
         client: client,
         cliente: client,
-        categoria: document.getElementById('transactionCategoria')?.value || ''
+        categoria: document.getElementById('transactionCategoria')?.value || '',
+        etiqueta: document.getElementById('transactionEtiqueta')?.value || ''
     };
 
     if (type === 'income') {
+        // MEJORA-2: soporte recurrente para ingresos
+        const esRecurrenteInc = document.getElementById('transactionRecurrente')?.checked;
+        if (esRecurrenteInc) {
+            newItem.recurrente = true;
+            if (!window.ingresosRecurrentes) window.ingresosRecurrentes = [];
+            window.ingresosRecurrentes.push({ concept, amount, dia: (date && date.includes('-')) ? parseInt(date.split('-')[2], 10) || 1 : (new Date(date).getDate() || 1) });
+            saveIngresosRecurrentes();
+        }
         incomes.push(newItem);
         saveIncomes();
     } else if (type === 'expense') {
@@ -711,6 +744,224 @@ function eliminarRecurrente(idx) {
     updateDashboard();
 });
         } // end if (!_txForm._mkBound)
+
+        // ══════════════════════════════════════════════════════════════════
+        // MEJORA-3: Etiquetas — badge, filtro, campo en modal
+        // (_ETIQUETAS definido al inicio del módulo para evitar TDZ)
+        // ══════════════════════════════════════════════════════════════════
+
+        function _etiquetaBadge(valor) {
+            if (!valor) return '';
+            const e = _ETIQUETAS.find(x => x.valor === valor);
+            if (!e) return `<span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" style="background:#f3f4f6;color:#6b7280">${valor}</span>`;
+            return `<span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" style="background:${e.bg};color:${e.color}">${e.label}</span>`;
+        }
+
+        // Inyecta el select de etiqueta en el modal (una sola vez)
+        function _toggleEtiquetaField(show) {
+            let wrap = document.getElementById('transactionEtiquetaWrap');
+            if (!wrap) {
+                const recContainer = document.getElementById('recurrenteContainer');
+                if (!recContainer) return;
+                wrap = document.createElement('div');
+                wrap.id = 'transactionEtiquetaWrap';
+                wrap.className = 'mb-3';
+                const opts = _ETIQUETAS.map(e => `<option value="${e.valor}">${e.label}</option>`).join('');
+                wrap.innerHTML = `<label class="block text-xs font-semibold text-gray-600 mb-1">Etiqueta</label>
+                    <select id="transactionEtiqueta" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
+                        <option value="">Sin etiqueta</option>${opts}
+                    </select>`;
+                recContainer.parentElement.insertBefore(wrap, recContainer);
+            }
+            wrap.style.display = show ? '' : 'none';
+            const sel = document.getElementById('transactionEtiqueta');
+            if (sel && !show) sel.value = '';
+        }
+
+        // Inserta el select de filtro por etiqueta encima del contenedor de lista
+        function _ensureEtiquetaFiltro(listId, filtroId, renderFn) {
+            if (document.getElementById(filtroId)) return;
+            const listEl = document.getElementById(listId);
+            if (!listEl || !listEl.parentElement) return;
+            const opts = _ETIQUETAS.map(e => `<option value="${e.valor}">${e.label}</option>`).join('');
+            const wrap = document.createElement('div');
+            wrap.className = 'mb-2';
+            wrap.innerHTML = `<select id="${filtroId}" onchange="${renderFn}()"
+                class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-400 bg-white">
+                <option value="">Todas las etiquetas</option>${opts}
+            </select>`;
+            listEl.parentElement.insertBefore(wrap, listEl);
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        // MEJORA-2: Ingresos recurrentes
+        // ══════════════════════════════════════════════════════════════════
+        if (!window.ingresosRecurrentes) window.ingresosRecurrentes = [];
+
+        function saveIngresosRecurrentes() {
+            (async () => { await sbSave('ingresosRecurrentes', window.ingresosRecurrentes); })();
+        }
+        window.saveIngresosRecurrentes = saveIngresosRecurrentes;
+
+        function procesarIngresosRecurrentes() {
+            if (!Array.isArray(window.ingresosRecurrentes) || window.ingresosRecurrentes.length === 0) return;
+            const hoy = new Date();
+            const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
+            let huboNuevos = false;
+            window.ingresosRecurrentes.forEach(ir => {
+                const yaExiste = (window.incomes||[]).some(i =>
+                    i.recurrenteAuto === true &&
+                    i.concept === ir.concept &&
+                    (i.date||'').startsWith(mesActual)
+                );
+                if (!yaExiste) {
+                    const ano = hoy.getFullYear();
+                    const mes = hoy.getMonth();
+                    const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+                    const diaValido = Math.min(ir.dia || 1, ultimoDia);
+                    const fecha = `${mesActual}-${String(diaValido).padStart(2,'0')}`;
+                    (window.incomes||[]).push({
+                        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + '-' + Math.random().toString(36).slice(2)),
+                        concept: ir.concept,
+                        concepto: ir.concept,
+                        amount: ir.amount,
+                        monto: ir.amount,
+                        date: fecha,
+                        fecha: fecha,
+                        recurrenteAuto: true
+                    });
+                    huboNuevos = true;
+                }
+            });
+            if (huboNuevos) saveIncomes();
+        }
+        window.procesarIngresosRecurrentes = procesarIngresosRecurrentes;
+
+        // ══════════════════════════════════════════════════════════════════
+        // MEJORA-4: Utilidad neta prominente
+        // ══════════════════════════════════════════════════════════════════
+        function _renderUtilidadNeta(totalIngresos, totalGastos) {
+            const utilidad = totalIngresos - totalGastos;
+            const margen = totalIngresos > 0 ? (utilidad / totalIngresos * 100) : 0;
+            const esPos = utilidad > 0;
+            const esNeg = utilidad < 0;
+            const bgColor = esPos ? '#f0fdf4' : esNeg ? '#fef2f2' : '#fefce8';
+            const textColor = esPos ? '#15803d' : esNeg ? '#dc2626' : '#ca8a04';
+            const borderColor = esPos ? '#bbf7d0' : esNeg ? '#fecaca' : '#fef08a';
+            const icono = esPos ? '📈' : esNeg ? '📉' : '➖';
+
+            let card = document.getElementById('balUtilidadNetaCard');
+            if (!card) {
+                // Insertar después del contenedor de categorías o del resumen mensual
+                const catContainer = document.getElementById('balCatGastosContainer');
+                const anchor = catContainer || document.getElementById('balMesNetoSub')?.closest('.rounded-xl')?.closest('div');
+                if (!anchor) return;
+                card = document.createElement('div');
+                card.id = 'balUtilidadNetaCard';
+                anchor.parentElement.insertBefore(card, anchor.nextSibling);
+            }
+            card.className = 'mt-4 rounded-2xl p-5 border';
+            card.style.cssText = `background:${bgColor};border-color:${borderColor}`;
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-bold uppercase tracking-wide" style="color:${textColor}">Utilidad neta ${icono}</span>
+                </div>
+                <p class="text-3xl font-extrabold" style="color:${textColor}">$${utilidad.toFixed(2)}</p>
+                <p class="text-xs mt-1 font-semibold" style="color:${textColor}">Margen: ${isFinite(margen) ? margen.toFixed(1) : '0.0'}%</p>`;
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        // MEJORA-1: Proyección de cashflow
+        // ══════════════════════════════════════════════════════════════════
+        function renderProyeccionCashflow() {
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const pedidosActivos = (window.pedidos||[]).filter(p => {
+                if (!p.entrega) return false;
+                const fe = new Date(p.entrega + 'T00:00:00');
+                const diff = Math.round((fe - hoy) / 86400000);
+                return diff >= 0 && diff <= 30 &&
+                    !['finalizado','cancelado','entregado'].includes((p.status||'').toLowerCase());
+            });
+
+            // Siempre re-renderizar o limpiar el card
+            let card = document.getElementById('balCashflowCard');
+
+            if (pedidosActivos.length === 0) {
+                if (card) card.innerHTML = '';
+                return;
+            }
+
+            const buckets = [
+                { label: 'Esta semana',       min: 0,  max: 7,  cobros: 0, gastos: 0 },
+                { label: 'Próximas 2 semanas',min: 8,  max: 14, cobros: 0, gastos: 0 },
+                { label: 'Este mes',          min: 15, max: 30, cobros: 0, gastos: 0 },
+            ];
+
+            pedidosActivos.forEach(p => {
+                const fe = new Date(p.entrega + 'T00:00:00');
+                const diff = Math.round((fe - hoy) / 86400000);
+                const saldo = typeof calcSaldoPendiente === 'function'
+                    ? calcSaldoPendiente(p)
+                    : Math.max(0, Number(p.total||0) - Number(p.anticipo||0));
+                const bk = buckets.find(b => diff >= b.min && diff <= b.max);
+                if (bk) bk.cobros += saldo;
+            });
+
+            // Gastos recurrentes programados en los periodos
+            if (Array.isArray(gastosRecurrentes)) {
+                gastosRecurrentes.forEach(gr => {
+                    const diaGasto = gr.dia || 1;
+                    // Calcular la fecha del gasto este mes
+                    const ano = hoy.getFullYear();
+                    const mes = hoy.getMonth();
+                    const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+                    const diaReal = Math.min(diaGasto, ultimoDia);
+                    const fechaGasto = new Date(ano, mes, diaReal);
+                    fechaGasto.setHours(0,0,0,0);
+                    const diff = Math.round((fechaGasto - hoy) / 86400000);
+                    const bk = buckets.find(b => diff >= b.min && diff <= b.max);
+                    if (bk) bk.gastos += Number(gr.amount||0);
+                });
+            }
+
+            if (!card) {
+                const utilCard = document.getElementById('balUtilidadNetaCard');
+                const anchor = utilCard || document.getElementById('balCatGastosContainer') ||
+                    document.getElementById('balMesNetoSub')?.closest('.rounded-xl')?.closest('div');
+                if (!anchor) return;
+                card = document.createElement('div');
+                card.id = 'balCashflowCard';
+                anchor.parentElement.insertBefore(card, anchor.nextSibling);
+            }
+
+            const filas = buckets.map(b => {
+                const neto = b.cobros - b.gastos;
+                const netoColor = neto >= 0 ? '#15803d' : '#dc2626';
+                return `<tr class="border-t border-gray-100">
+                    <td class="py-1.5 pr-2 text-xs font-medium text-gray-700">${b.label}</td>
+                    <td class="py-1.5 pr-2 text-xs text-green-700 font-semibold text-right">$${b.cobros.toFixed(2)}</td>
+                    <td class="py-1.5 pr-2 text-xs text-red-600 font-semibold text-right">$${b.gastos.toFixed(2)}</td>
+                    <td class="py-1.5 text-xs font-bold text-right" style="color:${netoColor}">$${neto.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+
+            card.className = 'mt-4 bg-white rounded-xl p-4 border border-gray-100';
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-bold text-gray-700">💸 Proyección de flujo de efectivo</h4>
+                    <span class="text-xs text-gray-400">${pedidosActivos.length} pedidos activos</span>
+                </div>
+                <table class="w-full">
+                    <thead><tr>
+                        <th class="text-left text-xs text-gray-400 pb-1 pr-2">Período</th>
+                        <th class="text-right text-xs text-gray-400 pb-1 pr-2">Cobros esperados</th>
+                        <th class="text-right text-xs text-gray-400 pb-1 pr-2">Gastos prog.</th>
+                        <th class="text-right text-xs text-gray-400 pb-1">Neto proyectado</th>
+                    </tr></thead>
+                    <tbody>${filas}</tbody>
+                </table>`;
+        }
+        window.renderProyeccionCashflow = renderProyeccionCashflow;
 
         function markAsPaid(type, id) {
             if (type === 'receivable') {

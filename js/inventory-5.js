@@ -1,3 +1,154 @@
+// ── Calcular cuántas unidades se pueden producir desde MP ──────────────────
+function calcularProducibles(prod) {
+    if (!Array.isArray(prod.mpComponentes) || prod.mpComponentes.length === 0) return null;
+    let minFabricable = Infinity;
+    for (const comp of prod.mpComponentes) {
+        const mp = (window.products || []).find(p => String(p.id) === String(comp.id));
+        if (!mp) return 0;
+        const stockMp = mp.stock || 0;
+        const qty = parseFloat(comp.qty) || 1;
+        minFabricable = Math.min(minFabricable, Math.floor(stockMp / qty));
+    }
+    return minFabricable === Infinity ? 0 : minFabricable;
+}
+window.calcularProducibles = calcularProducibles;
+
+// ── Actualización masiva de precios ───────────────────────────────────────
+function abrirBulkPrecioModal() {
+    let modal = document.getElementById('bulkPrecioModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'bulkPrecioModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+        document.body.appendChild(modal);
+    }
+
+    // Obtener categorías únicas
+    const cats = [...new Set((window.products||[]).map(p => p.category).filter(Boolean))];
+    const catOptions = cats.map(cid => {
+        const cat = (window.categories||[]).find(c => String(c.id) === String(cid));
+        return `<option value="${_esc(cid)}">${_esc(cat ? (cat.emoji ? cat.emoji+' '+cat.name : cat.name) : cid)}</option>`;
+    }).join('');
+
+    modal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;width:min(540px,95vw);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+        <div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#fef3c7,#fff7ed);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h2 style="font-size:1.1rem;font-weight:800;color:#92400e;margin:0;">📊 Actualizar precios masivamente</h2>
+                <p style="font-size:.75rem;color:#b45309;margin:4px 0 0;">Aplica un porcentaje de cambio a múltiples productos</p>
+            </div>
+            <button onclick="document.getElementById('bulkPrecioModal').style.display='none'"
+                style="width:32px;height:32px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1;">
+            <div>
+                <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">% de cambio en precio</label>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="range" id="bulkPrecioRange" min="-50" max="200" value="0"
+                        oninput="document.getElementById('bulkPrecioNum').value=this.value;bulkPrecioPreview()"
+                        style="flex:1;">
+                    <input type="number" id="bulkPrecioNum" min="-50" max="200" value="0"
+                        oninput="document.getElementById('bulkPrecioRange').value=this.value;bulkPrecioPreview()"
+                        style="width:72px;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.9rem;font-weight:700;text-align:center;">
+                    <span style="font-size:.9rem;font-weight:700;color:#374151;">%</span>
+                </div>
+                <p style="font-size:.7rem;color:#9ca3af;margin-top:3px;">Negativo = descuento · Positivo = aumento</p>
+            </div>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;">
+                    <input type="checkbox" id="bulkPrecioSoloPT" onchange="bulkPrecioPreview()" style="accent-color:#C5973B;">
+                    Solo Productos Terminados
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;">
+                    <input type="checkbox" id="bulkPrecioSoloMP" onchange="bulkPrecioPreview()" style="accent-color:#7c3aed;">
+                    Solo Materias Primas (costo)
+                </label>
+            </div>
+            <div>
+                <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Categoría (opcional)</label>
+                <select id="bulkPrecioCat" onchange="bulkPrecioPreview()"
+                    style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.85rem;outline:none;">
+                    <option value="">Todas las categorías</option>
+                    ${catOptions}
+                </select>
+            </div>
+            <div id="bulkPrecioPreviewList" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;max-height:220px;overflow-y:auto;padding:8px;">
+                <p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:16px;">Ajusta los filtros y haz clic en Vista previa</p>
+            </div>
+        </div>
+        <div style="padding:16px 24px;border-top:1px solid #f3f4f6;display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="document.getElementById('bulkPrecioModal').style.display='none'"
+                style="padding:8px 18px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.85rem;cursor:pointer;">Cancelar</button>
+            <button onclick="bulkPrecioPreview()"
+                style="padding:8px 18px;border:none;border-radius:10px;background:#e0f2fe;color:#0369a1;font-size:.85rem;font-weight:700;cursor:pointer;">👁 Vista previa</button>
+            <button onclick="bulkPrecioAplicar()"
+                style="padding:8px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;">✅ Aplicar</button>
+        </div>
+    </div>`;
+
+    modal.style.display = 'flex';
+    bulkPrecioPreview();
+}
+window.abrirBulkPrecioModal = abrirBulkPrecioModal;
+
+function _bulkPrecioGetAfectados() {
+    const pct    = parseFloat(document.getElementById('bulkPrecioNum')?.value) || 0;
+    const soloPT = document.getElementById('bulkPrecioSoloPT')?.checked || false;
+    const soloMP = document.getElementById('bulkPrecioSoloMP')?.checked || false;
+    const catFil = (document.getElementById('bulkPrecioCat')?.value || '').trim();
+    return (window.products || []).filter(p => {
+        if (catFil && String(p.category) !== catFil) return false;
+        if (soloPT && soloMP) return true; // ambos = todos
+        if (soloPT && !(!p.tipo || p.tipo === 'producto' || p.tipo === 'producto_interno' || p.tipo === 'pack')) return false;
+        if (soloMP && p.tipo !== 'materia_prima') return false;
+        return true;
+    }).map(p => {
+        const campoKey = (soloMP && !soloPT) ? 'cost' : 'price';
+        const precioActual = parseFloat(p[campoKey]) || 0;
+        const precioNuevo  = Math.max(0, Math.round(precioActual * (1 + pct / 100) * 100) / 100);
+        return { p, campoKey, precioActual, precioNuevo };
+    }).filter(r => r.precioActual > 0);
+}
+
+function bulkPrecioPreview() {
+    const lista = document.getElementById('bulkPrecioPreviewList');
+    if (!lista) return;
+    const afectados = _bulkPrecioGetAfectados();
+    if (!afectados.length) {
+        lista.innerHTML = '<p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:16px;">Sin productos que coincidan con los filtros</p>';
+        return;
+    }
+    lista.innerHTML = afectados.slice(0, 50).map(({ p, campoKey, precioActual, precioNuevo }) => {
+        const diff = precioNuevo - precioActual;
+        const clr  = diff > 0 ? '#16a34a' : diff < 0 ? '#dc2626' : '#6b7280';
+        const lbl  = campoKey === 'cost' ? 'Costo' : 'Precio';
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #f3f4f6;font-size:.78rem;">
+            <span style="font-weight:600;color:#374151;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${_esc(p.name)}">${_esc(p.name)}</span>
+            <span style="color:#6b7280;white-space:nowrap;margin:0 8px;">${lbl}: $${precioActual.toFixed(2)}</span>
+            <span style="font-weight:700;color:${clr};white-space:nowrap;">→ $${precioNuevo.toFixed(2)}</span>
+        </div>`;
+    }).join('') + (afectados.length > 50 ? `<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px;">...y ${afectados.length - 50} más</p>` : '');
+}
+window.bulkPrecioPreview = bulkPrecioPreview;
+
+function bulkPrecioAplicar() {
+    const afectados = _bulkPrecioGetAfectados();
+    if (!afectados.length) { manekiToastExport('Sin productos que actualizar', 'warn'); return; }
+    const pct = parseFloat(document.getElementById('bulkPrecioNum')?.value) || 0;
+    if (!confirm(`¿Aplicar ${pct > 0 ? '+' : ''}${pct}% a ${afectados.length} producto(s)?`)) return;
+    afectados.forEach(({ p, campoKey, precioNuevo }) => {
+        p[campoKey] = precioNuevo;
+        p.updatedAt = new Date().toISOString();
+    });
+    if (typeof guardarDatos === 'function') guardarDatos();
+    else if (typeof saveProducts === 'function') saveProducts();
+    renderInventoryTable();
+    document.getElementById('bulkPrecioModal').style.display = 'none';
+    manekiToastExport(`✅ Precios actualizados en ${afectados.length} producto(s)`, 'ok');
+}
+window.bulkPrecioAplicar = bulkPrecioAplicar;
+
 function renderInventoryTable() {
     const tbody = document.getElementById('inventoryTable');
     if (!tbody) return;
@@ -265,7 +416,9 @@ function renderInventoryTable() {
                     ${product.tipo === 'pack' && product.packComponentes && product.packComponentes.length ? `<div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">${product.packComponentes.map(c=>`${c.qty > 1 ? c.qty+'× ' : ''}${_esc(c.nombre)}`).join(' + ')}</div>` : ''}
                     ${product.historialPrecios && product.historialPrecios.length ? `<span title="Este producto ha tenido ${product.historialPrecios.length} modificaciones de precio o stock" style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialPrecios.length} cambio${product.historialPrecios.length>1?'s':''}</span>` : ''}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ''}
+                    ${product.proveedorNombre ? `<div style="margin-top:2px;font-size:.72rem;color:#065f46;display:flex;align-items:center;gap:3px;" title="${_esc(product.proveedorNotas||'')}">🏭 Proveedor: <b>${_esc(product.proveedorNombre)}</b>${product.proveedorNotas ? ' ℹ️' : ''}</div>` : ''}
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">${_esc(t)}</span>`).join('')}</div>` : ''}
+                    ${(() => { const _prod = calcularProducibles(product); if (_prod === null) return ''; const _pclr = _prod >= 5 ? '#16a34a' : _prod >= 1 ? '#d97706' : '#dc2626'; const _pbg = _prod >= 5 ? '#d1fae5' : _prod >= 1 ? '#fef3c7' : '#fee2e2'; return `<div style="margin-top:3px;"><span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:99px;background:${_pbg};color:${_pclr};border:1px solid ${_pclr}33;">🏭 Producibles: ${_prod}</span></div>`; })()}
                 </div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
@@ -287,6 +440,8 @@ function renderInventoryTable() {
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
                     ${product.tipo !== 'pack' ? `<button onclick="cambiarTipoProducto('${pid}')" title="Convertir a Materia Prima"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ''}
+                    ${product.movimientos && product.movimientos.length ? `<button onclick="verMovimientosProducto('${pid}')" title="Ver movimientos de stock (${product.movimientos.length})"
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>` : ''}
                     <button onclick="deleteProduct('${pid}')" title="Eliminar"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
@@ -525,7 +680,7 @@ function renderInventoryTable() {
             btnLabel: '+ Producto',
             btnOnclick: 'openAddProductModal()',
             btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
-            extraBtnHTML: `<button onclick="injectPackModal();openPackModal()" style="padding:7px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">🎁 Crear Pack</button>`,
+            extraBtnHTML: `<button onclick="injectPackModal();openPackModal()" style="padding:7px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">🎁 Crear Pack</button><button onclick="abrirBulkPrecioModal()" style="padding:7px 16px;background:linear-gradient(135deg,#0369a1,#38bdf8);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">📊 Actualizar precios</button>`,
             products: pts,
             renderFila: renderFilaPT,
             headers: [

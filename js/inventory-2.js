@@ -237,6 +237,25 @@ function injectPtModal() {
         // Update precio cuando cambia costo
         const precioInput = document.getElementById('ptPrecio');
         if (precioInput) precioInput.addEventListener('input', () => ptMostrarMargenInfo());
+
+        // ── Inyectar campos de proveedor si no existen aún ──────────────────
+        if (!document.getElementById('ptProveedorNombre')) {
+            const ptSubmitBtn = document.getElementById('ptSubmitBtn');
+            if (ptSubmitBtn) {
+                ptSubmitBtn.insertAdjacentHTML('beforebegin', `
+                <div id="ptProveedorSection" style="background:#f0fdf4;border:1.5px solid #6ee7b7;border-radius:14px;padding:16px;">
+                    <div style="font-size:.85rem;font-weight:700;color:#065f46;margin-bottom:12px;">🏭 Información del Proveedor <span style="font-weight:400;color:#9ca3af;">(opcional)</span></div>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <input type="text" id="ptProveedorNombre" placeholder="Nombre del proveedor"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #6ee7b7;border-radius:10px;font-size:.85rem;outline:none;box-sizing:border-box;background:#fff;"
+                            onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#6ee7b7'">
+                        <textarea id="ptProveedorNotas" rows="2" placeholder="Notas del proveedor (precio referencia, condiciones, etc.)"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #6ee7b7;border-radius:10px;font-size:.85rem;outline:none;resize:vertical;box-sizing:border-box;background:#fff;"
+                            onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#6ee7b7'"></textarea>
+                    </div>
+                </div>`);
+            }
+        }
     }, 80);
 }
 window.injectPtModal = injectPtModal;
@@ -567,6 +586,8 @@ async function guardarProductoTerminado() {
     const precio   = parseFloat(gv('ptPrecio'))||0;
     const stockMin = parseInt(gv('ptStockMin')) || 5;
     const rendimientoPorHoja = parseFloat(gv('ptRendimientoPorHoja')) || 0;
+    const proveedorNombre = gv('ptProveedorNombre').trim();
+    const proveedorNotas  = gv('ptProveedorNotas').trim();
 
     if (!nombre) { manekiToastExport('⚠️ El nombre es requerido','warn'); document.getElementById('ptNombre')?.focus(); return; }
     if (!precio||precio<=0) { manekiToastExport('⚠️ El precio de venta debe ser mayor a $0','warn'); document.getElementById('ptPrecio')?.focus(); return; }
@@ -582,6 +603,30 @@ async function guardarProductoTerminado() {
     }
     if (sku && !skuEsUnico(sku, _excludeIdPt)) {
         manekiToastExport(`⚠️ El SKU "${sku}" ya está en uso`,'warn'); return;
+    }
+
+    // ── Mejora 3: Validación de costo cero con sugerencia automática ────────
+    let costoFinal = costo;
+    const _mpCompsParaValidar = window._ptMpComponentes || [];
+    if (costoFinal === 0) {
+        if (_mpCompsParaValidar.length > 0) {
+            // Calcular costo desde materias primas
+            const _costoCalculado = _mpCompsParaValidar.reduce((sum, comp) => {
+                const _mp = (window.products || []).find(p => String(p.id) === String(comp.id));
+                return sum + ((comp.qty || 0) * ((_mp && _mp.cost) ? _mp.cost : (comp.costUnit || 0)));
+            }, 0);
+            if (_costoCalculado > 0) {
+                const _usarCosto = confirm(`El costo calculado basado en materias primas es $${_costoCalculado.toFixed(2)}. ¿Deseas usarlo como costo del producto?`);
+                if (_usarCosto) {
+                    costoFinal = _costoCalculado;
+                    const _costoInput = document.getElementById('ptCosto');
+                    if (_costoInput) _costoInput.value = costoFinal.toFixed(2);
+                }
+            }
+        } else {
+            // Sin MPs y costo 0 → solo advertencia, no bloquea
+            manekiToastExport('⚠️ El costo del producto está en $0. Considera agregar un costo.', 'warn');
+        }
     }
 
     // FIX loading state: deshabilitar botón para evitar doble guardado
@@ -633,18 +678,18 @@ async function guardarProductoTerminado() {
             const precioAnterior = productoAnterior.price;
             const costoAnterior = productoAnterior.cost;
             const historialPrecios = productoAnterior.historialPrecios || [];
-            if (precioAnterior !== precio || costoAnterior !== costo) {
+            if (precioAnterior !== precio || costoAnterior !== costoFinal) {
                 historialPrecios.push({
                     fecha: new Date().toISOString(),
                     precioAntes: precioAnterior,
                     costoAntes: costoAnterior,
                     precioNuevo: precio,
-                    costoNuevo: costo
+                    costoNuevo: costoFinal
                 });
             }
             window.products[idx] = Object.assign({}, window.products[idx], {
                 name:nombre, category:catId, tipo: publicarTienda ? 'producto' : 'producto_interno',
-                cost:costo, price:precio, stockMin,
+                cost:costoFinal, price:precio, stockMin,
                 tags, sku:finalSku,
                 mpComponentes: mpComps,
                 publicarTienda,
@@ -654,12 +699,30 @@ async function guardarProductoTerminado() {
                 variants:[...window.currentVariants],
                 historialPrecios,
                 rendimientoPorHoja,
+                proveedorNombre,
+                proveedorNotas,
+                movimientos: window.products[idx].movimientos || [],
             });
             syncStockFromVariants(window.products[idx]);
             const stNew = getStockEfectivo(window.products[idx]);
             if (stNew!==stOld) registrarMovimiento({productoId:window.edicionProductoId,
                 productoNombre:nombre, tipo:'ajuste', cantidad:stNew-stOld,
                 motivo:'Edición', stockAntes:stOld, stockDespues:stNew});
+            // ── Mejora 2: registrar en movimientos por-producto ─────────────
+            const _deltaStockPt = stNew - stOld;
+            if (_deltaStockPt !== 0) {
+                window.products[idx].movimientos = window.products[idx].movimientos || [];
+                window.products[idx].movimientos.unshift({
+                    id: Date.now(),
+                    fecha: _fechaHoy(),
+                    delta: _deltaStockPt,
+                    stockResultante: stNew,
+                    motivo: 'Edición manual',
+                    usuario: 'local'
+                });
+                if (window.products[idx].movimientos.length > 30)
+                    window.products[idx].movimientos = window.products[idx].movimientos.slice(0, 30);
+            }
             saveProducts(); renderInventoryTable();
             if (typeof renderProducts==='function') renderProducts();
             if (typeof updateDashboard==='function') updateDashboard();
@@ -670,7 +733,7 @@ async function guardarProductoTerminado() {
         } else {
             const np = {
                 id:_genId(), name:nombre, category:catId, tipo: publicarTienda ? 'producto' : 'producto_interno',
-                cost:costo, price:precio, stock:0,
+                cost:costoFinal, price:precio, stock:0,
                 stockMin, tags, sku:finalSku,
                 mpComponentes: mpComps,
                 publicarTienda,
@@ -679,6 +742,9 @@ async function guardarProductoTerminado() {
                 imageUrls: imageUrls,
                 variants:[...window.currentVariants],
                 rendimientoPorHoja,
+                proveedorNombre,
+                proveedorNotas,
+                movimientos: [],
             };
             syncStockFromVariants(np);
             window.products.push(np);
@@ -1773,3 +1839,61 @@ function pvGetPrecio(product, cantidad) {
     return rangoElegido.precio / min; // precio unitario
 }
 window.pvGetPrecio = pvGetPrecio;
+
+// ── Mejora 2: Modal de movimientos de stock por producto ──────────────────
+function verMovimientosProducto(pid) {
+    const prod = (window.products || []).find(p => String(p.id) === String(pid));
+    if (!prod) return;
+    const movs = (prod.movimientos || []).slice(0, 5);
+
+    // Remover modal previo si existe
+    const _prev = document.getElementById('_mkMovimientosModal');
+    if (_prev) _prev.remove();
+
+    const filas = movs.length ? movs.map(m => {
+        const clr = m.delta > 0 ? '#059669' : '#dc2626';
+        const bg  = m.delta > 0 ? '#d1fae5' : '#fee2e2';
+        const signo = m.delta > 0 ? '+' : '';
+        return `<tr>
+            <td style="padding:6px 10px;font-size:.8rem;color:#6b7280;">${_esc(m.fecha||'—')}</td>
+            <td style="padding:6px 10px;text-align:center;">
+                <span style="background:${bg};color:${clr};font-weight:700;padding:2px 10px;border-radius:8px;font-size:.8rem;">${signo}${m.delta}</span>
+            </td>
+            <td style="padding:6px 10px;text-align:center;font-size:.8rem;font-weight:600;color:#374151;">${m.stockResultante}</td>
+            <td style="padding:6px 10px;font-size:.78rem;color:#6b7280;">${_esc(m.motivo||'—')}</td>
+        </tr>`;
+    }).join('') : `<tr><td colspan="4" style="padding:14px;text-align:center;font-size:.8rem;color:#9ca3af;">Sin movimientos registrados</td></tr>`;
+
+    const modal = document.createElement('div');
+    modal.id = '_mkMovimientosModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);';
+    modal.innerHTML = `
+    <div style="background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.2);max-width:560px;width:95%;padding:24px;max-height:80vh;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+                <div style="font-size:1.05rem;font-weight:800;color:#1a0533;">📋 Últimos movimientos de stock</div>
+                <div style="font-size:.78rem;color:#9ca3af;margin-top:2px;">${_esc(prod.name)}</div>
+            </div>
+            <button onclick="document.getElementById('_mkMovimientosModal').remove()"
+                style="font-size:1.4rem;background:none;border:none;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f9fafb;">
+                    <th style="padding:6px 10px;text-align:left;font-size:.75rem;font-weight:700;color:#6b7280;border-bottom:1.5px solid #e5e7eb;">Fecha</th>
+                    <th style="padding:6px 10px;text-align:center;font-size:.75rem;font-weight:700;color:#6b7280;border-bottom:1.5px solid #e5e7eb;">Cambio</th>
+                    <th style="padding:6px 10px;text-align:center;font-size:.75rem;font-weight:700;color:#6b7280;border-bottom:1.5px solid #e5e7eb;">Stock final</th>
+                    <th style="padding:6px 10px;text-align:left;font-size:.75rem;font-weight:700;color:#6b7280;border-bottom:1.5px solid #e5e7eb;">Motivo</th>
+                </tr>
+            </thead>
+            <tbody>${filas}</tbody>
+        </table>
+        ${movs.length === 0 || prod.movimientos.length <= 5 ? '' : `<p style="font-size:.72rem;color:#9ca3af;text-align:center;margin-top:10px;">Mostrando los últimos 5 de ${prod.movimientos.length} movimientos</p>`}
+    </div>`;
+    document.body.appendChild(modal);
+    // Cerrar al hacer clic fuera del panel
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+}
+window.verMovimientosProducto = verMovimientosProducto;

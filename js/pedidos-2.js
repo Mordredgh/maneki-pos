@@ -830,6 +830,90 @@ async function kanbanDrop(event, newStatus) {
     _kanbanDragId = null;
 }
 
+// ── Selección en lote Kanban (MEJORA 4) ──────────────────────────────────────
+let _kanbanSeleccionados = new Set();
+
+function _toggleKanbanSelect(id, checked) {
+    if (checked) {
+        _kanbanSeleccionados.add(String(id));
+    } else {
+        _kanbanSeleccionados.delete(String(id));
+    }
+    _actualizarBarraLote();
+}
+window._toggleKanbanSelect = _toggleKanbanSelect;
+
+function _actualizarBarraLote() {
+    const n = _kanbanSeleccionados.size;
+    let barra = document.getElementById('_kanbanBarraLote');
+    if (n === 0) {
+        if (barra) barra.style.display = 'none';
+        return;
+    }
+    if (!barra) {
+        barra = document.createElement('div');
+        barra.id = '_kanbanBarraLote';
+        barra.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:1000;background:#1f2937;color:white;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,0.25);';
+        document.body.appendChild(barra);
+    }
+    barra.style.display = 'flex';
+    barra.innerHTML = `
+        <span style="font-weight:700;font-size:.9rem;">${n} seleccionado${n!==1?'s':''}</span>
+        <select id="_kanbanLoteStatus" style="padding:6px 12px;border-radius:8px;border:none;font-size:.85rem;background:#374151;color:white;outline:none;">
+            <option value="confirmado">✅ Confirmado</option>
+            <option value="pago">💰 Pago</option>
+            <option value="produccion">🔧 Producción</option>
+            <option value="envio">📦 Envío</option>
+            <option value="salida">🚚 Salió</option>
+            <option value="retirar">🏪 Retirar</option>
+        </select>
+        <button onclick="_aplicarCambioLote()"
+            style="padding:7px 18px;border-radius:8px;background:#C5A572;color:white;border:none;cursor:pointer;font-weight:700;font-size:.85rem;">
+            Aplicar
+        </button>
+        <button onclick="_cancelarSeleccionLote()"
+            style="padding:7px 12px;border-radius:8px;background:#4b5563;color:white;border:none;cursor:pointer;font-size:.85rem;">
+            Cancelar
+        </button>`;
+}
+window._actualizarBarraLote = _actualizarBarraLote;
+
+function _aplicarCambioLote() {
+    const nuevoStatus = document.getElementById('_kanbanLoteStatus')?.value;
+    if (!nuevoStatus) return;
+    const _fecha = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    let cambiados = 0;
+    _kanbanSeleccionados.forEach(id => {
+        const idx = (window.pedidos || []).findIndex(p => String(p.id) === String(id));
+        if (idx === -1) return;
+        window.pedidos[idx].status = nuevoStatus;
+        window.pedidos[idx].fechaUltimoEstado = new Date().toISOString();
+        if (!window.pedidos[idx].historialEstados) window.pedidos[idx].historialEstados = [];
+        window.pedidos[idx].historialEstados.push({
+            estado: nuevoStatus,
+            fecha: _fecha,
+            hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+            nota: 'Cambio en lote'
+        });
+        cambiados++;
+    });
+    if (cambiados > 0) {
+        savePedidos();
+        _kanbanSeleccionados.clear();
+        _actualizarBarraLote();
+        renderKanbanBoard();
+        manekiToastExport(`✅ ${cambiados} pedido${cambiados!==1?'s':''} actualizados a "${nuevoStatus}".`, 'ok');
+    }
+}
+window._aplicarCambioLote = _aplicarCambioLote;
+
+function _cancelarSeleccionLote() {
+    _kanbanSeleccionados.clear();
+    _actualizarBarraLote();
+    renderKanbanBoard(); // para desmarcar checkboxes
+}
+window._cancelarSeleccionLote = _cancelarSeleccionLote;
+
 // ── Modo Compacto ──
 function toggleKanbanCompacto() {
     _kanbanCompacto = !_kanbanCompacto;
@@ -838,23 +922,58 @@ function toggleKanbanCompacto() {
     renderKanbanBoard();
 }
 
-// ── Reactivar pedido finalizado → volver a activo ──────────────────────────
+// ── Reactivar pedido finalizado/cancelado → volver a activo ─────────────────
 function reactivarPedido(id) {
-    const idx = (window.pedidosFinalizados || []).findIndex(x => String(x.id) === String(id));
+    // Buscar primero en finalizados
+    let idx = (window.pedidosFinalizados || []).findIndex(x => String(x.id) === String(id));
+    let fuente = 'finalizados';
+
+    // Si no está en finalizados, buscar en pedidos activos con status cancelado
+    if (idx === -1) {
+        idx = (window.pedidos || []).findIndex(x => String(x.id) === String(id) && (x.status === 'cancelado' || x.status === 'cancelar'));
+        fuente = 'cancelado';
+    }
+
     if (idx === -1) { manekiToastExport('⚠️ Pedido no encontrado.', 'warn'); return; }
-    const p = window.pedidosFinalizados[idx];
+
+    const p = fuente === 'finalizados' ? window.pedidosFinalizados[idx] : window.pedidos[idx];
     showConfirm(
         `¿Reactivar el pedido <strong>${p.folio || p.id}</strong> de <strong>${p.cliente || '—'}</strong>?<br><small style="color:#6b7280;">Volverá al kanban como "Confirmado".</small>`,
         '↩ Reactivar pedido'
     ).then(ok => {
         if (!ok) return;
-        const reactivado = { ...p, status: 'confirmado', inventarioDescontado: false, _inventarioYaFinalizado: false };
-        delete reactivado.fechaFinalizado;
         if (!window.pedidos) window.pedidos = [];
-        window.pedidos.push(reactivado);
-        window.pedidosFinalizados.splice(idx, 1);
-        savePedidos();
-        savePedidosFinalizados();
+
+        const _fecha = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+        const reactivado = {
+            ...p,
+            status: 'confirmado',
+            inventarioDescontado: false,
+            _inventarioYaFinalizado: false
+        };
+        delete reactivado.fechaFinalizado;
+        delete reactivado.fechaCancelado;
+
+        // Registrar en historialEstados
+        if (!reactivado.historialEstados) reactivado.historialEstados = [];
+        reactivado.historialEstados.push({
+            estado: 'confirmado',
+            fecha: _fecha,
+            hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+            nota: 'Reactivado desde historial'
+        });
+
+        if (fuente === 'finalizados') {
+            window.pedidosFinalizados.splice(idx, 1);
+            window.pedidos.push(reactivado);
+            savePedidos();
+            savePedidosFinalizados();
+        } else {
+            // Cancelado en window.pedidos — solo cambiar el status
+            window.pedidos[idx] = reactivado;
+            savePedidos();
+        }
+
         renderHistorialPedidos();
         renderPedidosTable();
         manekiToastExport(`↩ Pedido ${p.folio || p.id} reactivado.`, 'ok');
@@ -873,10 +992,77 @@ function cambiarPaginaHistorial(dir) {
 }
 window.cambiarPaginaHistorial = cambiarPaginaHistorial;
 
+// Estado de filtros del historial (MEJORA 5)
+window._historialFiltros = window._historialFiltros || { cliente: '', status: 'todos', desde: '', hasta: '' };
+
 function renderHistorialPedidos() {
     const lista = document.getElementById('historialPedidosLista');
     if (!lista) return;
     const finalizados = window.pedidosFinalizados || [];
+
+    // MEJORA 5: Inyectar bloque de filtros mejorados si no existe
+    const _histContainer = lista.parentElement;
+    if (_histContainer && !document.getElementById('histFiltrosBloque')) {
+        const _filtrosDiv = document.createElement('div');
+        _filtrosDiv.id = 'histFiltrosBloque';
+        _filtrosDiv.style.cssText = 'background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:12px;';
+        _filtrosDiv.innerHTML = `
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                <input id="histFiltroCliente" type="text" placeholder="🔍 Buscar cliente..." value="${window._historialFiltros.cliente||''}"
+                    oninput="window._historialFiltros.cliente=this.value;_histPage=1;renderHistorialPedidos()"
+                    style="flex:1;min-width:140px;padding:6px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.82rem;outline:none;">
+                <select id="histFiltroStatus" onchange="window._historialFiltros.status=this.value;_histPage=1;renderHistorialPedidos()"
+                    style="padding:6px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:.82rem;outline:none;">
+                    <option value="todos" ${window._historialFiltros.status==='todos'?'selected':''}>Todos los estados</option>
+                    <option value="finalizado" ${window._historialFiltros.status==='finalizado'?'selected':''}>✅ Finalizado</option>
+                    <option value="cancelado" ${window._historialFiltros.status==='cancelado'?'selected':''}>❌ Cancelado</option>
+                </select>
+                <label style="font-size:.78rem;color:#6b7280;white-space:nowrap;">Desde:
+                    <input id="histFiltroDesde" type="date" value="${window._historialFiltros.desde||''}"
+                        onchange="window._historialFiltros.desde=this.value;_histPage=1;renderHistorialPedidos()"
+                        style="margin-left:4px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:.8rem;">
+                </label>
+                <label style="font-size:.78rem;color:#6b7280;white-space:nowrap;">Hasta:
+                    <input id="histFiltroHasta" type="date" value="${window._historialFiltros.hasta||''}"
+                        onchange="window._historialFiltros.hasta=this.value;_histPage=1;renderHistorialPedidos()"
+                        style="margin-left:4px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:.8rem;">
+                </label>
+                <button onclick="window._historialFiltros={cliente:'',status:'todos',desde:'',hasta:''};_histPage=1;document.getElementById('histFiltroCliente').value='';document.getElementById('histFiltroStatus').value='todos';document.getElementById('histFiltroDesde').value='';document.getElementById('histFiltroHasta').value='';renderHistorialPedidos()"
+                    style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:.78rem;background:white;color:#6b7280;cursor:pointer;">Limpiar filtros</button>
+            </div>`;
+        lista.insertAdjacentElement('beforebegin', _filtrosDiv);
+    }
+
+    // MEJORA 6: Tarjeta de tiempo promedio de producción
+    if (_histContainer && !document.getElementById('histTiempoPromedio')) {
+        const _statDiv = document.createElement('div');
+        _statDiv.id = 'histTiempoPromedio';
+        _statDiv.style.cssText = 'background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:.82rem;color:#1e40af;font-weight:600;';
+        lista.insertAdjacentElement('beforebegin', _statDiv);
+    }
+    // Calcular tiempo promedio
+    (function _calcTiempoPromedio() {
+        const el = document.getElementById('histTiempoPromedio');
+        if (!el) return;
+        let totalDias = 0, conteo = 0;
+        (window.pedidosFinalizados || []).forEach(p => {
+            const fechaInicio = p.fechaPedido || p.fechaCreacion;
+            if (!fechaInicio) return;
+            // Última entrada del historialEstados con status de finalización
+            let fechaFin = null;
+            if (p.historialEstados && p.historialEstados.length > 0) {
+                const ult = [...p.historialEstados].reverse().find(h => h.estado === 'finalizado' || h.estado === 'entregado');
+                if (ult && ult.fecha) fechaFin = ult.fecha;
+            }
+            if (!fechaFin && p.fechaFinalizado) fechaFin = p.fechaFinalizado.split('T')[0];
+            if (!fechaFin) return;
+            const diff = Math.round((new Date(fechaFin + 'T00:00:00') - new Date(fechaInicio + 'T00:00:00')) / 86400000);
+            if (diff >= 0 && diff < 365) { totalDias += diff; conteo++; }
+        });
+        el.textContent = conteo > 0
+            ? `⏱ Tiempo promedio de entrega: ${Math.round(totalDias / conteo)} días (basado en ${conteo} pedidos finalizados)`
+            : '⏱ Sin suficientes datos de tiempo de entrega aún';
+    })();
 
     const selMes = document.getElementById('histPedidoMes');
     if (selMes && selMes.options.length <= 1) {
@@ -884,11 +1070,62 @@ function renderHistorialPedidos() {
         selMes.innerHTML = '<option value="">Todos los meses</option>' + meses.map(m => `<option value="${m}">${m}</option>`).join('');
     }
 
-    const q = ((document.getElementById('histPedidoBuscar')||{}).value||'').toLowerCase().trim();
+    // MEJORA 3 + 5: combinar finalizados y cancelados
+    const cancelados = (window.pedidos || []).filter(p => p.status === 'cancelado' || p.status === 'cancelar');
+    // Marcar cancelados con un flag para diferenciarlos
+    const canceladosMarcados = cancelados.map(p => ({ ...p, _esCancelado: true }));
+    const todosHistorial = [...finalizados, ...canceladosMarcados];
+
+    const q = ((document.getElementById('histPedidoBuscar')||{}).value || (window._historialFiltros.cliente || '')).toLowerCase().trim();
     const mes = ((selMes||{}).value||'');
-    let items = [...finalizados].reverse();
-    if (q) { items = items.filter(p => (p.cliente||'').toLowerCase().includes(q)||(p.folio||'').toLowerCase().includes(q)||(p.concepto||'').toLowerCase().includes(q)); _histPage = 1; }
-    if (mes) { items = items.filter(p => (p.fechaFinalizado||p.fechaPedido||'').startsWith(mes)); _histPage = 1; }
+    const filtroStatus = window._historialFiltros.status || 'todos';
+    const filtroDesde = window._historialFiltros.desde || '';
+    const filtroHasta = window._historialFiltros.hasta || '';
+
+    let items = [...todosHistorial].sort((a, b) => {
+        const fa = a.fechaFinalizado || a.fechaCancelado || a.fechaPedido || '';
+        const fb = b.fechaFinalizado || b.fechaCancelado || b.fechaPedido || '';
+        return fb.localeCompare(fa);
+    });
+
+    // Aplicar filtro de búsqueda por cliente
+    if (q) {
+        items = items.filter(p =>
+            (p.cliente||'').toLowerCase().includes(q) ||
+            (p.folio||'').toLowerCase().includes(q) ||
+            (p.concepto||'').toLowerCase().includes(q)
+        );
+        _histPage = 1;
+    }
+    // Filtro por mes (selector existente)
+    if (mes) {
+        items = items.filter(p => (p.fechaFinalizado||p.fechaCancelado||p.fechaPedido||'').startsWith(mes));
+        _histPage = 1;
+    }
+    // MEJORA 5: Filtro por status
+    if (filtroStatus !== 'todos') {
+        if (filtroStatus === 'cancelado') {
+            items = items.filter(p => p._esCancelado);
+        } else {
+            items = items.filter(p => !p._esCancelado);
+        }
+        _histPage = 1;
+    }
+    // MEJORA 5: Filtro por rango de fechas
+    if (filtroDesde) {
+        items = items.filter(p => {
+            const f = (p.fechaFinalizado||p.fechaCancelado||p.fechaPedido||'').split('T')[0];
+            return f >= filtroDesde;
+        });
+        _histPage = 1;
+    }
+    if (filtroHasta) {
+        items = items.filter(p => {
+            const f = (p.fechaFinalizado||p.fechaCancelado||p.fechaPedido||'').split('T')[0];
+            return f <= filtroHasta;
+        });
+        _histPage = 1;
+    }
 
     const totalItems = items.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / _HIST_PER_PAGE));
@@ -908,7 +1145,7 @@ function renderHistorialPedidos() {
     }
 
     lista.innerHTML = pageItems.length === 0
-        ? '<p class="text-center text-gray-400 py-6 text-sm">Sin pedidos finalizados</p>'
+        ? '<p class="text-center text-gray-400 py-6 text-sm">Sin pedidos en el historial</p>'
         : pageItems.map(p => {
             // FIX PE-0013: si total = 0 pero hay ítems, recalcular para mostrar correctamente
             let _totalMostrar = Number(p.total || 0);
@@ -917,23 +1154,33 @@ function renderHistorialPedidos() {
                     return s + Math.round(parseFloat(it.price || it.precio || 0) * 100) * parseInt(it.quantity || it.cantidad || 1, 10);
                 }, 0) / 100;
             }
-            return `<div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-amber-50 transition-all">
+            const _esCancelado = p._esCancelado;
+            const _fechaRef = _esCancelado
+                ? ((p.fechaCancelado||'').split('T')[0] || p.fechaPedido || '')
+                : ((p.fechaFinalizado||'').split('T')[0] || '');
+            const _statusBadge = _esCancelado
+                ? '<p class="text-xs text-red-500">❌ Cancelado</p>'
+                : '<p class="text-xs text-green-600">✅ Finalizado</p>';
+            const _botonesExtra = _esCancelado
+                ? `<button onclick="reactivarPedido('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700" title="Reactivar pedido cancelado">↩ Reactivar</button>`
+                : `<button onclick="imprimirTicketPedido('${p.id}')" class="text-xs text-gray-400 hover:text-gray-600" title="Imprimir comprobante">🖨️</button>
+                   <button onclick="reactivarPedido('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700" title="Mover de nuevo al kanban">↩ Reactivar</button>
+                   <button onclick="editarPedidoFinalizado('${p.id}')" class="text-xs text-amber-500 hover:text-amber-700">✏️ Editar</button>
+                   <button onclick="eliminarPedidoFinalizado('${p.id}')" class="text-xs text-red-400 hover:text-red-600">🗑 Eliminar</button>`;
+            return `<div class="flex items-center justify-between p-4 ${_esCancelado ? 'bg-red-50' : 'bg-gray-50'} rounded-xl hover:bg-amber-50 transition-all">
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="font-bold text-amber-600 text-sm">${p.folio||'—'}</span>
-                    <span class="text-xs text-gray-400">${(p.fechaFinalizado||'').split('T')[0]||''}</span>
+                    <span class="text-xs text-gray-400">${_fechaRef}</span>
                 </div>
                 <p class="font-semibold text-gray-800 text-sm">${p.cliente||'—'}</p>
                 <p class="text-xs text-gray-500 truncate">${p.concepto||''}</p>
             </div>
             <div class="text-right ml-4">
                 <p class="font-bold text-gray-800">$${_totalMostrar.toFixed(2)}</p>
-                <p class="text-xs text-green-600">✅ Finalizado</p>
+                ${_statusBadge}
                 <div class="flex gap-2 justify-end mt-1">
-                    <button onclick="imprimirTicketPedido('${p.id}')" class="text-xs text-gray-400 hover:text-gray-600" title="Imprimir comprobante">🖨️</button>
-                    <button onclick="reactivarPedido('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700" title="Mover de nuevo al kanban">↩ Reactivar</button>
-                    <button onclick="editarPedidoFinalizado('${p.id}')" class="text-xs text-amber-500 hover:text-amber-700">✏️ Editar</button>
-                    <button onclick="eliminarPedidoFinalizado('${p.id}')" class="text-xs text-red-400 hover:text-red-600">🗑 Eliminar</button>
+                    ${_botonesExtra}
                 </div>
             </div>
         </div>`;

@@ -277,6 +277,11 @@ function editProduct(id) {
             set('ptPrecio',   p.price||0);
             set('ptStockMin', p.stockMin ?? 5);
             set('ptRendimientoPorHoja', p.rendimientoPorHoja || '');
+            // Mejora 1: campos de proveedor (inyectados con 80ms delay en injectPtModal)
+            setTimeout(() => {
+                set('ptProveedorNombre', p.proveedorNombre || '');
+                set('ptProveedorNotas',  p.proveedorNotas  || '');
+            }, 200);
             poblarCategoriasPt();
             setTimeout(()=>{ const s=document.getElementById('ptCategory'); if(s) s.value=p.category; },80);
             if (p.imageUrl) {
@@ -532,9 +537,98 @@ function ajustarStock(id) {
     const modal = document.getElementById('ajustarStockModal');
     if (modal) modal.dataset.productId = String(id);
 
+    // Inyectar campo Motivo (select) y Notas si no existen aún
+    _inyectarCamposAjusteStock(modal);
+
+    // Renderizar últimos movimientos del producto
+    _renderUltimosMovimientosProducto(id, modal);
+
     if (typeof openModal === 'function') openModal('ajustarStockModal');
 }
 window.ajustarStock = ajustarStock;
+
+// Inyecta los campos extra de Motivo y Notas en el modal de ajuste de stock
+function _inyectarCamposAjusteStock(modal) {
+    if (!modal || modal.querySelector('#ajusteStockMotivoSelect')) return;
+    // Encontrar el contenedor .space-y-3 para insertar los campos
+    const spaceY = modal.querySelector('.space-y-3');
+    if (!spaceY) return;
+
+    // Insertar antes del botón de punto de reorden (que tiene style margin-top:12px)
+    const prDiv = spaceY.querySelector('#ajusteStockPuntoReorden')?.parentElement;
+
+    const motivoDiv = document.createElement('div');
+    motivoDiv.id = '_ajusteStockExtraFields';
+    motivoDiv.innerHTML = `
+        <div style="margin-top:10px;">
+            <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Motivo del ajuste</label>
+            <select id="ajusteStockMotivoSelect"
+                style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;background:#fff;cursor:pointer;">
+                <option value="">— Selecciona un motivo —</option>
+                <option value="Merma">Merma</option>
+                <option value="Muestra/Regalo">Muestra / Regalo</option>
+                <option value="Ajuste de conteo">Ajuste de conteo</option>
+                <option value="Devolución a proveedor">Devolución a proveedor</option>
+                <option value="Entrada de mercancía">Entrada de mercancía</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+        <div style="margin-top:8px;">
+            <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Notas adicionales <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+            <input type="text" id="ajusteStockNotasExtra" placeholder="Ej: Lote dañado por humedad"
+                style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;">
+        </div>`;
+
+    if (prDiv) {
+        spaceY.insertBefore(motivoDiv, prDiv);
+    } else {
+        spaceY.appendChild(motivoDiv);
+    }
+}
+window._inyectarCamposAjusteStock = _inyectarCamposAjusteStock;
+
+// Renderiza los últimos 5 movimientos del producto en el modal de ajuste
+function _renderUltimosMovimientosProducto(productoId, modal) {
+    if (!modal) return;
+    const existente = modal.querySelector('#_ajusteUltMovimientos');
+    if (!existente) {
+        // Crear el bloque de últimos movimientos al final del contenido del modal
+        const inner = modal.querySelector('.bg-white');
+        if (!inner) return;
+        const div = document.createElement('div');
+        div.id = '_ajusteUltMovimientos';
+        div.style.cssText = 'margin-top:14px;border-top:1px solid #f3f4f6;padding-top:10px;';
+        inner.appendChild(div);
+    }
+    const container = modal.querySelector('#_ajusteUltMovimientos');
+    if (!container) return;
+
+    const movs = (window.stockMovements || [])
+        .filter(m => String(m.productoId) === String(productoId))
+        .slice(0, 5);
+
+    if (!movs.length) {
+        container.innerHTML = `<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px 0;">Sin movimientos registrados</p>`;
+        return;
+    }
+    const icons = { entrada:'🟢', salida:'🔴', ajuste:'🟡', creacion:'🔵', venta:'🟠', merma:'🟤' };
+    container.innerHTML = `
+        <p style="font-size:.72rem;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Últimos movimientos</p>
+        ${movs.map(m => {
+            const f = new Date(m.fecha).toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'});
+            const s = m.cantidad >= 0 ? `+${m.cantidad}` : `${m.cantidad}`;
+            return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f9fafb;font-size:.75rem;">
+                <span style="font-size:13px;">${icons[m.tipo]||'⚪'}</span>
+                <div style="flex:1;min-width:0;">
+                    <span style="font-weight:600;color:#374151;">${m.tipo}</span>
+                    <span style="color:#9ca3af;margin-left:4px;">${_esc(m.motivo||'')}</span>
+                    <div style="color:#9ca3af;font-size:.68rem;">${f}</div>
+                </div>
+                <span style="font-weight:700;color:${m.cantidad>=0?'#10b981':'#ef4444'};white-space:nowrap;">${s} uds</span>
+            </div>`;
+        }).join('')}`;
+}
+window._renderUltimosMovimientosProducto = _renderUltimosMovimientosProducto;
 
 function confirmarAjusteStock() {
     // Leer id desde múltiples fuentes en orden de prioridad
@@ -548,12 +642,18 @@ function confirmarAjusteStock() {
     const p = (window.products||[]).find(x => String(x.id) === String(rawId));
     if (!p) { manekiToastExport('❌ Error: producto no encontrado', 'err'); return; }
 
-    const cantEl = document.getElementById('ajustarStockCantidad');
-    const motEl  = document.getElementById('ajustarStockMotivo');
+    const cantEl  = document.getElementById('ajustarStockCantidad');
+    const motEl   = document.getElementById('ajustarStockMotivo');
+    const motSelEl = document.getElementById('ajusteStockMotivoSelect');
+    const notasEl  = document.getElementById('ajusteStockNotasExtra');
     if (!cantEl) { manekiToastExport('❌ Error: formulario no disponible', 'err'); return; }
 
     const delta  = parseInt(cantEl.value);
-    const motivo = motEl ? motEl.value.trim() : '';
+    // Motivo: primero el select, luego el texto libre, luego vacío
+    const motivoSelect = motSelEl ? motSelEl.value.trim() : '';
+    const motivoTexto  = motEl ? motEl.value.trim() : '';
+    const motivo = motivoSelect || motivoTexto || '';
+    const notas  = notasEl ? notasEl.value.trim() : '';
 
     if (isNaN(delta) || cantEl.value.trim() === '') {
         manekiToastExport('⚠️ Ingresa una cantidad válida (+para agregar / -para restar)', 'warn');
@@ -588,6 +688,22 @@ function confirmarAjusteStock() {
         cantidad: delta, motivo,
         stockAntes: antes, stockDespues: despues
     });
+
+    // Registrar también en movimientosStock con motivo estructurado y notas
+    window.movimientosStock = window.movimientosStock || [];
+    const _mvEntry = {
+        fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0]),
+        productoId: p.id,
+        productoNombre: p.name,
+        deltaStock: delta,
+        motivo: motivo || 'Ajuste manual',
+        notas: notas,
+        usuario: 'local'
+    };
+    window.movimientosStock.unshift(_mvEntry);
+    if (window.movimientosStock.length > 500) window.movimientosStock = window.movimientosStock.slice(0, 500);
+    if (typeof sbSave === 'function') sbSave('movimientosStock', window.movimientosStock);
+    else if (typeof guardarDatos === 'function') guardarDatos();
 
     // Guardar punto de reorden si se ingresó
     const prEl = document.getElementById('ajusteStockPuntoReorden');

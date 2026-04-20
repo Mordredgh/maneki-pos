@@ -61,7 +61,7 @@
                         </div>
                         <div class="text-right shrink-0">
                             <p class="text-sm font-bold text-gray-800">$${Number(p.total||0).toFixed(2)}</p>
-                            ${Number(saldo)>0 ? `<p class="text-xs text-red-600 font-semibold">Saldo: $${saldo}</p>` : '<p class="text-xs text-green-600 font-semibold">✓ Pagado</p>'}
+                            ${Number(saldo)>0 ? `<p class="text-xs font-semibold" style="color:#ea580c;">💸 Pendiente: $${saldo}</p>` : '<p class="text-xs text-green-600 font-semibold">✅ Pagado</p>'}
                             <p class="text-xs text-gray-400">${_esc(p.entrega)}</p>
                         </div>
                     </div>`;
@@ -556,6 +556,9 @@ function _updateDashboardImpl() {
     checkPedidosSinMovimiento();
     actualizarSidebarBadges();
     if (typeof actualizarBadgePOS === 'function') actualizarBadgePOS();
+    renderSyncIndicator();
+    renderResumenDia();
+    renderAccesosRapidos();
 }
 
 // NTH-08: Widget día más rentable de la semana ──────────────────────────────
@@ -760,3 +763,161 @@ function checkPedidosSinMovimiento() {
         </div>`).join('');
 }
 window.checkPedidosSinMovimiento = checkPedidosSinMovimiento;
+
+// ── MEJ-NEW-1: Indicador de sincronización con Supabase ──────────────────────
+function renderSyncIndicator() {
+    // Determinar estado de conexión
+    let estado = 'ok'; // 'ok' | 'syncing' | 'offline'
+    if (!navigator.onLine) {
+        estado = 'offline';
+    } else if (window._supabaseOnline === false) {
+        estado = 'offline';
+    } else if (window._supabaseSyncing === true) {
+        estado = 'syncing';
+    }
+
+    const iconMap   = { ok: '🟢', syncing: '🟡', offline: '🔴' };
+    const labelMap  = { ok: 'Sincronizado', syncing: 'Sincronizando...', offline: 'Sin conexión' };
+    const colorMap  = { ok: '#16a34a', syncing: '#d97706', offline: '#dc2626' };
+    const icon  = iconMap[estado];
+    const label = labelMap[estado];
+    const color = colorMap[estado];
+
+    let el = document.getElementById('syncIndicator');
+    if (!el) {
+        // Buscar el header del dashboard e inyectar el indicador
+        const header = document.getElementById('dashDate')?.closest('.flex, header, [class*="header"]')
+            || document.getElementById('dashGreeting')?.closest('.flex, [class*="header"], [class*="card"]')
+            || document.querySelector('#dashboard-section, #dashboardSection, [id*="dashboard"]');
+        if (!header) return;
+        el = document.createElement('div');
+        el.id = 'syncIndicator';
+        el.style.cssText = 'display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.85);border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:default;user-select:none;';
+        header.insertAdjacentElement('afterbegin', el);
+    }
+    el.innerHTML = `<span>${icon}</span><span style="color:${color};">${label}</span>`;
+
+    // Registrar listener online/offline una sola vez
+    if (!window._syncIndicatorBound) {
+        window._syncIndicatorBound = true;
+        window.addEventListener('online',  () => renderSyncIndicator());
+        window.addEventListener('offline', () => renderSyncIndicator());
+    }
+}
+window.renderSyncIndicator = renderSyncIndicator;
+
+// ── MEJ-NEW-2: Resumen del día (card de bienvenida) ──────────────────────────
+function renderResumenDia() {
+    const now  = new Date();
+    const hora = now.getHours();
+    const saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches';
+
+    const fechaStr = now.toLocaleDateString('es-MX', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    // Capitalizar primera letra
+    const fechaCap = fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1);
+
+    const hoy = (typeof window._fechaHoy === 'function') ? window._fechaHoy() : (() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    })();
+
+    const pedidosActivos = (window.pedidos || []).filter(p =>
+        !['finalizado','cancelado'].includes((p.status || '').toLowerCase())
+    );
+    const nActivos = pedidosActivos.length;
+
+    const nHoy = pedidosActivos.filter(p => (p.entrega || p.fechaEntrega) === hoy).length;
+
+    const _calcS = (typeof window.calcSaldoPendiente === 'function')
+        ? window.calcSaldoPendiente
+        : (p) => Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
+    const totalPorCobrar = pedidosActivos.reduce((acc, p) => acc + _calcS(p), 0);
+
+    const sinFecha = pedidosActivos.filter(p => !p.entrega && !p.fechaEntrega).length;
+
+    const html = `
+        <div id="resumenDia" style="background:linear-gradient(135deg,#fff9f0 0%,#fffbf5 100%);border:1.5px solid #f5e6cc;border-radius:18px;padding:20px 22px;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+                <div>
+                    <h2 style="font-size:1.15rem;font-weight:800;color:#1f2937;margin:0;">${saludo}, Maneki 🐱</h2>
+                    <p style="font-size:.8rem;color:#9ca3af;margin:2px 0 0;">${fechaCap}</p>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;">
+                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
+                    <p style="font-size:1.4rem;font-weight:900;color:#C5A572;margin:0;">${nActivos}</p>
+                    <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">pedidos activos</p>
+                </div>
+                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
+                    <p style="font-size:1.4rem;font-weight:900;color:#f97316;margin:0;">${nHoy}</p>
+                    <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">para entregar hoy</p>
+                </div>
+                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
+                    <p style="font-size:1.1rem;font-weight:900;color:#dc2626;margin:0;">$${totalPorCobrar.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
+                    <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">por cobrar</p>
+                </div>
+                ${sinFecha > 0 ? `<div style="background:#fef9c3;border-radius:12px;padding:10px 12px;border:1px solid #fde68a;">
+                    <p style="font-size:1.4rem;font-weight:900;color:#b45309;margin:0;">${sinFecha}</p>
+                    <p style="font-size:.7rem;color:#92400e;margin:2px 0 0;">sin fecha de entrega</p>
+                </div>` : ''}
+            </div>
+        </div>`;
+
+    // Actualizar si ya existe, o inyectar antes del primer contenido del dashboard
+    const existing = document.getElementById('resumenDia');
+    if (existing) {
+        existing.outerHTML = html;
+        return;
+    }
+
+    // Buscar el contenedor raíz del dashboard para insertar al inicio
+    const dashRoot = document.querySelector('#dashboard-section > div, #dashboardSection > div, [id*="dashboard-section"] > div')
+        || document.getElementById('dashGoalBar')?.closest('.p-6, .p-4, [class*="card"]')?.parentElement;
+    if (dashRoot) {
+        dashRoot.insertAdjacentHTML('afterbegin', html);
+    }
+}
+window.renderResumenDia = renderResumenDia;
+
+// ── MEJ-NEW-3: Accesos rápidos (quick actions) ───────────────────────────────
+function renderAccesosRapidos() {
+    if (document.getElementById('accesosRapidos')) return; // No duplicar
+
+    const acciones = [
+        { emoji: '➕', label: 'Nuevo Pedido',     fn: () => { if (typeof openPedidoModal === 'function') openPedidoModal(); else manekiToastExport('Módulo no cargado', 'warn'); } },
+        { emoji: '📦', label: 'Inventario',       fn: () => { if (typeof showSection === 'function') showSection('inventario'); } },
+        { emoji: '💰', label: 'Registrar Cobro',  fn: () => { if (typeof openIncomeModal === 'function') openIncomeModal(); else if (typeof showSection === 'function') showSection('balance'); } },
+        { emoji: '📊', label: 'Reportes',         fn: () => { if (typeof showSection === 'function') showSection('reportes'); } },
+        { emoji: '👤', label: 'Clientes',         fn: () => { if (typeof showSection === 'function') showSection('clientes'); } },
+    ];
+
+    const container = document.createElement('div');
+    container.id = 'accesosRapidos';
+    container.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;';
+
+    acciones.forEach((a, i) => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;background:#fff;border:1.5px solid #f3f4f6;border-radius:14px;cursor:pointer;font-family:inherit;transition:border-color .15s,box-shadow .15s;';
+        btn.innerHTML = `<span style="font-size:1.5rem;line-height:1;">${a.emoji}</span><span style="font-size:.68rem;font-weight:700;color:#374151;text-align:center;line-height:1.2;">${a.label}</span>`;
+        btn.title = a.label;
+        btn.addEventListener('click', a.fn);
+        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#C5A572'; btn.style.boxShadow = '0 2px 8px rgba(197,165,114,.18)'; });
+        btn.addEventListener('mouseleave', () => { btn.style.borderColor = '#f3f4f6'; btn.style.boxShadow = ''; });
+        container.appendChild(btn);
+    });
+
+    // Inyectar después del resumenDia si existe, o al inicio del dashboard
+    const afterResumen = document.getElementById('resumenDia');
+    if (afterResumen) {
+        afterResumen.insertAdjacentElement('afterend', container);
+        return;
+    }
+    const dashRoot = document.querySelector('#dashboard-section > div, #dashboardSection > div, [id*="dashboard-section"] > div')
+        || document.getElementById('dashGoalBar')?.closest('.p-6, .p-4, [class*="card"]')?.parentElement;
+    if (dashRoot) {
+        dashRoot.insertAdjacentElement('afterbegin', container);
+    }
+}
+window.renderAccesosRapidos = renderAccesosRapidos;

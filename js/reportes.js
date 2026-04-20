@@ -139,7 +139,39 @@ function renderValorInventario() {
 let comparativaMesesChart = null;
 let topProductosChart = null;
 let categoryChart = null;
+let margenCategoriaChart = null;
 
+// ── MEJORA 4: Exportar gráfica como PNG ──────────────────────────────────────
+function exportarGraficaPNG(chart, nombre) {
+    if (!chart || !chart.canvas) return;
+    const url = chart.toBase64Image('image/png', 1);
+    const a = document.createElement('a');
+    a.href = url; a.download = (nombre || 'grafica') + '.png'; a.click();
+}
+window.exportarGraficaPNG = exportarGraficaPNG;
+
+// Helper: inyecta botón de exportar PNG en esquina superior derecha de un contenedor
+function _inyectarBtnExport(containerId, chartVarName, fileName) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    var existing = container.querySelector('.mk-export-png-btn[data-chart="' + chartVarName + '"]');
+    if (existing) return;
+    var btnHtml = '<button class="mk-export-png-btn" data-chart="' + chartVarName + '" ' +
+        'onclick="exportarGraficaPNG(window[\'' + chartVarName + '\'], \'' + fileName + '\')" ' +
+        'title="Exportar como PNG" ' +
+        'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
+        'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
+        'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);" ' +
+        '>📥</button>';
+    // Ensure container has position:relative for absolute positioning
+    var parent = container.parentElement;
+    if (parent && getComputedStyle(parent).position === 'static') {
+        parent.style.position = 'relative';
+    }
+    container.insertAdjacentHTML('afterbegin', btnHtml);
+}
+
+// ── MEJORA 1: Comparativa mes a mes con año anterior ────────────────────────
 function initComparativaMeses() {
     const canvas = document.getElementById('comparativaMesesChart');
     if (!canvas) return;
@@ -147,35 +179,74 @@ function initComparativaMeses() {
         try { comparativaMesesChart.destroy(); } catch(e) {}
         comparativaMesesChart = null;
     }
-    const meses = [], ventas = [], gastos = [];
+    const meses = [], ventas = [], gastos = [], ventasAnioAnterior = [];
     const now = new Date();
+    const todasVentas = _getAllVentas();
+    const todasGastos = window.expenses || [];
+
     for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const mesStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        // Mismo mes pero un año antes
+        const dAnio = new Date(d.getFullYear() - 1, d.getMonth(), 1);
+        const mesStrAnio = `${dAnio.getFullYear()}-${String(dAnio.getMonth()+1).padStart(2,'0')}`;
         const label = d.toLocaleDateString('es-MX', { month: 'short', year: '2-digit' });
         meses.push(label);
         // FIX 6: exclude cancelled orders from monthly chart
-        ventas.push(_getAllVentas().filter(function(s){ return s.date && s.date.startsWith(mesStr) && s.method !== 'Cancelado' && s.metodo !== 'cancelado'; }).reduce(function(s,v){ return s+(Number(v.total)||0); }, 0));
-        gastos.push((window.expenses||[]).filter(e => e.date && e.date.startsWith(mesStr)).reduce((s, e) => s + (e.amount || 0), 0));
+        ventas.push(todasVentas.filter(function(s){ return s.date && s.date.startsWith(mesStr) && s.method !== 'Cancelado' && s.metodo !== 'cancelado'; }).reduce(function(s,v){ return s+(Number(v.total)||0); }, 0));
+        gastos.push(todasGastos.filter(function(e){ return e.date && e.date.startsWith(mesStr); }).reduce(function(s, e){ return s + (e.amount || 0); }, 0));
+        ventasAnioAnterior.push(todasVentas.filter(function(s){ return s.date && s.date.startsWith(mesStrAnio) && s.method !== 'Cancelado' && s.metodo !== 'cancelado'; }).reduce(function(s,v){ return s+(Number(v.total)||0); }, 0));
     }
+
     comparativaMesesChart = new Chart(canvas, {
         type: 'bar',
         data: {
             labels: meses,
             datasets: [
                 { label: 'Ventas', data: ventas, backgroundColor: '#C5A572', borderRadius: 6 },
-                { label: 'Gastos', data: gastos, backgroundColor: '#FCA5A5', borderRadius: 6 }
+                { label: 'Gastos', data: gastos, backgroundColor: '#FCA5A5', borderRadius: 6 },
+                { label: 'Ventas año anterior', data: ventasAnioAnterior, backgroundColor: 'rgba(197,165,114,0.45)', borderRadius: 6, hidden: true }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString() } } }
+            scales: { y: { beginAtZero: true, ticks: { callback: function(v){ return '$' + v.toLocaleString(); } } } }
         }
     });
 
+    // Toggle "vs. año anterior"
+    var chartWrapper = canvas.closest('div[style*="height"]') || canvas.parentElement;
+    if (chartWrapper && !document.getElementById('toggleAnioAnterior')) {
+        chartWrapper.insertAdjacentHTML('beforeend',
+            '<div style="text-align:center;margin-top:8px;">' +
+            '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#6B7280;">' +
+            '<input type="checkbox" id="toggleAnioAnterior" ' +
+            'onchange="(function(cb){if(comparativaMesesChart){comparativaMesesChart.data.datasets[2].hidden=!cb.checked;comparativaMesesChart.update();}})(this)" ' +
+            'style="cursor:pointer;accent-color:#C5A572;"> 📅 vs. año anterior</label></div>'
+        );
+    }
+
+    // MEJORA 5: Ticket promedio y métricas por mes
+    _renderTicketPromedioStats(meses, ventas, todasVentas, now);
+
+    // Exportar PNG
+    var comparativaContainer = canvas.closest('div.bg-white') || canvas.parentElement;
+    if (comparativaContainer && !comparativaContainer.id) comparativaContainer.id = 'comparativaContainer';
+    comparativaContainer.style.position = 'relative';
+    if (!comparativaContainer.querySelector('.mk-export-png-btn')) {
+        comparativaContainer.insertAdjacentHTML('afterbegin',
+            '<button class="mk-export-png-btn" ' +
+            'onclick="exportarGraficaPNG(comparativaMesesChart, \'ventas-mensuales\')" ' +
+            'title="Exportar como PNG" ' +
+            'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
+            'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
+            'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+        );
+    }
+
     // NTH: show best and worst month summary
-    const monthlyTotals = meses.map(function(label, i) { return { label: label, total: ventas[i] }; });
+    const monthlyTotals = meses.map(function(lbl, i) { return { label: lbl, total: ventas[i] }; });
     const hasData = monthlyTotals.some(function(m) { return m.total > 0; });
     var summaryEl = document.getElementById('mejorPeorMes');
     if (!summaryEl) {
@@ -197,6 +268,59 @@ function initComparativaMeses() {
     }
 }
 
+// ── MEJORA 5: Ticket promedio por mes ────────────────────────────────────────
+function _renderTicketPromedioStats(meses, ventas, todasVentas, now) {
+    var canvas = document.getElementById('comparativaMesesChart');
+    if (!canvas) return;
+
+    // Calcular pedidos por mes para ticket promedio
+    var pedidosPorMes = [];
+    for (var i = 5; i >= 0; i--) {
+        var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        var mesStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+        var pedidosMes = todasVentas.filter(function(s){
+            return s.date && s.date.startsWith(mesStr) && s.method !== 'Cancelado' && s.metodo !== 'cancelado' && s.type !== 'abono' && s.type !== 'anticipo';
+        });
+        pedidosPorMes.push(pedidosMes.length);
+    }
+
+    // Mes actual (último en el array)
+    var mesActualIdx = meses.length - 1;
+    var totalMesActual = ventas[mesActualIdx] || 0;
+    var pedidosMesActual = pedidosPorMes[mesActualIdx] || 0;
+    var ticketPromedio = pedidosMesActual > 0 ? (totalMesActual / pedidosMesActual) : 0;
+
+    // Mejor mes por revenue
+    var bestIdx = ventas.reduce(function(maxIdx, v, idx) { return v > ventas[maxIdx] ? idx : maxIdx; }, 0);
+    var bestMes = meses[bestIdx];
+    var bestTotal = ventas[bestIdx];
+
+    var statsId = 'ticketPromedioStats';
+    var existingStats = document.getElementById(statsId);
+    if (existingStats) existingStats.remove();
+
+    var chartSection = canvas.closest('div.bg-white') || canvas.parentElement;
+    if (!chartSection) return;
+
+    var statsHtml = '<div id="' + statsId + '" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #F3F4F6;">' +
+        '<div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;">' +
+        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Ticket promedio (mes)</p>' +
+        '<p style="font-size:18px;font-weight:700;color:#1F2937;margin:0;">$' + ticketPromedio.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}) + '</p>' +
+        '</div>' +
+        '<div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;">' +
+        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Pedidos este mes</p>' +
+        '<p style="font-size:18px;font-weight:700;color:#1F2937;margin:0;">' + pedidosMesActual + ' pedidos</p>' +
+        '</div>' +
+        '<div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;">' +
+        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Mejor mes (6m)</p>' +
+        '<p style="font-size:15px;font-weight:700;color:#059669;margin:0;">' + bestMes + ' · $' + bestTotal.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}) + '</p>' +
+        '</div>' +
+        '</div>';
+
+    chartSection.insertAdjacentHTML('beforeend', statsHtml);
+}
+
+// ── MEJORA 2: Top 10 productos más vendidos (por ingresos, todo el historial) ─
 function initTopProductosChart() {
     const canvas = document.getElementById('topProductosChart');
     if (!canvas) return;
@@ -204,29 +328,202 @@ function initTopProductosChart() {
         try { topProductosChart.destroy(); } catch(e) {}
         topProductosChart = null;
     }
-    const now = new Date();
-    const mesStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    // Agrupar por nombre: suma cantidad e ingresos (precio * cantidad)
     const prodMap = {};
-    _getAllVentas().filter(function(s){ return s.date && s.date.startsWith(mesStr) && s.type !== 'abono' && s.type !== 'anticipo'; }).forEach(function(s) {
-        (s.products || []).forEach(function(p) { prodMap[p.name] = (prodMap[p.name] || 0) + (Number(p.quantity) || 1); });
-        // pedidos sin desglose de productos
-        if (!(s.products||[]).length && s.concepto) { prodMap[s.concepto] = (prodMap[s.concepto]||0) + 1; }
+    _getAllVentas().filter(function(s){ return s.type !== 'abono' && s.type !== 'anticipo'; }).forEach(function(s) {
+        (s.products || []).forEach(function(p) {
+            var nombre = p.name || p.nombre || '—';
+            var qty = Number(p.quantity || p.cantidad || 1);
+            var precio = Number(p.price || p.precio || 0);
+            if (!prodMap[nombre]) prodMap[nombre] = { cantidad: 0, ingresos: 0 };
+            prodMap[nombre].cantidad += qty;
+            prodMap[nombre].ingresos += precio * qty;
+        });
+        // pedidos sin desglose de productos — usar concepto y total
+        if (!(s.products||[]).length && s.concepto) {
+            var k = s.concepto;
+            if (!prodMap[k]) prodMap[k] = { cantidad: 0, ingresos: 0 };
+            prodMap[k].cantidad += 1;
+            prodMap[k].ingresos += Number(s.total || 0);
+        }
     });
-    const top = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    if (top.length === 0) { canvas.parentElement.innerHTML = '<p class="text-gray-400 text-center pt-20 text-sm">Sin ventas este mes</p>'; return; }
+
+    // Top 10 por ingresos generados
+    const top10 = Object.entries(prodMap)
+        .sort(function(a, b) { return b[1].ingresos - a[1].ingresos; })
+        .slice(0, 10);
+
+    var canvasParent = canvas.parentElement;
+    if (top10.length === 0) {
+        canvasParent.innerHTML = '<p style="color:#9CA3AF;text-align:center;padding-top:80px;font-size:14px;">Sin ventas registradas</p>';
+        return;
+    }
+
     topProductosChart = new Chart(canvas, {
         type: 'bar',
         data: {
-            labels: top.map(([n]) => n.length > 20 ? n.slice(0, 20) + '…' : n),
-            datasets: [{ label: 'Unidades vendidas', data: top.map(([, q]) => q), backgroundColor: '#8B5CF6', borderRadius: 6 }]
+            labels: top10.map(function(e){ var n = e[0]; return n.length > 22 ? n.slice(0, 22) + '…' : n; }),
+            datasets: [{
+                label: 'Ingresos ($)',
+                data: top10.map(function(e){ return e[1].ingresos; }),
+                backgroundColor: '#8B5CF6',
+                borderRadius: 6
+            }]
         },
         options: {
-            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var idx = ctx.dataIndex;
+                            var entry = top10[idx];
+                            return ['$' + entry[1].ingresos.toLocaleString('es-MX'), entry[1].cantidad + ' unidades'];
+                        }
+                    }
+                }
+            },
+            scales: { x: { beginAtZero: true, ticks: { callback: function(v){ return '$' + v.toLocaleString(); } } } }
         }
     });
+
+    // Botón exportar PNG
+    var topContainer = canvas.closest('div.bg-white') || canvasParent;
+    topContainer.style.position = 'relative';
+    if (!topContainer.querySelector('.mk-export-png-btn')) {
+        topContainer.insertAdjacentHTML('afterbegin',
+            '<button class="mk-export-png-btn" ' +
+            'onclick="exportarGraficaPNG(topProductosChart, \'top-10-productos\')" ' +
+            'title="Exportar como PNG" ' +
+            'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
+            'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
+            'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+        );
+    }
 }
+
+// ── MEJORA 3: Margen de utilidad por categoría ───────────────────────────────
+function initMargenCategoriaChart() {
+    // Inyectar canvas si no existe
+    if (!document.getElementById('margenCategoriaCanvas')) {
+        var reportesSection = document.getElementById('reportes-section');
+        if (!reportesSection) return;
+        // Buscar el grid de gráficas para insertar el nuevo bloque
+        var gridRef = document.querySelector('#reportes-section .grid.grid-cols-1.lg\\:grid-cols-2');
+        var insertTarget = gridRef || reportesSection.querySelector('.grid') || reportesSection;
+        insertTarget.insertAdjacentHTML('beforeend',
+            '<div id="margenCategoriaWrap" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100" style="position:relative;">' +
+            '<h3 style="font-size:18px;font-weight:700;color:#1F2937;margin-bottom:16px;">📊 Margen por categoría</h3>' +
+            '<div style="height:280px;position:relative;">' +
+            '<canvas id="margenCategoriaCanvas"></canvas>' +
+            '</div></div>'
+        );
+    }
+
+    var canvas = document.getElementById('margenCategoriaCanvas');
+    if (!canvas) return;
+
+    if (margenCategoriaChart) {
+        try { margenCategoriaChart.destroy(); } catch(e) {}
+        margenCategoriaChart = null;
+    }
+
+    var cats = window.categories || [];
+    var productos = window.products || [];
+    var labels = [], datos = [], colores = [];
+
+    cats.forEach(function(cat) {
+        var prods = productos.filter(function(p) {
+            return p.category === cat.id && Number(p.price||0) > 0 && Number(p.cost||0) > 0;
+        });
+        if (prods.length === 0) return;
+        var margenTotal = prods.reduce(function(sum, p) {
+            return sum + ((Number(p.price) - Number(p.cost)) / Number(p.price) * 100);
+        }, 0);
+        var margenProm = margenTotal / prods.length;
+        labels.push(cat.name || 'Sin nombre');
+        datos.push(parseFloat(margenProm.toFixed(1)));
+        // Color por umbral
+        if (margenProm >= 40) colores.push('#10B981');       // verde
+        else if (margenProm >= 20) colores.push('#F59E0B');  // amarillo
+        else colores.push('#EF4444');                         // rojo
+    });
+
+    // Fallback: si no hay categorías definidas, agrupar por campo category de products
+    if (labels.length === 0) {
+        var catMap = {};
+        productos.forEach(function(p) {
+            if (Number(p.price||0) <= 0 || Number(p.cost||0) <= 0) return;
+            var k = String(p.category || 'Sin categoría');
+            if (!catMap[k]) catMap[k] = [];
+            catMap[k].push((Number(p.price) - Number(p.cost)) / Number(p.price) * 100);
+        });
+        Object.entries(catMap).forEach(function(entry) {
+            var k = entry[0], arr = entry[1];
+            var prom = arr.reduce(function(s,v){ return s+v; }, 0) / arr.length;
+            labels.push(k);
+            datos.push(parseFloat(prom.toFixed(1)));
+            colores.push(prom >= 40 ? '#10B981' : prom >= 20 ? '#F59E0B' : '#EF4444');
+        });
+    }
+
+    var ctx = canvas.getContext('2d');
+    if (labels.length === 0) {
+        ctx.font = '14px Inter'; ctx.fillStyle = '#9CA3AF'; ctx.textAlign = 'center';
+        ctx.fillText('Sin datos de categorías con costo y precio', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    margenCategoriaChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Margen promedio (%)',
+                data: datos,
+                backgroundColor: colores,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) { return ctx.parsed.y + '% margen'; }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: function(v){ return v + '%'; } }
+                }
+            }
+        }
+    });
+
+    // Botón exportar PNG
+    var wrap = document.getElementById('margenCategoriaWrap');
+    if (wrap && !wrap.querySelector('.mk-export-png-btn')) {
+        wrap.insertAdjacentHTML('afterbegin',
+            '<button class="mk-export-png-btn" ' +
+            'onclick="exportarGraficaPNG(margenCategoriaChart, \'margen-por-categoria\')" ' +
+            'title="Exportar como PNG" ' +
+            'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
+            'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
+            'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+        );
+    }
+}
+window.initMargenCategoriaChart = initMargenCategoriaChart;
 
 function initReports() {
     updateInventoryStats();
@@ -237,6 +534,7 @@ function initReports() {
     renderValorInventario();
     initComparativaMeses();
     initTopProductosChart();
+    initMargenCategoriaChart();
 }
 
 function updateInventoryStats() {
@@ -421,6 +719,22 @@ function initCategoryChart() {
             plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } } }
         }
     });
+
+    // MEJORA 4: Botón exportar PNG para gráfica de categorías
+    var catContainer = canvas.closest('div.bg-white') || canvas.parentElement;
+    if (catContainer) {
+        catContainer.style.position = 'relative';
+        if (!catContainer.querySelector('.mk-export-png-btn')) {
+            catContainer.insertAdjacentHTML('afterbegin',
+                '<button class="mk-export-png-btn" ' +
+                'onclick="exportarGraficaPNG(categoryChart, \'categoria-' + categoryChartMode + '\')" ' +
+                'title="Exportar como PNG" ' +
+                'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
+                'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
+                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+            );
+        }
+    }
 }
 
 // ── Historial de ventas ───────────────────────────────────────────────────
@@ -562,7 +876,13 @@ function showSection(sectionName) {
     if (sectionName === 'reportes') {
         salesHistoryPage = 1;
         const si = document.getElementById('salesSearchInput'); if (si) si.value = '';
-        setTimeout(() => { initCategoryChart(); renderSalesHistory(); }, 150);
+        setTimeout(() => {
+            initCategoryChart();
+            renderSalesHistory();
+            initComparativaMeses();
+            initTopProductosChart();
+            initMargenCategoriaChart();
+        }, 150);
     }
     if (sectionName === 'analisis')   setTimeout(() => { if (typeof renderAnalisis === 'function') renderAnalisis(); }, 100);
     if (sectionName === 'equipos') {
@@ -657,6 +977,25 @@ function initChart() {
             scales: { y: { beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'} }, x: { grid:{display:false} } }
         }
     });
+
+    // MEJORA 4: Botón exportar PNG para gráfica semanal del dashboard
+    var salesChartCanvas = document.getElementById('salesChart');
+    if (salesChartCanvas) {
+        var salesContainer = salesChartCanvas.closest('div.bg-white') || salesChartCanvas.parentElement;
+        if (salesContainer) {
+            salesContainer.style.position = 'relative';
+            if (!salesContainer.querySelector('.mk-export-png-btn')) {
+                salesContainer.insertAdjacentHTML('afterbegin',
+                    '<button class="mk-export-png-btn" ' +
+                    'onclick="exportarGraficaPNG(salesWeekChart, \'ventas-7-dias\')" ' +
+                    'title="Exportar como PNG" ' +
+                    'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
+                    'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
+                    'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+                );
+            }
+        }
+    }
 }
 
 // ── Search filter (POS) ────────────────────────────────────────────────────

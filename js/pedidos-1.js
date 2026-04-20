@@ -102,6 +102,9 @@ window.setPedidoPrioridad = setPedidoPrioridad;
 function openPedidoModal(id) {
     const form = document.getElementById('pedidoForm');
     if (form) form.reset();
+    // MEJORA 2: limpiar notasInternas al abrir modal (no está en el form nativo)
+    const _niReset = document.getElementById('pedidoNotasInternas');
+    if (_niReset) _niReset.value = '';
     window.pedidoProductosSeleccionados = [];
     window.pedidoEmpaquesSeleccionados = [];
     document.getElementById('editPedidoId').value = id || '';
@@ -126,6 +129,24 @@ function openPedidoModal(id) {
     if (_plEl) _plEl.value = '';
     calcPedidoTotal();
 
+    // MEJORA 2: Crear campo notasInternas dinámicamente si no existe
+    (function _inyectarNotasInternas() {
+        if (document.getElementById('pedidoNotasInternas')) return;
+        const taNotas = document.getElementById('pedidoNotas');
+        if (!taNotas) return;
+        const wrapper = document.createElement('div');
+        wrapper.id = 'pedidoNotasInternasWrapper';
+        wrapper.style.cssText = 'margin-top:8px;';
+        wrapper.innerHTML = `
+            <label style="display:block;font-size:.75rem;font-weight:600;color:#6b7280;margin-bottom:4px;">
+                🔒 Notas internas <span style="font-weight:400;font-style:italic;">(solo equipo — no va al cliente)</span>
+            </label>
+            <textarea id="pedidoNotasInternas" rows="2" placeholder="Notas internas (solo equipo — no va al cliente)"
+                style="width:100%;border:2px dashed #d1d5db;border-radius:8px;padding:8px 10px;font-size:.83rem;resize:vertical;outline:none;background:#fafafa;color:#374151;"
+                onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#d1d5db'"></textarea>`;
+        taNotas.parentElement.insertAdjacentElement('afterend', wrapper);
+    })();
+
     if (id) {
         const p = (window.pedidos || []).find(x => String(x.id) === String(id));
         if (p) {
@@ -141,6 +162,9 @@ function openPedidoModal(id) {
             document.getElementById('pedidoNotas').value = p.notas || '';
             document.getElementById('pedidoLugarEntrega').value = p.lugarEntrega || '';
             document.getElementById('pedidoCostoMateriales').value = p.costoMateriales || 0;
+            // MEJORA 2: cargar notasInternas
+            const _niEl = document.getElementById('pedidoNotasInternas');
+            if (_niEl) _niEl.value = p.notasInternas || '';
             window.pedidoProductosSeleccionados = [...(p.productosInventario || [])];
             window.pedidoEmpaquesSeleccionados = [...(p.empaques || [])];
             // NTH-05: cargar prioridad
@@ -290,6 +314,8 @@ function calcPedidoTotal() {
         dispGan.value = costoMat > 0 ? '$' + ganancia.toFixed(2) + (total > 0 ? ' (' + Math.round(ganancia/total*100) + '%)' : '') : '—';
         dispGan.style.color = ganancia >= 0 ? '#16a34a' : '#dc2626';
     }
+    // MEJORA 1: actualizar costo de producción visible
+    if (typeof _calcularCostoProduccionPedido === 'function') _calcularCostoProduccionPedido();
 }
 
 // ── Submit formulario de pedido ──
@@ -321,6 +347,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     const anticipoRaw = parseFloat(document.getElementById('pedidoAnticipo').value);
     const anticipo = (!isNaN(anticipoRaw) && anticipoRaw >= 0) ? anticipoRaw : 0;
     const notas = document.getElementById('pedidoNotas').value.trim();
+    const notasInternas = (document.getElementById('pedidoNotasInternas')?.value || '').trim();
     const lugarEntrega = document.getElementById('pedidoLugarEntrega').value.trim();
     const costoMateriales = parseFloat(document.getElementById('pedidoCostoMateriales').value) || 0;
     // NTH-05: prioridad del pedido
@@ -459,7 +486,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
             }
 
             // Guardar alias móvil (whatsapp/facebook) para compatibilidad bidireccional
-            window.pedidos[idx] = { ...pActual, cliente, telefono, redes, whatsapp: telefono, facebook: redes, fechaPedido, entrega, concepto, cantidad, costo, total, anticipo, resta, notas, lugarEntrega, costoMateriales, prioridad, pagos: pagosActualizados, productosInventario: (window.pedidoProductosSeleccionados || []).map(i => ({...i})), empaques: (window.pedidoEmpaquesSeleccionados || []).map(e => ({...e})) };
+            window.pedidos[idx] = { ...pActual, cliente, telefono, redes, whatsapp: telefono, facebook: redes, fechaPedido, entrega, concepto, cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad, pagos: pagosActualizados, productosInventario: (window.pedidoProductosSeleccionados || []).map(i => ({...i})), empaques: (window.pedidoEmpaquesSeleccionados || []).map(e => ({...e})) };
             savePedidos();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Pedido actualizado.', 'ok');
@@ -479,7 +506,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
             cliente, telefono, redes,
             whatsapp: telefono, facebook: redes,  // alias móvil para compatibilidad
             fechaPedido, entrega, concepto,
-            cantidad, costo, total, anticipo, resta, notas, lugarEntrega, costoMateriales, prioridad,
+            cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad,
             status: 'confirmado',
             pagos: anticipo > 0 ? [{
                 id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
@@ -576,9 +603,71 @@ function normalizarResta() {
 }
 window.normalizarResta = normalizarResta;
 
+// ── Costo de producción visible en modal (MEJORA 1) ──────────────────────────
+function _calcularCostoProduccionPedido() {
+    const items = window.pedidoProductosSeleccionados || [];
+    let costoTotal = 0;
+    items.forEach(item => {
+        const prod = (window.products || []).find(p => String(p.id) === String(item.id));
+        if (!prod) return;
+        const qty = item.quantity || item.cantidad || 1;
+        // Prioridad: costoMateriales explícito, luego mpComponentes, luego prod.costo
+        if (Array.isArray(prod.mpComponentes) && prod.mpComponentes.length > 0) {
+            const costoUnit = prod.mpComponentes.reduce((s, c) => s + (parseFloat(c.costUnit) || 0) * (parseFloat(c.qty) || 1), 0);
+            const rph = prod.rendimientoPorHoja || 0;
+            const hojas = rph > 0 ? Math.ceil(qty / rph) : qty;
+            costoTotal += costoUnit * hojas;
+        } else if (prod.costoMateriales != null && prod.costoMateriales !== '') {
+            costoTotal += (parseFloat(prod.costoMateriales) || 0) * qty;
+        } else if (prod.costo != null && prod.costo !== '') {
+            costoTotal += (parseFloat(prod.costo) || 0) * qty;
+        }
+    });
+
+    // Calcular total de venta desde calcPedidoTotal logic
+    let total = 0;
+    if (items.length > 0) {
+        total = window._sumLineas ? _sumLineas(items) :
+            items.reduce((s, it) => s + (parseFloat(it.price) || 0) * (it.quantity || 1), 0);
+    } else {
+        const plEl = document.getElementById('pedidoPrecioLibre');
+        if (plEl) total = parseFloat(plEl.value) || 0;
+    }
+
+    const margen = total > 0 ? Math.round((total - costoTotal) / total * 100) : 0;
+
+    // Crear o actualizar el elemento #pedidoCostoProduccion
+    let el = document.getElementById('pedidoCostoProduccion');
+    if (!el) {
+        const btnGuardar = document.getElementById('pedidoSubmitBtn');
+        if (btnGuardar && btnGuardar.parentElement) {
+            el = document.createElement('div');
+            el.id = 'pedidoCostoProduccion';
+            el.style.cssText = 'font-size:.78rem;padding:6px 10px;border-radius:8px;margin-bottom:8px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-weight:600;';
+            btnGuardar.parentElement.insertBefore(el, btnGuardar);
+        }
+    }
+    if (el) {
+        if (costoTotal > 0 || items.length > 0) {
+            el.style.display = '';
+            el.textContent = `Costo producción: $${costoTotal.toFixed(2)} | Margen estimado: ${margen}%`;
+            el.style.color = margen >= 30 ? '#166534' : margen >= 10 ? '#92400e' : '#991b1b';
+            el.style.background = margen >= 30 ? '#f0fdf4' : margen >= 10 ? '#fffbeb' : '#fef2f2';
+            el.style.borderColor = margen >= 30 ? '#bbf7d0' : margen >= 10 ? '#fde68a' : '#fecaca';
+        } else {
+            el.style.display = 'none';
+        }
+    }
+}
+window._calcularCostoProduccionPedido = _calcularCostoProduccionPedido;
+
 // ── Template chips para el campo de notas ──────────────────────────────────
 function pedidoInsertarTemplate(texto) {
-    const ta = document.getElementById('pedidoNotas');
+    // MEJORA 2: insertar en el campo con foco activo (notas o notasInternas)
+    const taInternas = document.getElementById('pedidoNotasInternas');
+    const taNormal = document.getElementById('pedidoNotas');
+    // Detectar cuál textarea tiene el foco o fue el último activo
+    const ta = (taInternas && document.activeElement === taInternas) ? taInternas : taNormal;
     if (!ta) return;
     const actual = ta.value.trim();
     ta.value = actual ? actual + '\n' + texto : texto;
@@ -645,6 +734,28 @@ function renderKanbanBoard() {
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     let lista = window.pedidos || [];
 
+    // MEJORA 7: Pipeline value bar
+    (function _renderPipelineBar() {
+        const activos = (window.pedidos || []).filter(p => p.status !== 'cancelado');
+        const pipelineTotal = activos.reduce((s, p) => s + (Number(p.total) || 0), 0);
+        const pipelinePendiente = activos.reduce((s, p) => {
+            const saldo = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - Number(p.anticipo||0));
+            return s + saldo;
+        }, 0);
+        let barEl = document.getElementById('_kanbanPipelineBar');
+        const kanbanSection = document.getElementById('vistaKanban');
+        if (!barEl && kanbanSection) {
+            barEl = document.createElement('div');
+            barEl.id = '_kanbanPipelineBar';
+            barEl.style.cssText = 'background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 16px;margin-bottom:10px;font-size:.82rem;font-weight:600;color:#92400e;display:flex;align-items:center;gap:16px;flex-wrap:wrap;';
+            kanbanSection.insertAdjacentElement('afterbegin', barEl);
+        }
+        if (barEl) {
+            const _m = n => '$' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            barEl.innerHTML = `<span>📊 Pipeline: <strong style="color:#d97706;">${_m(pipelineTotal)}</strong> total activo</span><span>|</span><span>⏳ Pendiente de cobro: <strong style="color:#dc2626;">${_m(pipelinePendiente)}</strong></span><span style="color:#b45309;font-weight:400;">(${activos.length} pedido${activos.length!==1?'s':''})</span>`;
+        }
+    })();
+
     // NTH-03: aplicar filtro de urgencia
     if (_kanbanUrgenciaFiltro !== 'todos') {
         lista = lista.filter(p => {
@@ -699,9 +810,20 @@ function kanbanCardHTML(p) {
     }
     // BUG-PED-005 FIX: XSS en campos de usuario — _esc() sanitiza antes de insertar en innerHTML
     const _e = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+    // MEJORA 4: checkbox de selección en lote (visible on-hover)
+    const _isSelected = window._kanbanSeleccionados && window._kanbanSeleccionados.has(String(p.id));
+    const _checkboxHtml = `<input type="checkbox" ${_isSelected ? 'checked' : ''}
+        onchange="_toggleKanbanSelect('${p.id}', this.checked)"
+        onclick="event.stopPropagation()"
+        style="position:absolute;top:6px;right:6px;width:16px;height:16px;cursor:pointer;accent-color:#C5A572;opacity:${_isSelected ? '1' : '0'};transition:opacity .15s;"
+        class="_kanban-check"
+        title="Seleccionar para acción en lote">`;
+
     if (_kanbanCompacto) {
         return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex items-center gap-2"
+            style="position:relative;" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
             draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
+            ${_checkboxHtml}
             <div class="flex-1 min-w-0">
                 <span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
                 <span class="text-xs text-gray-700 ml-1 truncate">${_e(p.cliente)}</span>
@@ -741,7 +863,9 @@ function kanbanCardHTML(p) {
            </div>`
         : '';
     return `<div class="kanban-card bg-white rounded-xl p-3 shadow-sm border border-gray-100 select-none"
+        style="position:relative;" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
+        ${_checkboxHtml}
         ${_retrasadoHTML}
         <div class="flex justify-between items-start mb-1">
             <div class="flex items-center flex-wrap gap-1">

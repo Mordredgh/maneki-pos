@@ -325,6 +325,29 @@ function mostrarListaCompras(esRerender) {
             </div>`;
         }
 
+        // Top 5 más producibles (PT con mpComponentes)
+        const ptProducibles = (window.products || [])
+            .filter(p => (!p.tipo || p.tipo === 'producto' || p.tipo === 'producto_interno' || p.tipo === 'pack') && Array.isArray(p.mpComponentes) && p.mpComponentes.length > 0)
+            .map(p => ({ prod: p, producibles: typeof calcularProducibles === 'function' ? (calcularProducibles(p) ?? 0) : 0 }))
+            .sort((a, b) => b.producibles - a.producibles)
+            .slice(0, 5);
+
+        if (ptProducibles.length > 0) {
+            let topHtml = `<div style="margin-top:20px;padding:14px 16px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;">
+                <p style="font-size:.7rem;font-weight:800;color:#166534;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">🏭 Top 5 más producibles ahora</p>
+                <div style="display:flex;flex-direction:column;gap:6px;">`;
+            ptProducibles.forEach(({ prod, producibles }) => {
+                const clr = producibles >= 5 ? '#16a34a' : producibles >= 1 ? '#d97706' : '#dc2626';
+                const bg  = producibles >= 5 ? '#d1fae5' : producibles >= 1 ? '#fef3c7' : '#fee2e2';
+                topHtml += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;">
+                    <span style="font-size:.8rem;font-weight:600;color:#374151;">${_esc(prod.name)}</span>
+                    <span style="padding:2px 10px;border-radius:99px;font-size:.75rem;font-weight:700;background:${bg};color:${clr};">${producibles} uds</span>
+                </div>`;
+            });
+            topHtml += `</div></div>`;
+            html += topHtml;
+        }
+
         content.innerHTML = html;
     }
 
@@ -428,12 +451,38 @@ window.sortInventory = sortInventory;
 
 // ── Alertas de stock bajo ──────────────────────────────────────────────────
 let _lastTelegramAlert = window._lastTelegramStockAlert || 0;
+
+// Helper: dado un producto (materia prima), encuentra los pedidos activos que lo usan
+function _pedidosQueUsanMP(mpId) {
+    const estadosActivos = ['confirmado', 'pago', 'produccion', 'envio', 'salida', 'retirar', 'pendiente'];
+    return (window.pedidos || []).filter(ped => {
+        if (!estadosActivos.includes(ped.status || '')) return false;
+        // Buscar si algún producto del pedido tiene este MP como componente
+        return (ped.productosInventario || []).some(item => {
+            const prod = (window.products || []).find(p => String(p.id) === String(item.id));
+            if (!prod) return false;
+            return (prod.mpComponentes || []).some(c => String(c.id) === String(mpId));
+        });
+    });
+}
+window._pedidosQueUsanMP = _pedidosQueUsanMP;
+
 function checkStockAlerts() {
     const todos    = window.products||[];
     const agotados = todos.filter(p => getStockEfectivo(p) === 0);
     const bajos    = todos.filter(p => { const s = getStockEfectivo(p); return s > 0 && s <= (p.puntoReorden ?? p.stockMin ?? 5); });
     const mpBajas  = bajos.filter(p => p.tipo === 'materia_prima');
     const mpAgotadas = agotados.filter(p => p.tipo === 'materia_prima');
+
+    // Revisar si materias primas críticas afectan pedidos activos
+    const mpCriticas = [...mpAgotadas, ...mpBajas];
+    mpCriticas.forEach(mp => {
+        const pedAfectados = _pedidosQueUsanMP(mp.id);
+        if (pedAfectados.length > 0) {
+            const folios = pedAfectados.map(p => p.folio || p.id).slice(0, 5).join(', ');
+            manekiToastExport(`🚨 URGENTE: "${mp.name}" con stock crítico — afecta pedidos: ${folios}`, 'err');
+        }
+    });
 
     if (agotados.length) manekiToastExport(`🔴 ${agotados.length} producto(s) agotado(s)`, 'warn');
     if (bajos.length)    manekiToastExport(`⚠️ ${bajos.length} producto(s) con stock bajo`, 'warn');
@@ -520,15 +569,17 @@ window._alertaStockWA = _alertaStockWA;
 
 // ── Exportar CSV ───────────────────────────────────────────────────────────
 function exportarInventarioCSV() {
-    const headers = ['SKU','Nombre','Categoría','Tipo','Costo','Precio','Stock','Stock Mín','Margen%','Proveedor','Estado','Tags','Variantes'];
+    const headers = ['SKU','Nombre','Categoría','Tipo','Costo','Precio','Stock','Stock Mín','Margen%','Producibles','Proveedor','Proveedor URL','Estado','Tags','Variantes','Última actualización'];
     const rows = (window.products||[]).map(p => {
         const cat    = ((window.categories||[]).find(c => c.id === p.category)||{}).name || p.category;
         const margen = (p.cost && p.price) ? (((p.price-p.cost)/p.price)*100).toFixed(0)+'%' : '';
         const _stExport = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (p.stock || 0);
         const estado = _stExport===0 ? 'Agotado' : _stExport<=(p.stockMin||5) ? 'Bajo Stock' : 'Disponible';
+        const producibles = typeof calcularProducibles === 'function' ? (calcularProducibles(p) ?? '') : '';
+        const updatedAt = p.updatedAt ? new Date(p.updatedAt).toLocaleString('es-MX') : '';
         return [p.sku, p.name, cat, p.tipo||'producto', p.cost||0, p.price||0, _stExport, p.stockMin||5,
-                margen, p.proveedor||'', estado, (p.tags||[]).join('; '),
-                (p.variants||[]).map(v=>`${v.type}:${v.value}(${v.qty??0})`).join('; ')]
+                margen, producibles, p.proveedor||'', p.proveedorUrl||'', estado, (p.tags||[]).join('; '),
+                (p.variants||[]).map(v=>`${v.type}:${v.value}(${v.qty??0})`).join('; '), updatedAt]
             .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
     });
     const csv  = [headers.join(','),...rows].join('\n');

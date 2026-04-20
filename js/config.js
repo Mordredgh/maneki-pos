@@ -545,7 +545,7 @@ async function initApp() {
         const [
             _products, _clients, _salesHistory, _quotes,
             _incomes, _expenses, _receivables, _payables,
-            _pedidos, _stockMov, _gastosRec, _pedidosFin, _storeConf
+            _pedidos, _stockMov, _gastosRec, _pedidosFin, _storeConf, _ingresosRec
         ] = await Promise.all([
             sbLoad('products', []),
             sbLoad('clients', []),
@@ -560,21 +560,23 @@ async function initApp() {
             sbLoad('gastosRecurrentes', []),
             sbLoad('pedidosFinalizados', []),
             sbLoad('storeConfig', storeConfig),
+            sbLoad('ingresosRecurrentes', []),
         ]);
 
-        products           = _products;
-        clients            = _clients;
-        salesHistory       = _salesHistory;
-        quotes             = _quotes;
-        incomes            = _incomes;
-        expenses           = _expenses;
-        receivables        = _receivables;
-        payables           = _payables;
-        pedidos            = _pedidos;
-        stockMovimientos   = _stockMov;
-        gastosRecurrentes  = _gastosRec;
-        pedidosFinalizados = _pedidosFin;
-        storeConfig        = _storeConf;
+        products             = _products;
+        clients              = _clients;
+        salesHistory         = _salesHistory;
+        quotes               = _quotes;
+        incomes              = _incomes;
+        expenses             = _expenses;
+        receivables          = _receivables;
+        payables             = _payables;
+        pedidos              = _pedidos;
+        stockMovimientos     = _stockMov;
+        gastosRecurrentes    = _gastosRec;
+        pedidosFinalizados   = _pedidosFin;
+        storeConfig          = _storeConf;
+        window.ingresosRecurrentes = _ingresosRec;
 
         splashProgress(4, 'Cargando configuración...');
 
@@ -687,6 +689,7 @@ async function initApp() {
             window.stockMovimientos   = stockMovimientos;
             window.stockMovements     = stockMovimientos; // inventory.js usa este nombre
             window.gastosRecurrentes  = gastosRecurrentes;
+            window.ingresosRecurrentes = window.ingresosRecurrentes || [];
             window.storeConfig        = storeConfig;
             window.notas              = notas;
             window.equipos            = equipos;
