@@ -418,7 +418,7 @@ function renderInventoryTable() {
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ''}
                     ${product.proveedorNombre ? `<div style="margin-top:2px;font-size:.72rem;color:#065f46;display:flex;align-items:center;gap:3px;" title="${_esc(product.proveedorNotas||'')}">🏭 Proveedor: <b>${_esc(product.proveedorNombre)}</b>${product.proveedorNotas ? ' ℹ️' : ''}</div>` : ''}
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">${_esc(t)}</span>`).join('')}</div>` : ''}
-                    ${(() => { const _prod = calcularProducibles(product); if (_prod === null) return ''; const _pclr = _prod >= 5 ? '#16a34a' : _prod >= 1 ? '#d97706' : '#dc2626'; const _pbg = _prod >= 5 ? '#d1fae5' : _prod >= 1 ? '#fef3c7' : '#fee2e2'; return `<div style="margin-top:3px;"><span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:99px;background:${_pbg};color:${_pclr};border:1px solid ${_pclr}33;">🏭 Producibles: ${_prod}</span></div>`; })()}
+                    ${(() => { const _prod = calcularProducibles(product); if (_prod === null) return ''; const _pclr = _prod >= 5 ? '#16a34a' : _prod >= 1 ? '#d97706' : '#dc2626'; const _pbg = _prod >= 5 ? '#d1fae5' : _prod >= 1 ? '#fef3c7' : '#fee2e2'; const _txt = _prod === 0 ? 'Sin stock MP' : `Producibles: ${_prod}`; return `<div style="margin-top:3px;"><span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:99px;background:${_pbg};color:${_pclr};border:1px solid ${_pclr}33;">🏭 ${_txt}</span></div>`; })()}
                 </div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
@@ -1197,7 +1197,7 @@ function invBulkDesseleccionar() {
 }
 window.invBulkDesseleccionar = invBulkDesseleccionar;
 
-function invBulkEliminar() {
+async function invBulkEliminar() {
   const ids = invGetSelectedIds();
   if (!ids.length) return;
   // Verificar pedidos activos que usen estos productos
@@ -1210,11 +1210,21 @@ function invBulkEliminar() {
       if (!confirm(`⚠️ ${_pedAfectados.length} pedido(s) activo(s) usan estos productos (${_folios}). ¿Eliminar de todas formas?`)) return;
   }
   if (!confirm(`¿Eliminar ${ids.length} producto(s)? Esta acción no se puede deshacer.`)) return;
-  window.products = (window.products||[]).filter(p => !ids.includes(String(p.id)));
+  // FIX-3: capturar IDs antes de filtrar para poder usarlos en Supabase
+  const idsAEliminar = [...ids];
+  window.products = (window.products||[]).filter(p => !idsAEliminar.includes(String(p.id)));
   saveProducts();
   renderInventoryTable();
   invUpdateBulkBar();
-  manekiToastExport(`🗑 ${ids.length} producto(s) eliminados`, 'ok');
+  // FIX-3: Eliminar de tabla relacional Supabase para que no aparezcan en la web store
+  if (typeof db !== 'undefined' && db) {
+      try {
+          await db.from('products').delete().in('id', idsAEliminar);
+      } catch(e) {
+          console.warn('[BulkEliminar] Error al eliminar de Supabase relacional:', e);
+      }
+  }
+  manekiToastExport(`🗑 ${idsAEliminar.length} producto(s) eliminados`, 'ok');
 }
 window.invBulkEliminar = invBulkEliminar;
 

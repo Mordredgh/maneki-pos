@@ -71,6 +71,10 @@ async function imprimirTicketPedido(id) {
         <div style="margin-top:4px;font-size:11px;color:#9ca3af;">📍 ${p.lugarEntrega}</div>` : '';
 
     const win = window.open('', '_blank', 'width=480,height=750,scrollbars=yes');
+    if (!win) {
+        manekiToastExport('⚠️ El navegador bloqueó la ventana de impresión. Permite popups para este sitio.', 'warn');
+        return;
+    }
     win.document.write(`<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8">
@@ -364,7 +368,7 @@ function duplicarPedido(id) {
                   || (window.pedidosFinalizados || []).find(p => String(p.id) === String(id));
     if (!original) return;
     const nuevoId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + Math.random());
-    const hoy = (()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+    const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
     const copia = {
         ...original,
         id: nuevoId,
@@ -1107,7 +1111,9 @@ function imprimirEtiquetaPedido(id) {
     const total     = Number(p.total    || 0).toFixed(2);
     const anticipo  = Number(p.anticipo || 0).toFixed(2);
     const resta     = Math.max(0, Number(p.resta || 0)).toFixed(2);
-    const fechaImpresion = new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric' });
+    // FIX-6: usar _fechaHoy() para evitar UTC shift; reformatear a dd/mm/yyyy para mostrar
+    const _hoyISO = typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+    const fechaImpresion = _hoyISO.split('-').reverse().join('/');
 
     const _ee = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 

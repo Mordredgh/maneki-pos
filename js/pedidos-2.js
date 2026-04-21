@@ -294,7 +294,9 @@ function _regresarInventarioCompleto(pedido) {
             prod.mpComponentes.forEach(comp => {
                 const mp = (window.products || []).find(p => String(p.id) === String(comp.id));
                 if (!mp || mp.tipo === 'servicio') return;
-                const cantMP = (parseFloat(comp.qty) || 1) * cantidad;
+                // FIX-2: usar la misma fórmula que _descontarInventarioPedido (considera rendimientoPorHoja)
+                const rph = prod.rendimientoPorHoja || 1;
+                const cantMP = Math.ceil(cantidad / rph) * (parseFloat(comp.qty) || 1);
                 const antesMP = mp.stock || 0;
 
                 // Devolver a la variante específica si aplica
@@ -604,7 +606,7 @@ function openAbonoPedido(id) {
         <p><b>Folio:</b> ${p.folio}</p>
         <p><b>Total:</b> $${Number(p.total||0).toFixed(2)}</p>
         <p><b>Anticipo:</b> $${Number(p.anticipo||0).toFixed(2)}</p>
-        <p class="font-bold text-red-600"><b>Saldo:</b> $${Number(p.resta||0).toFixed(2)}</p>
+        <p class="font-bold text-red-600"><b>Saldo:</b> $${(typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - Number(p.anticipo||0))).toFixed(2)}</p>
         ${_historialHTML}`;
     document.getElementById('abonoPedidoMonto').value = '';
     document.getElementById('abonoPedidoNota').value = '';
@@ -883,26 +885,75 @@ function _aplicarCambioLote() {
     if (!nuevoStatus) return;
     const _fecha = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
     let cambiados = 0;
+    let finalizados = 0;
+
     _kanbanSeleccionados.forEach(id => {
         const idx = (window.pedidos || []).findIndex(p => String(p.id) === String(id));
         if (idx === -1) return;
-        window.pedidos[idx].status = nuevoStatus;
-        window.pedidos[idx].fechaUltimoEstado = new Date().toISOString();
-        if (!window.pedidos[idx].historialEstados) window.pedidos[idx].historialEstados = [];
-        window.pedidos[idx].historialEstados.push({
-            estado: nuevoStatus,
+        const p = window.pedidos[idx];
+
+        // Registrar en historialEstados para cualquier status
+        p.historialEstados = [...(p.historialEstados || []), {
+            status: nuevoStatus,
             fecha: _fecha,
             hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
             nota: 'Cambio en lote'
-        });
+        }];
+
+        if (nuevoStatus === 'finalizado' || nuevoStatus === 'entregado') {
+            // Guard de negocio: mover a finalizados igual que el flujo normal
+            if (!window.pedidosFinalizados) window.pedidosFinalizados = [];
+            const pedidoFin = {
+                ...p,
+                status: nuevoStatus,
+                fechaFinalizado: _fecha
+            };
+            // Descontar inventario si no se hizo antes
+            if ((pedidoFin.productosInventario || []).length > 0 && !pedidoFin.inventarioDescontado) {
+                try {
+                    const n = _descontarInventarioPedido(pedidoFin);
+                    if (n > 0) {
+                        pedidoFin.inventarioDescontado = true;
+                        pedidoFin._inventarioYaFinalizado = true;
+                    }
+                } catch(e) { console.error('[Lote] Error al descontar inventario:', e); }
+            }
+            // Descontar empaques si no se hicieron antes
+            if ((pedidoFin.empaques || []).length > 0 && !pedidoFin.empaquesDescontados) {
+                const nEmp = _descontarEmpaquesInventario(pedidoFin);
+                if (nEmp > 0) pedidoFin.empaquesDescontados = true;
+            }
+            window.pedidosFinalizados.push(pedidoFin);
+            window.pedidos.splice(idx, 1);
+            finalizados++;
+        } else {
+            // Guard de negocio: descontar inventario al pasar a producción
+            if (nuevoStatus === 'produccion' && !p.inventarioDescontado) {
+                if ((p.productosInventario || []).length > 0) {
+                    try {
+                        const n = _descontarInventarioPedido(p);
+                        if (n > 0) p.inventarioDescontado = true;
+                    } catch(e) { console.error('[Lote] Error al descontar inventario:', e); }
+                }
+            }
+            p.status = nuevoStatus;
+            p.fechaUltimoEstado = new Date().toISOString();
+        }
         cambiados++;
     });
+
     if (cambiados > 0) {
-        savePedidos();
+        guardarDatos ? guardarDatos() : savePedidos();
+        if (finalizados > 0) {
+            savePedidosFinalizados();
+            renderHistorialPedidos();
+        }
         _kanbanSeleccionados.clear();
         _actualizarBarraLote();
-        renderKanbanBoard();
-        manekiToastExport(`✅ ${cambiados} pedido${cambiados!==1?'s':''} actualizados a "${nuevoStatus}".`, 'ok');
+        if (typeof renderKanbanBoard === 'function') renderKanbanBoard();
+        else if (typeof renderKanban === 'function') renderKanban();
+        const msgFin = finalizados > 0 ? ` (${finalizados} finalizado${finalizados!==1?'s':''})` : '';
+        manekiToastExport(`✅ ${cambiados} pedido${cambiados!==1?'s':''} actualizados a "${nuevoStatus}"${msgFin}.`, 'ok');
     }
 }
 window._aplicarCambioLote = _aplicarCambioLote;
@@ -949,7 +1000,8 @@ function reactivarPedido(id) {
             ...p,
             status: 'confirmado',
             inventarioDescontado: false,
-            _inventarioYaFinalizado: false
+            _inventarioYaFinalizado: false,
+            empaquesDescontados: false
         };
         delete reactivado.fechaFinalizado;
         delete reactivado.fechaCancelado;

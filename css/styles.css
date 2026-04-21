@@ -156,7 +156,7 @@
             font-weight: 500 !important;
             font-size: 0.875rem !important;
             letter-spacing: 0.005em !important;
-            color: rgba(92,61,30,0.65) !important;
+            color: rgba(92,61,30,0.82) !important;
             transition: all 0.18s var(--snap) !important;
             position: relative !important;
         }
@@ -294,6 +294,12 @@
             color: var(--text-primary) !important;
             transition: all 0.18s var(--out) !important;
             box-shadow: inset 0 1.5px 4px rgba(42,26,14,0.04) !important;
+        }
+        /* FIX-5: Mínimo 16px en mobile para evitar zoom automático en iOS */
+        @media (max-width: 1023px) {
+            input, select, textarea {
+                font-size: max(16px, 1em) !important;
+            }
         }
         input:focus, textarea:focus, select:focus {
             border-color: var(--gold) !important;
@@ -566,7 +572,7 @@
             color: var(--ink2) !important;
             box-shadow: 0 4px 16px rgba(201,147,58,0.18);
         }
-        .sidebar-item { color: rgba(92,61,30,0.65) !important; }
+        .sidebar-item { color: rgba(92,61,30,0.82) !important; }
         .sidebar .sidebar-store-name { color: var(--ink) !important; }
         .sidebar .sidebar-store-slogan { color: var(--gold) !important; }
         .sidebar .border-t { border-color: rgba(201,147,58,0.15) !important; }
@@ -1326,8 +1332,8 @@ body, .sidebar, .bg-white, input, textarea, select, table {
 
         /* ── KANBAN URGENCY BAR ── */
         .kanban-urgency-bar {
-            height: 3px;
-            border-radius: 99px;
+            height: 5px; /* FIX-7: era 3px — más visible */
+            border-radius: 3px;
             margin-top: 8px;
             transition: width 0.4s ease;
         }
@@ -1389,19 +1395,25 @@ body, .sidebar, .bg-white, input, textarea, select, table {
 /* ══════════════════════════════ */
 
 
-      body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
-      h1 { font-size: 18px; margin-bottom: 4px; }
-      p { color: #666; margin-bottom: 16px; }
-      table { width: 100%; border-collapse: collapse; }
-      th { background: #f3f4f6; text-align: left; padding: 8px; border: 1px solid #ddd; }
-      td { padding: 6px 8px; border: 1px solid #eee; }
-      tr:nth-child(even) { background: #f9f9f9; }
-      @media print { button { display: none; } }
+      /* FIX-6: reglas de plantilla de impresión — movidas a @media print */
+      @media print {
+        body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
+        h1 { font-size: 18px; margin-bottom: 4px; }
+        p { color: #666; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f3f4f6; text-align: left; padding: 8px; border: 1px solid #ddd; }
+        td { padding: 6px 8px; border: 1px solid #eee; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        button { display: none; }
+      }
     
 
 /* ══════════════════════════════ */
 
-body{font-family:sans-serif;padding:2rem;} h1{color:var(--gold,#C9933A);} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#C9933A;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#5C3D1E;} .meta{font-size:12px;color:#9B7B5A;margin-top:4px;} @media print{body{padding:0.5rem;}}
+/* FIX-6: plantilla de impresión de cotizaciones — movida a @media print */
+@media print {
+  body{padding:2rem;} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#C9933A;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#5C3D1E;} .meta{font-size:12px;color:#9B7B5A;margin-top:4px;} body{padding:0.5rem;}
+}
 
 
 /* ══════════════════════════════════════════

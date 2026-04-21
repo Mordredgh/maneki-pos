@@ -146,7 +146,15 @@ function exportarGraficaPNG(chart, nombre) {
     if (!chart || !chart.canvas) return;
     const url = chart.toBase64Image('image/png', 1);
     const a = document.createElement('a');
-    a.href = url; a.download = (nombre || 'grafica') + '.png'; a.click();
+    a.href = url;
+    a.download = (nombre || 'grafica') + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    if (typeof manekiToastExport === 'function') {
+        manekiToastExport('📥 Gráfica guardada: ' + (nombre || 'grafica') + '.png', 'ok');
+    }
 }
 window.exportarGraficaPNG = exportarGraficaPNG;
 
@@ -305,7 +313,7 @@ function _renderTicketPromedioStats(meses, ventas, todasVentas, now) {
     var statsHtml = '<div id="' + statsId + '" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #F3F4F6;">' +
         '<div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;">' +
         '<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Ticket promedio (mes)</p>' +
-        '<p style="font-size:18px;font-weight:700;color:#1F2937;margin:0;">$' + ticketPromedio.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}) + '</p>' +
+        '<p style="font-size:18px;font-weight:700;color:#1F2937;margin:0;">' + (pedidosMesActual > 0 ? '$' + ticketPromedio.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}) : '—') + '</p>' +
         '</div>' +
         '<div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;">' +
         '<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Pedidos este mes</p>' +
@@ -356,9 +364,21 @@ function initTopProductosChart() {
 
     var canvasParent = canvas.parentElement;
     if (top10.length === 0) {
-        canvasParent.innerHTML = '<p style="color:#9CA3AF;text-align:center;padding-top:80px;font-size:14px;">Sin ventas registradas</p>';
+        canvas.style.display = 'none';
+        var _nodata = canvasParent.querySelector('._nodata-msg');
+        if (!_nodata) {
+            _nodata = document.createElement('p');
+            _nodata.className = '_nodata-msg';
+            _nodata.style.cssText = 'text-align:center;color:#9ca3af;padding:24px;font-size:13px;';
+            canvasParent.appendChild(_nodata);
+        }
+        _nodata.textContent = 'Sin ventas registradas aún';
         return;
     }
+    // Hay datos: restaurar canvas y quitar mensaje de no-datos si existía
+    canvas.style.display = '';
+    var _oldMsg = canvasParent.querySelector('._nodata-msg');
+    if (_oldMsg) _oldMsg.remove();
 
     topProductosChart = new Chart(canvas, {
         type: 'bar',

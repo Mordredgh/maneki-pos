@@ -689,19 +689,23 @@ function confirmarAjusteStock() {
         stockAntes: antes, stockDespues: despues
     });
 
-    // Registrar también en movimientosStock con motivo estructurado y notas
+    // FIX-2 + FIX-5: Registrar en movimientosStock (array canónico) con estructura completa
     window.movimientosStock = window.movimientosStock || [];
+    const motivoEl  = document.getElementById('ajusteStockMotivoSelect');
+    const notasEl2  = document.getElementById('ajusteStockNotasExtra');
     const _mvEntry = {
+        id: Date.now() + Math.random(),
         fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0]),
         productoId: p.id,
-        productoNombre: p.name,
+        productoNombre: p.name || p.nombre,
         deltaStock: delta,
-        motivo: motivo || 'Ajuste manual',
-        notas: notas,
+        stockResultante: despues,
+        motivo: motivoEl ? motivoEl.value : (motivo || 'Ajuste manual'),
+        notas: notasEl2 ? notasEl2.value : notas,
         usuario: 'local'
     };
     window.movimientosStock.unshift(_mvEntry);
-    if (window.movimientosStock.length > 500) window.movimientosStock = window.movimientosStock.slice(0, 500);
+    if (window.movimientosStock.length > 200) window.movimientosStock = window.movimientosStock.slice(0, 200);
     if (typeof sbSave === 'function') sbSave('movimientosStock', window.movimientosStock);
     else if (typeof guardarDatos === 'function') guardarDatos();
 

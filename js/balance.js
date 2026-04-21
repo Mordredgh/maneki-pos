@@ -325,6 +325,52 @@ function eliminarRecurrente(idx) {
         manekiToastExport('🗑️ Gasto recurrente eliminado', 'ok');
     });
 }
+
+// FIX-2: Panel de gestión de ingresos recurrentes ─────────────────────────
+function toggleIngresosRecurrentesPanel() {
+    let panel = document.getElementById('ingresosRecurrentesPanel');
+    if (!panel) {
+        // Crear el panel la primera vez junto al panel de gastos recurrentes
+        const gastosPanel = document.getElementById('recurrentesPanel');
+        if (!gastosPanel) return;
+        panel = document.createElement('div');
+        panel.id = 'ingresosRecurrentesPanel';
+        panel.className = 'hidden mt-2 p-3 bg-green-50 border border-green-200 rounded-xl';
+        panel.innerHTML = '<ul id="ingresosRecurrentesLista"></ul>';
+        gastosPanel.parentElement.insertBefore(panel, gastosPanel.nextSibling);
+    }
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) renderIngresosRecurrentesPanel();
+}
+
+function renderIngresosRecurrentesPanel() {
+    const lista = document.getElementById('ingresosRecurrentesLista');
+    if (!lista) return;
+    const arr = window.ingresosRecurrentes || [];
+    if (arr.length === 0) {
+        lista.innerHTML = '<p class="text-xs text-green-700">Sin ingresos recurrentes configurados.</p>';
+        return;
+    }
+    lista.innerHTML = arr.map((ir, i) => {
+        const diaStr = ir.dia ? `<span class="text-xs text-gray-400 ml-1">(día ${ir.dia})</span>` : '';
+        return `<div class="flex justify-between items-center py-1">
+            <span class="text-xs text-green-800 font-semibold">${_escBal(ir.concept)} — $${Number(ir.amount).toFixed(2)}/mes ${diaStr}</span>
+            <button onclick="eliminarIngresoRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">🗑️ Eliminar</button>
+        </div>`;
+    }).join('');
+}
+
+function eliminarIngresoRecurrente(idx) {
+    window.ingresosRecurrentes.splice(idx, 1);
+    saveIngresosRecurrentes();
+    renderIngresosRecurrentesPanel();
+    manekiToastExport('✅ Ingreso recurrente eliminado', 'ok');
+}
+
+window.toggleIngresosRecurrentesPanel = toggleIngresosRecurrentesPanel;
+window.renderIngresosRecurrentesPanel = renderIngresosRecurrentesPanel;
+window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
+
         function renderBalance() {
             procesarGastosRecurrentes();
             procesarIngresosRecurrentes();
@@ -606,6 +652,44 @@ function eliminarRecurrente(idx) {
             openModal(modal);
         }
         
+        // FIX-3: Editar movimiento existente (ingreso o gasto) ─────────────────────
+        function editBalanceItem(type, id) {
+            const list = type === 'income' ? incomes : expenses;
+            const item = list.find(i => String(i.id) === String(id));
+            if (!item) return;
+
+            document.getElementById('transactionForm').reset();
+            document.getElementById('transactionModalTitle').textContent = type === 'income' ? 'Editar Ingreso' : 'Editar Egreso';
+            document.getElementById('transactionType').value = type;
+            document.getElementById('transactionConcept').value = item.concept || '';
+            document.getElementById('transactionAmount').value = item.amount || '';
+            document.getElementById('transactionDate').value = item.date || '';
+            document.getElementById('clientFieldContainer').classList.add('hidden');
+            document.getElementById('recurrenteContainer').classList.remove('hidden');
+            document.getElementById('transactionRecurrente').checked = !!(item.recurrente);
+            document.getElementById('transactionSubmitBtn').textContent = '💾 Guardar';
+
+            const modal = document.getElementById('transactionModal');
+            modal.dataset.editId = String(item.id);
+            modal.dataset.editType = type;
+
+            if (type === 'expense') {
+                _toggleCatField(true);
+                const catEl = document.getElementById('transactionCategoria');
+                if (catEl) catEl.value = item.categoria || '';
+            } else {
+                _toggleCatField(false);
+            }
+
+            // MEJORA-3: restaurar etiqueta al editar
+            _toggleEtiquetaField(true);
+            const etqEl = document.getElementById('transactionEtiqueta');
+            if (etqEl) etqEl.value = item.etiqueta || '';
+
+            openModal(modal);
+        }
+        window.editBalanceItem = editBalanceItem;
+
         // NTH-13: Mostrar/ocultar campo categoría en modal de transacción ─────────
         function _toggleCatField(show) {
             let wrap = document.getElementById('transactionCategoriaWrap');
@@ -809,7 +893,8 @@ function eliminarRecurrente(idx) {
             const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
             let huboNuevos = false;
             window.ingresosRecurrentes.forEach(ir => {
-                const yaExiste = (window.incomes||[]).some(i =>
+                // FIX-1: usar variable local `incomes` (fuente de verdad) en vez de window.incomes
+                const yaExiste = incomes.some(i =>
                     i.recurrenteAuto === true &&
                     i.concept === ir.concept &&
                     (i.date||'').startsWith(mesActual)
@@ -820,7 +905,7 @@ function eliminarRecurrente(idx) {
                     const ultimoDia = new Date(ano, mes + 1, 0).getDate();
                     const diaValido = Math.min(ir.dia || 1, ultimoDia);
                     const fecha = `${mesActual}-${String(diaValido).padStart(2,'0')}`;
-                    (window.incomes||[]).push({
+                    incomes.push({
                         id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + '-' + Math.random().toString(36).slice(2)),
                         concept: ir.concept,
                         concepto: ir.concept,
@@ -867,7 +952,7 @@ function eliminarRecurrente(idx) {
                     <span class="text-xs font-bold uppercase tracking-wide" style="color:${textColor}">Utilidad neta ${icono}</span>
                 </div>
                 <p class="text-3xl font-extrabold" style="color:${textColor}">$${utilidad.toFixed(2)}</p>
-                <p class="text-xs mt-1 font-semibold" style="color:${textColor}">Margen: ${isFinite(margen) ? margen.toFixed(1) : '0.0'}%</p>`;
+                <p class="text-xs mt-1 font-semibold" style="color:${textColor}">Margen: ${totalIngresos === 0 ? 'N/A' : (isFinite(margen) ? margen.toFixed(1) + '%' : 'N/A')}</p>`;
         }
 
         // ══════════════════════════════════════════════════════════════════
@@ -887,7 +972,17 @@ function eliminarRecurrente(idx) {
             let card = document.getElementById('balCashflowCard');
 
             if (pedidosActivos.length === 0) {
-                if (card) card.innerHTML = '';
+                if (!card) {
+                    const utilCard = document.getElementById('balUtilidadNetaCard');
+                    const anchor = utilCard || document.getElementById('balCatGastosContainer') ||
+                        document.getElementById('balMesNetoSub')?.closest('.rounded-xl')?.closest('div');
+                    if (!anchor) return;
+                    card = document.createElement('div');
+                    card.id = 'balCashflowCard';
+                    anchor.parentElement.insertBefore(card, anchor.nextSibling);
+                }
+                card.className = 'mt-4 bg-white rounded-xl p-4 border border-gray-100';
+                card.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:12px;padding:12px 0">Sin pedidos activos con fecha de entrega en los próximos 30 días</p>';
                 return;
             }
 

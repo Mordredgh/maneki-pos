@@ -1,3 +1,11 @@
+// Guard: _esc puede estar definida globalmente por otro módulo,
+// pero definimos una local por si este archivo carga antes
+if (typeof _esc !== 'function') {
+    window._esc = function(s) {
+        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    };
+}
+
 // ── FIX: clearAllData nunca había sido definida ───────────────
 function clearAllData() {
     showConfirm('Esto eliminará productos, ventas, pedidos, clientes y todo el historial. Esta acción NO se puede deshacer.', '⚠️ ¿Borrar TODOS los datos?').then(ok1 => {
@@ -474,6 +482,7 @@ function _debouncedSearch(value) {
 // ===== BUSCADOR GLOBAL (CORREGIDO — navegación funcional) =====
 function busquedaGlobal(query) {
   const panel = document.getElementById('globalSearchResults');
+  if (!panel) return; // panel no existe en este contexto
   if (!query || query.trim().length < 2) {
     panel.classList.add('hidden');
     panel.innerHTML = '';
@@ -1004,9 +1013,12 @@ function _seleccionarResultadoBusqueda(el) {
 function _resaltarResultado(el) {
     const contenedor = document.getElementById('busquedaGlobalResultados');
     if (!contenedor) return;
-    contenedor.querySelectorAll('.busq-resultado').forEach(r => r.style.background = '');
+    contenedor.querySelectorAll('.busq-resultado').forEach(r => {
+        r.style.background = '';
+        delete r.dataset.resaltado;
+    });
     el.style.background = '#f0f9ff';
-    el._resaltado = true;
+    el.dataset.resaltado = '1';
 }
 
 function _navResultados(direccion) {
@@ -1014,13 +1026,13 @@ function _navResultados(direccion) {
     if (!contenedor) return;
     const items = Array.from(contenedor.querySelectorAll('.busq-resultado'));
     if (!items.length) return;
-    const actual = items.findIndex(i => i.style.background === 'rgb(240, 249, 255)' || i._resaltado);
-    items.forEach(i => { i.style.background = ''; i._resaltado = false; });
+    const actual = items.findIndex(i => i.dataset.resaltado === '1');
+    items.forEach(i => { i.style.background = ''; delete i.dataset.resaltado; });
     let siguiente = actual + direccion;
     if (siguiente < 0) siguiente = items.length - 1;
     if (siguiente >= items.length) siguiente = 0;
     items[siguiente].style.background = '#f0f9ff';
-    items[siguiente]._resaltado = true;
+    items[siguiente].dataset.resaltado = '1';
     items[siguiente].scrollIntoView({ block: 'nearest' });
 }
 
@@ -1043,6 +1055,14 @@ function initBusquedaGlobal() {
         </div>`;
     document.body.appendChild(overlay);
 
+    // FIX-7: Agregar hint Ctrl+K junto al input de búsqueda
+    const inputWrapper = document.querySelector('#busquedaGlobalOverlay input')?.parentElement;
+    if (inputWrapper && !inputWrapper.querySelector('._busq-kbd')) {
+        inputWrapper.insertAdjacentHTML('beforeend',
+            '<kbd class="_busq-kbd" style="background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:11px;color:#6b7280;pointer-events:none">Ctrl+K</kbd>'
+        );
+    }
+
     // Cerrar al hacer clic en el fondo
     overlay.addEventListener('mousedown', function(e) {
         if (e.target === overlay) _cerrarBusquedaOverlay();
@@ -1064,7 +1084,7 @@ function initBusquedaGlobal() {
         if (e.key === 'Enter') {
             e.preventDefault();
             const contenedor = document.getElementById('busquedaGlobalResultados');
-            const resaltado = contenedor && contenedor.querySelector('.busq-resultado[style*="rgb(240, 249, 255)"]');
+            const resaltado = contenedor && contenedor.querySelector('[data-resaltado="1"]');
             if (resaltado) _seleccionarResultadoBusqueda(resaltado);
             return;
         }
@@ -1147,19 +1167,21 @@ function initErrorLog() {
     // Captura de errores globales
     window._errorLog = window._errorLog || [];
 
+    const _prevOnerror = window.onerror;
     window.onerror = function(msg, src, line, col, err) {
-        window._errorLog.unshift({
-            ts: new Date().toISOString(),
-            tipo: 'error',
-            msg: String(msg),
-            src: src,
-            line: line,
-            stack: err && err.stack ? err.stack : null
-        });
+        // Encadenar con handler anterior
+        if (typeof _prevOnerror === 'function') _prevOnerror(msg, src, line, col, err);
+        // Agregar al log propio
+        window._errorLog = window._errorLog || [];
+        window._errorLog.unshift({ ts: new Date().toISOString(), tipo: 'error', msg, src, line, stack: err?.stack });
         if (window._errorLog.length > 50) window._errorLog.pop();
     };
 
-    window.addEventListener('unhandledrejection', function(e) {
+    const _prevUnhandled = window._unhandledRejectionHandler || null;
+    const _unhandledHandler = function(e) {
+        // Encadenar con handler anterior si existe
+        if (typeof _prevUnhandled === 'function') _prevUnhandled(e);
+        window._errorLog = window._errorLog || [];
         window._errorLog.unshift({
             ts: new Date().toISOString(),
             tipo: 'promise',
@@ -1167,7 +1189,9 @@ function initErrorLog() {
             stack: e.reason && e.reason.stack ? e.reason.stack : null
         });
         if (window._errorLog.length > 50) window._errorLog.pop();
-    });
+    };
+    window._unhandledRejectionHandler = _unhandledHandler;
+    window.addEventListener('unhandledrejection', _unhandledHandler);
 
     // Crear modal si no existe
     if (document.getElementById('errorLogModal')) return;
@@ -1291,6 +1315,18 @@ function confirmarResetTotal() {
 }
 
 // ══════════════════════════════════════════
+// FIX-8: Bottom nav activo según sección
+// ══════════════════════════════════════════
+
+function _actualizarBottomNavActivo(seccion) {
+    const mapSection = { dashboard: 0, pedidos: 1, inventory: 2, balance: 3 };
+    document.querySelectorAll('#mobileBottomNav button').forEach((btn, i) => {
+        btn.style.color = i === mapSection[seccion] ? '#C9933A' : '#6b7280';
+    });
+}
+window._actualizarBottomNavActivo = _actualizarBottomNavActivo;
+
+// ══════════════════════════════════════════
 // SISTEMA RESPONSIVE — Detección de dispositivo
 // ══════════════════════════════════════════
 
@@ -1339,10 +1375,16 @@ function _aplicarModoDispositivo() {
     document.body.classList.remove('device-desktop', 'device-tablet', 'device-mobile');
     document.body.classList.add('device-' + dispositivo);
 
-    // En mobile: activar compact mode automáticamente
+    // En mobile: activar compact mode automáticamente solo si no hay preferencia explícita
     if (dispositivo === 'mobile') {
-        document.body.classList.add('compact-mode');
-        try { localStorage.setItem('maneki_compactMode', '1'); } catch(e) {}
+        const pref = localStorage.getItem('maneki_compactMode');
+        if (pref === null) {
+            // null = nunca se ha guardado = aplicar default sin fijar en localStorage
+            document.body.classList.add('compact-mode');
+        } else if (pref === '1') {
+            document.body.classList.add('compact-mode');
+        }
+        // Si pref === '0': el usuario lo desactivó explícitamente, respetar
     } else if (anterior === 'mobile' && dispositivo !== 'mobile') {
         // Al pasar de mobile a desktop: respetar preferencia guardada
         const pref = localStorage.getItem('maneki_compactMode');
@@ -1357,11 +1399,7 @@ function _aplicarModoDispositivo() {
     // Actualizar topbar mobile: agregar padding-top al main cuando topbar visible
     const mainEls = document.querySelectorAll('.ml-64, main, #mainContent, .main-content');
     mainEls.forEach(el => {
-        if (dispositivo !== 'desktop') {
-            el.style.paddingTop = el.style.paddingTop || '56px';
-        } else {
-            el.style.paddingTop = '';
-        }
+        el.style.paddingTop = dispositivo !== 'desktop' ? '56px' : '';
     });
 
     // Cerrar sidebar si cambió a desktop mientras estaba abierto
@@ -1386,7 +1424,12 @@ function initResponsive() {
     if (typeof _origShowSection === 'function') {
         window.showSection = function(...args) {
             if (window._dispositivoActual !== 'desktop') closeSidebar();
-            return _origShowSection.apply(this, args);
+            const result = _origShowSection.apply(this, args);
+            // FIX-8: actualizar bottom nav según sección activa
+            if (args[0] && typeof _actualizarBottomNavActivo === 'function') {
+                _actualizarBottomNavActivo(args[0]);
+            }
+            return result;
         };
     }
 
@@ -1397,8 +1440,13 @@ function initResponsive() {
     }, { passive: true });
     document.addEventListener('touchend', (e) => {
         const dx = e.changedTouches[0].clientX - _touchStartX;
-        if (_touchStartX < 30 && dx > 60) openSidebar();   // swipe desde borde izquierdo
-        if (dx < -60) closeSidebar();                        // swipe izquierda cierra
+        // Abrir sidebar: swipe desde borde izquierdo
+        if (_touchStartX < 30 && dx > 60) { openSidebar(); return; }
+        // Cerrar sidebar con swipe-left: verificar que no sea en el Kanban
+        if (dx < -60) {
+            const enKanban = e.target.closest('#vistaKanban, .kanban-board, [class*="kanban"]');
+            if (!enKanban) closeSidebar();
+        }
     }, { passive: true });
 
     // Actualizar bottom nav según sección activa

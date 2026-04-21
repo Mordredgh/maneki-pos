@@ -36,6 +36,11 @@
     display: flex !important;
   }
 
+  /* FIX-4: topbar encima del sidebar overlay (199) y sidebar (200) */
+  #mobileTopbar {
+    z-index: 201 !important;
+  }
+
   /* Kanban: scroll horizontal en tablet */
   #vistaKanban, .kanban-board, [id*="kanban"] {
     overflow-x: auto;
@@ -43,12 +48,16 @@
     padding-bottom: 12px;
   }
 
-  /* Tablas: scroll horizontal */
-  .overflow-x-auto, table {
+  /* FIX-2: scroll horizontal solo en contenedores, no en la tabla misma (evita desalinear colgroup) */
+  .table-responsive, .overflow-x-auto {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    display: block;
     width: 100%;
+  }
+
+  /* Para tablas sin contenedor responsive, solo limitar ancho sin romper display */
+  table {
+    max-width: 100%;
   }
 
   /* Cards en grid 2 columnas */
@@ -63,11 +72,16 @@
     grid-template-columns: repeat(1, 1fr) !important;
   }
 
-  /* Modales full-width */
+  /* FIX-1: Bottom sheet — solo modales de nivel superior (no sub-paneles genéricos) */
+  .modal-fullpage > div:first-child,
+  #pedidoModal > div:first-child,
+  #ptModal > div:first-child,
+  #clientModal > div:first-child,
+  #abonoPedidoModal > div:first-child,
+  #bulkPrecioModal > div:first-child,
   .modal > div:first-child,
   .modal > .bg-white,
-  .modal > [class*="rounded"],
-  [id$="Modal"] > div:first-child {
+  .modal > [class*="rounded"] {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -76,6 +90,12 @@
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Selector genérico [id$="Modal"] — solo max-height y overflow, sin reposicionar */
+  [id$="Modal"] > div:first-child {
     max-height: 92vh !important;
     overflow-y: auto !important;
   }
@@ -114,6 +134,8 @@
   /* Bottom nav visible en mobile */
   #mobileBottomNav {
     display: flex !important;
+    /* FIX-3: safe area inset para notch/home indicator en iOS */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   /* Espacio para bottom nav */
@@ -147,6 +169,11 @@
   /* Texto de sección header más pequeño */
   h2.section-title {
     font-size: 1.1rem !important;
+  }
+
+  /* FIX-5: botón de sonido encima del home indicator y bottom nav */
+  #mk-sound-btn {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 

@@ -80,7 +80,11 @@ function saveEquipo() {
     if (editId) {
         const idx = equipos.findIndex(e => String(e.id) === String(editId));
         if (idx !== -1) {
-            equipos[idx] = { ...equipos[idx], nombre, emoji, costoOriginal, metaReemplazo, metaMensual };
+            equipos[idx] = {
+                ...equipos[idx],
+                nombre, emoji, costoOriginal, metaReemplazo, metaMensual,
+                historialPagos: equipos[idx].historialPagos || [] // FIX-9: preservar historial existente
+            };
         }
         manekiToastExport('✅ Equipo actualizado', 'ok');
     } else {
@@ -143,19 +147,20 @@ function renderEquiposGrid() {
         const metaMensual = Number(eq.metaMensual) || 0;
         let metaMensualHTML = '';
         if (metaMensual > 0) {
-            const pctMensual = Math.min(100, (recuperadoMes / metaMensual) * 100);
-            const barColorMensual = pctMensual < 50 ? '#ef4444' : pctMensual < 80 ? '#f59e0b' : '#10b981';
+            const pctMensual = (!metaMensual || isNaN(metaMensual)) ? 0 : Math.min(100, (recuperadoMes / metaMensual) * 100);
+            const pctDisplay = isNaN(pctMensual) ? 0 : parseFloat(pctMensual.toFixed(1));
+            const barColorMensual = pctDisplay < 50 ? '#ef4444' : pctDisplay < 80 ? '#f59e0b' : '#10b981';
             metaMensualHTML = `
             <!-- MEJ-4: Meta mensual -->
             <div class="mb-3" style="padding-top:8px;border-top:1px solid #f3f4f6;">
                 <div class="flex justify-between text-xs text-gray-500 mb-1">
                     <span>📅 Meta mensual</span>
-                    <span class="font-semibold" style="color:${barColorMensual}">${pctMensual.toFixed(1)}%</span>
+                    <span class="font-semibold" style="color:${barColorMensual}">${pctDisplay.toFixed(1)}%</span>
                 </div>
                 <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full rounded-full transition-all duration-500" style="width:${pctMensual}%;background:${barColorMensual};"></div>
+                    <div class="h-full rounded-full transition-all duration-500" style="width:${pctDisplay}%;background:${barColorMensual};"></div>
                 </div>
-                <p class="text-xs mt-1" style="color:${barColorMensual};">Meta: $${metaMensual.toLocaleString('es-MX')} | Recuperado: $${recuperadoMes.toLocaleString('es-MX')} (${pctMensual.toFixed(0)}%)</p>
+                <p class="text-xs mt-1" style="color:${barColorMensual};">Meta: $${metaMensual.toLocaleString('es-MX')} | Recuperado: $${recuperadoMes.toLocaleString('es-MX')} (${pctDisplay.toFixed(0)}%)</p>
             </div>`;
         }
 
@@ -238,19 +243,23 @@ window._togglePagosEquipo = _togglePagosEquipo;
 
 // MEJ-5: registrar un pago en el historial de un equipo
 // Llamar desde confirmarRoiEquipos y confirmarRoiManual para mantener el historial
-function _registrarPagoEquipo(eqId, monto, concepto) {
+// pedidoId y folio son opcionales — se usan en FIX-8 para poder revertir pagos al cancelar pedidos
+function _registrarPagoEquipo(eqId, monto, concepto, pedidoId, folio) {
     const idx = equipos.findIndex(e => e.id === eqId);
     if (idx === -1) return;
     if (!equipos[idx].historialPagos) equipos[idx].historialPagos = [];
     const fecha = (typeof window._fechaHoy === 'function') ? window._fechaHoy()
         : new Date().toISOString().split('T')[0];
-    equipos[idx].historialPagos.push({
+    const entrada = {
         id: Date.now(),
         fecha,
         monto: Number(monto) || 0,
         concepto: concepto || '',
         tipo: 'pago'
-    });
+    };
+    if (pedidoId) entrada.pedidoId = pedidoId;
+    if (folio)    entrada.folio    = folio;
+    equipos[idx].historialPagos.push(entrada);
 }
 window._registrarPagoEquipo = _registrarPagoEquipo;
 
@@ -334,14 +343,21 @@ function cerrarRoiEquiposModal() {
 
 // Elimina entradas del historial ROI de un pedido y resta lo recuperado a los equipos
 function limpiarRoiDePedido(pedidoId) {
-    const entradas = roiHistorial.filter(h => h.pedidoId === pedidoId || h.folio === (pedidos.find(p=>p.id===pedidoId)||{}).folio);
+    const pedidoFolio = ((window.pedidos || pedidos || []).find(p => p.id === pedidoId) || {}).folio;
+    const entradas = roiHistorial.filter(h => h.pedidoId === pedidoId || (pedidoFolio && h.folio === pedidoFolio));
     if (entradas.length === 0) return;
-    // Revertir el recuperado de cada equipo
+    // Revertir el recuperado de cada equipo y limpiar historialPagos
     entradas.forEach(h => {
         h.equiposIds.forEach(eqId => {
             const idx = equipos.findIndex(e => e.id === eqId);
             if (idx !== -1) {
                 equipos[idx].recuperado = Math.max(0, (equipos[idx].recuperado || 0) - h.porEquipo);
+                // FIX-8: quitar del historialPagos los registros relacionados a este pedido
+                if (Array.isArray(equipos[idx].historialPagos)) {
+                    equipos[idx].historialPagos = equipos[idx].historialPagos.filter(p =>
+                        p.pedidoId !== pedidoId && (!pedidoFolio || p.folio !== pedidoFolio)
+                    );
+                }
             }
         });
     });
@@ -400,8 +416,8 @@ function confirmarRoiEquipos() {
         const idx = equipos.findIndex(e => e.id === id);
         if (idx !== -1) {
             equipos[idx].recuperado = (equipos[idx].recuperado || 0) + porEquipo;
-            // MEJ-5: registrar pago en historial del equipo
-            _registrarPagoEquipo(id, porEquipo, conceptoPago);
+            // MEJ-5: registrar pago en historial del equipo (con pedidoId y folio para FIX-8)
+            _registrarPagoEquipo(id, porEquipo, conceptoPago, pedido.id, pedido.folio);
         }
     });
     saveEquipos();

@@ -134,6 +134,24 @@ function openClientHistory(clientId) {
         ? topProds.map(([name, qty]) => `<span class="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-semibold">${name} ×${qty}</span>`).join('')
         : '<span class="text-xs text-gray-400">Sin datos</span>';
 
+    // FIX-3: integrar renderHistorialClienteModal en la vista de cliente
+    const histHtml = typeof renderHistorialClienteModal === 'function'
+        ? renderHistorialClienteModal(client.nombre || client.name || '')
+        : '';
+    if (histHtml) {
+        let histContainer = document.getElementById('clientHistorialPedidos');
+        if (!histContainer) {
+            histContainer = document.createElement('div');
+            histContainer.id = 'clientHistorialPedidos';
+            histContainer.style.cssText = 'margin-top:16px;';
+            const modalBody = document.querySelector('#clientHistoryModal .modal-body') ||
+                              document.getElementById('tabContentPedidos') ||
+                              document.getElementById('historyPedidosList')?.parentElement;
+            if (modalBody) modalBody.appendChild(histContainer);
+        }
+        histContainer.innerHTML = histHtml;
+    }
+
     switchHistoryTab('ventas');
     openModal('clientHistoryModal');
 }
@@ -301,7 +319,9 @@ function renderBienvenida() {
         const totalDeben = pedidosArr
             .filter(p => !['finalizado','cancelado','entregado'].includes((p.status||'').toLowerCase()))
             .reduce((s, p) => {
-                const resta = p.resta ?? Math.max(0, Number(p.total||0) - Number(p.anticipo||0));
+                const resta = typeof calcSaldoPendiente === 'function'
+                    ? calcSaldoPendiente(p)
+                    : Math.max(0, Number(p.total||0) - Number(p.anticipo||0));
                 return s + resta;
             }, 0);
         elSet('mornReceivable', currency(totalDeben));
@@ -666,7 +686,7 @@ async function initApp() {
         if (td) td.value = today;
 
         // ── Setups sin DOM pesado — ejecutar antes de los renders ──
-        if (typeof setupSearchFilter === 'function') setupSearchFilter();
+        try { if (typeof setupSearchFilter === 'function') setupSearchFilter(); } catch(e) { console.warn('[initApp] setupSearchFilter error:', e); }
         // FIX BUG-011: clientes.js puede no haber cargado si tiene un SyntaxError en producción.
         // Llamar con guard para que un fallo aquí no aborte toda la inicialización de la app.
         try { if (typeof setupClientSearch === 'function') setupClientSearch(); } catch(e) { console.warn('setupClientSearch error:', e); }

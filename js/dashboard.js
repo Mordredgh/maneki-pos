@@ -783,19 +783,31 @@ function renderSyncIndicator() {
     const label = labelMap[estado];
     const color = colorMap[estado];
 
+    const indicadorStyle = 'display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.85);border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:default;user-select:none;';
     let el = document.getElementById('syncIndicator');
     if (!el) {
         // Buscar el header del dashboard e inyectar el indicador
         const header = document.getElementById('dashDate')?.closest('.flex, header, [class*="header"]')
             || document.getElementById('dashGreeting')?.closest('.flex, [class*="header"], [class*="card"]')
             || document.querySelector('#dashboard-section, #dashboardSection, [id*="dashboard"]');
-        if (!header) return;
-        el = document.createElement('div');
-        el.id = 'syncIndicator';
-        el.style.cssText = 'display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.85);border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:default;user-select:none;';
-        header.insertAdjacentElement('afterbegin', el);
+        if (!header) {
+            console.warn('[SyncIndicator] No se encontró contenedor de header para el indicador de sync');
+            // Fallback: intentar agregar al footer del sidebar
+            const fallback = document.querySelector('#sidebar footer, #sidebar .mt-auto, aside footer');
+            if (fallback && !document.getElementById('syncIndicator')) {
+                const indicadorHTML = `<div id="syncIndicator" style="${indicadorStyle}margin:8px;"></div>`;
+                fallback.insertAdjacentHTML('afterbegin', indicadorHTML);
+                el = document.getElementById('syncIndicator');
+            }
+            if (!el) return;
+        } else {
+            el = document.createElement('div');
+            el.id = 'syncIndicator';
+            el.style.cssText = indicadorStyle;
+            header.insertAdjacentElement('afterbegin', el);
+        }
     }
-    el.innerHTML = `<span>${icon}</span><span style="color:${color};">${label}</span>`;
+    el.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;"></span><span style="color:${color};">${label}</span>`;
 
     // Registrar listener online/offline una sola vez
     if (!window._syncIndicatorBound) {
@@ -803,8 +815,28 @@ function renderSyncIndicator() {
         window.addEventListener('online',  () => renderSyncIndicator());
         window.addEventListener('offline', () => renderSyncIndicator());
     }
+
+    // FIX-8: banner de offline más visible en la parte superior del contenido principal
+    _toggleSyncBanner(estado === 'offline' || estado === 'error');
 }
 window.renderSyncIndicator = renderSyncIndicator;
+
+function _toggleSyncBanner(offline) {
+    let banner = document.getElementById('syncOfflineBanner');
+    if (offline) {
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'syncOfflineBanner';
+            banner.style.cssText = 'background:#ef4444;color:white;text-align:center;padding:4px 12px;font-size:12px;font-weight:600;position:sticky;top:0;z-index:100';
+            banner.textContent = '⚠️ Sin conexión — los cambios se guardarán localmente';
+            const main = document.querySelector('main, .main-content, #mainContent');
+            if (main) main.insertAdjacentElement('afterbegin', banner);
+        }
+    } else {
+        if (banner) banner.remove();
+    }
+}
+window._toggleSyncBanner = _toggleSyncBanner;
 
 // ── MEJ-NEW-2: Resumen del día (card de bienvenida) ──────────────────────────
 function renderResumenDia() {
@@ -837,11 +869,13 @@ function renderResumenDia() {
 
     const sinFecha = pedidosActivos.filter(p => !p.entrega && !p.fechaEntrega).length;
 
+    const nombreTienda = window.storeConfig?.name || window.storeConfig?.storeName || window.storeName || 'Maneki';
+
     const html = `
         <div id="resumenDia" style="background:linear-gradient(135deg,#fff9f0 0%,#fffbf5 100%);border:1.5px solid #f5e6cc;border-radius:18px;padding:20px 22px;margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
                 <div>
-                    <h2 style="font-size:1.15rem;font-weight:800;color:#1f2937;margin:0;">${saludo}, Maneki 🐱</h2>
+                    <h2 style="font-size:1.15rem;font-weight:800;color:#1f2937;margin:0;">${saludo}, ${nombreTienda} 🐱</h2>
                     <p style="font-size:.8rem;color:#9ca3af;margin:2px 0 0;">${fechaCap}</p>
                 </div>
             </div>
@@ -868,7 +902,12 @@ function renderResumenDia() {
     // Actualizar si ya existe, o inyectar antes del primer contenido del dashboard
     const existing = document.getElementById('resumenDia');
     if (existing) {
-        existing.outerHTML = html;
+        // Actualizar solo el contenido interno — no reemplazar el nodo para no romper
+        // la referencia que usa accesosRapidos (insertAdjacentElement afterend)
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        const newContent = temp.firstElementChild;
+        if (newContent) existing.innerHTML = newContent.innerHTML;
         return;
     }
 
@@ -895,11 +934,11 @@ function renderAccesosRapidos() {
 
     const container = document.createElement('div');
     container.id = 'accesosRapidos';
-    container.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;';
+    container.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;padding:12px 16px;margin-bottom:16px;';
 
     acciones.forEach((a, i) => {
         const btn = document.createElement('button');
-        btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;background:#fff;border:1.5px solid #f3f4f6;border-radius:14px;cursor:pointer;font-family:inherit;transition:border-color .15s,box-shadow .15s;';
+        btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;min-height:64px;background:#fff;border:1.5px solid #f3f4f6;border-radius:14px;cursor:pointer;font-family:inherit;transition:border-color .15s,box-shadow .15s;';
         btn.innerHTML = `<span style="font-size:1.5rem;line-height:1;">${a.emoji}</span><span style="font-size:.68rem;font-weight:700;color:#374151;text-align:center;line-height:1.2;">${a.label}</span>`;
         btn.title = a.label;
         btn.addEventListener('click', a.fn);

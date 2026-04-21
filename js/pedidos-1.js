@@ -115,9 +115,9 @@ function openPedidoModal(id) {
     const selRow = document.getElementById('pedidoProductoSelRow');
     if (selRow) selRow.classList.add('hidden');
 
-    const _now = new Date();
-    const hoy = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
-    const _entrega = new Date(_now);
+    // FIX-6: usar _fechaHoy() para evitar UTC shift
+    const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{ const _d=new Date(); return `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`; })();
+    const _entrega = new Date(hoy + 'T12:00:00'); // parsear desde fecha local evita UTC shift
     _entrega.setDate(_entrega.getDate() + 7);
     const entregaStr = `${_entrega.getFullYear()}-${String(_entrega.getMonth()+1).padStart(2,'0')}-${String(_entrega.getDate()).padStart(2,'0')}`;
     document.getElementById('pedidoFecha').value = hoy;
@@ -224,12 +224,16 @@ function closePedidoModal() {
             const itemsActuales   = (window.pedidoProductosSeleccionados||[]).length;
             const entregaActual   = (document.getElementById('pedidoEntrega')||{}).value || '';
             const notasActuales   = (document.getElementById('pedidoNotas')||{}).value?.trim() || '';
+            const niEl = document.getElementById('pedidoNotasInternas');
+            const niActual = niEl ? niEl.value.trim() : '';
+            const niOriginal = saved.notasInternas || '';
             const hayCambio = clienteActual  !== (saved.cliente||'')   ||
                               conceptoActual !== (saved.concepto||'')  ||
                               anticipoActual !== (saved.anticipo||0)   ||
                               itemsActuales  !== (saved.productosInventario||[]).length ||
                               entregaActual  !== (saved.entrega||'')   ||
-                              notasActuales  !== (saved.notas||'');
+                              notasActuales  !== (saved.notas||'')     ||
+                              niActual       !== niOriginal;
             if (hayCambio) {
                 showConfirm('¿Cerrar sin guardar los cambios?', '⚠️ Cambios sin guardar').then(ok => { if (ok) _cerrar(); });
                 return;

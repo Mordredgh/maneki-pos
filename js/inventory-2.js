@@ -1844,6 +1844,8 @@ window.pvGetPrecio = pvGetPrecio;
 function verMovimientosProducto(pid) {
     const prod = (window.products || []).find(p => String(p.id) === String(pid));
     if (!prod) return;
+    // FIX-1: migrar campo en runtime para productos heredados sin movimientos
+    if (!prod.movimientos) prod.movimientos = [];
     const movs = (prod.movimientos || []).slice(0, 5);
 
     // Remover modal previo si existe
@@ -1888,7 +1890,7 @@ function verMovimientosProducto(pid) {
             </thead>
             <tbody>${filas}</tbody>
         </table>
-        ${movs.length === 0 || prod.movimientos.length <= 5 ? '' : `<p style="font-size:.72rem;color:#9ca3af;text-align:center;margin-top:10px;">Mostrando los últimos 5 de ${prod.movimientos.length} movimientos</p>`}
+        ${movs.length === 0 || (prod.movimientos || []).length <= 5 ? '' : `<p style="font-size:.72rem;color:#9ca3af;text-align:center;margin-top:10px;">Mostrando los últimos 5 de ${(prod.movimientos || []).length} movimientos</p>`}
     </div>`;
     document.body.appendChild(modal);
     // Cerrar al hacer clic fuera del panel

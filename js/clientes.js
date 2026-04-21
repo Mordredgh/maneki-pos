@@ -39,30 +39,30 @@ function _sortArrow(col) {
 
 // ── MEJORA 1: Stats del cliente ───────────────────────────────────────────────
 function _calcClienteStats(clienteNombreOrId) {
-    const todos = [...(window.pedidos || []), ...(window.pedidosFinalizados || [])];
-    const normQ = String(clienteNombreOrId || '').toLowerCase().trim();
+    const todos = [...(window.pedidos||[]), ...(window.pedidosFinalizados||[])];
+    const finalizados = (window.pedidosFinalizados||[]);
 
-    // Todos los pedidos del cliente (activos + finalizados)
-    const pedidosCliente = todos.filter(p => {
-        const nombre = (p.cliente || '').toLowerCase().trim();
-        return nombre === normQ || String(p.clienteId || '') === normQ;
-    });
+    // Filtrar: primero intentar por ID, luego por nombre normalizado
+    const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const q = norm(clienteNombreOrId);
 
-    // Solo finalizados para dinero
-    const finalizados = (window.pedidosFinalizados || []).filter(p => {
-        const nombre = (p.cliente || '').toLowerCase().trim();
-        return nombre === normQ || String(p.clienteId || '') === normQ;
-    });
+    const matchPedido = p => {
+        if (p.clienteId && String(p.clienteId) === String(clienteNombreOrId)) return true;
+        if (p.clientId && String(p.clientId) === String(clienteNombreOrId)) return true;
+        return norm(p.cliente || p.clientName || '') === q;
+    };
+
+    const pedidosCliente = todos.filter(matchPedido);
+    const finalizadosCliente = finalizados.filter(matchPedido);
 
     const totalPedidos = pedidosCliente.length;
-    const totalGastado = finalizados.reduce((s, p) => s + (Number(p.total) || 0), 0);
-    const ticketPromedio = finalizados.length > 0 ? totalGastado / finalizados.length : 0;
+    const totalGastado = finalizadosCliente.reduce((s,p) => s + (Number(p.total)||0), 0);
+    const ticketPromedio = finalizadosCliente.length > 0 ? totalGastado / finalizadosCliente.length : 0;
 
+    // Obtener fecha más reciente de cualquier campo de fecha disponible
     const fechas = pedidosCliente
-        .map(p => p.fechaPedido)
-        .filter(Boolean)
-        .sort()
-        .reverse();
+        .map(p => p.fechaPedido || p.fechaCreacion || p.fecha || p.fechaFinalizado || '')
+        .filter(Boolean).sort().reverse();
     const ultimoPedido = fechas[0] || null;
 
     return { totalPedidos, totalGastado, ticketPromedio, ultimoPedido };
@@ -301,6 +301,13 @@ function _renderFiltrosActividad() {
                 return dir * va.localeCompare(vb);
             });
 
+            // FIX-2: pre-calcular stats de todos los clientes una sola vez (evita O(n×m))
+            const _statsCache = {};
+            (window.clientes || clients || []).forEach(c => {
+                const key = c.id || c.nombre || c.name || '';
+                _statsCache[key] = _calcClienteStats(c.id || c.nombre || c.name || '');
+            });
+
             tbody.innerHTML = listaOrdenada.map((client, rowIndex) => {
                 const esVIP = client.isVIP || client.type === 'vip';
                 // NTH-12: inicial coloreada
@@ -320,8 +327,9 @@ function _renderFiltrosActividad() {
                     ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? '…' : ''}</div>`
                     : '';
 
-                // MEJORA 1: stats del cliente
-                const stats = _calcClienteStats(client.nombre || client.name || '');
+                // MEJORA 1: stats del cliente — leer desde cache pre-calculado
+                const _cacheKey = client.id || client.nombre || client.name || '';
+                const stats = _statsCache[_cacheKey] || _calcClienteStats(_cacheKey);
                 const statsHtml = `<div style="font-size:.7rem;color:#6b7280;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
                     <span title="Total pedidos">📦 ${stats.totalPedidos}</span>
                     <span title="Total gastado">💰 $${stats.totalGastado.toFixed(0)}</span>
