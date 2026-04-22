@@ -283,11 +283,17 @@ function _renderFiltrosActividad() {
                 ).join('');
             }
 
-            // NTH-12: colores de avatar por inicial
-            const _avatarColors = ['#C5A572','#7C3AED','#0891B2','#16A34A','#DC2626','#D97706','#9333EA','#0284C7','#059669','#E11D48'];
-            function _avatarColor(name) {
-                const c = (name||'A').toUpperCase().charCodeAt(0) - 65;
-                return _avatarColors[((c % _avatarColors.length) + _avatarColors.length) % _avatarColors.length];
+            // NTH-12: colores de avatar por inicial — usando clases mk-avatar del ui-redesign
+            function _avatarClass(name) {
+                const c = (name || '').trim().toLowerCase().charCodeAt(0);
+                if (c >= 97 && c <= 101) return 'mk-avatar-gold';
+                if (c >= 102 && c <= 108) return 'mk-avatar-lila';
+                if (c >= 109 && c <= 114) return 'mk-avatar-peach';
+                return 'mk-avatar-green';
+            }
+            function _getInitiales(nombre) {
+                const partes = (nombre || '').trim().split(' ');
+                return ((partes[0]||'')[0] || '') + (partes[1] ? partes[1][0] : '');
             }
 
             // Aplicar ordenamiento a la lista filtrada
@@ -310,9 +316,9 @@ function _renderFiltrosActividad() {
 
             tbody.innerHTML = listaOrdenada.map((client, rowIndex) => {
                 const esVIP = client.isVIP || client.type === 'vip';
-                // NTH-12: inicial coloreada
-                const inicial = (client.name || '?').trim().charAt(0).toUpperCase();
-                const avatarColor = _avatarColor(client.name);
+                // NTH-12: avatar con clases mk-avatar del ui-redesign
+                const iniciales = _getInitiales(client.name || '?').toUpperCase() || (client.name || '?').trim().charAt(0).toUpperCase();
+                const avatarClass = _avatarClass(client.name);
 
                 // NTH-11: snippet de nota más reciente vinculada a este cliente
                 const notasCliente = (window.notas || []).filter(n =>
@@ -350,8 +356,8 @@ function _renderFiltrosActividad() {
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:${avatarColor};color:#fff;font-weight:800;font-size:1rem;">
-                                ${inicial}
+                            <div class="mk-avatar ${avatarClass}">
+                                ${iniciales}
                             </div>
                             <div>
                                 <div style="display:flex;align-items:center;gap:6px">

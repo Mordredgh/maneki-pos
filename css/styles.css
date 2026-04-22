@@ -1452,4 +1452,186 @@ body.dark .dark-text {
     color: #F5ECD6 !important;
 }
 .d5 { animation-delay: .5s !important; transition-delay: .5s !important; }
+
+/* ══════════════════════════════════════════════════
+   KANBAN BOARD — Sistema de diseño por estado
+   Añadido junto con la refactor UI/UX 2025
+══════════════════════════════════════════════════ */
+
+/* Wrapper de columna kanban */
+.mk-kanban-wrapper {
+    transition: opacity 0.2s ease;
+}
+.mk-kanban-wrapper:hover { opacity: 1; }
+
+/* Header de columna — pill de color */
+.mk-kanban-header {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(201,147,58,0.10);
+    box-shadow: 0 1px 4px rgba(42,26,14,0.05);
+    transition: background 0.15s ease;
+    backdrop-filter: blur(8px);
+}
+.mk-kanban-wrapper:hover .mk-kanban-header {
+    background: rgba(255,255,255,0.92);
+    border-color: rgba(201,147,58,0.18);
+}
+
+/* Dot de color de estado */
+.mk-kanban-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 1px 4px rgba(0,0,0,0.15);
+}
+
+/* Badge contador de columna */
+.mk-kanban-badge {
+    min-width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    transition: transform 0.2s var(--spring);
+}
+.mk-kanban-badge:not([style*="0"]) {
+    transform: scale(1.05);
+}
+
+/* Columna drop zone */
+.mk-kanban-col {
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+.mk-kanban-col.drag-over {
+    box-shadow: inset 0 0 0 2px var(--gold), 0 4px 20px rgba(201,147,58,0.15) !important;
+    background: rgba(253,246,220,0.8) !important;
+    border-color: var(--gold) !important;
+    border-style: solid !important;
+}
+
+/* Pills de estado en tarjeta kanban */
+.mk-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 99px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.015em;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+.mk-pill-confirmado { background: #F3F4F6; color: #4B5563; }
+.mk-pill-pago       { background: #D1FAE5; color: #065f46; }
+.mk-pill-produccion { background: #DBEAFE; color: #1e40af; }
+.mk-pill-envio      { background: #EDE5F8; color: #4E3470; }
+.mk-pill-salida     { background: #FFEDD5; color: #9a3412; }
+.mk-pill-retirar    { background: #CCFBF1; color: #134e4a; }
+.mk-pill-finalizado { background: #D1FAE5; color: #065f46; }
+.mk-pill-cancelado  { background: #F3F4F6; color: #9CA3AF; text-decoration: line-through; }
+
+/* Tarjeta kanban por estado — borde izquierdo */
+.kanban-card[data-status="confirmado"] { border-left: 3px solid #9CA3AF !important; }
+.kanban-card[data-status="pago"]       { border-left: 3px solid #10B981 !important; }
+.kanban-card[data-status="produccion"] { border-left: 3px solid #3B82F6 !important; }
+.kanban-card[data-status="envio"]      { border-left: 3px solid #9B7BC4 !important; }
+.kanban-card[data-status="salida"]     { border-left: 3px solid #F97316 !important; }
+.kanban-card[data-status="retirar"]    { border-left: 3px solid #0D9488 !important; }
+.kanban-card[data-status="cancelado"]  { border-left: 3px solid #E5E7EB !important; opacity: 0.65; }
+
+/* Tarjeta kanban — mejoras generales */
+.kanban-card {
+    border-radius: var(--r-md) !important;
+    border: 1px solid rgba(201,147,58,0.08) !important;
+    box-shadow: 0 1px 4px rgba(42,26,14,0.06), 0 2px 12px rgba(42,26,14,0.03) !important;
+    transition: transform 0.2s var(--spring), box-shadow 0.2s ease, border-color 0.15s ease !important;
+    position: relative !important;
+}
+.kanban-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(42,26,14,0.10), 0 2px 8px rgba(201,147,58,0.08) !important;
+    border-color: rgba(201,147,58,0.18) !important;
+}
+
+/* ── AVATARES DE CLIENTE ── */
+.mk-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: white;
+    flex-shrink: 0;
+    letter-spacing: -0.01em;
+    user-select: none;
+}
+.mk-avatar-gold  { background: linear-gradient(135deg,#C9933A,#E8B84B); box-shadow: 0 3px 10px rgba(201,147,58,.35); }
+.mk-avatar-lila  { background: linear-gradient(135deg,#9B7BC4,#C4A8E0); box-shadow: 0 3px 10px rgba(155,123,196,.35); }
+.mk-avatar-peach { background: linear-gradient(135deg,#D97B4A,#F2A97E); box-shadow: 0 3px 10px rgba(217,123,74,.35); }
+.mk-avatar-green { background: linear-gradient(135deg,#059669,#10B981); box-shadow: 0 3px 10px rgba(16,185,129,.35); }
+
+/* Dark mode avatares */
+body.dark .mk-avatar-gold  { box-shadow: 0 3px 10px rgba(201,147,58,.5); }
+body.dark .mk-avatar-lila  { box-shadow: 0 3px 10px rgba(155,123,196,.5); }
+body.dark .mk-avatar-peach { box-shadow: 0 3px 10px rgba(217,123,74,.5); }
+body.dark .mk-avatar-green { box-shadow: 0 3px 10px rgba(16,185,129,.5); }
+
+/* ── TRANSACCIONES BALANCE ── */
+.mk-tx-income {
+    border-left: 3px solid #10B981 !important;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.mk-tx-expense {
+    border-left: 3px solid #EF4444 !important;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.mk-tx-income:hover  { background: rgba(16,185,129,0.03) !important; }
+.mk-tx-expense:hover { background: rgba(239,68,68,0.03) !important; }
+
+/* ── EMPTY STATES ── */
+.mk-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+}
+.mk-empty-icon  { font-size: 2.5rem; margin-bottom: 12px; filter: saturate(0.6) opacity(0.7); }
+.mk-empty-title { font-weight: 700; color: var(--ink2); font-size: 0.95rem; margin-bottom: 4px; }
+.mk-empty-sub   { font-size: 0.8rem; color: var(--ink3); max-width: 260px; line-height: 1.5; }
+
+/* Dark mode empty state */
+body.dark .mk-empty-title { color: #C9A87B; }
+body.dark .mk-empty-sub   { color: #7B5A3A; }
+
+/* ── DARK MODE KANBAN ── */
+body.dark .mk-kanban-header {
+    background: rgba(42,30,15,0.85);
+    border-color: rgba(201,147,58,0.15);
+}
+body.dark .mk-kanban-wrapper:hover .mk-kanban-header {
+    background: rgba(50,31,13,0.95);
+    border-color: rgba(201,147,58,0.25);
+}
+body.dark .kanban-card {
+    background: #2A1E0F !important;
+    border-color: rgba(201,147,58,0.12) !important;
+}
+body.dark .kanban-card:hover {
+    border-color: rgba(201,147,58,0.25) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 2px 8px rgba(201,147,58,0.10) !important;
+}
+body.dark .mk-kanban-col.drag-over {
+    background: rgba(42,30,15,0.6) !important;
+    border-color: var(--gold) !important;
+}
 .d6 { animation-delay: .6s !important; transition-delay: .6s !important; }

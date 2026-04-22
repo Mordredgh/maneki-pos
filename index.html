@@ -23,6 +23,7 @@
   <!-- Estilos -->
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/ui-redesign.css">
 
   <!-- Scripts de la app (orden importa) -->
   <script src="js/icons.js"></script>
@@ -1650,73 +1651,79 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="overflow-x-auto pb-4">
                 <div class="flex gap-4" style="min-width: 900px; align-items: flex-start;">
 
-                    <div class="flex-1 min-w-[200px] flex flex-col" style="max-height: calc(100vh - 280px);">
-                        <div class="flex items-center gap-2 mb-3 px-1 flex-shrink-0">
-                            <span class="text-lg">✅</span>
-                            <span class="font-bold text-gray-700 text-sm">Confirmado</span>
-                            <span id="kBadge-confirmado" class="ml-auto bg-gray-200 text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    <!-- ── Col: Confirmado ── -->
+                    <div class="mk-kanban-wrapper flex-1 min-w-[200px] flex flex-col" data-col="confirmado" style="max-height: calc(100vh - 280px);">
+                        <div class="mk-kanban-header flex items-center gap-2 mb-3 px-2 py-1.5 flex-shrink-0 rounded-xl">
+                            <span class="mk-kanban-dot" style="background:#6B7280;"></span>
+                            <span class="font-bold text-sm" style="color:#374151;">Confirmado</span>
+                            <span id="kBadge-confirmado" class="ml-auto mk-kanban-badge text-xs font-bold px-2 py-0.5 rounded-full" style="background:#F3F4F6;color:#6B7280;">0</span>
                         </div>
-                        <div id="kCol-confirmado" class="space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
+                        <div id="kCol-confirmado" class="mk-kanban-col space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
                             style="background:#F9FAFB; border: 2px dashed #E5E7EB; max-height: calc(100vh - 380px);"
                             ondragover="kanbanDragOver(event,'confirmado')" ondragleave="kanbanDragLeave(event)" ondrop="kanbanDrop(event,'confirmado')">
                         </div>
                     </div>
 
-                    <div class="flex-1 min-w-[200px] flex flex-col" style="max-height: calc(100vh - 280px);">
-                        <div class="flex items-center gap-2 mb-3 px-1 flex-shrink-0">
-                            <span class="text-lg">💰</span>
-                            <span class="font-bold text-gray-700 text-sm">Pago</span>
-                            <span id="kBadge-pago" class="ml-auto bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    <!-- ── Col: Pago ── -->
+                    <div class="mk-kanban-wrapper flex-1 min-w-[200px] flex flex-col" data-col="pago" style="max-height: calc(100vh - 280px);">
+                        <div class="mk-kanban-header flex items-center gap-2 mb-3 px-2 py-1.5 flex-shrink-0 rounded-xl">
+                            <span class="mk-kanban-dot" style="background:#10B981;"></span>
+                            <span class="font-bold text-sm" style="color:#065f46;">Pago</span>
+                            <span id="kBadge-pago" class="ml-auto mk-kanban-badge text-xs font-bold px-2 py-0.5 rounded-full" style="background:#D1FAE5;color:#065f46;">0</span>
                         </div>
-                        <div id="kCol-pago" class="space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
+                        <div id="kCol-pago" class="mk-kanban-col space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
                             style="background:#F0FFF4; border: 2px dashed #BBF7D0; max-height: calc(100vh - 380px);"
                             ondragover="kanbanDragOver(event,'pago')" ondragleave="kanbanDragLeave(event)" ondrop="kanbanDrop(event,'pago')">
                         </div>
                     </div>
 
-                    <div class="flex-1 min-w-[200px] flex flex-col" style="max-height: calc(100vh - 280px);">
-                        <div class="flex items-center gap-2 mb-3 px-1 flex-shrink-0">
-                            <span class="text-lg">🔧</span>
-                            <span class="font-bold text-gray-700 text-sm">Producción</span>
-                            <span id="kBadge-produccion" class="ml-auto bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    <!-- ── Col: Producción ── -->
+                    <div class="mk-kanban-wrapper flex-1 min-w-[200px] flex flex-col" data-col="produccion" style="max-height: calc(100vh - 280px);">
+                        <div class="mk-kanban-header flex items-center gap-2 mb-3 px-2 py-1.5 flex-shrink-0 rounded-xl">
+                            <span class="mk-kanban-dot" style="background:#3B82F6;"></span>
+                            <span class="font-bold text-sm" style="color:#1e40af;">Producción</span>
+                            <span id="kBadge-produccion" class="ml-auto mk-kanban-badge text-xs font-bold px-2 py-0.5 rounded-full" style="background:#DBEAFE;color:#1e40af;">0</span>
                         </div>
-                        <div id="kCol-produccion" class="space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
+                        <div id="kCol-produccion" class="mk-kanban-col space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
                             style="background:#EFF6FF; border: 2px dashed #BFDBFE; max-height: calc(100vh - 380px);"
                             ondragover="kanbanDragOver(event,'produccion')" ondragleave="kanbanDragLeave(event)" ondrop="kanbanDrop(event,'produccion')">
                         </div>
                     </div>
 
-                    <div class="flex-1 min-w-[200px] flex flex-col" style="max-height: calc(100vh - 280px);">
-                        <div class="flex items-center gap-2 mb-3 px-1 flex-shrink-0">
-                            <span class="text-lg">📦</span>
-                            <span class="font-bold text-gray-700 text-sm">Envío</span>
-                            <span id="kBadge-envio" class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style="background:#EDE5F8;color:#6B4A8E;">0</span>
+                    <!-- ── Col: Envío ── -->
+                    <div class="mk-kanban-wrapper flex-1 min-w-[200px] flex flex-col" data-col="envio" style="max-height: calc(100vh - 280px);">
+                        <div class="mk-kanban-header flex items-center gap-2 mb-3 px-2 py-1.5 flex-shrink-0 rounded-xl">
+                            <span class="mk-kanban-dot" style="background:#9B7BC4;"></span>
+                            <span class="font-bold text-sm" style="color:#4E3470;">Envío</span>
+                            <span id="kBadge-envio" class="ml-auto mk-kanban-badge text-xs font-bold px-2 py-0.5 rounded-full" style="background:#EDE5F8;color:#6B4A8E;">0</span>
                         </div>
-                        <div id="kCol-envio" class="space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
+                        <div id="kCol-envio" class="mk-kanban-col space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
                             style="background:#FAF5FF; border: 2px dashed #E9D5FF; max-height: calc(100vh - 380px);"
                             ondragover="kanbanDragOver(event,'envio')" ondragleave="kanbanDragLeave(event)" ondrop="kanbanDrop(event,'envio')">
                         </div>
                     </div>
 
-                    <div class="flex-1 min-w-[200px] flex flex-col" style="max-height: calc(100vh - 280px);">
-                        <div class="flex items-center gap-2 mb-3 px-1 flex-shrink-0">
-                            <span class="text-lg">🚚</span>
-                            <span class="font-bold text-gray-700 text-sm">Salió</span>
-                            <span id="kBadge-salida" class="ml-auto bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    <!-- ── Col: Salió ── -->
+                    <div class="mk-kanban-wrapper flex-1 min-w-[200px] flex flex-col" data-col="salida" style="max-height: calc(100vh - 280px);">
+                        <div class="mk-kanban-header flex items-center gap-2 mb-3 px-2 py-1.5 flex-shrink-0 rounded-xl">
+                            <span class="mk-kanban-dot" style="background:#F97316;"></span>
+                            <span class="font-bold text-sm" style="color:#9a3412;">Salió</span>
+                            <span id="kBadge-salida" class="ml-auto mk-kanban-badge text-xs font-bold px-2 py-0.5 rounded-full" style="background:#FFEDD5;color:#9a3412;">0</span>
                         </div>
-                        <div id="kCol-salida" class="space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
+                        <div id="kCol-salida" class="mk-kanban-col space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
                             style="background:#FFF7ED; border: 2px dashed #FED7AA; max-height: calc(100vh - 380px);"
                             ondragover="kanbanDragOver(event,'salida')" ondragleave="kanbanDragLeave(event)" ondrop="kanbanDrop(event,'salida')">
                         </div>
                     </div>
 
-                    <div class="flex-1 min-w-[200px] flex flex-col" style="max-height: calc(100vh - 280px);">
-                        <div class="flex items-center gap-2 mb-3 px-1 flex-shrink-0">
-                            <span class="text-lg">🏪</span>
-                            <span class="font-bold text-gray-700 text-sm">Retirar</span>
-                            <span id="kBadge-retirar" class="ml-auto bg-teal-100 text-teal-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    <!-- ── Col: Retirar ── -->
+                    <div class="mk-kanban-wrapper flex-1 min-w-[200px] flex flex-col" data-col="retirar" style="max-height: calc(100vh - 280px);">
+                        <div class="mk-kanban-header flex items-center gap-2 mb-3 px-2 py-1.5 flex-shrink-0 rounded-xl">
+                            <span class="mk-kanban-dot" style="background:#0D9488;"></span>
+                            <span class="font-bold text-sm" style="color:#134e4a;">Retirar</span>
+                            <span id="kBadge-retirar" class="ml-auto mk-kanban-badge text-xs font-bold px-2 py-0.5 rounded-full" style="background:#CCFBF1;color:#134e4a;">0</span>
                         </div>
-                        <div id="kCol-retirar" class="space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
+                        <div id="kCol-retirar" class="mk-kanban-col space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
                             style="background:#F0FDFA; border: 2px dashed #99F6E4; max-height: calc(100vh - 380px);"
                             ondragover="kanbanDragOver(event,'retirar')" ondragleave="kanbanDragLeave(event)" ondrop="kanbanDrop(event,'retirar')">
                         </div>

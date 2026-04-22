@@ -431,9 +431,9 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
     let listaInc = q ? incomes.filter(i => _norm(i.concept).includes(q) || (i.date||'').includes(q)) : incomes;
     if (etqFiltro) listaInc = listaInc.filter(i => (i.etiqueta||'') === etqFiltro);
     container.innerHTML = listaInc.length === 0
-        ? '<div class="mk-empty"><div class="mk-empty-icon">💰</div><div class="mk-empty-title">Sin ingresos</div><div class="mk-empty-sub">No hay ingresos registrados aún</div></div>'
+        ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p></div>'
         : listaInc.slice().reverse().map(income => `
-            <div class="flex justify-between items-center p-3 bg-green-50 rounded-xl mb-2">
+            <div class="mk-tx-income flex justify-between items-center p-3 bg-green-50 rounded-xl mb-2">
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(income.concept)}</p>
                     <p class="text-xs text-gray-500">${_esc(income.date)}${income.etiqueta ? ' ' + _etiquetaBadge(income.etiqueta) : ''}${income.recurrente ? ' <span class="text-xs text-blue-500 font-semibold">↺</span>' : ''}</p>
@@ -460,9 +460,9 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
     let listaExp = q ? expenses.filter(e => _norm(e.concept).includes(q) || (e.date||'').includes(q)) : expenses;
     if (etqFiltro) listaExp = listaExp.filter(e => (e.etiqueta||'') === etqFiltro);
     container.innerHTML = listaExp.length === 0
-        ? '<div class="mk-empty"><div class="mk-empty-icon">🧾</div><div class="mk-empty-title">Sin egresos</div><div class="mk-empty-sub">No hay egresos registrados aún</div></div>'
+        ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p></div>'
         : listaExp.slice().reverse().map(expense => `
-            <div class="flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
+            <div class="mk-tx-expense flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(expense.concept)}</p>
                     <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#C5A572;font-weight:600">${_esc(expense.categoria)}</span>` : ''}${expense.etiqueta ? ' ' + _etiquetaBadge(expense.etiqueta) : ''}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">↺</span>' : ''}</p>

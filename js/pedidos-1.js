@@ -800,6 +800,8 @@ function renderKanbanBoard() {
     }
 }
 
+const _statusLabel = s => ({confirmado:'✅ Confirmado',pago:'💰 Pagado',produccion:'🔧 Producción',envio:'📦 Envío',salida:'🚚 Salió',retirar:'🏪 Retirar',finalizado:'🎉 Listo',cancelado:'❌ Cancelado'})[s] || s;
+
 function kanbanCardHTML(p) {
     const _saldo = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Number(p.resta || 0);
     const hoy = new Date(); hoy.setHours(0,0,0,0);
@@ -866,7 +868,8 @@ function kanbanCardHTML(p) {
                 </span>`).join('→')}
            </div>`
         : '';
-    return `<div class="kanban-card bg-white rounded-xl p-3 shadow-sm border border-gray-100 select-none"
+    return `<div class="kanban-card mk-kanban-card-${p.status || 'confirmado'} bg-white rounded-xl p-3 shadow-sm border border-gray-100 select-none"
+        data-status="${p.status || 'confirmado'}"
         style="position:relative;" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
         ${_checkboxHtml}
@@ -874,6 +877,7 @@ function kanbanCardHTML(p) {
         <div class="flex justify-between items-start mb-1">
             <div class="flex items-center flex-wrap gap-1">
                 <span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
+                <span class="mk-status-pill mk-pill-${p.status || 'confirmado'}">${_statusLabel(p.status)}</span>
                 ${_prioBadge}
             </div>
             ${alertaHtml}
