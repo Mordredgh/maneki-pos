@@ -97,119 +97,157 @@
   overflow: hidden;
 }
 
-/* Pseudo-elemento de gradiente que no interfiere con contenido existente */
+/* ── FIX CRÍTICO: texto legible sobre fondos claros ──
+   styles.css define color:white !important en .mk-sh-text h2/p
+   Estos fondos son claros, así que sobreescribimos a colores oscuros */
+.mk-section-header .mk-sh-text h2 {
+  color: var(--ink) !important;
+}
+.mk-section-header .mk-sh-text p {
+  color: var(--ink3) !important;
+}
+/* El ícono ya no tiene fondo blanco transparente — lo hacemos visible */
+.mk-section-header .mk-sh-icon {
+  background: rgba(255,255,255,0.75) !important;
+  box-shadow: 0 2px 8px rgba(42,26,14,0.10), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+
+/* Pseudo-elemento de gradiente decorativo */
 .mk-section-header::after {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: .08;
+  opacity: .06;
   pointer-events: none;
   border-radius: inherit;
 }
 
 /* Dashboard — gold */
 #dashboard-section .mk-section-header {
-  background: linear-gradient(120deg, rgba(201,147,58,.13) 0%, rgba(232,184,75,.07) 100%);
-  border: 1px solid rgba(201,147,58,.18);
+  background: linear-gradient(120deg, rgba(201,147,58,.12) 0%, rgba(232,184,75,.06) 100%);
+  border: 1px solid rgba(201,147,58,.20);
 }
 #dashboard-section .mk-section-header::after {
   background: radial-gradient(ellipse at top right, #C9933A 0%, transparent 70%);
 }
-#dashboard-section .mk-sh-icon {
-  color: #C9933A;
-  background: rgba(201,147,58,.12);
-}
+#dashboard-section .mk-section-header .mk-sh-text h2 { color: #7A5010 !important; }
+#dashboard-section .mk-section-header .mk-sh-text p  { color: #9B7B5A !important; }
+#dashboard-section .mk-sh-icon { color: #C9933A; }
 
 /* Pedidos — lila/purple */
 #pedidos-section .mk-section-header {
-  background: linear-gradient(120deg, rgba(155,123,196,.13) 0%, rgba(196,168,224,.07) 100%);
-  border: 1px solid rgba(155,123,196,.18);
+  background: linear-gradient(120deg, rgba(155,123,196,.12) 0%, rgba(196,168,224,.06) 100%);
+  border: 1px solid rgba(155,123,196,.20);
 }
 #pedidos-section .mk-section-header::after {
   background: radial-gradient(ellipse at top right, #9B7BC4 0%, transparent 70%);
 }
-#pedidos-section .mk-sh-icon {
-  color: #9B7BC4;
-  background: rgba(155,123,196,.12);
-}
+#pedidos-section .mk-section-header .mk-sh-text h2 { color: #4E3470 !important; }
+#pedidos-section .mk-section-header .mk-sh-text p  { color: #6B4A8E !important; }
+#pedidos-section .mk-sh-icon { color: #9B7BC4; }
 
 /* Inventario — blue-indigo */
 #inventory-section .mk-section-header {
-  background: linear-gradient(120deg, rgba(59,130,246,.11) 0%, rgba(99,102,241,.06) 100%);
-  border: 1px solid rgba(59,130,246,.15);
+  background: linear-gradient(120deg, rgba(59,130,246,.10) 0%, rgba(99,102,241,.05) 100%);
+  border: 1px solid rgba(59,130,246,.18);
 }
 #inventory-section .mk-section-header::after {
   background: radial-gradient(ellipse at top right, #3B82F6 0%, transparent 70%);
 }
-#inventory-section .mk-sh-icon {
-  color: #3B82F6;
-  background: rgba(59,130,246,.12);
-}
+#inventory-section .mk-section-header .mk-sh-text h2 { color: #1e40af !important; }
+#inventory-section .mk-section-header .mk-sh-text p  { color: #3B63C0 !important; }
+#inventory-section .mk-sh-icon { color: #3B82F6; }
 
 /* Balance — emerald */
 #balance-section .mk-section-header {
-  background: linear-gradient(120deg, rgba(16,185,129,.11) 0%, rgba(5,150,105,.06) 100%);
-  border: 1px solid rgba(16,185,129,.15);
+  background: linear-gradient(120deg, rgba(16,185,129,.10) 0%, rgba(5,150,105,.05) 100%);
+  border: 1px solid rgba(16,185,129,.18);
 }
 #balance-section .mk-section-header::after {
   background: radial-gradient(ellipse at top right, #10B981 0%, transparent 70%);
 }
-#balance-section .mk-sh-icon {
-  color: #10B981;
-  background: rgba(16,185,129,.12);
-}
+#balance-section .mk-section-header .mk-sh-text h2 { color: #065f46 !important; }
+#balance-section .mk-section-header .mk-sh-text p  { color: #047857 !important; }
+#balance-section .mk-sh-icon { color: #10B981; }
 
 /* Clientes — rose/pink */
 #clientes-section .mk-section-header {
-  background: linear-gradient(120deg, rgba(232,160,180,.13) 0%, rgba(244,114,182,.06) 100%);
-  border: 1px solid rgba(232,160,180,.18);
+  background: linear-gradient(120deg, rgba(219,39,119,.10) 0%, rgba(244,114,182,.05) 100%);
+  border: 1px solid rgba(219,39,119,.15);
 }
 #clientes-section .mk-section-header::after {
   background: radial-gradient(ellipse at top right, #E8A0B4 0%, transparent 70%);
 }
-#clientes-section .mk-sh-icon {
-  color: #DB2777;
-  background: rgba(232,160,180,.15);
-}
+#clientes-section .mk-section-header .mk-sh-text h2 { color: #9d174d !important; }
+#clientes-section .mk-section-header .mk-sh-text p  { color: #be185d !important; }
+#clientes-section .mk-sh-icon { color: #DB2777; }
 
 /* Reportes — orange */
 #reportes-section .mk-section-header {
-  background: linear-gradient(120deg, rgba(249,115,22,.11) 0%, rgba(234,88,12,.06) 100%);
-  border: 1px solid rgba(249,115,22,.15);
+  background: linear-gradient(120deg, rgba(249,115,22,.10) 0%, rgba(234,88,12,.05) 100%);
+  border: 1px solid rgba(249,115,22,.18);
 }
 #reportes-section .mk-section-header::after {
   background: radial-gradient(ellipse at top right, #F97316 0%, transparent 70%);
 }
-#reportes-section .mk-sh-icon {
-  color: #EA580C;
-  background: rgba(249,115,22,.12);
-}
+#reportes-section .mk-section-header .mk-sh-text h2 { color: #9a3412 !important; }
+#reportes-section .mk-section-header .mk-sh-text p  { color: #c2410c !important; }
+#reportes-section .mk-sh-icon { color: #EA580C; }
 
 /* Equipos — navy/slate */
 #equipos-section .mk-section-header {
   background: linear-gradient(120deg, rgba(51,65,85,.10) 0%, rgba(30,41,59,.05) 100%);
-  border: 1px solid rgba(51,65,85,.15);
+  border: 1px solid rgba(51,65,85,.16);
 }
 #equipos-section .mk-section-header::after {
   background: radial-gradient(ellipse at top right, #334155 0%, transparent 70%);
 }
-#equipos-section .mk-sh-icon {
-  color: #334155;
-  background: rgba(51,65,85,.10);
-}
+#equipos-section .mk-section-header .mk-sh-text h2 { color: #1e293b !important; }
+#equipos-section .mk-section-header .mk-sh-text p  { color: #475569 !important; }
+#equipos-section .mk-sh-icon { color: #334155; }
 
 /* Configuración — warm gray */
 #configuracion-section .mk-section-header {
   background: linear-gradient(120deg, rgba(120,113,108,.10) 0%, rgba(87,83,78,.05) 100%);
-  border: 1px solid rgba(120,113,108,.15);
+  border: 1px solid rgba(120,113,108,.16);
 }
 #configuracion-section .mk-section-header::after {
   background: radial-gradient(ellipse at top right, #78716C 0%, transparent 70%);
 }
-#configuracion-section .mk-sh-icon {
-  color: #57534E;
-  background: rgba(120,113,108,.10);
+#configuracion-section .mk-section-header .mk-sh-text h2 { color: #292524 !important; }
+#configuracion-section .mk-section-header .mk-sh-text p  { color: #57534E !important; }
+#configuracion-section .mk-sh-icon { color: #57534E; }
+
+/* Analisis — amber */
+#analisis-section .mk-section-header {
+  background: linear-gradient(120deg, rgba(217,119,6,.10) 0%, rgba(180,83,9,.05) 100%);
+  border: 1px solid rgba(217,119,6,.18);
 }
+#analisis-section .mk-section-header .mk-sh-text h2 { color: #92400e !important; }
+#analisis-section .mk-section-header .mk-sh-text p  { color: #b45309 !important; }
+#analisis-section .mk-sh-icon { color: #D97706; }
+
+/* Categorías */
+#categorias-section .mk-section-header {
+  background: linear-gradient(120deg, rgba(139,92,246,.10) 0%, rgba(124,58,237,.05) 100%);
+  border: 1px solid rgba(139,92,246,.16);
+}
+#categorias-section .mk-section-header .mk-sh-text h2 { color: #4c1d95 !important; }
+#categorias-section .mk-section-header .mk-sh-text p  { color: #6d28d9 !important; }
+#categorias-section .mk-sh-icon { color: #7C3AED; }
+
+/* Dark mode — section headers */
+body.dark .mk-section-header .mk-sh-text h2 { color: #F5ECD6 !important; }
+body.dark .mk-section-header .mk-sh-text p  { color: #C9A87B !important; }
+body.dark .mk-section-header .mk-sh-icon    { background: rgba(255,255,255,0.08) !important; box-shadow: none !important; }
+body.dark #dashboard-section   .mk-section-header .mk-sh-text h2 { color: #E8B84B !important; }
+body.dark #pedidos-section     .mk-section-header .mk-sh-text h2 { color: #C4A8E0 !important; }
+body.dark #inventory-section   .mk-section-header .mk-sh-text h2 { color: #93C5FD !important; }
+body.dark #balance-section     .mk-section-header .mk-sh-text h2 { color: #6EE7B7 !important; }
+body.dark #clientes-section    .mk-section-header .mk-sh-text h2 { color: #F9A8D4 !important; }
+body.dark #reportes-section    .mk-section-header .mk-sh-text h2 { color: #FDBA74 !important; }
+body.dark #equipos-section     .mk-section-header .mk-sh-text h2 { color: #94A3B8 !important; }
+body.dark #configuracion-section .mk-section-header .mk-sh-text h2 { color: #D6D3D1 !important; }
 
 
 /* ══ 3. KANBAN BOARD — columnas y tarjetas ══ */

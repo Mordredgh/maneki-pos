@@ -273,16 +273,24 @@
             width:48px;height:48px;border-radius:14px;
             display:flex;align-items:center;justify-content:center;
             font-size:1.35rem;
-            background:rgba(255,255,255,0.18) !important;
-            box-shadow:0 2px 8px rgba(0,0,0,0.1),inset 0 1px 0 rgba(255,255,255,0.3);
+            background:rgba(255,255,255,0.75) !important;  /* era 0.18 — subido para ser visible en fondo claro */
+            box-shadow:0 2px 8px rgba(42,26,14,0.10), inset 0 1px 0 rgba(255,255,255,0.9);
             flex-shrink:0;
+        }
+        body.dark .mk-sh-icon {
+            background:rgba(255,255,255,0.08) !important;
+            box-shadow:0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
         }
         .mk-sh-text h2 {
             font-family:'Outfit',sans-serif !important;
-            font-size:1.45rem !important;font-weight:800 !important;color:white !important;
+            font-size:1.45rem !important;font-weight:800 !important;
+            color: var(--ink) !important;   /* era white — cambiado para fondos claros */
             letter-spacing:-0.02em !important;
         }
-        .mk-sh-text p { font-size:0.72rem !important;color:rgba(255,255,255,0.72) !important;margin-top:2px !important; }
+        .mk-sh-text p { font-size:0.72rem !important;color:var(--ink3) !important;margin-top:2px !important; }
+        /* Dark mode: texto claro sobre fondo oscuro */
+        body.dark .mk-sh-text h2 { color: #F5ECD6 !important; }
+        body.dark .mk-sh-text p  { color: rgba(201,168,123,0.75) !important; }
 
         /* ── INPUTS PREMIUM ── */
         input[type=text],input[type=number],input[type=email],input[type=search],textarea,select {
