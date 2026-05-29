@@ -940,27 +940,46 @@ function renderTablaPedidos() {
     const _et = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
     tbody.innerHTML = page.length === 0
         ? '<tr><td colspan="10" class="text-center py-10 text-gray-400">Sin pedidos</td></tr>'
-        : page.map(p => `<tr class="hover:bg-gray-50">
+        : page.map(p => {
+            const _wa  = p.telefono || p.whatsapp || '';
+            const _fb  = p.redes   || p.facebook  || '';
+            const _dir = p.lugarEntrega || '';
+            const _r   = Number(p.resta||0), _a = Number(p.anticipo||0);
+            const _badge = _r<=0
+                ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#dcfce7;color:#166534;">Liquidado</span>'
+                : _a>0
+                    ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#fef9c3;color:#854d0e;">Anticipo</span>'
+                    : '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#fee2e2;color:#991b1b;">Pendiente</span>';
+            const _fbUrl = _fb ? (_fb.startsWith('http') ? _fb : `https://facebook.com/${_fb.replace(/^@/,'')}`) : '';
+            return `<tr class="hover:bg-gray-50">
             <td class="px-4 py-3 text-sm font-bold text-amber-600">${_et(p.folio)||'—'}</td>
-            <td class="px-4 py-3 text-sm font-semibold text-gray-800">${_et(p.cliente)||'—'}</td>
-            <td class="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate">${_et(p.concepto)||'—'}</td>
+            <td class="px-4 py-3">
+                <p class="text-sm font-semibold text-gray-800">${_et(p.cliente)||'—'}</p>
+                <div class="flex gap-1 mt-1 flex-wrap">
+                    ${_wa ? `<button onclick="abrirWhatsAppPedido('${p.id}')" title="WhatsApp: ${_et(_wa)}" style="color:#25D366;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:1px 6px;font-size:.75rem;cursor:pointer;"><i class="fab fa-whatsapp"></i> ${_et(_wa)}</button>` : ''}
+                    ${_fb ? `<a href="${_fbUrl}" target="_blank" title="Facebook: ${_et(_fb)}" style="color:#1877F2;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:1px 6px;font-size:.75rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;"><i class="fab fa-facebook"></i> ${_et(_fb)}</a>` : ''}
+                </div>
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500 max-w-[160px]">
+                <p class="truncate">${_et(p.concepto)||'—'}</p>
+                ${_dir ? `<p class="truncate mt-1" style="color:#7c3aed;">📍 ${_et(_dir)}</p>` : ''}
+            </td>
             <td class="px-4 py-3 text-xs text-gray-500">${_et(p.fechaPedido)||'—'}</td>
             <td class="px-4 py-3 text-xs text-gray-500">${_et(p.entrega)||'—'}</td>
             <td class="px-4 py-3 text-sm font-bold text-gray-800">$${Number(p.total||0).toFixed(2)}</td>
             <td class="px-4 py-3 text-sm text-green-700">$${Number(p.anticipo||0).toFixed(2)}</td>
-            <td class="px-4 py-3 text-sm font-bold ${p.resta>0?'text-red-600':'text-green-600'}">$${Number(p.resta||0).toFixed(2)}<br>${(()=>{const _r=Number(p.resta||0),_a=Number(p.anticipo||0);if(_r<=0)return'<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#dcfce7;color:#166534;">Liquidado</span>';if(_a>0)return'<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#fef9c3;color:#854d0e;">Anticipo</span>';return'<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#fee2e2;color:#991b1b;">Pendiente</span>';})()}</td>
-            <td class="px-4 py-3 text-xs">${statusLabel[p.status]||p.status||'—'}</td>
+            <td class="px-4 py-3 text-sm font-bold ${_r>0?'text-red-600':'text-green-600'}">$${_r.toFixed(2)}<br>${_badge}</td>
+            <td class="px-4 py-3 text-xs">${statusLabel[(p.status||'').toLowerCase()]||p.status||'—'}</td>
             <td class="px-4 py-3">
-                <div class="flex gap-1">
+                <div class="flex gap-1 flex-wrap">
                     <button onclick="openPedidoStatusModal('${p.id}')" class="px-2 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600 hover:bg-amber-50">Estado</button>
                     <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg bg-amber-50 text-xs text-amber-700">✏️</button>
                     <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-green-50 text-xs text-green-700">$</button>
-                    <button onclick="abrirWhatsAppPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-green-50 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
-                    <button onclick="duplicarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-purple-50 text-xs text-purple-600" title="Duplicar pedido">⧉</button>
+                    <button onclick="duplicarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-purple-50 text-xs text-purple-600" title="Duplicar">⧉</button>
                     <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-red-50 text-xs text-red-600">🗑</button>
                 </div>
             </td>
-        </tr>`).join('');
+        </tr>`;}).join('');
     // Render pagination controls
     let paginador = document.getElementById('pedidosTablePaginador');
     if (!paginador) {
