@@ -956,8 +956,8 @@ function renderTablaPedidos() {
             <td class="px-4 py-3">
                 <p class="text-sm font-semibold text-gray-800">${_et(p.cliente)||'—'}</p>
                 <div class="flex gap-1 mt-1 flex-wrap">
-                    ${_wa ? `<button onclick="abrirWhatsAppPedido('${p.id}')" title="WhatsApp: ${_et(_wa)}" style="color:#25D366;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:1px 6px;font-size:.75rem;cursor:pointer;"><i class="fab fa-whatsapp"></i> ${_et(_wa)}</button>` : ''}
-                    ${_fb ? `<a href="${_fbUrl}" target="_blank" title="Facebook: ${_et(_fb)}" style="color:#1877F2;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:1px 6px;font-size:.75rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;"><i class="fab fa-facebook"></i> ${_et(_fb)}</a>` : ''}
+                    ${_wa ? `<button onclick="abrirWhatsAppPedido('${p.id}')" title="WhatsApp: ${_et(_wa)}" style="color:#25D366;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:2px 7px;font-size:.85rem;cursor:pointer;"><i class="fab fa-whatsapp"></i></button>` : ''}
+                    ${_fb ? `<a href="${_fbUrl}" target="_blank" title="Facebook: ${_et(_fb)}" style="color:#1877F2;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:2px 7px;font-size:.85rem;text-decoration:none;display:inline-flex;align-items:center;"><i class="fab fa-facebook"></i></a>` : ''}
                 </div>
             </td>
             <td class="px-4 py-3 text-xs text-gray-500 max-w-[160px]">
