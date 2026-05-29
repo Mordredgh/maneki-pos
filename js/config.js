@@ -761,26 +761,28 @@ async function initApp() {
         // ✅ FIX Forced Reflow: renders DOM divididos en 3 frames separados
         // Cada requestAnimationFrame da al navegador ~16ms para pintar
         // antes del siguiente bloque, evitando recálculos de layout masivos.
+        // NOTA: funciones de módulos lazy usan guard typeof — se renderizan
+        // cuando el usuario navega a cada sección vía _lazyLoad.
 
         // Frame 1: secciones principales visibles al iniciar
         requestAnimationFrame(() => {
             updateDashboard();
             // renderProducts() eliminado — módulo POS removido
-            renderBalance();
-            updateCategorySelects();
+            if (typeof renderBalance          === 'function') renderBalance();
+            if (typeof updateCategorySelects  === 'function') updateCategorySelects();
 
             // Frame 2: tablas secundarias
             requestAnimationFrame(() => {
-                renderInventoryTable();
-                renderClientsTable();
-                renderCategoriesGrid();
+                if (typeof renderInventoryTable === 'function') renderInventoryTable();
+                if (typeof renderClientsTable   === 'function') renderClientsTable();
+                if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
                 // renderQuotesTable() eliminado — módulo POS removido
-                renderPedidosTable();
+                if (typeof renderPedidosTable   === 'function') renderPedidosTable();
 
                 // Frame 3: charts y reportes (los más costosos)
                 requestAnimationFrame(() => {
-                    initChart();
-                    initReports();
+                    if (typeof initChart    === 'function') initChart();
+                    if (typeof initReports  === 'function') initReports();
                     try { showSection('bienvenida'); } catch (e) {}
                     // Activar Live Sync después de que todo esté listo
                     if (typeof _setupRealtime === 'function') _setupRealtime();
