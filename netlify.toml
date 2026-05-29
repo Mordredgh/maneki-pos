@@ -38,16 +38,16 @@
   [headers.values]
     Cache-Control = "no-cache, must-revalidate"
 
-# ── JS/CSS locales: 1 día de cache (Netlify CDN sirve versión del deploy)
+# ── JS/CSS locales: sin cache — siempre la versión más nueva del deploy
 [[headers]]
   for = "/js/*.js"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "no-cache, must-revalidate"
 
 [[headers]]
   for = "/css/*.css"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "no-cache, must-revalidate"
 
 # ── Imágenes y fuentes: 30 días de cache
 [[headers]]
