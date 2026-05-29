@@ -376,10 +376,10 @@ function _updateDashboardImpl() {
             npSub.textContent = meses[now.getMonth()] + ' ' + now.getFullYear();
         }
     }
-    renderSparkline();
-    renderComparativaSemanal();
     if (ar) animarNumero(ar, 0, accountsReceivable, 700, '$', '');
     if (ap) ap.textContent = activePedidos;
+    try { renderSparkline(); } catch(e) {}
+    try { renderComparativaSemanal(); } catch(e) {}
 
     // R2-A5: Desglose "Me deben" por cliente — onclick en la tarjeta
     const arCard = ar ? ar.closest('[onclick]') || ar.parentElement : null;

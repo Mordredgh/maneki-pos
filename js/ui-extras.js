@@ -219,6 +219,7 @@ function _totalVentasDia(dStr) {
 function renderSparkline() {
     const canvas = document.getElementById('sparklineGanancia');
     if (!canvas) return;
+    if (typeof Chart === 'undefined') return; // Chart.js aún no cargó
     const now = new Date();
     const datos = [], labels = [];
     for (let i = 6; i >= 0; i--) {

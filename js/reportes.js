@@ -912,7 +912,10 @@ function showSection(sectionName) {
         if (typeof renderRoiHistorial  === 'function') renderRoiHistorial();
         setTimeout(() => { if (typeof renderGraficaROI === 'function') renderGraficaROI(); }, 300);
     }
-    if (sectionName === 'dashboard')  setTimeout(() => { if (typeof renderTopClientes === 'function') renderTopClientes(); }, 300);
+    if (sectionName === 'dashboard') {
+        if (typeof window.updateDashboard === 'function') setTimeout(window.updateDashboard, 50);
+        setTimeout(() => { if (typeof renderTopClientes === 'function') renderTopClientes(); }, 300);
+    }
     if (sectionName === 'bienvenida') if (typeof renderBienvenida === 'function') renderBienvenida();
     if (sectionName === 'pos')        setTimeout(() => { const s = document.getElementById('searchProduct'); if (s) s.focus(); }, 200);
     if (sectionName === 'inventory')  setTimeout(() => { const s = document.getElementById('inventorySearch'); if (s) s.focus(); }, 200);
