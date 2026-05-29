@@ -572,13 +572,16 @@ const _lazySections = new Set();
 function _lazyLoad(name) {
     if (_lazySections.has(name)) return;
     _lazySections.add(name);
-    setTimeout(() => {
+    const _render = () => {
         if (name==='analisis' && window.renderAnalisis) window.renderAnalisis();
         if (name==='reportes' && window.renderSalesHistory) window.renderSalesHistory();
         if (name==='clientes' && window.renderClientsTable) window.renderClientsTable();
         if (name==='balance'  && window.renderBalance) window.renderBalance();
         if (name==='quotes'   && window.renderQuotesTable) window.renderQuotesTable();
-    }, 80);
+    };
+    // Si lazy-loader está activo, esperar a que los scripts carguen antes de renderizar
+    const _load = window._mkLazyLoad ? window._mkLazyLoad(name) : Promise.resolve();
+    _load.then(() => setTimeout(_render, 80));
 }
 
 // ─────────────────────────────────────────────────────────────────

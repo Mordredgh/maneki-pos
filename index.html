@@ -3382,6 +3382,8 @@ input:focus, select:focus, textarea:focus, button:focus {
 
   <!-- ═══════════════════════════════════════════════
        MÓDULOS DE LA APP — orden importante
+       Lazy loading activo: ~317 KB en arranque (antes ~1.1 MB)
+       Los módulos de sección se cargan bajo demanda vía lazy-loader.js
   ═══════════════════════════════════════════════ -->
 
   <!-- 1. Base: Supabase, SQLite, sync, offline -->
@@ -3390,28 +3392,14 @@ input:focus, select:focus, textarea:focus, button:focus {
   <!-- 2. Datos globales, variables, temas, emojis -->
   <script src="js/app-data.js"></script>
 
-  <!-- 3. Módulos de secciones -->
+  <!-- 3. Core siempre necesario -->
   <script src="js/equipos.js"></script>
   <script src="js/config.js"></script>
   <script src="js/dashboard.js"></script>
-  <script src="js/inventory-1.js"></script>
-  <script src="js/inventory-2.js"></script>
-  <script src="js/inventory-3.js"></script>
-  <script src="js/inventory-4.js"></script>
-  <script src="js/inventory-5.js"></script>
-  <script src="js/balance.js"></script>
-  <script src="js/clientes.js"></script>
-  <script src="js/categorias.js"></script>
-  <script src="js/reportes.js"></script>
-
-  <!-- 4. Módulos extra -->
-  <script src="js/whatsapp.js"></script>
-  <script src="js/backup.js"></script>
   <script src="js/ui-extras.js"></script>
-  <script src="js/pedidos-1.js"></script>
-  <script src="js/pedidos-2.js"></script>
-  <script src="js/pedidos-3.js"></script>
-  <script src="js/envios.js"></script>
+
+  <!-- 4. Cargador diferido — descarga secciones bajo demanda -->
+  <script src="js/lazy-loader.js"></script>
 
   <!-- 5. Sistema visual y arranque final -->
   <script src="js/design-system.js"></script>
