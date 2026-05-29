@@ -738,28 +738,6 @@ function renderKanbanBoard() {
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     let lista = window.pedidos || [];
 
-    // MEJORA 7: Pipeline value bar
-    (function _renderPipelineBar() {
-        const activos = (window.pedidos || []).filter(p => p.status !== 'cancelado');
-        const pipelineTotal = activos.reduce((s, p) => s + (Number(p.total) || 0), 0);
-        const pipelinePendiente = activos.reduce((s, p) => {
-            const saldo = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - Number(p.anticipo||0));
-            return s + saldo;
-        }, 0);
-        let barEl = document.getElementById('_kanbanPipelineBar');
-        const kanbanSection = document.getElementById('vistaKanban');
-        if (!barEl && kanbanSection) {
-            barEl = document.createElement('div');
-            barEl.id = '_kanbanPipelineBar';
-            barEl.style.cssText = 'background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 16px;margin-bottom:10px;font-size:.82rem;font-weight:600;color:#92400e;display:flex;align-items:center;gap:16px;flex-wrap:wrap;';
-            kanbanSection.insertAdjacentElement('afterbegin', barEl);
-        }
-        if (barEl) {
-            const _m = n => '$' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            barEl.innerHTML = `<span>📊 Pipeline: <strong style="color:#d97706;">${_m(pipelineTotal)}</strong> total activo</span><span>|</span><span>⏳ Pendiente de cobro: <strong style="color:#dc2626;">${_m(pipelinePendiente)}</strong></span><span style="color:#b45309;font-weight:400;">(${activos.length} pedido${activos.length!==1?'s':''})</span>`;
-        }
-    })();
-
     // NTH-03: aplicar filtro de urgencia
     if (_kanbanUrgenciaFiltro !== 'todos') {
         lista = lista.filter(p => {
