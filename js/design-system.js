@@ -601,11 +601,20 @@ function _lazyLoad(name) {
     if (_lazySections.has(name)) return;
     _lazySections.add(name);
     const _render = () => {
-        if (name==='analisis' && window.renderAnalisis) window.renderAnalisis();
-        if (name==='reportes' && window.renderSalesHistory) window.renderSalesHistory();
-        if (name==='clientes' && window.renderClientsTable) window.renderClientsTable();
-        if (name==='balance'  && window.renderBalance) window.renderBalance();
-        if (name==='quotes'   && window.renderQuotesTable) window.renderQuotesTable();
+        if (name==='analisis'  && window.renderAnalisis)      window.renderAnalisis();
+        if (name==='reportes'  && window.renderSalesHistory)  window.renderSalesHistory();
+        if (name==='clientes'  && window.renderClientsTable)  window.renderClientsTable();
+        if (name==='balance'   && window.renderBalance)       window.renderBalance();
+        if (name==='quotes'    && window.renderQuotesTable)   window.renderQuotesTable();
+        if (name==='inventory' || name==='inventario' || name==='categorias') {
+            if (window.updateCategorySelects) window.updateCategorySelects();
+            if (window.renderInventoryTable)  window.renderInventoryTable();
+        }
+        if (name==='pedidos') {
+            if (window.renderPedidosTable)    window.renderPedidosTable();
+            if (window.renderKanbanBoard)     window.renderKanbanBoard();
+            if (window.renderHistorialPedidos) window.renderHistorialPedidos();
+        }
     };
     if (!window._mkLazyLoad || window._mkGrupoListo(name)) {
         // Ya listo — renderizar directo sin spinner
