@@ -569,6 +569,34 @@ function _getWorker() {
 // 8. LAZY LOADED SECTIONS — tracking
 // ─────────────────────────────────────────────────────────────────
 const _lazySections = new Set();
+
+// Muestra/oculta spinner de carga en una sección
+function _sectionSpinner(name, show) {
+    const sectionId = 'section-' + name;
+    const el = document.getElementById(sectionId) ||
+               document.querySelector('[data-section="' + name + '"]');
+    if (!el) return;
+    const spinnerId = '__mk_spin_' + name;
+    if (show) {
+        if (el.querySelector('#' + spinnerId)) return;
+        const s = document.createElement('div');
+        s.id = spinnerId;
+        s.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);z-index:99;border-radius:12px;';
+        s.innerHTML = '<div style="width:36px;height:36px;border:3px solid #f3f3f3;border-top:3px solid #C9933A;border-radius:50%;animation:mkSpin .7s linear infinite;"></div>';
+        if (!document.getElementById('mk-spin-style')) {
+            const st = document.createElement('style');
+            st.id = 'mk-spin-style';
+            st.textContent = '@keyframes mkSpin{to{transform:rotate(360deg)}}';
+            document.head.appendChild(st);
+        }
+        el.style.position = el.style.position || 'relative';
+        el.appendChild(s);
+    } else {
+        const s = el.querySelector('#' + spinnerId);
+        if (s) s.remove();
+    }
+}
+
 function _lazyLoad(name) {
     if (_lazySections.has(name)) return;
     _lazySections.add(name);
@@ -579,9 +607,18 @@ function _lazyLoad(name) {
         if (name==='balance'  && window.renderBalance) window.renderBalance();
         if (name==='quotes'   && window.renderQuotesTable) window.renderQuotesTable();
     };
-    // Si lazy-loader está activo, esperar a que los scripts carguen antes de renderizar
-    const _load = window._mkLazyLoad ? window._mkLazyLoad(name) : Promise.resolve();
-    _load.then(() => setTimeout(_render, 80));
+    if (!window._mkLazyLoad || window._mkGrupoListo(name)) {
+        // Ya listo — renderizar directo sin spinner
+        const _load = window._mkLazyLoad ? window._mkLazyLoad(name) : Promise.resolve();
+        _load.then(() => setTimeout(_render, 80));
+        return;
+    }
+    // Scripts aún cargando — mostrar spinner mientras esperamos
+    _sectionSpinner(name, true);
+    window._mkLazyLoad(name).then(() => {
+        _sectionSpinner(name, false);
+        setTimeout(_render, 80);
+    });
 }
 
 // ─────────────────────────────────────────────────────────────────

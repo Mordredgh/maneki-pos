@@ -100,15 +100,24 @@
         return _cargarScript(src);
     }
 
-    // ── Carga todos los recursos de un grupo en orden ────────────
+    // ── Carga todos los recursos de un grupo ────────────────────
+    // CDN externos + primer módulo local en paralelo (acelera espera inicial),
+    // resto de locales en serie (respeta dependencias entre módulos).
     function _cargarGrupo(grupo) {
         if (_cargados.has(grupo))  return Promise.resolve();
         if (_cargando.has(grupo))  return _cargando.get(grupo);
 
         var promise = (async function () {
-            var recursos = _GRUPOS[grupo] || [];
-            for (var i = 0; i < recursos.length; i++) {
-                await _cargarRecurso(recursos[i]);
+            var recursos   = _GRUPOS[grupo] || [];
+            var cdnItems   = recursos.filter(function(r){ return r.startsWith('http'); });
+            var localItems = recursos.filter(function(r){ return !r.startsWith('http'); });
+            // CDN + primer local en paralelo
+            var primeros = cdnItems.concat(localItems.slice(0, 1));
+            var resto    = localItems.slice(1);
+            if (primeros.length) await Promise.all(primeros.map(_cargarRecurso));
+            // Resto en orden (pueden tener dependencias entre sí)
+            for (var i = 0; i < resto.length; i++) {
+                await _cargarRecurso(resto[i]);
             }
             _cargados.add(grupo);
         })();
@@ -139,19 +148,22 @@
         return !grupo || _cargados.has(grupo);
     };
 
-    // ── Prefetch escalonado tras el arranque ─────────────────────
-    // Chart.js primero: sparkline del dashboard lo necesita pronto.
-    // Resto por orden de uso probable.
+    // ── Prefetch agresivo — todos los grupos en paralelo a 300ms ──
+    // El navegador maneja hasta 6 conexiones paralelas por dominio.
+    // Con esto, para cuando el usuario navega a cualquier sección,
+    // los scripts ya están descargados o casi terminan.
     window.addEventListener('load', function () {
-        setTimeout(function () { _cargarScript(CDN.chartjs);   }, 200);  // sparkline dashboard
-        setTimeout(function () { _cargarGrupo('pedidos');      }, 900);
-        setTimeout(function () { _cargarGrupo('inventario');   }, 1700);
-        setTimeout(function () { _cargarGrupo('balance');      }, 2900);
-        setTimeout(function () { _cargarGrupo('clientes');     }, 3900);
-        setTimeout(function () { _cargarGrupo('reportes');     }, 5100);
-        setTimeout(function () { _cargarGrupo('envios');       }, 6300);
-        setTimeout(function () { _cargarGrupo('pos');          }, 7100);
-        setTimeout(function () { _cargarGrupo('backup');       }, 7900);
+        setTimeout(function () {
+            _cargarScript(CDN.chartjs);   // sparkline dashboard — lo antes posible
+            _cargarGrupo('pedidos');
+            _cargarGrupo('inventario');
+            _cargarGrupo('balance');
+            _cargarGrupo('clientes');
+            _cargarGrupo('reportes');
+            _cargarGrupo('envios');
+            _cargarGrupo('pos');
+            _cargarGrupo('backup');
+        }, 300);
     }, { once: true });
 
 })();
