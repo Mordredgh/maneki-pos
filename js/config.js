@@ -690,8 +690,8 @@ async function initApp() {
         // FIX BUG-011: clientes.js puede no haber cargado si tiene un SyntaxError en producción.
         // Llamar con guard para que un fallo aquí no aborte toda la inicialización de la app.
         try { if (typeof setupClientSearch === 'function') setupClientSearch(); } catch(e) { console.warn('setupClientSearch error:', e); }
-        setupMobileMenu();
-        setupImageUpload();
+        try { if (typeof setupMobileMenu  === 'function') setupMobileMenu();  } catch(e) { console.warn('[initApp] setupMobileMenu error:', e); }
+        try { if (typeof setupImageUpload === 'function') setupImageUpload(); } catch(e) { console.warn('[initApp] setupImageUpload error:', e); }
         // Sincroniza variables globales con window.* para que todos los módulos
         // lean siempre los datos frescos de Supabase/SQLite y nunca de localStorage
         function _syncWindowVars() {

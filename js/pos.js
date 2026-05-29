@@ -594,7 +594,8 @@
             document.getElementById('quoteTotal').textContent = `$${total.toFixed(2)}`;
         }
         
-        document.getElementById('quoteForm').addEventListener('submit', function(e) {
+        const _quoteForm = document.getElementById('quoteForm');
+        if (_quoteForm) _quoteForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const customer = document.getElementById('quoteCustomer').value;

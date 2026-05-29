@@ -17,6 +17,7 @@
         ],
         pedidos: [
             'js/whatsapp.js',
+            'js/balance.js',    // pedidos-3.js necesita eliminarPedidoFinalizado
             'js/pedidos-1.js',
             'js/pedidos-2.js',
             'js/pedidos-3.js'
