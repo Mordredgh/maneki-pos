@@ -504,7 +504,12 @@
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-            
+            if (typeof html2pdf === 'undefined') {
+                if (typeof manekiToastExport === 'function') manekiToastExport('⏳ Cargando exportador PDF...', 'info');
+                window._mkLoadCDN('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js')
+                    .then(function () { html2pdf().set(opt).from(element).save(); });
+                return;
+            }
             html2pdf().set(opt).from(element).save();
         }
         

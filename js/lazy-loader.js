@@ -1,12 +1,21 @@
 // ═══════════════════════════════════════════════════════════════
-//  MANEKI LAZY LOADER — carga módulos por sección bajo demanda
-//  Reduce el JS inicial de ~1.1 MB a ~317 KB (71% menos)
+//  MANEKI LAZY LOADER v2 — módulos JS + librerías CDN bajo demanda
+//  JS inicial: ~317 KB  |  CDN diferido: ~1.7 MB (xlsx, pdf, leaflet)
 // ═══════════════════════════════════════════════════════════════
 (function () {
     'use strict';
 
+    // ── URLs de librerías CDN pesadas ────────────────────────────
+    var CDN = {
+        chartjs:  'https://cdn.jsdelivr.net/npm/chart.js',
+        xlsx:     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+        html2pdf: 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+        leafletCSS: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+        leafletJS:  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+    };
+
     // ── Grupos de scripts por sección ───────────────────────────
-    const _GRUPOS = {
+    var _GRUPOS = {
         inventario: [
             'js/categorias.js',
             'js/inventory-1.js',
@@ -17,21 +26,22 @@
         ],
         pedidos: [
             'js/whatsapp.js',
-            'js/balance.js',    // pedidos-3.js necesita eliminarPedidoFinalizado
+            'js/balance.js',        // pedidos-3.js necesita eliminarPedidoFinalizado
+            CDN.chartjs,            // pedidos-2.js usa Chart para ROI
             'js/pedidos-1.js',
             'js/pedidos-2.js',
             'js/pedidos-3.js'
         ],
         balance:  ['js/balance.js'],
-        reportes: ['js/reportes.js'],
+        reportes: [CDN.chartjs, 'js/reportes.js'],
         clientes: ['js/clientes.js'],
-        envios:   ['js/envios.js'],
+        envios:   [CDN.leafletCSS, CDN.leafletJS, 'js/envios.js'],
         pos:      ['js/pos.js'],
         backup:   ['js/backup.js']
     };
 
     // ── Mapa sección → grupo ─────────────────────────────────────
-    const _SECCION_A_GRUPO = {
+    var _SECCION_A_GRUPO = {
         inventory:   'inventario',
         inventario:  'inventario',
         categorias:  'inventario',
@@ -46,8 +56,8 @@
         backup:      'backup'
     };
 
-    const _cargados  = new Set();
-    const _cargando  = new Map(); // grupo → Promise
+    var _cargados = new Set();
+    var _cargando = new Map(); // url/grupo → Promise
 
     // ── Inyecta un <script> y resuelve cuando carga ──────────────
     function _cargarScript(src) {
@@ -60,21 +70,45 @@
             el.onload  = resolve;
             el.onerror = function () {
                 console.warn('[Maneki Lazy] No se pudo cargar:', src);
-                resolve(); // no bloquear el resto
+                resolve();
             };
             document.body.appendChild(el);
         });
     }
 
-    // ── Carga todos los scripts de un grupo en orden ─────────────
+    // ── Inyecta un <link> CSS y resuelve cuando carga ────────────
+    function _cargarCSS(href) {
+        return new Promise(function (resolve) {
+            if (document.querySelector('link[href="' + href + '"]')) {
+                resolve(); return;
+            }
+            var el = document.createElement('link');
+            el.rel  = 'stylesheet';
+            el.href = href;
+            el.onload  = resolve;
+            el.onerror = function () {
+                console.warn('[Maneki Lazy] No se pudo cargar CSS:', href);
+                resolve();
+            };
+            document.head.appendChild(el);
+        });
+    }
+
+    // ── Carga un recurso (JS o CSS según extensión/tipo) ─────────
+    function _cargarRecurso(src) {
+        if (src.includes('.css') || src.includes('leaflet.css')) return _cargarCSS(src);
+        return _cargarScript(src);
+    }
+
+    // ── Carga todos los recursos de un grupo en orden ────────────
     function _cargarGrupo(grupo) {
         if (_cargados.has(grupo))  return Promise.resolve();
         if (_cargando.has(grupo))  return _cargando.get(grupo);
 
         var promise = (async function () {
-            var scripts = _GRUPOS[grupo] || [];
-            for (var i = 0; i < scripts.length; i++) {
-                await _cargarScript(scripts[i]);
+            var recursos = _GRUPOS[grupo] || [];
+            for (var i = 0; i < recursos.length; i++) {
+                await _cargarRecurso(recursos[i]);
             }
             _cargados.add(grupo);
         })();
@@ -84,10 +118,19 @@
     }
 
     // ── API pública ──────────────────────────────────────────────
-    // Llamar antes de mostrar una sección; devuelve Promise
+
+    // Carga el grupo de una sección; devuelve Promise
     window._mkLazyLoad = function (seccion) {
         var grupo = _SECCION_A_GRUPO[seccion];
         return grupo ? _cargarGrupo(grupo) : Promise.resolve();
+    };
+
+    // Carga una URL CDN arbitraria bajo demanda (JS o CSS)
+    window._mkLoadCDN = function (url) {
+        if (_cargando.has(url)) return _cargando.get(url);
+        var p = _cargarRecurso(url).then(function () { _cargados.add(url); });
+        _cargando.set(url, p);
+        return p;
     };
 
     // Verdadero si el grupo ya está listo
@@ -96,18 +139,19 @@
         return !grupo || _cargados.has(grupo);
     };
 
-    // ── Prefetch en segundo plano tras el arranque ───────────────
-    // Los módulos más usados se descargan silenciosamente para que
-    // estén listos antes de que el usuario los necesite.
+    // ── Prefetch escalonado tras el arranque ─────────────────────
+    // Chart.js primero: sparkline del dashboard lo necesita pronto.
+    // Resto por orden de uso probable.
     window.addEventListener('load', function () {
-        setTimeout(function () { _cargarGrupo('pedidos');   }, 800);
-        setTimeout(function () { _cargarGrupo('inventario');}, 1600);
-        setTimeout(function () { _cargarGrupo('balance');   }, 2800);
-        setTimeout(function () { _cargarGrupo('clientes');  }, 3800);
-        setTimeout(function () { _cargarGrupo('reportes');  }, 5000);
-        setTimeout(function () { _cargarGrupo('envios');    }, 6200);
-        setTimeout(function () { _cargarGrupo('pos');       }, 7000);
-        setTimeout(function () { _cargarGrupo('backup');    }, 7800);
+        setTimeout(function () { _cargarScript(CDN.chartjs);   }, 200);  // sparkline dashboard
+        setTimeout(function () { _cargarGrupo('pedidos');      }, 900);
+        setTimeout(function () { _cargarGrupo('inventario');   }, 1700);
+        setTimeout(function () { _cargarGrupo('balance');      }, 2900);
+        setTimeout(function () { _cargarGrupo('clientes');     }, 3900);
+        setTimeout(function () { _cargarGrupo('reportes');     }, 5100);
+        setTimeout(function () { _cargarGrupo('envios');       }, 6300);
+        setTimeout(function () { _cargarGrupo('pos');          }, 7100);
+        setTimeout(function () { _cargarGrupo('backup');       }, 7900);
     }, { once: true });
 
 })();

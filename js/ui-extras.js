@@ -56,7 +56,9 @@ function clearAllData() {
 // Lee desde window.* que son sincronizados por _syncWindowVars() al cargar
 function manekiExportar(tipo) {
     if (typeof XLSX === 'undefined') {
-        manekiToastExport('⚠️ Error: SheetJS no cargó. Verifica tu conexión a internet.', 'err');
+        manekiToastExport('⏳ Cargando exportador Excel...', 'info');
+        window._mkLoadCDN('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js')
+            .then(function () { manekiExportar(tipo); });
         return;
     }
 

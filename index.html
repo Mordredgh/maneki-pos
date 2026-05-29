@@ -6,19 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maneki Store - Sistema de Gestión</title>
 
+    <!-- Preconnect a dominios CDN para acelerar carga diferida -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <!-- Leaflet CSS — cargado por lazy-loader al entrar a Envíos -->
+    <!-- html2pdf (500KB) — cargado por lazy-loader al exportar PDF -->
+    <!-- xlsx (800KB)     — cargado por lazy-loader al exportar Excel -->
+    <!-- Leaflet JS       — cargado por lazy-loader al entrar a Envíos -->
 
     <link rel="stylesheet" href="maneki-premium.css">
   <!-- CDN Libraries -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Chart.js: async para no bloquear render; lazy-loader lo prefetchea a 200ms -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" async></script>
+  <!-- Supabase: necesario al arranque para autenticación y datos -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <!-- Estilos -->
   <link rel="stylesheet" href="css/styles.css">
