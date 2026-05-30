@@ -1108,8 +1108,9 @@ td button:active, td a[onclick]:active {
   transform: translateX(-50%) translateY(0) scale(1);
 }
 
-/* ── TRANSICIONES GLOBALES — smoothness premium ── */
-*, *::before, *::after {
+/* ── TRANSICIONES — solo en elementos interactivos (NO body * que mata perf) ── */
+button, a, input, select, textarea, .sidebar-item, .mk-card, .mk-toast,
+td, th, .mk-avatar, [onclick], [draggable] {
   transition-timing-function: var(--ease);
 }
 
@@ -1517,17 +1518,13 @@ body.dark .pos-total-bar .amount { color: var(--mk-g300) !important; }
   animation: mkConfettiFall linear forwards;
 }
 
-/* ── #3 DARK MODE TOGGLE — transición suave ── */
+/* ── #3 DARK MODE TOGGLE — transición suave (solo body + sidebar + cards) ── */
 body {
   transition: background-color 0.4s ease, color 0.3s ease !important;
 }
-body * {
-  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease, box-shadow 0.25s ease;
-}
-/* Excluir animaciones que no deben tener transition global */
-body canvas, body svg, body img, body video,
-body [style*="animation"], body .mk-toast, body .confetti-piece {
-  transition: none !important;
+#sidebar, .mk-card, .kpi-card, #global-search-bar,
+.sidebar-item, .modal-overlay > div, table thead th {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.25s ease !important;
 }
 #darkModeBtn i, #darkModeIcon {
   transition: transform 0.4s var(--spring) !important;

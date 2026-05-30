@@ -1015,7 +1015,15 @@ function saveProducts() {
                 variants:         p.variants         || [],
                 mp_componentes:   p.mpComponentes    || [],
                 proveedor:        p.proveedor        || null,
+                proveedor_url:    p.proveedorUrl     || null,
                 notas:            p.notas            || null,
+                unidad:           p.unidad           || 'pza',
+                es_empaque:       p.esEmpaque        === true,
+                usa_variantes:    p.usaVariantes     === true,
+                rendimiento_por_hoja: Number(p.rendimientoPorHoja) || 1,
+                punto_reorden:    p.puntoReorden != null ? Number(p.puntoReorden) : null,
+                historial_costos: p.historialCostos  || [],
+                historial_precios: p.historialPrecios || [],
                 publicar_tienda:  p.publicarTienda   === true,
                 updated_at:       new Date().toISOString()
             }));
@@ -1026,7 +1034,24 @@ function saveProducts() {
         }
     })();
 }
-function saveClients()       { (async () => { await sbSave('clients', clients); })(); }
+function saveClients() {
+    (async () => {
+        await sbSave('clients', clients);
+        // Dual write a tabla relacional
+        try {
+            const rows = (window.clients||[]).map(c => ({
+                id: String(c.id), name: c.name||'', phone: c.phone||null,
+                facebook: c.facebook||null, email: c.email||null,
+                type: c.type||'regular', notas: c.notas||null,
+                total_purchases: Number(c.totalPurchases)||0,
+                last_purchase: c.lastPurchase||null,
+                is_vip: c.type==='vip',
+                tags: c.tags||[]
+            }));
+            if (rows.length) await db.from('clients').upsert(rows, {onConflict:'id'}).catch(e=>console.warn('[clients]',e));
+        } catch(e){}
+    })();
+}
 // ── saveSalesHistory — dual write: store (legacy) + public.sales_history ──
 function saveSalesHistory() {
     (async () => {
@@ -1058,8 +1083,35 @@ function saveSalesHistory() {
     })();
 }
 function saveQuotes()        { (async () => { await sbSave('quotes', quotes); })(); }
-function saveIncomes()       { (async () => { await sbSave('incomes', incomes); })(); }
-function saveExpenses()      { (async () => { await sbSave('expenses', expenses); })(); }
+function saveIncomes() {
+    (async () => {
+        await sbSave('incomes', incomes);
+        try {
+            const rows = (window.incomes||[]).map(i => ({
+                id: typeof i.id==='number'?i.id:undefined, concept: i.concept||i.concepto||null,
+                amount: Number(i.amount||i.monto)||0, date: i.date||i.fecha||null,
+                client: i.client||i.cliente||null, from_pos: i.fromPOS===true,
+                folio_origen: i.folioOrigen||null, pedido_id: i.pedidoId||null
+            }));
+            // Solo si hay filas con datos
+            if (rows.length && db) await db.from('incomes').upsert(rows,{onConflict:'id'}).catch(e=>console.warn('[incomes]',e));
+        } catch(e){}
+    })();
+}
+function saveExpenses() {
+    (async () => {
+        await sbSave('expenses', expenses);
+        try {
+            const rows = (window.expenses||[]).map(e => ({
+                id: typeof e.id==='number'?e.id:undefined, concept: e.concept||e.concepto||null,
+                amount: Number(e.amount||e.monto)||0, date: e.date||e.fecha||null,
+                category: e.category||e.categoria||null, etiqueta: e.etiqueta||null,
+                notas: e.notas||null, from_payable: e.fromPayable===true
+            }));
+            if (rows.length && db) await db.from('expenses').upsert(rows,{onConflict:'id'}).catch(e=>console.warn('[expenses]',e));
+        } catch(e){}
+    })();
+}
 let gastosRecurrentes = [];
 function saveGastosRecurrentes() { (async () => { await sbSave('gastosRecurrentes', gastosRecurrentes); })(); }
 function saveReceivables()   { (async () => { await sbSave('receivables', receivables); })(); }
@@ -1092,6 +1144,16 @@ function savePedidos() {
                 productos_inventario: p.productosInventario || [],
                 inventario_descontado: p.inventarioDescontado === true,
                 from_quote:           p.fromQuote           || null,
+                whatsapp:             p.whatsapp || p.telefono || null,
+                facebook:             p.facebook || p.redes   || null,
+                lugar_entrega:        p.lugarEntrega        || null,
+                costo_materiales:     Number(p.costoMateriales) || 0,
+                prioridad:            p.prioridad           || 'normal',
+                notas_internas:       p.notasInternas       || null,
+                pagos:                p.pagos               || [],
+                empaques:             p.empaques            || [],
+                historial_estados:    p.historialEstados    || [],
+                fecha_ultimo_estado:  p.fechaUltimoEstado   || null,
                 updated_at:           new Date().toISOString()
             }));
             const { error } = await db.from('orders').upsert(rows, { onConflict: 'id' });
@@ -1130,6 +1192,15 @@ function savePedidosFinalizados() {
                 productos_inventario:  p.productosInventario  || [],
                 inventario_descontado: p.inventarioDescontado === true,
                 from_quote:            p.fromQuote            || null,
+                whatsapp:              p.whatsapp || p.telefono || null,
+                facebook:              p.facebook || p.redes   || null,
+                lugar_entrega:         p.lugarEntrega         || null,
+                costo_materiales:      Number(p.costoMateriales) || 0,
+                prioridad:             p.prioridad            || 'normal',
+                notas_internas:        p.notasInternas        || null,
+                pagos:                 p.pagos                || [],
+                empaques:              p.empaques             || [],
+                historial_estados:     p.historialEstados     || [],
                 updated_at:            new Date().toISOString()
             }));
             const { error } = await db.from('orders_finalizados').upsert(rows, { onConflict: 'id' });

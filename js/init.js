@@ -57,22 +57,40 @@
     // #1 CONFETTI — explosión al finalizar pedido
     // ══════════════════════════════════════════════════════════════
     window.mkConfetti = function() {
-        let c = document.getElementById('mk-confetti-canvas');
-        if (!c) { c = document.createElement('div'); c.id = 'mk-confetti-canvas'; document.body.appendChild(c); }
+        let canvas = document.getElementById('mk-confetti-canvas');
+        if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'mk-confetti-canvas'; canvas.style.cssText='position:fixed;inset:0;z-index:99999;pointer-events:none;'; document.body.appendChild(canvas); }
+        canvas.width = innerWidth; canvas.height = innerHeight; canvas.style.display = 'block';
+        const ctx = canvas.getContext('2d');
         const colors = ['#C5A572','#E8B84B','#F5D080','#9B7BC4','#C4A8E0','#F2A97E','#10b981','#ef4444','#3b82f6'];
-        for (let i = 0; i < 60; i++) {
-            const p = document.createElement('div');
-            p.className = 'confetti-piece';
-            p.style.left = Math.random()*100+'%';
-            p.style.background = colors[Math.floor(Math.random()*colors.length)];
-            p.style.width = (4+Math.random()*6)+'px';
-            p.style.height = (4+Math.random()*6)+'px';
-            p.style.borderRadius = Math.random()>0.5?'50%':'2px';
-            p.style.animationDuration = (1.5+Math.random()*2)+'s';
-            p.style.animationDelay = Math.random()*0.5+'s';
-            c.appendChild(p);
+        const pieces = Array.from({length:80}, ()=>({
+            x: Math.random()*innerWidth, y: -10-Math.random()*40,
+            w: 4+Math.random()*5, h: 4+Math.random()*5,
+            color: colors[Math.floor(Math.random()*colors.length)],
+            vy: 1.5+Math.random()*3, vx: (Math.random()-0.5)*2,
+            rot: Math.random()*360, vr: (Math.random()-0.5)*8,
+            opacity: 1
+        }));
+        let frame = 0;
+        function draw() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let alive = 0;
+            pieces.forEach(p => {
+                if (p.opacity <= 0) return;
+                p.y += p.vy; p.x += p.vx; p.rot += p.vr;
+                p.vy += 0.04; // gravity
+                if (p.y > innerHeight) p.opacity -= 0.03;
+                ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+                ctx.globalAlpha = Math.max(0,p.opacity);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+                ctx.restore();
+                if (p.opacity > 0) alive++;
+            });
+            frame++;
+            if (alive > 0 && frame < 300) requestAnimationFrame(draw);
+            else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.style.display='none'; }
         }
-        setTimeout(()=>{ if(c) c.innerHTML=''; }, 4000);
+        requestAnimationFrame(draw);
     };
 
     // ══════════════════════════════════════════════════════════════
