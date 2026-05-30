@@ -340,6 +340,20 @@ function openPedidoStatusModal(id) {
     _pedidoStatusActualId = id;
     document.getElementById('pedidoStatusId').value = id;
     document.getElementById('pedidoStatusFolio').textContent = p.folio || '—';
+    // #9 Timeline visual de estados
+    let tlContainer = document.getElementById('pedidoStatusTimeline');
+    if (!tlContainer) {
+        const folioEl = document.getElementById('pedidoStatusFolio');
+        if (folioEl) {
+            tlContainer = document.createElement('div');
+            tlContainer.id = 'pedidoStatusTimeline';
+            tlContainer.style.cssText = 'margin:12px 0 4px;';
+            folioEl.parentElement.insertAdjacentElement('afterend', tlContainer);
+        }
+    }
+    if (tlContainer && typeof _mkTimeline === 'function') {
+        tlContainer.innerHTML = _mkTimeline(p.status || 'confirmado');
+    }
     openModal('pedidoStatusModal');
 }
 
@@ -446,6 +460,8 @@ function setPedidoStatus(status) {
             closePedidoStatusModal();
             renderPedidosTable();
             manekiToastExport('🎉 Pedido finalizado: ' + p.folio, 'ok');
+            // #1 Confetti celebration
+            if (typeof window.mkConfetti === 'function') window.mkConfetti();
             if (typeof abrirRoiEquiposModal === 'function') abrirRoiEquiposModal(p);
 
             // MEJ-17: actualizar estadísticas del cliente al finalizar pedido.

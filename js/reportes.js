@@ -920,6 +920,8 @@ function showSection(sectionName) {
     if (sectionName === 'inventory')  setTimeout(() => { const s = document.getElementById('inventorySearch'); if (s) s.focus(); }, 200);
     if (sectionName === 'clientes')   if (typeof renderClientsTable  === 'function') renderClientsTable();
     if (sectionName === 'categorias') if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
+    // #5 Breadcrumb
+    if (typeof window._mkUpdateBreadcrumb === 'function') window._mkUpdateBreadcrumb(sectionName);
 }
 window.showSection = showSection;
 

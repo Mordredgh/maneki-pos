@@ -26,6 +26,8 @@
             }
 
             banner.classList.add('visible');
+            // #4 Sonido de notificación para entregas urgentes
+            if (typeof window._mkNotifSound === 'function') window._mkNotifSound();
             document.getElementById('alertaSubtitulo').textContent =
                 pedidosAlerta.length === 1
                     ? '1 pedido requiere tu atención'

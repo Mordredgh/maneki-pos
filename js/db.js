@@ -720,6 +720,8 @@ async function sbSave(key, data) {
             actualizarIndicadorConexion(true);
             // FIX #3: guardar timestamp de sync como metadato separado
             sqliteStorage.set('__meta_' + key, { syncedAt: new Date().toISOString() }).catch(e => console.warn('[Maneki DB]', e?.message || e));
+            // #12 Actualizar indicador de sync
+            if (typeof window._mkUpdateSyncTime === 'function') window._mkUpdateSyncTime();
         }
     } catch(e) {
         console.error('sbSave error de red:', e);

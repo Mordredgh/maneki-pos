@@ -1488,6 +1488,213 @@ body.dark .pos-total-bar .amount { color: var(--mk-g300) !important; }
   body { background: white !important; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   VISUAL PREMIUM v4.1 — Ronda 2
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── #1 CONFETTI — explosión al finalizar pedido ── */
+@keyframes mkConfettiFall {
+  0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+#mk-confetti-canvas {
+  position: fixed; inset: 0; z-index: 99999; pointer-events: none;
+  overflow: hidden;
+}
+#mk-confetti-canvas .confetti-piece {
+  position: absolute; top: -10px;
+  width: 8px; height: 8px; border-radius: 2px;
+  animation: mkConfettiFall linear forwards;
+}
+
+/* ── #3 DARK MODE TOGGLE — transición suave ── */
+body {
+  transition: background-color 0.4s ease, color 0.3s ease !important;
+}
+body * {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease, box-shadow 0.25s ease;
+}
+/* Excluir animaciones que no deben tener transition global */
+body canvas, body svg, body img, body video,
+body [style*="animation"], body .mk-toast, body .confetti-piece {
+  transition: none !important;
+}
+#darkModeBtn i, #darkModeIcon {
+  transition: transform 0.4s var(--spring) !important;
+}
+body.dark #darkModeBtn i, body.dark #darkModeIcon {
+  transform: rotate(180deg) !important;
+}
+
+/* ── #5 BREADCRUMB — indicador de sección ── */
+#mk-breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; font-weight: 600; color: #9ca3af;
+  padding: 0; margin: 0;
+}
+#mk-breadcrumb .bc-sep { color: #d1d5db; font-size: 0.6rem; }
+#mk-breadcrumb .bc-current {
+  color: var(--mk-g500);
+  font-weight: 700;
+}
+
+/* ── #6 SIDEBAR ACCORDION — sección colapsable ── */
+.sidebar-accordion-toggle {
+  cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 16px; margin: 8px 0 2px;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: rgba(197,151,59,0.4);
+  border: none; background: none; width: 100%;
+  transition: color 0.15s ease;
+}
+.sidebar-accordion-toggle:hover { color: rgba(197,151,59,0.7); }
+.sidebar-accordion-toggle .chevron {
+  transition: transform 0.25s var(--snap);
+  font-size: 0.5rem;
+}
+.sidebar-accordion-toggle.collapsed .chevron { transform: rotate(-90deg); }
+.sidebar-accordion-items {
+  overflow: hidden;
+  max-height: 500px;
+  transition: max-height 0.3s var(--out), opacity 0.2s ease;
+  opacity: 1;
+}
+.sidebar-accordion-items.collapsed {
+  max-height: 0 !important;
+  opacity: 0;
+}
+
+/* ── #7 ATAJOS OVERLAY ── */
+#mk-shortcuts-overlay {
+  position: fixed; inset: 0; z-index: 99998;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center;
+}
+#mk-shortcuts-overlay.visible { display: flex; }
+#mk-shortcuts-card {
+  background: #fff; border-radius: 20px;
+  padding: 28px 32px; max-width: 480px; width: 90vw;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+  animation: mkModalIn 0.25s var(--spring) both;
+}
+body.dark #mk-shortcuts-card { background: #1e1e2e; color: #e5e7eb; }
+.shortcut-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+body.dark .shortcut-row { border-color: rgba(255,255,255,0.06); }
+.shortcut-key {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  border: 1px solid #d1d5db;
+  border-radius: 6px; padding: 2px 8px;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 600;
+  color: #374151; min-width: 28px; text-align: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+body.dark .shortcut-key { background: #2d2d3d; border-color: #404050; color: #d1d5db; }
+
+/* ── #8 AVATARES — círculo con iniciales ── */
+.mk-avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  font-size: 0.65rem; font-weight: 800; color: white;
+  flex-shrink: 0; text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ── #9 TIMELINE DE ESTADOS ── */
+.mk-timeline {
+  display: flex; align-items: center; gap: 0;
+  padding: 12px 0; overflow-x: auto;
+}
+.mk-timeline-step {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 60px; position: relative; flex-shrink: 0;
+}
+.mk-timeline-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2.5px solid #e5e7eb; background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.55rem; z-index: 1;
+  transition: all 0.2s var(--spring);
+}
+.mk-timeline-step.active .mk-timeline-dot {
+  border-color: var(--mk-g500); background: var(--mk-g500);
+  color: white; box-shadow: 0 0 0 4px rgba(197,151,59,0.18);
+  transform: scale(1.15);
+}
+.mk-timeline-step.done .mk-timeline-dot {
+  border-color: #10b981; background: #10b981; color: white;
+}
+.mk-timeline-step.future .mk-timeline-dot {
+  border-color: #e5e7eb; background: #f9fafb; color: #d1d5db;
+}
+.mk-timeline-label {
+  font-size: 0.55rem; font-weight: 600; color: #9ca3af;
+  margin-top: 4px; text-align: center; white-space: nowrap;
+}
+.mk-timeline-step.active .mk-timeline-label { color: var(--mk-g700); font-weight: 800; }
+.mk-timeline-step.done .mk-timeline-label { color: #059669; }
+.mk-timeline-line {
+  flex: 1; height: 2.5px; min-width: 16px;
+  background: #e5e7eb; margin: 0 -2px;
+  align-self: flex-start; margin-top: 10px;
+}
+.mk-timeline-line.done { background: #10b981; }
+.mk-timeline-line.active { background: linear-gradient(90deg, #10b981, var(--mk-g400)); }
+
+/* ── #11 TOTALES FLOTANTES — barra fija inferior ── */
+#mk-pedidos-totals-bar {
+  position: sticky; bottom: 0; z-index: 30;
+  background: linear-gradient(135deg, rgba(26,5,51,0.95), rgba(37,8,64,0.95));
+  backdrop-filter: blur(12px);
+  border-radius: 14px 14px 0 0;
+  padding: 10px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  color: white; font-size: 0.78rem;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  border-top: 1px solid rgba(197,151,59,0.15);
+  margin-top: 8px;
+}
+#mk-pedidos-totals-bar .tot-item {
+  display: flex; align-items: center; gap: 6px;
+}
+#mk-pedidos-totals-bar .tot-label {
+  color: rgba(255,255,255,0.5); font-weight: 600; font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+#mk-pedidos-totals-bar .tot-value {
+  font-weight: 800; font-size: 0.95rem; font-family: 'Space Grotesk', sans-serif;
+}
+#mk-pedidos-totals-bar .tot-green { color: #4ade80; }
+#mk-pedidos-totals-bar .tot-red   { color: #f87171; }
+#mk-pedidos-totals-bar .tot-gold  { color: #fbbf24; }
+
+/* ── #12 SYNC INDICATOR ── */
+#mk-sync-time {
+  font-size: 0.58rem; color: rgba(197,151,59,0.4);
+  font-weight: 500; margin-top: 2px;
+}
+
+/* ── #7 FLOATING HELP BUTTON ── */
+#mk-help-fab {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9990;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--mk-p700), var(--mk-p600));
+  color: white; border: none; cursor: pointer;
+  font-size: 1rem; font-weight: 800;
+  box-shadow: 0 4px 16px rgba(124,58,237,0.35);
+  transition: transform 0.2s var(--spring), box-shadow 0.2s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+#mk-help-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(124,58,237,0.5);
+}
+
 /* ─────────────────────────────────────────────────────────────────────
    RESPONSIVE
    ───────────────────────────────────────────────────────────────────── */
@@ -1496,4 +1703,7 @@ body.dark .pos-total-bar .amount { color: var(--mk-g300) !important; }
   .mk-section-header { padding: 14px 16px; margin-bottom: 20px; }
   .mk-sh-text h2 { font-size: 1.2rem !important; }
   .mk-kpi-value { font-size: 1.6rem !important; }
+  #mk-help-fab { width: 36px; height: 36px; font-size: 0.85rem; bottom: 70px; }
+  #mk-pedidos-totals-bar { font-size: 0.7rem; padding: 8px 14px; }
+  #mk-pedidos-totals-bar .tot-value { font-size: 0.82rem; }
 }

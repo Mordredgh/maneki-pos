@@ -1021,7 +1021,10 @@ function renderTablaPedidos() {
             return `<tr class="hover:bg-gray-50">
             <td class="px-4 py-3 text-sm font-bold text-amber-600">${_et(p.folio)||'—'}</td>
             <td class="px-4 py-3">
-                <p class="text-sm font-semibold text-gray-800">${_et(p.cliente)||'—'}</p>
+                <div class="flex items-center gap-2">
+                    ${typeof _mkAvatar==='function'?_mkAvatar(p.cliente):''}
+                    <p class="text-sm font-semibold text-gray-800">${_et(p.cliente)||'—'}</p>
+                </div>
                 <div class="flex gap-1 mt-1 flex-wrap">
                     ${_wa ? `<button onclick="abrirWhatsAppPedido('${p.id}')" title="WhatsApp: ${_et(_wa)}" style="color:#fff;background:#25D366;border:none;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;cursor:pointer;letter-spacing:.02em;">WA</button>` : ''}
                     ${_fb ? `<a href="${_fbUrl}" target="_blank" title="Facebook: ${_et(_fb)}" style="color:#fff;background:#1877F2;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;text-decoration:none;display:inline-block;letter-spacing:.02em;">FB</a>` : ''}
@@ -1063,6 +1066,8 @@ function renderTablaPedidos() {
             <button onclick="_pedidosTablePage=Math.max(1,_pedidosTablePage-1);renderTablaPedidos()" ${_pedidosTablePage===1?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">‹ Anterior</button>
             <button onclick="_pedidosTablePage=Math.min(${totalPages},_pedidosTablePage+1);renderTablaPedidos()" ${_pedidosTablePage===totalPages?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">Siguiente ›</button>
         </div>`;
+    // #11 Totales flotantes
+    if (typeof _mkUpdatePedidosTotals === 'function') setTimeout(_mkUpdatePedidosTotals, 50);
 }
 
 // ── Eliminar pedido activo ──
