@@ -58,13 +58,13 @@ function renderBalanceMensual() {
     const labelEl = document.getElementById('balanceMesLabel');
     if (labelEl) labelEl.textContent = label.charAt(0).toUpperCase() + label.slice(1);
 
-    // Ventas POS del mes (excluir pedidos, abonos y anticipos para no duplicar)
+    // Ventas directas del mes (excluir pedidos, abonos y anticipos para no duplicar)
     const ventasMes = (window.salesHistory||[]).filter(s =>
         s.date && s.date.startsWith(mesStr) &&
         s.method !== 'Cancelado' &&
         s.type !== 'pedido' &&   // pedidos se cuentan por separado abajo
         s.type !== 'abono'  &&   // BUG-S07 FIX: abonos ya están en ingresos o en pedido.total
-        s.type !== 'anticipo'    // BUG-S07 FIX: anticipos sintéticos no son ventas POS
+        s.type !== 'anticipo'    // BUG-S07 FIX: anticipos sintéticos no son ventas directas
     );
     // BUG-BAL-01 FIX: calcular como números puros; _money solo en display
     const totalVentas = ventasMes.reduce((s, v) => s + (Number(v.total) || 0), 0);
@@ -377,7 +377,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
             procesarGastosRecurrentes();
             procesarIngresosRecurrentes();
 
-            // BUG-BAL-01 FIX: excluir incomes marcados con fromPOS:true para no duplicar con totalPOS.
+            // BUG-BAL-01 FIX: excluir incomes marcados con fromPOS:true para no duplicar con ventas directas.
             // BUG-BAL-02 FIX: excluir incomes de abonos de pedidos (tienen folio de pedido guardado)
             //   ya que esos pedidos se contabilizan via totalPedidosFin cuando se finalizan.
             // incomes "manuales" = entradas sin fromPOS y sin folioOrigen de pedido
@@ -392,7 +392,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
                 .filter(p => !foliosEnIncomes.has(p.folio))
                 .reduce((sum, p) => sum + Number(p.total||0), 0);
 
-            // Ventas POS — desde salesHistory (sin type y no canceladas)
+            // Ventas directas — desde salesHistory (sin type y no canceladas)
             const totalPOS = (window.salesHistory||[])
                 .filter(s => s.type !== 'pedido' && s.type !== 'abono' && s.type !== 'anticipo' && s.method !== 'Cancelado')
                 .reduce((sum, s) => sum + Number(s.total||0), 0);

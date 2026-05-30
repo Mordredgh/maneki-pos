@@ -19,7 +19,7 @@ function openClientHistory(clientId) {
 
     const clientName = client.name.toLowerCase().trim();
 
-    // Buscar ventas POS
+    // Buscar ventas directas
     const ventas = salesHistory.filter(s =>
         s.customer && s.customer.toLowerCase().trim() === clientName
     );
@@ -61,7 +61,7 @@ function openClientHistory(clientId) {
     // Render ventas
     const ventasList = document.getElementById('historyVentasList');
     if (ventas.length === 0) {
-        ventasList.innerHTML = '<p class="text-gray-400 text-center py-8 text-sm">Sin ventas registradas en POS</p>';
+        ventasList.innerHTML = '<p class="text-gray-400 text-center py-8 text-sm">Sin ventas registradas</p>';
     } else {
         ventasList.innerHTML = ventas.slice().reverse().map(v => `
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
@@ -253,12 +253,15 @@ function renderBienvenida() {
 
     if (!window._bienvenidaClock) {
         window._bienvenidaClock = setInterval(() => {
-            const n       = new Date();
             const timeEl  = document.getElementById('welcomeTime');
-            const greetEl = document.getElementById('welcomeGreeting');
             if (!timeEl) { clearInterval(window._bienvenidaClock); window._bienvenidaClock = null; return; }
+            // Skip update if bienvenida section is not visible
+            const bienvenidaSec = document.getElementById('bienvenida-section');
+            if (bienvenidaSec && bienvenidaSec.classList.contains('hidden')) return;
+            const n = new Date();
             timeEl.textContent = n.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
             const hh = n.getHours();
+            const greetEl = document.getElementById('welcomeGreeting');
             if (greetEl) greetEl.textContent = hh < 12 ? '¡Buenos días!' : hh < 19 ? '¡Buenas tardes!' : '¡Buenas noches!';
         }, 60000);
     }

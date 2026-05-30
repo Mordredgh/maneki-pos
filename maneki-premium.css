@@ -419,7 +419,6 @@ input::placeholder, textarea::placeholder {
 }
 
 /* Gradientes por sección */
-#pos-section         .mk-section-header { background: linear-gradient(135deg, #FF8C69 0%, #FF5F3D 100%); }
 #pedidos-section     .mk-section-header { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); }
 #quotes-section      .mk-section-header { background: linear-gradient(135deg, #06B6D4 0%, #0284C7 100%); }
 #inventory-section   .mk-section-header { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
@@ -608,54 +607,7 @@ span.badge-vip {
   border-color: rgba(197,151,59,0.25) !important;
 }
 
-/* ─────────────────────────────────────────────────────────────────────
-   PRODUCT CARDS (POS)
-   ───────────────────────────────────────────────────────────────────── */
-.product-card {
-  border-radius: var(--r-lg) !important;
-  border: 1.5px solid var(--bd-subtle) !important;
-  box-shadow: var(--hi-top-sm), var(--sh-xs) !important;
-  transition: transform 0.18s var(--spring), box-shadow 0.18s ease, border-color 0.18s ease !important;
-  overflow: hidden;
-  cursor: pointer;
-}
-.product-card:hover {
-  border-color: rgba(197,151,59,0.30) !important;
-  box-shadow: var(--hi-top-sm), 0 10px 32px rgba(124,58,237,0.14), 0 2px 8px rgba(197,151,59,0.12) !important;
-  transform: translateY(-4px) scale(1.018) !important;
-}
-.product-card:active {
-  transform: scale(0.97) !important;
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   POS CATEGORY TABS
-   ───────────────────────────────────────────────────────────────────── */
-.pos-cat-tab {
-  border-radius: 99px !important;
-  font-weight: 700 !important;
-  font-size: 0.73rem !important;
-  letter-spacing: 0.025em !important;
-  border: 1.5px solid rgba(197,151,59,0.18) !important;
-  background: rgba(255,255,255,0.88) !important;
-  color: var(--tx-muted) !important;
-  transition: transform 0.16s var(--snap), background 0.16s ease, color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease !important;
-  white-space: nowrap;
-  box-shadow: var(--sh-xs) !important;
-}
-.pos-cat-tab:hover {
-  border-color: var(--mk-g400) !important;
-  color: var(--mk-g700) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: var(--sh-sm) !important;
-}
-.pos-cat-tab.active {
-  background: linear-gradient(135deg, var(--mk-g500), var(--mk-g400)) !important;
-  border-color: transparent !important;
-  color: white !important;
-  box-shadow: 0 4px 14px rgba(197,151,59,0.42) !important;
-  transform: translateY(-1px) !important;
-}
+/* (POS product cards and category tabs removed — POS module was removed) */
 
 /* ─────────────────────────────────────────────────────────────────────
    TOAST SYSTEM — premium con identidad de marca
@@ -1169,31 +1121,7 @@ body.dark input:focus, body.dark select:focus, body.dark textarea:focus {
   box-shadow: 0 0 0 3px rgba(197,151,59,0.18), 0 2px 8px rgba(197,151,59,0.12) !important;
 }
 
-/* Payment method buttons (legacy compat) */
-.payment-method-btn {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 12px 8px !important;
-  border-radius: var(--r-md) !important;
-  border: 1.5px solid rgba(197,151,59,0.15) !important;
-  background: rgba(253,246,220,0.5) !important;
-  transition: transform 0.18s var(--snap), background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
-  cursor: pointer !important;
-  gap: 4px !important;
-}
-.payment-method-btn:hover {
-  border-color: var(--mk-g400) !important;
-  background: rgba(253,246,220,0.85) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: var(--sh-sm) !important;
-}
-.payment-method-btn.selected {
-  border-color: var(--mk-g500) !important;
-  background: linear-gradient(135deg, rgba(197,151,59,0.18), rgba(232,184,75,0.10)) !important;
-  box-shadow: 0 4px 14px rgba(197,151,59,0.25) !important;
-}
+/* (POS payment method buttons removed — POS module was removed) */
 
 /* ─────────────────────────────────────────────────────────────────────
    AUTOCOMPLETE DROPDOWN
@@ -1314,8 +1242,7 @@ body.dark #global-search-bar {
   border-color: rgba(197,151,59,0.08) !important;
 }
 
-/* Dark: pos ticket */
-body.dark .pos-ticket-panel { background: #1C1E2E !important; }
+/* (Dark POS ticket panel removed — POS module was removed) */
 
 /* ─────────────────────────────────────────────────────────────────────
    MICRO-INTERACCIONES — elementos de acción
@@ -1440,14 +1367,12 @@ body.no-transition * {
 
 /* Numbers everywhere: tabular numerals for alignment */
 .mk-kpi-value,
-.pos-total-bar .amount,
 table tbody td:is(:nth-child(3), :nth-child(4), :nth-child(5)) {
   font-variant-numeric: tabular-nums;
 }
 
 /* Dark mode KPI values */
 body.dark .mk-kpi-value { color: #F1F5F9 !important; }
-body.dark .pos-total-bar .amount { color: var(--mk-g300) !important; }
 /* variant tags */
 .variant-tag {
   background: linear-gradient(135deg, var(--mk-p100), var(--mk-p50)) !important;

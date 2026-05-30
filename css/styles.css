@@ -357,19 +357,7 @@
             border-color: rgba(197,151,59,0.22) !important;
         }
 
-        /* ── PRODUCT CARDS POS ── */
-        .product-card {
-            border-radius: var(--r-lg) !important;
-            border: 1.5px solid rgba(197,151,59,0.08) !important;
-            box-shadow: var(--inset-top-sm), var(--shadow-xs) !important;
-            transition: all 0.18s var(--spring) !important;
-            overflow: hidden;
-        }
-        .product-card:hover {
-            border-color: rgba(197,151,59,0.25) !important;
-            box-shadow: var(--inset-top-sm), 0 8px 28px rgba(124,58,237,0.12), 0 2px 8px rgba(197,151,59,0.1) !important;
-            transform: translateY(-3px) scale(1.015) !important;
-        }
+        /* (POS product cards removed — POS module was removed) */
 
         /* ── BADGES / TAGS ── */
         .badge-success { background:linear-gradient(135deg,#10B981,#059669) !important;color:white !important;border-radius:99px !important; }
@@ -377,28 +365,7 @@
         .badge-danger  { background:linear-gradient(135deg,#EF4444,#DC2626) !important;color:white !important;border-radius:99px !important; }
         .badge-vip     { background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400)) !important;color:#3A2000 !important;border-radius:99px !important; }
 
-        .pos-cat-tab {
-            border-radius: 99px !important;
-            font-weight: 600 !important;
-            font-size: 0.73rem !important;
-            letter-spacing: 0.02em !important;
-            border: 1.5px solid rgba(201,147,58,0.18) !important;
-            background: rgba(255,255,255,0.85) !important;
-            color: var(--ink2) !important;
-            transition: all 0.18s var(--snap) !important;
-            box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, var(--shadow-xs) !important;
-        }
-        .pos-cat-tab:hover {
-            border-color: rgba(201,147,58,0.35) !important;
-            color: var(--ink) !important;
-            transform: translateY(-1px) !important;
-        }
-        .pos-cat-tab.active {
-            background: linear-gradient(135deg, var(--lila-dk), var(--lila)) !important;
-            color: white !important;
-            border-color: transparent !important;
-            box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset, 0 6px 16px rgba(155,123,196,0.32) !important;
-        }
+        /* (POS category tabs removed — POS module was removed) */
 
         /* ── TOASTS PREMIUM ── */
         .maneki-toast {
@@ -452,7 +419,7 @@
 
         /* ── CURSOR PERSONALIZADO ── */
         body { cursor: default; }
-        button, a, [onclick], .clickable, .cursor-pointer, .numpad-btn, .sidebar-item, .product-card, .kanban-card {
+        button, a, [onclick], .clickable, .cursor-pointer, .numpad-btn, .sidebar-item, .kanban-card {
             cursor: pointer;
         }
 
@@ -545,17 +512,7 @@
         }
 
         /* stat-card — definición unificada más abajo */
-        
-        .product-card {
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-        
-        .product-card:hover {
-            transform: scale(1.03);
-            box-shadow: 0 8px 16px rgba(197, 165, 114, 0.3);
-        }
-        
+
         .sidebar nav { padding: 16px !important; }
         .sidebar nav > * + * { margin-top: 2px !important; }
         .sidebar-item {
@@ -1317,26 +1274,7 @@ body, .sidebar, .bg-white, input, textarea, select, table {
         }
         /* ═══════════════════════════════════════════════════ */
 
-        /* ── POS CATEGORY TABS ── */
-        .pos-cat-tab {
-            padding: 5px 14px;
-            border-radius: 99px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            border: 1.5px solid #e5e7eb;
-            background: white;
-            color: #6b7280;
-            cursor: pointer;
-            transition: all 0.18s ease;
-            white-space: nowrap;
-        }
-        .pos-cat-tab:hover { border-color: #C5A572; color: #92400e; }
-        .pos-cat-tab.active {
-            background: linear-gradient(135deg, #C5A572, #e8a844);
-            border-color: transparent;
-            color: white;
-            box-shadow: 0 3px 10px rgba(197,165,114,.4);
-        }
+        /* (POS category tabs removed — POS module was removed) */
 
         /* ── KANBAN URGENCY BAR ── */
         .kanban-urgency-bar {
