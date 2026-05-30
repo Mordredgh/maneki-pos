@@ -540,7 +540,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     renderPedidosTable();
     updatePedidosStats();
     if (typeof checkAlertasEntregas === 'function') checkAlertasEntregas();
-    checkAlertasCobro();
+    if (typeof checkAlertasCobro === 'function') checkAlertasCobro();
 });
 
 // ── Cambiar vista kanban / tabla ──
@@ -692,7 +692,7 @@ function renderPedidosTable() {
     const histPanel = document.getElementById('vistaHistorial');
     if (histPanel && !histPanel.classList.contains('hidden')) renderHistorialPedidos();
     if (typeof checkAlertasEntregas === 'function') checkAlertasEntregas();
-    checkAlertasCobro();
+    if (typeof checkAlertasCobro === 'function') checkAlertasCobro();
     // Refresh production list if visible
     const panel = document.getElementById('listaProduccionPanel');
     if (panel && !panel.classList.contains('hidden')) renderListaProduccion();
