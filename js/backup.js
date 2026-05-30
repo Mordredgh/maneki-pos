@@ -50,7 +50,8 @@ function exportarBackupJSON() {
             clients: window.clients || [],
             storeConfig: window.storeConfig || {},
             gastosRecurrentes: window.gastosRecurrentes || [],
-            stockMovimientos: window.stockMovimientos || window.stockMovements || []
+            stockMovimientos: window.stockMovimientos || window.stockMovements || [],
+            folioCounter: window._folioCounter || 0
         }
     };
 
@@ -143,6 +144,12 @@ function restaurarBackup() {
             if (d.storeConfig !== undefined)        { window.storeConfig = d.storeConfig; await sbSave('storeConfig', storeConfig); }
             if (d.gastosRecurrentes !== undefined)  { window.gastosRecurrentes = d.gastosRecurrentes; await sbSave('gastosRecurrentes', gastosRecurrentes); }
             if (d.stockMovimientos !== undefined)   { window.stockMovimientos = d.stockMovimientos; window.stockMovements = d.stockMovimientos; await sbSave('stockMovimientos', window.stockMovimientos); }
+            // Restaurar folioCounter para evitar folios duplicados
+            if (d.folioCounter !== undefined && Number(d.folioCounter) > 0) {
+                window._folioCounter = Number(d.folioCounter);
+                await sbSave('folioCounter', String(window._folioCounter));
+                try { localStorage.setItem('maneki_folioCounter', String(window._folioCounter)); } catch(_){}
+            }
 
             cerrarBackupModal();
             manekiToastExport('✅ Backup restaurado exitosamente. La página se recargará.', 'ok');

@@ -250,7 +250,7 @@ function _updateDashboardImpl() {
     function diasRestantes(producto) {
         const k = String(producto.id || '');
         const kn = (producto.name || '').toLowerCase();
-        const totalVendido = (ventasPorProductoId[k] || 0) + (ventasPorProductoNombre[kn] || 0);
+        const totalVendido = (ventasPorProductoId[k] || 0) || (ventasPorProductoNombre[kn] || 0);
         const promDiario = totalVendido / 30;
         if (!promDiario) return null;
         const _gse2 = typeof getStockEfectivo === 'function' ? getStockEfectivo : (p => p.stock || 0);
@@ -280,7 +280,7 @@ function _updateDashboardImpl() {
                 <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
                     <div class="flex items-center gap-2 flex-1 min-w-0">
                         <span class="text-base flex-shrink-0">${p.image || '📦'}</span>
-                        <span class="text-xs text-gray-700 truncate">${p.name}</span>
+                        <span class="text-xs text-gray-700 truncate">${_esc(p.name)}</span>
                     </div>
                     <div class="flex items-center gap-1.5 ml-2 flex-shrink-0">
                         ${!p.out ? `<span class="text-xs text-gray-400">${p.stock}u</span>` : ''}

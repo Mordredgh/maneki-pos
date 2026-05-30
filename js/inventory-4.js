@@ -637,7 +637,7 @@ function confirmarAjusteStock() {
     const notasEl2  = document.getElementById('ajusteStockNotasExtra');
     const _mvEntry = {
         id: Date.now() + Math.random(),
-        fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0]),
+        fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})()),
         productoId: p.id,
         productoNombre: p.name || p.nombre,
         deltaStock: delta,
@@ -669,7 +669,7 @@ function confirmarAjusteStock() {
     if (modal) delete modal.dataset.productId;
 
     if (window.MKS) MKS.tick();
-    manekiToastExport(`✅ Stock de "${p.name}": ${antes} → ${p.stock}`, 'ok');
+    manekiToastExport(`✅ Stock de "${p.name}": ${antes} → ${despues}`, 'ok');
 }
 window.confirmarAjusteStock = confirmarAjusteStock;
 

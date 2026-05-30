@@ -58,15 +58,16 @@ if (typeof window.showSection === 'undefined') {
     };
     const esColor = t => /color|colour|color\s*\/\s*tono/i.test(t||'');
     window._mkColorDot = function(tipo, valor) {
-        if (!esColor(tipo)) return `<span style="font-weight:600;">${valor}</span>`;
+        const _e = typeof _esc==='function'?_esc:(s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+        if (!esColor(tipo)) return `<span style="font-weight:600;">${_e(valor)}</span>`;
         const key = (valor||'').toLowerCase().trim();
         const css = COLORES[key];
         const borde = (key === 'blanco' || key === 'blanca' || key === 'white' || key === 'crema') ? '#d1d5db' : 'transparent';
         if (css) return `<span style="display:inline-flex;align-items:center;gap:5px;font-weight:600;">
-            <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${css};border:1.5px solid ${borde};flex-shrink:0;"></span>${valor}</span>`;
+            <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${css};border:1.5px solid ${borde};flex-shrink:0;"></span>${_e(valor)}</span>`;
         // Color no mapeado: mostrar circulo con texto como color CSS directo si es válido
         return `<span style="display:inline-flex;align-items:center;gap:5px;font-weight:600;">
-            <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${valor.startsWith('#')||/^(rgb|hsl)/.test(valor)?valor:'#d1d5db'};border:1.5px solid #e5e7eb;flex-shrink:0;"></span>${valor}</span>`;
+            <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${valor.startsWith('#')||/^(rgb|hsl)/.test(valor)?valor:'#d1d5db'};border:1.5px solid #e5e7eb;flex-shrink:0;"></span>${_e(valor)}</span>`;
     };
     window._mkColorEmoji = function(tipo, valor) {
         if (!esColor(tipo)) return valor;
@@ -128,7 +129,7 @@ function saveStockMovements() {
 function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motivo, stockAntes, stockDespues }) {
     window.stockMovements.unshift({
         id:             (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(),
-        fecha:          new Date().toISOString(),
+        fecha:          (typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().split('T')[0]) + 'T' + new Date().toLocaleTimeString('es-MX'),
         productoId, productoNombre, tipo, cantidad,
         motivo:         motivo || '',
         stockAntes, stockDespues
@@ -282,7 +283,7 @@ function mostrarListaCompras(esRerender) {
                 html += `<tr style="${rowStyle}border-bottom:1px solid #fde68a;">
                     <td style="padding:8px 8px;">
                         <span style="font-weight:700;">${_esc(r.nombre)}</span>${r.variante ? ` <span style="font-weight:400;color:#92400e;font-size:.7rem;">(${_esc(r.variante)})</span>` : ''}
-                        <div style="font-size:.65rem;color:#9ca3af;">Pedidos: ${[...new Set(r.pedidosRef)].join(', ')}</div>
+                        <div style="font-size:.65rem;color:#9ca3af;">Pedidos: ${[...new Set(r.pedidosRef)].map(f=>_esc(f)).join(', ')}</div>
                         ${buyBtn}
                     </td>
                     <td style="text-align:center;padding:8px 6px;">${r.disponible}</td>
@@ -559,7 +560,7 @@ function _alertaStockWA(agotadas, bajas) {
             <strong style="color:#1f2937;font-size:14px;">🏭 MP crítica</strong>
             <button onclick="document.getElementById('_mkStockWAAlert').remove()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;line-height:1;">×</button>
         </div>
-        <div style="color:#6b7280;margin-bottom:10px;">${partes.join('<br>')}</div>
+        <div style="color:#6b7280;margin-bottom:10px;">${partes.map(p=>_esc(p)).join('<br>')}</div>
         <button onclick="window.open('https://api.whatsapp.com/send?text=${msgWA}','_blank')" style="width:100%;padding:8px 12px;background:#25D366;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">
             📱 Avisar por WhatsApp
         </button>`;
@@ -600,7 +601,7 @@ function editarStockInline(id) {
     if (!cell) return;
     cell.innerHTML = `
         <div style="display:flex;align-items:center;gap:4px;">
-            <input id="inline-stock-${id}" type="number" min="0" value="${p.stock||0}"
+            <input id="inline-stock-${id}" type="number" min="0" value="${typeof getStockEfectivo==='function'?getStockEfectivo(p):(p.stock||0)}"
                 style="width:60px;padding:2px 6px;border:1px solid #6366f1;border-radius:6px;font-size:13px;text-align:center;"
                 onkeydown="if(event.key==='Enter')confirmarStockInline('${id}');if(event.key==='Escape')renderInventoryTable();">
             <button onclick="confirmarStockInline('${id}')"
@@ -620,8 +621,14 @@ function confirmarStockInline(id) {
     if (!inp) return;
     const nuevo = parseInt(inp.value);
     if (isNaN(nuevo)||nuevo<0) { manekiToastExport('Stock inválido','err'); return; }
-    const antes = p.stock||0;
+    const antes = typeof getStockEfectivo==='function'?getStockEfectivo(p):(p.stock||0);
     p.stock = nuevo;
+    // Sincronizar variantes si existen (distribuir en la primera)
+    if (Array.isArray(p.variants) && p.variants.length > 0) {
+        const diff = nuevo - antes;
+        if (diff !== 0 && p.variants[0]) p.variants[0].qty = Math.max(0, (parseInt(p.variants[0].qty)||0) + diff);
+        if (typeof syncStockFromVariants==='function') syncStockFromVariants(p);
+    }
     registrarMovimiento({ productoId:p.id, productoNombre:p.name, tipo:'ajuste',
         cantidad:nuevo-antes, motivo:'Edición inline', stockAntes:antes, stockDespues:nuevo });
     saveProducts(); renderInventoryTable();

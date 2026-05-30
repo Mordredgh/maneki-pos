@@ -1171,7 +1171,7 @@ function renderListaProduccion() {
                 <div class="flex flex-wrap gap-3 text-xs text-gray-500">
                     <span>📅 Entrega: <strong>${p.entrega||'—'}</strong></span>
                     <span>💵 Total: <strong>$${Number(p.total||0).toFixed(2)}</strong></span>
-                    ${p.resta > 0 ? `<span class="text-red-500 font-bold">⚠️ Resta: $${Number(p.resta).toFixed(2)}</span>` : '<span class="text-green-600 font-bold">✅ Pagado</span>'}
+                    ${(typeof calcSaldoPendiente==='function'?calcSaldoPendiente(p):Number(p.resta||0)) > 0 ? `<span class="text-red-500 font-bold">⚠️ Resta: $${(typeof calcSaldoPendiente==='function'?calcSaldoPendiente(p):Number(p.resta||0)).toFixed(2)}</span>` : '<span class="text-green-600 font-bold">✅ Pagado</span>'}
                     ${ganancia}
                 </div>
                 ${p.lugarEntrega ? `<p class="text-xs mt-1" style="color:#7c3aed;">📍 ${_escP(p.lugarEntrega)}</p>` : ''}

@@ -136,7 +136,7 @@ function _renderGraficaCategorias(gastosMes, mesStr) {
         const color = colores[i % colores.length];
         return `<div class="mb-2">
             <div class="flex justify-between text-xs mb-0.5">
-                <span class="font-medium text-gray-700">${cat}</span>
+                <span class="font-medium text-gray-700">${_escBal(cat)}</span>
                 <span class="text-gray-500">$${monto.toFixed(2)} <span style="color:${color}">(${pct}%)</span></span>
             </div>
             <div class="h-2 rounded-full bg-gray-100">
@@ -310,7 +310,7 @@ function renderRecurrentesPanel() {
         // NTH-15: mostrar el día del mes en que cae el gasto recurrente
         const diaStr = gr.dia ? `<span class="text-xs text-gray-400 ml-1">(día ${gr.dia})</span>` : '';
         return `<div class="flex justify-between items-center py-1">
-            <span class="text-xs text-amber-800 font-semibold">${gr.concept} — $${Number(gr.amount).toFixed(2)}/mes ${diaStr}</span>
+            <span class="text-xs text-amber-800 font-semibold">${_escBal(gr.concept)} — $${Number(gr.amount).toFixed(2)}/mes ${diaStr}</span>
             <button onclick="eliminarRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">✕</button>
         </div>`;
     }).join('');
@@ -629,6 +629,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
         }
         
         function openReceivableModal() {
+            document.getElementById('transactionForm').reset();
             document.getElementById('transactionModalTitle').textContent = 'Nueva Cuenta por Cobrar';
             document.getElementById('transactionType').value = 'receivable';
             document.getElementById('clientFieldContainer').classList.remove('hidden');
@@ -636,7 +637,6 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
             const modal = document.getElementById('transactionModal');
             modal.dataset.editId = '';
             modal.dataset.editType = '';
-            document.getElementById('transactionForm').reset();
             openModal(modal);
         }
         

@@ -825,7 +825,7 @@ function renderSalesHistory() {
         tbody.innerHTML = `<tr><td colspan="6"><div class="mk-empty" style="padding:40px 24px;">
             <div class="mk-empty-icon">🧾</div>
             <p class="mk-empty-title">Sin ventas en este período</p>
-            <p class="mk-empty-sub">Registra una venta desde el Punto de Venta para verla aquí.</p>
+            <p class="mk-empty-sub">Registra pedidos o ventas para verlas aquí.</p>
         </div></td></tr>`;
     } else {
         const typeColors  = { abono:'text-yellow-600 bg-yellow-50', pedido:'text-purple-600 bg-purple-50', pos:'text-green-600 bg-green-50' };
@@ -917,7 +917,6 @@ function showSection(sectionName) {
         setTimeout(() => { if (typeof renderTopClientes === 'function') renderTopClientes(); }, 300);
     }
     if (sectionName === 'bienvenida') if (typeof renderBienvenida === 'function') renderBienvenida();
-    if (sectionName === 'pos')        setTimeout(() => { const s = document.getElementById('searchProduct'); if (s) s.focus(); }, 200);
     if (sectionName === 'inventory')  setTimeout(() => { const s = document.getElementById('inventorySearch'); if (s) s.focus(); }, 200);
     if (sectionName === 'clientes')   if (typeof renderClientsTable  === 'function') renderClientsTable();
     if (sectionName === 'categorias') if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
@@ -1040,7 +1039,7 @@ function descargarReporteVentas() {
     const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url; a.download = `Reporte_Ventas_Maneki_${new Date().toISOString().split('T')[0]}.csv`;
+    a.href = url; a.download = `Reporte_Ventas_Maneki_${typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().split('T')[0]}.csv`;
     a.click(); URL.revokeObjectURL(url);
 }
 window.descargarReporteVentas = descargarReporteVentas;

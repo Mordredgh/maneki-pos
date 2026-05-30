@@ -159,7 +159,6 @@
             _cargarGrupo('clientes');
             _cargarGrupo('reportes');
             _cargarGrupo('envios');
-            _cargarGrupo('pos');
             _cargarGrupo('backup');
         }, 300);
     }, { once: true });

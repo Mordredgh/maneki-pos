@@ -305,34 +305,7 @@ function renderComparativaSemanal() {
         </div>`;
 }
 
-function animarNumero(el, inicio, fin, duracion, prefijo, sufijo) {
-    if (!el) return;
-    // Cancelar animación previa (animarNumero)
-    if (el._animFrame) { cancelAnimationFrame(el._animFrame); el._animFrame = null; }
-    el.innerHTML = '';
-    // Escribir valor final inmediatamente si no hay duración
-    if (!duracion || inicio === fin) {
-        el.textContent = prefijo + (Number.isInteger(fin) ? Math.round(fin) : fin.toFixed(2)) + sufijo;
-        return;
-    }
-    const range = fin - inicio;
-    const startTime = performance.now();
-    function step(now) {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duracion, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const valor = inicio + range * eased;
-        el.textContent = prefijo + (Number.isInteger(fin) ? Math.round(valor) : valor.toFixed(2)) + sufijo;
-        if (progress < 1) {
-            el._animFrame = requestAnimationFrame(step);
-        } else {
-            el._animFrame = null;
-            // Garantizar valor final exacto
-            el.textContent = prefijo + (Number.isInteger(fin) ? Math.round(fin) : fin.toFixed(2)) + sufijo;
-        }
-    }
-    el._animFrame = requestAnimationFrame(step);
-}
+// animarNumero: definida en dashboard.js — duplicado eliminado aquí
 
 // ===== #67 TOGGLE DE PRIVACIDAD =====
 let _privacidadActiva = false;
@@ -403,11 +376,12 @@ function manekiToastExport(msg, tipo) {
 
     const toast = document.createElement('div');
     toast.className = `mk-toast ${t}`;
+    const _escT = typeof window._esc==='function'?window._esc:(s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
     toast.innerHTML = `
         <div class="mk-toast-icon">${icon}</div>
         <div class="mk-toast-body">
             <div class="mk-toast-title">${title}</div>
-            <div class="mk-toast-msg">${msg}</div>
+            <div class="mk-toast-msg">${_escT(msg)}</div>
         </div>
         <div class="mk-toast-progress"></div>`;
 

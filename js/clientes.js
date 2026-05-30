@@ -372,7 +372,7 @@ function _renderFiltrosActividad() {
                     </td>
                     <td class="px-6 py-4 text-gray-600">
     ${client.phone ? `<div style="display:flex;flex-direction:column;gap:4px">
-        <a href="https://wa.me/52${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
+        <a href="https://wa.me/521${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
         ${waBtn}
     </div>` : ''}
 ${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(client.facebook) : 'https://'+_esc(client.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ''}
@@ -613,7 +613,7 @@ function closeAddClientModal() {
                         </td>
                         <td class="px-6 py-4 text-gray-600">
     ${client.phone ? `<div style="display:flex;flex-direction:column;gap:2px">
-        <a href="https://wa.me/52${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
+        <a href="https://wa.me/521${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
         ${waBtn}
     </div>` : ''}
 ${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(client.facebook) : 'https://'+_esc(client.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ''}

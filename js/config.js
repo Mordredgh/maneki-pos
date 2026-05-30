@@ -131,7 +131,7 @@ function openClientHistory(clientId) {
     const topProds = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const topEl = document.getElementById('historyTopProductos');
     if (topEl) topEl.innerHTML = topProds.length > 0
-        ? topProds.map(([name, qty]) => `<span class="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-semibold">${name} ×${qty}</span>`).join('')
+        ? topProds.map(([name, qty]) => `<span class="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-semibold">${_esc(name)} ×${qty}</span>`).join('')
         : '<span class="text-xs text-gray-400">Sin datos</span>';
 
     // FIX-3: integrar renderHistorialClienteModal en la vista de cliente
@@ -302,8 +302,8 @@ function renderBienvenida() {
                 : urgentes.slice(0, 4).map(p => `
                     <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fff5f5;border-left:3px solid #ef4444;margin-bottom:6px;cursor:pointer;" onclick="showSection('pedidos')">
                         <div style="flex:1;">
-                            <p style="font-size:.78rem;font-weight:700;color:#1f2937;margin:0;">${p.customer || p.cliente || 'Sin nombre'}</p>
-                            <p style="font-size:.68rem;color:#6b7280;margin:1px 0 0;">${p.items?.length || 0} producto${(p.items?.length || 0) !== 1 ? 's' : ''} · ${p.status || 'pendiente'}</p>
+                            <p style="font-size:.78rem;font-weight:700;color:#1f2937;margin:0;">${_esc(p.customer || p.cliente || 'Sin nombre')}</p>
+                            <p style="font-size:.68rem;color:#6b7280;margin:1px 0 0;">${p.items?.length || 0} producto${(p.items?.length || 0) !== 1 ? 's' : ''} · ${_esc(p.status || 'pendiente')}</p>
                         </div>
                         <span style="font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:99px;background:#fee2e2;color:#dc2626;">HOY</span>
                     </div>
@@ -334,7 +334,7 @@ function renderBienvenida() {
 function updateStorePreview() {
     if (storeConfig.logoMode === 'image' && typeof storeLogo !== 'undefined' && storeLogo) {
         document.getElementById('previewEmoji').innerHTML =
-            `<img src="${storeLogo}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
+            `<img src="${typeof _validateImgUrl==='function'?_validateImgUrl(storeLogo):storeLogo}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
     } else {
         document.getElementById('previewEmoji').textContent = document.getElementById('configEmoji').value || '🐱';
     }
@@ -344,9 +344,9 @@ function updateStorePreview() {
     const fb    = document.getElementById('configFacebook').value;
     const email = document.getElementById('configEmail').value;
     let contactHTML = '';
-    if (phone) contactHTML += `<p>📱 ${phone}</p>`;
-    if (fb)    contactHTML += `<p>📘 ${fb}</p>`;
-    if (email) contactHTML += `<p>✉️ ${email}</p>`;
+    if (phone) contactHTML += `<p>📱 ${_esc(phone)}</p>`;
+    if (fb)    contactHTML += `<p>📘 ${_esc(fb)}</p>`;
+    if (email) contactHTML += `<p>✉️ ${_esc(email)}</p>`;
     document.getElementById('previewContact').innerHTML = contactHTML;
 }
 
@@ -505,13 +505,13 @@ function imprimirInventario() {
         const tags   = (p.tags || []).join(', ');
         const estado = p.stock === 0 ? 'Agotado' : p.stock <= 10 ? 'Bajo Stock' : 'Disponible';
         return `<tr>
-            <td>${p.image || ''} ${p.name}</td>
-            <td>${p.sku || ''}</td>
-            <td>${cat}</td>
+            <td>${_esc(p.image || '')} ${_esc(p.name)}</td>
+            <td>${_esc(p.sku || '')}</td>
+            <td>${_esc(cat)}</td>
             <td>$${(p.price || 0).toFixed(2)}</td>
             <td>${p.stock}</td>
             <td>${estado}</td>
-            <td>${tags}</td>
+            <td>${_esc(tags)}</td>
         </tr>`;
     }).join('');
 
@@ -682,7 +682,7 @@ async function initApp() {
         const vu    = new Date(); vu.setDate(vu.getDate() + 15);
         const qv    = document.getElementById('quoteValidUntil');
         const td    = document.getElementById('transactionDate');
-        if (qv) qv.value = vu.toISOString().split('T')[0];
+        if (qv) { const _v=vu; qv.value = _v.getFullYear()+'-'+('0'+(_v.getMonth()+1)).slice(-2)+'-'+('0'+_v.getDate()).slice(-2); }
         if (td) td.value = today;
 
         // ── Setups sin DOM pesado — ejecutar antes de los renders ──

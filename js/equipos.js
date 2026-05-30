@@ -424,7 +424,7 @@ function confirmarRoiEquipos() {
 
     // Save to historial
     roiHistorial.push({
-        fecha: (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0],
+        fecha: (typeof _fechaHoy === 'function') ? _fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})(),
         folio: pedido.folio,
         pedidoId: pedido.id,
         equiposIds,
@@ -503,7 +503,7 @@ function confirmarRoiManual() {
     saveEquipos();
 
     roiHistorial.push({
-        fecha: window._fechaHoy ? window._fechaHoy() : new Date().toISOString().split('T')[0],
+        fecha: window._fechaHoy ? window._fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})(),
         folio: '__manual__',
         concepto,
         pedidoId: null,
@@ -589,73 +589,7 @@ function renderNotas() {
         </div>
     `).join('');
 }
-  // ============== AUTOCOMPLETADO CLIENTES POS ==============
-
-let autocompleteIndex = -1;
-let selectedClient = null;
-
-function searchClientAutocomplete(query) {
-    const dropdown = document.getElementById('clientAutocompleteDropdown');
-    autocompleteIndex = -1;
-
-    if (!query || query.trim().length < 1) {
-        dropdown.classList.add('hidden');
-        return;
-    }
-
-    const q = query.toLowerCase().trim();
-    const matches = clients.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        (c.phone && c.phone.includes(q))
-    ).slice(0, 6);
-
-    if (matches.length === 0) {
-        dropdown.innerHTML = `
-            <div class="autocomplete-item">
-                <p class="client-detail">No encontrado — se registrará como nuevo cliente</p>
-            </div>`;
-        dropdown.classList.remove('hidden');
-        return;
-    }
-
-    dropdown.innerHTML = matches.map((c, i) => `
-        <div class="autocomplete-item" data-index="${i}" onclick="selectClientFromAutocomplete('${c.id}')">
-            <div class="flex items-center justify-between">
-                <span class="client-name">${_esc(c.name)}</span>
-                ${c.type === 'vip' ? '<span class="client-vip">⭐ VIP</span>' : ''}
-            </div>
-            <p class="client-detail">
-                ${c.phone ? '📱 ' + _esc(c.phone) : ''}
-                ${c.email ? ' · ✉️ ' + _esc(c.email) : ''}
-            </p>
-        </div>
-    `).join('');
-
-    dropdown.classList.remove('hidden');
-}
-
-function selectClientFromAutocomplete(clientId) {
-    const client = clients.find(c => c.id === clientId);
-    if (!client) return;
-
-    selectedClient = client;
-    document.getElementById('customerName').value = client.name;
-    document.getElementById('clientAutocompleteDropdown').classList.add('hidden');
-
-    // Mostrar info del cliente
-    const infoBox = document.getElementById('selectedClientInfo');
-    document.getElementById('selectedClientPhone').textContent = client.phone ? '📱 ' + client.phone : '';
-    document.getElementById('selectedClientEmail').textContent = client.email ? '✉️ ' + client.email : '';
-    document.getElementById('selectedClientType').textContent = client.type === 'vip' ? '⭐ Cliente VIP' : '👤 Cliente registrado';
-    infoBox.classList.remove('hidden');
-}
-
-function clearSelectedClient() {
-    selectedClient = null;
-    document.getElementById('customerName').value = '';
-    document.getElementById('selectedClientInfo').classList.add('hidden');
-    document.getElementById('clientAutocompleteDropdown').classList.add('hidden');
-}
+  // POS autocomplete removed — module eliminated
 
 function handleAutocompleteKey(event) {
     const dropdown = document.getElementById('clientAutocompleteDropdown');

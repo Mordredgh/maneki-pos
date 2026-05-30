@@ -108,7 +108,7 @@ function _descontarInventarioPedido(pedido) {
             for (const comp of prod.mpComponentes) {
                 const mp = (window.products || []).find(p => String(p.id) === String(comp.id));
                 if (!mp || mp.tipo === 'servicio') continue;
-                const _rph = prod.rendimientoPorHoja || 0;
+                const _rph = prod.rendimientoPorHoja || 1;
                 const cantMP = _rph > 0
                     ? Math.ceil(cantidad / _rph) * (parseFloat(comp.qty) || 1)
                     : (parseFloat(comp.qty) || 1) * cantidad;
@@ -602,8 +602,8 @@ function openAbonoPedido(id) {
             </div>
         </div>` : '';
     document.getElementById('abonoPedidoInfo').innerHTML = `
-        <p><b>Cliente:</b> ${p.cliente}</p>
-        <p><b>Folio:</b> ${p.folio}</p>
+        <p><b>Cliente:</b> ${typeof _esc==='function'?_esc(p.cliente):p.cliente}</p>
+        <p><b>Folio:</b> ${typeof _esc==='function'?_esc(p.folio):p.folio}</p>
         <p><b>Total:</b> $${Number(p.total||0).toFixed(2)}</p>
         <p><b>Anticipo:</b> $${Number(p.anticipo||0).toFixed(2)}</p>
         <p class="font-bold text-red-600"><b>Saldo:</b> $${(typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - Number(p.anticipo||0))).toFixed(2)}</p>
@@ -892,9 +892,9 @@ function _aplicarCambioLote() {
         if (idx === -1) return;
         const p = window.pedidos[idx];
 
-        // Registrar en historialEstados para cualquier status
+        // Registrar en historialEstados para cualquier status (key: estado para compatibilidad con timeline)
         p.historialEstados = [...(p.historialEstados || []), {
-            status: nuevoStatus,
+            estado: nuevoStatus,
             fecha: _fecha,
             hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
             nota: 'Cambio en lote'
@@ -924,6 +924,22 @@ function _aplicarCambioLote() {
                 if (nEmp > 0) pedidoFin.empaquesDescontados = true;
             }
             window.pedidosFinalizados.push(pedidoFin);
+            // Registrar en salesHistory igual que el flujo individual
+            if (typeof window.salesHistory !== 'undefined' && pedidoFin.total) {
+                window.salesHistory.push({
+                    id: pedidoFin.id, type: 'pedido', folio: pedidoFin.folio,
+                    date: _fecha, customer: pedidoFin.cliente,
+                    concept: pedidoFin.concepto || 'Pedido finalizado',
+                    total: Number(pedidoFin.total), method: 'Pedido',
+                    products: pedidoFin.productosInventario || []
+                });
+                if (typeof saveSalesHistory === 'function') saveSalesHistory();
+            }
+            // Actualizar totalPurchases del cliente
+            if (pedidoFin.cliente && typeof window.clients !== 'undefined') {
+                const _cl = (window.clients||[]).find(c => (c.name||'').toLowerCase().trim() === (pedidoFin.cliente||'').toLowerCase().trim());
+                if (_cl) { _cl.totalPurchases = (_cl.totalPurchases||0) + Number(pedidoFin.total||0); if (typeof saveClients==='function') saveClients(); }
+            }
             window.pedidos.splice(idx, 1);
             finalizados++;
         } else {
@@ -989,7 +1005,7 @@ function reactivarPedido(id) {
 
     const p = fuente === 'finalizados' ? window.pedidosFinalizados[idx] : window.pedidos[idx];
     showConfirm(
-        `¿Reactivar el pedido <strong>${p.folio || p.id}</strong> de <strong>${p.cliente || '—'}</strong>?<br><small style="color:#6b7280;">Volverá al kanban como "Confirmado".</small>`,
+        `¿Reactivar el pedido <strong>${typeof _esc==='function'?_esc(p.folio||p.id):p.folio||p.id}</strong> de <strong>${typeof _esc==='function'?_esc(p.cliente||'—'):p.cliente||'—'}</strong>?<br><small style="color:#6b7280;">Volverá al kanban como "Confirmado".</small>`,
         '↩ Reactivar pedido'
     ).then(ok => {
         if (!ok) return;
@@ -1222,11 +1238,11 @@ function renderHistorialPedidos() {
             return `<div class="flex items-center justify-between p-4 ${_esCancelado ? 'bg-red-50' : 'bg-gray-50'} rounded-xl hover:bg-amber-50 transition-all">
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
-                    <span class="font-bold text-amber-600 text-sm">${p.folio||'—'}</span>
+                    <span class="font-bold text-amber-600 text-sm">${_esc(p.folio||'—')}</span>
                     <span class="text-xs text-gray-400">${_fechaRef}</span>
                 </div>
-                <p class="font-semibold text-gray-800 text-sm">${p.cliente||'—'}</p>
-                <p class="text-xs text-gray-500 truncate">${p.concepto||''}</p>
+                <p class="font-semibold text-gray-800 text-sm">${_esc(p.cliente||'—')}</p>
+                <p class="text-xs text-gray-500 truncate">${_esc(p.concepto||'')}</p>
             </div>
             <div class="text-right ml-4">
                 <p class="font-bold text-gray-800">$${_totalMostrar.toFixed(2)}</p>

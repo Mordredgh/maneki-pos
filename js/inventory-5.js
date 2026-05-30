@@ -5,7 +5,7 @@ function calcularProducibles(prod) {
     for (const comp of prod.mpComponentes) {
         const mp = (window.products || []).find(p => String(p.id) === String(comp.id));
         if (!mp) return 0;
-        const stockMp = mp.stock || 0;
+        const stockMp = typeof getStockEfectivo==='function' ? getStockEfectivo(mp) : (mp.stock || 0);
         const qty = parseFloat(comp.qty) || 1;
         minFabricable = Math.min(minFabricable, Math.floor(stockMp / qty));
     }
