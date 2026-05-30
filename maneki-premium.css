@@ -897,52 +897,268 @@ main > section:not(.hidden) {
 .sortable-th:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
 
 /* ─────────────────────────────────────────────────────────────────────
-   POS TICKET PANEL — sección especial
+   VISUAL PREMIUM v4.0 — Mejoras de UI/UX
    ───────────────────────────────────────────────────────────────────── */
-.pos-ticket-panel {
-  background: white;
-  border-radius: var(--r-xl);
-  border: 1px solid var(--bd-subtle);
-  box-shadow: var(--hi-top), var(--sh-lg);
-  overflow: hidden;
+
+/* ── #2 KANBAN CARDS — borde de estado + hover lift ── */
+.kanban-card, [draggable="true"] > div, [ondragstart] {
+  transition: transform 0.18s var(--snap), box-shadow 0.18s ease, border-color 0.18s ease !important;
+  border-left: 3.5px solid transparent !important;
 }
-.pos-ticket-header {
-  padding: 20px 22px 16px;
-  background: linear-gradient(135deg, var(--mk-p900) 0%, var(--mk-p800) 100%);
-  border-bottom: 1px solid rgba(197,151,59,0.12);
+[draggable="true"]:hover > div, [ondragstart]:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(21,4,40,0.10), 0 2px 8px rgba(197,151,59,0.08) !important;
 }
-.pos-ticket-header h3 {
-  color: var(--mk-g300) !important;
-  font-size: 0.85rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-  margin: 0;
-}
-.pos-total-bar {
-  background: linear-gradient(135deg, var(--mk-p800) 0%, var(--mk-p900) 100%);
-  padding: 16px 22px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid rgba(197,151,59,0.15);
-}
-.pos-total-bar .label {
-  color: rgba(255,255,255,0.55);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-.pos-total-bar .amount {
-  color: var(--mk-g300);
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+[draggable="true"][class*="dragging"], [ondragstart].dragging {
+  opacity: 0.6;
+  transform: rotate(2deg) scale(1.02) !important;
 }
 
-/* Payment method buttons */
+/* ── #3 TABLAS — zebra-striping + bordes redondeados ── */
+table { border-collapse: separate !important; border-spacing: 0 !important; }
+table thead tr th:first-child { border-radius: 12px 0 0 0; }
+table thead tr th:last-child  { border-radius: 0 12px 0 0; }
+table thead th {
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6) !important;
+  position: sticky; top: 0; z-index: 2;
+}
+tbody tr:nth-child(even) { background: rgba(197,151,59,0.025) !important; }
+tbody tr { transition: background 0.12s ease, transform 0.12s ease !important; }
+tbody tr:hover {
+  background: rgba(197,151,59,0.06) !important;
+  transform: scale(1.002);
+}
+
+/* ── #4 SIDEBAR BADGE — pulso animado ── */
+.sidebar-badge, [id^="sidebarBadge"] {
+  animation: mkBadgePulse 2.5s ease-in-out infinite !important;
+}
+@keyframes mkBadgePulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+
+/* ── #5 MODALES — backdrop blur + animación de entrada ── */
+.modal-overlay, [id$="Modal"][style*="flex"], [id$="Modal"][style*="display: flex"] {
+  backdrop-filter: blur(8px) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.3) !important;
+}
+.modal-overlay > div:first-child,
+[id$="Modal"] > div:first-child,
+.modal-content {
+  animation: mkModalIn 0.25s var(--spring) both !important;
+}
+@keyframes mkModalIn {
+  from { opacity: 0; transform: scale(0.93) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── #6 SCROLLBARS en modales y listas internas ── */
+.modal-overlay div[style*="overflow"], .modal-content,
+[id$="Modal"] div[style*="overflow"],
+[style*="overflow-y: auto"], [style*="overflow-y:auto"],
+[class*="overflow-y-auto"], [class*="overflow-auto"] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(197,151,59,0.2) transparent;
+}
+.modal-overlay div[style*="overflow"]::-webkit-scrollbar,
+[id$="Modal"] div[style*="overflow"]::-webkit-scrollbar,
+[style*="overflow-y"]::-webkit-scrollbar {
+  width: 5px;
+}
+.modal-overlay div[style*="overflow"]::-webkit-scrollbar-thumb,
+[id$="Modal"] div[style*="overflow"]::-webkit-scrollbar-thumb,
+[style*="overflow-y"]::-webkit-scrollbar-thumb {
+  background: rgba(197,151,59,0.22);
+  border-radius: 99px;
+}
+
+/* ── #7 DASHBOARD CARDS — glassmorphism ── */
+.mk-card, .kpi-card, [class*="rounded-xl"][class*="shadow"],
+#dashboard-section .rounded-2xl, #dashboard-section .rounded-xl {
+  background: rgba(255,255,255,0.72) !important;
+  backdrop-filter: blur(12px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.2) !important;
+  border: 1px solid rgba(197,151,59,0.08) !important;
+  transition: transform 0.2s var(--snap), box-shadow 0.2s ease !important;
+}
+.mk-card:hover, .kpi-card:hover,
+#dashboard-section .rounded-2xl:hover, #dashboard-section .rounded-xl:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--sh-md) !important;
+}
+
+/* ── #8 BOTONES DE ACCIÓN — micro-animaciones ── */
+button[onclick*="openPedidoModal"], button[onclick*="openAbonoPedido"],
+button[onclick*="duplicarPedido"], button[onclick*="eliminarPedido"],
+button[onclick*="exportarPedidoPDF"], button[onclick*="openPedidoStatusModal"],
+td button, td a[onclick] {
+  transition: transform 0.12s var(--spring), background 0.12s ease, box-shadow 0.12s ease !important;
+}
+td button:hover, td a[onclick]:hover {
+  transform: scale(1.08) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+td button:active, td a[onclick]:active {
+  transform: scale(0.95) !important;
+}
+
+/* ── #9 EMPTY STATES — ilustración con ícono grande ── */
+.mk-empty {
+  text-align: center;
+  padding: 48px 24px !important;
+}
+.mk-empty-icon {
+  width: 80px !important; height: 80px !important;
+  font-size: 2.2rem !important;
+  background: linear-gradient(135deg, rgba(197,151,59,0.08), rgba(124,58,237,0.06)) !important;
+  border: 2px dashed rgba(197,151,59,0.15) !important;
+  border-radius: 24px !important;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px !important;
+  animation: mkEmptyFloat 3s ease-in-out infinite;
+}
+@keyframes mkEmptyFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.mk-empty-title {
+  font-size: 1rem !important; font-weight: 700 !important;
+  color: var(--tx-primary) !important;
+  margin-bottom: 4px !important;
+}
+.mk-empty-sub {
+  font-size: 0.82rem !important; color: var(--tx-muted) !important;
+  max-width: 320px; margin: 0 auto;
+}
+
+/* ── #10 PROGRESS BAR — brillo animado ── */
+[id="dashGoalBar"], .progress-bar-fill {
+  position: relative;
+  overflow: hidden;
+}
+[id="dashGoalBar"]::after, .progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: mkProgressShine 2.5s ease-in-out infinite;
+}
+@keyframes mkProgressShine {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* ── #11 SKELETON LOADING en tablas ── */
+.mk-table-skeleton td {
+  padding: 12px 16px !important;
+}
+.mk-table-skeleton .sk-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg,
+    rgba(197,151,59,0.06) 25%,
+    rgba(197,151,59,0.14) 50%,
+    rgba(197,151,59,0.06) 75%);
+  background-size: 200% 100%;
+  animation: mkSkeleton 1.5s infinite;
+}
+.mk-table-skeleton .sk-line.w-20 { width: 50px; }
+.mk-table-skeleton .sk-line.w-40 { width: 100px; }
+.mk-table-skeleton .sk-line.w-60 { width: 150px; }
+.mk-table-skeleton .sk-line.w-full { width: 100%; }
+
+/* ── #12 TOOLTIP MEJORADO — reemplaza title nativo ── */
+.mk-tip {
+  position: relative;
+}
+.mk-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px) scale(0.95);
+  background: linear-gradient(135deg, #1A0533 0%, #250840 100%);
+  color: rgba(255,255,255,0.92);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s var(--out);
+  z-index: 9999;
+  box-shadow: 0 6px 20px rgba(21,4,40,0.30);
+  border: 1px solid rgba(197,151,59,0.12);
+  letter-spacing: 0.01em;
+}
+.mk-tip:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* ── TRANSICIONES GLOBALES — smoothness premium ── */
+*, *::before, *::after {
+  transition-timing-function: var(--ease);
+}
+
+/* Sidebar icons SVG — animación sutil al hover */
+.sidebar-item i svg, #sidebar button i svg {
+  transition: transform 0.2s var(--spring) !important;
+}
+.sidebar-item:hover i svg, #sidebar button:hover i svg {
+  transform: scale(1.12) !important;
+}
+
+/* ── INPUT FOCUS — glow dorado premium ── */
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(197,151,59,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(197,151,59,0.12), 0 2px 8px rgba(197,151,59,0.08) !important;
+}
+
+/* ── BADGES — consistentes ── */
+.sidebar-badge, [id^="sidebarBadge"] {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  padding: 1px 7px !important;
+  border-radius: 99px !important;
+  min-width: 18px !important;
+  text-align: center !important;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.35) !important;
+}
+
+/* ── NOTIFICATION TOAST — mejorar ── */
+.mk-toast {
+  border-radius: 14px !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+/* ── Dark mode fixes para elementos dinámicos JS ── */
+body.dark tbody tr:nth-child(even) { background: rgba(255,255,255,0.02) !important; }
+body.dark tbody tr:hover { background: rgba(255,255,255,0.05) !important; }
+body.dark .mk-card, body.dark .kpi-card,
+body.dark #dashboard-section .rounded-2xl, body.dark #dashboard-section .rounded-xl {
+  background: rgba(30,20,50,0.65) !important;
+  border-color: rgba(197,151,59,0.12) !important;
+}
+body.dark table thead th {
+  background: linear-gradient(135deg, #1e1e2e, #252540) !important;
+  color: #d1d5db !important;
+}
+body.dark .mk-empty-icon {
+  background: linear-gradient(135deg, rgba(197,151,59,0.12), rgba(124,58,237,0.10)) !important;
+  border-color: rgba(197,151,59,0.2) !important;
+}
+body.dark input:focus, body.dark select:focus, body.dark textarea:focus {
+  box-shadow: 0 0 0 3px rgba(197,151,59,0.18), 0 2px 8px rgba(197,151,59,0.12) !important;
+}
+
+/* Payment method buttons (legacy compat) */
 .payment-method-btn {
   display: flex !important;
   flex-direction: column !important;

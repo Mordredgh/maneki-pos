@@ -63,6 +63,35 @@
         supaEl.style.border = '1px solid rgba(197,151,59,0.12)';
     }
 
-    console.log('%c🐱 Maneki Store Premium v3.0', 'color:#E8B84B;font-size:14px;font-weight:800;');
+    console.log('%c🐱 Maneki Store Premium v4.0', 'color:#E8B84B;font-size:14px;font-weight:800;');
     console.log('%cDesign System cargado correctamente.', 'color:#A855F7;font-size:11px;');
+
+    // ── #12 TOOLTIPS — convertir title nativos a data-tip custom ──
+    function _convertTitles() {
+        document.querySelectorAll('[title]:not(input):not(select):not(textarea):not([data-tip])').forEach(el => {
+            const t = el.getAttribute('title');
+            if (t && t.length > 0 && t.length < 80) {
+                el.setAttribute('data-tip', t);
+                el.removeAttribute('title');
+            }
+        });
+    }
+    // Ejecutar al inicio y observar cambios
+    setTimeout(_convertTitles, 1000);
+    setTimeout(_convertTitles, 3000);
+    const _tipObs = new MutationObserver(() => requestAnimationFrame(_convertTitles));
+    if (document.body) _tipObs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['title'] });
+
+    // ── #11 SKELETON — generar filas skeleton para tablas vacías ──
+    window._mkSkeletonRows = function(cols, rows) {
+        cols = cols || 6; rows = rows || 5;
+        const widths = ['w-40','w-60','w-20','w-40','w-20','w-60','w-40','w-20'];
+        return Array.from({length: rows}, () =>
+            '<tr class="mk-table-skeleton">' +
+            Array.from({length: cols}, (_, i) =>
+                `<td><div class="sk-line ${widths[i % widths.length]}"></div></td>`
+            ).join('') + '</tr>'
+        ).join('');
+    };
+
 })();
