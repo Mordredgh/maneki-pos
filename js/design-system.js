@@ -122,29 +122,6 @@ section:not(.hidden).active-section {
 .mk-pc-tag { background:rgba(232,184,75,0.1);color:#92400e;border:1px solid rgba(197,151,59,0.2);
     font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:99px; }
 
-/* == ADD-TO-TICKET PULSE == */
-@keyframes mkCartPulse {
-    0%  { box-shadow:0 0 0 0 rgba(197,151,59,0.6); }
-    70% { box-shadow:0 0 0 12px rgba(197,151,59,0); }
-    100%{ box-shadow:0 0 0 0 rgba(197,151,59,0); }
-}
-.mk-cart-pulse { animation:mkCartPulse 0.5s ease; }
-
-/* == COUNT-UP POP == */
-@keyframes mkCountPop {
-    0%   { transform:scale(0.8); opacity:0.5; }
-    60%  { transform:scale(1.08); }
-    100% { transform:scale(1); opacity:1; }
-}
-.mk-count-pop { animation:mkCountPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
-
-/* == TICKET ITEM SLIDE IN == */
-@keyframes mkTicketIn {
-    from { opacity:0; transform:translateX(16px) scale(0.93); }
-    to   { opacity:1; transform:translateX(0) scale(1); }
-}
-#ticketItems > * { animation:mkTicketIn 0.28s cubic-bezier(0.34,1.4,0.64,1) both; }
-
 /* == PARTICLES CANVAS == */
 #mk-particles {
     position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.38;
@@ -635,13 +612,6 @@ function _lazyLoad(name) {
 // 10. DEBOUNCE en inputs de búsqueda
 // ─────────────────────────────────────────────────────────────────
 function _applyDebounces() {
-    const ps = document.getElementById('searchProduct');
-    if (ps && !ps._mkD) {
-        ps.oninput = null; ps.removeAttribute('oninput');
-        let _t;
-        ps.addEventListener('input', () => { clearTimeout(_t); _t=setTimeout(()=>{if(window.renderProducts)renderProducts();},150); });
-        ps._mkD = true;
-    }
     const is = document.getElementById('inventorySearch');
     if (is && !is._mkD) { is._mkD=true; }
 }

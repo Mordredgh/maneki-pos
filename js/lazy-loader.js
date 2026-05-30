@@ -36,7 +36,6 @@
         reportes: [CDN.chartjs, 'js/reportes.js'],
         clientes: ['js/clientes.js'],
         envios:   [CDN.leafletCSS, CDN.leafletJS, 'js/envios.js'],
-        pos:      ['js/pos.js'],
         backup:   ['js/backup.js']
     };
 
@@ -52,7 +51,6 @@
         analisis:    'reportes',
         clientes:    'clientes',
         envios:      'envios',
-        pos:         'pos',
         backup:      'backup'
     };
 

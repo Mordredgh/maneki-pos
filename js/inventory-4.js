@@ -92,7 +92,6 @@ async function guardarMateriaPrima() {
         if (costo !== costoViejo) _cascadeCostMP(window.edicionProductoId, costo);
         if (usaVariantes && variantesGuardar.length > 0) _cascadeVariantesMP(window.edicionProductoId, variantesGuardar);
         saveProducts(); renderInventoryTable();
-        if (typeof renderProducts === 'function') renderProducts();
         if (typeof updateDashboard === 'function') updateDashboard();
         closeMateriaPrimaModal();
         if (window.MKS) MKS.notify();
@@ -112,7 +111,6 @@ async function guardarMateriaPrima() {
         if (stockFinal > 0) registrarMovimiento({ productoId: np.id, productoNombre: np.name,
             tipo: 'creacion', cantidad: stockFinal, motivo: 'Alta de materia prima', stockAntes: 0, stockDespues: stockFinal });
         saveProducts(); renderInventoryTable();
-        if (typeof renderProducts === 'function') renderProducts();
         if (typeof updateDashboard === 'function') updateDashboard();
         closeMateriaPrimaModal();
         if (window.MKS) MKS.notify();
@@ -455,63 +453,7 @@ function patchInventoryButtons() {
 }
 window.patchInventoryButtons = patchInventoryButtons;
 
-// ── Descuento automático de MP al vender un Producto Terminado ────────────
-// Llamado desde pos.js al procesar un pago. 
-// products: [{id, quantity}] — lista de productos vendidos con sus cantidades
-function descontarMpPorVenta(productoId, cantidadVendida) {
-    const pt = (window.products||[]).find(p=>String(p.id)===String(productoId));
-    if (!pt || !pt.mpComponentes || !pt.mpComponentes.length) return;
-
-    pt.mpComponentes.forEach(comp => {
-        const mp = (window.products||[]).find(p=>String(p.id)===String(comp.id));
-        if (!mp) return;
-        const consumo = comp.qty * cantidadVendida;
-        const antes = mp.stock||0;
-        mp.stock = Math.max(0, antes - consumo);
-        registrarMovimiento({
-            productoId: mp.id,
-            productoNombre: mp.name,
-            tipo: 'salida',
-            cantidad: -consumo,
-            motivo: `Venta de "${pt.name}" ×${cantidadVendida}`,
-            stockAntes: antes,
-            stockDespues: mp.stock
-        });
-    });
-    saveProducts();
-}
-window.descontarMpPorVenta = descontarMpPorVenta;
-
-// Hook automático: parchear processPayment para descontar MP
-(function _hookProcessPayment() {
-    let _att = 0;
-    const _poll = setInterval(() => {
-        if (window.processPayment && !window.processPayment._mkMpHooked) {
-            const _orig = window.processPayment;
-            window.processPayment = function() {
-                // Capturar ticket ANTES de que se limpie
-                const items = window.ticket || [];
-                const result = _orig.apply(this, arguments);
-                // Descontar MP por cada producto terminado vendido
-                items.forEach(item => {
-                    const prod = (window.products||[]).find(p=>String(p.id)===String(item.id));
-                    if (prod && (prod.tipo==='producto' || prod.tipo==='producto_interno' || prod.tipo==='pack') && prod.mpComponentes && prod.mpComponentes.length) {
-                        descontarMpPorVenta(item.id, item.quantity||1);
-                    }
-                });
-                // Recalcular disponibilidad si el modal PT está abierto
-                if (document.getElementById('ptModal') && !document.getElementById('ptModal').classList.contains('hidden')) {
-                    setTimeout(calcularDisponibilidadPt, 200);
-                }
-                return result;
-            };
-            window.processPayment._mkMpHooked = true;
-            window.processPayment._mk4 = true;
-            clearInterval(_poll);
-        }
-        if (++_att > 60) clearInterval(_poll);
-    }, 300);
-})();
+// POS module removed — descontarMpPorVenta y hook eliminados
 
 // ── Ajustar stock ──────────────────────────────────────────────────────────
 function ajustarStock(id) {
@@ -718,7 +660,6 @@ function confirmarAjusteStock() {
 
     saveProducts();
     renderInventoryTable();
-    if (typeof renderProducts  === 'function') renderProducts();
     if (typeof updateDashboard === 'function') updateDashboard();
     if (typeof closeModal      === 'function') closeModal('ajustarStockModal');
 
@@ -795,7 +736,6 @@ function cambiarTipoProducto(id) {
         }
         saveProducts();
         renderInventoryTable();
-        if (typeof renderProducts === 'function') renderProducts();
         manekiToastExport(`✅ "${p.name}" ahora es ${label}`, 'ok');
     });
 }
@@ -831,8 +771,7 @@ function deleteProduct(id) {
         window.products = window.products.filter(x => String(x.id) !== String(id));
         try { products = window.products; } catch(e) {}
         saveProducts(); renderInventoryTable();
-        if (typeof renderProducts  === 'function') renderProducts();
-        if (typeof updateDashboard === 'function') updateDashboard();
+            if (typeof updateDashboard === 'function') updateDashboard();
         // Borrar de la tabla relacional para que desaparezca de la página web
         try {
             await db.from('products').delete().eq('id', String(id));

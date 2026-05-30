@@ -1065,7 +1065,6 @@ function duplicarProducto(id) {
     window.products.unshift(copia);
     saveProducts();
     renderInventoryTable();
-    if (typeof renderProducts === 'function') renderProducts();
     manekiToastExport(`📋 "${copia.name}" creado — edítalo para ajustar stock y SKU`, 'ok');
 }
 window.duplicarProducto = duplicarProducto;

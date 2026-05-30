@@ -724,7 +724,6 @@ async function guardarProductoTerminado() {
                     window.products[idx].movimientos = window.products[idx].movimientos.slice(0, 30);
             }
             saveProducts(); renderInventoryTable();
-            if (typeof renderProducts==='function') renderProducts();
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);
             closePtModal();
@@ -749,7 +748,6 @@ async function guardarProductoTerminado() {
             syncStockFromVariants(np);
             window.products.push(np);
             saveProducts(); renderInventoryTable();
-            if (typeof renderProducts==='function') renderProducts();
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);
             closePtModal();
@@ -1410,8 +1408,7 @@ async function guardarPack() {
                 mpComponentes, historialPrecios: historial
             });
             saveProducts(); renderInventoryTable();
-            if (typeof renderProducts === 'function') renderProducts();
-            if (typeof updateDashboard === 'function') updateDashboard();
+                    if (typeof updateDashboard === 'function') updateDashboard();
             closePackModal();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Pack actualizado', 'ok');
@@ -1428,8 +1425,7 @@ async function guardarPack() {
             };
             window.products.push(np);
             saveProducts(); renderInventoryTable();
-            if (typeof renderProducts === 'function') renderProducts();
-            if (typeof updateDashboard === 'function') updateDashboard();
+                    if (typeof updateDashboard === 'function') updateDashboard();
             closePackModal();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Pack creado exitosamente', 'ok');
@@ -1819,7 +1815,6 @@ async function guardarProductoVariable(e) {
     _restore();
     saveProducts();
     renderInventoryTable();
-    if (typeof renderProducts === 'function') renderProducts();
     closeModal('pvModal');
 }
 window.guardarProductoVariable = guardarProductoVariable;

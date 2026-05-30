@@ -350,7 +350,6 @@ async function _applyRTDesktopConDatos(key, fresh) {
         if (typeof updateDashboard === 'function') updateDashboard();
     } else if (key === 'products') {
         _rtInPlace(window.products, fresh);
-        if (typeof renderProducts === 'function') renderProducts();
         if (typeof renderInventoryTable === 'function') renderInventoryTable();
         if (typeof updateDashboard === 'function') updateDashboard();
     } else if (key === 'clients') {

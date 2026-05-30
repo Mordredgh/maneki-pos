@@ -38,7 +38,7 @@ function clearAllData() {
 
             ['renderInventoryTable','renderClientsTable','renderSalesHistory',
              'renderPedidosTable','renderQuotesTable',
-             'updateDashboard','renderProducts','renderBalance'].forEach(fn => {
+             'updateDashboard','renderBalance'].forEach(fn => {
                 if (typeof window[fn] === 'function') window[fn]();
             });
 
@@ -730,7 +730,6 @@ function irAReportes() {
       }
       if (typeof saveProducts  === 'function') saveProducts();
       if (typeof renderInventoryTable === 'function') renderInventoryTable();
-      if (typeof renderProducts === 'function') renderProducts();
       if (typeof updateDashboard === 'function') updateDashboard();
       closeAjustarStockModal();
       manekiToastExport(`✅ Stock de "${p.name}": ${stockActual} → ${p.stock}`, 'ok');

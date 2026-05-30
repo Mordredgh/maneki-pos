@@ -8,39 +8,6 @@
         });
     }); // ── end remove no-transition ──
 
-    // ── POS ticket live clock ──
-    function updateTicketClock() {
-        const el = document.getElementById('ticketDateTime');
-        if (!el) return;
-        const now = new Date();
-        el.textContent = now.toLocaleDateString('es-MX', {
-            weekday:'short', day:'2-digit', month:'short'
-        }) + ' · ' + now.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
-    }
-    updateTicketClock();
-    setInterval(updateTicketClock, 30000);
-
-    // ── Patch updateTotals to show item count in POS ──
-    let _patchAttempts = 0;
-    const _patchInterval = setInterval(() => {
-        if (window.updateTotals) {
-            const _orig = window.updateTotals;
-            window.updateTotals = function() {
-                _orig.apply(this, arguments);
-                try {
-                    const items = document.querySelectorAll('#ticketItems > div');
-                    const label = document.getElementById('totalItemsLabel');
-                    if (label) {
-                        const count = items.length;
-                        label.textContent = count === 0 ? 'Vacío' : count + ' producto' + (count !== 1 ? 's' : '');
-                    }
-                } catch(e) { console.warn('Error en sbLoad local fallback:', e); }
-            };
-            clearInterval(_patchInterval);
-        }
-        if (++_patchAttempts > 30) clearInterval(_patchInterval);
-    }, 200);
-
     // ── Button ripple effect ──
     if (!document.getElementById('mk-ripple-style')) {
         const s = document.createElement('style');

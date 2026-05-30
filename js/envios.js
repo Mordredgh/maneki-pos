@@ -454,10 +454,6 @@ function redrawMapaConfig() {
     }
 
     const names = [
-        // POS / Ticket
-        'addToTicket','removeFromTicket','updateQuantity','clearTicket',
-        'processPayment','printReceipt','downloadReceipt','shareReceipt',
-        'selectPaymentMethod','closeReceiptModal',
         // Inventario
         'openAddProductModal','closeAddProductModal','setTipoProducto',
         'addVariant','removeVariant','agregarComponenteKit','eliminarComponenteKit',

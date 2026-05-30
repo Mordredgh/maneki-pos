@@ -1022,14 +1022,7 @@ function initChart() {
 }
 
 // ── Search filter (POS) ────────────────────────────────────────────────────
-function setupSearchFilter() {
-    const input = document.getElementById('searchProduct');
-    if (!input) return;
-    input.addEventListener('input', function() {
-        clearTimeout(window._posSearchTimeout);
-        window._posSearchTimeout = setTimeout(() => { if (typeof renderProducts === 'function') renderProducts(); }, 180);
-    });
-}
+// POS search filter removed — module eliminated
 
 // ── Descargar CSV de ventas ────────────────────────────────────────────────
 function descargarReporteVentas() {
@@ -1542,7 +1535,6 @@ document.addEventListener('submit', function(e) {
                 });
                 if (typeof saveProducts === 'function') saveProducts();
                 if (typeof renderInventoryTable === 'function') renderInventoryTable();
-                if (typeof renderProducts === 'function') renderProducts();
             }
             if (typeof savePedidos === 'function') savePedidos();
         }
