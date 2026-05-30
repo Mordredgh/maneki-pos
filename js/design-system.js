@@ -355,6 +355,8 @@ function _morphTo(name) {
     setTimeout(() => _overlay.classList.remove('active'), 420);
     _prevSection = name;
 }
+// #23 — Exponer para uso directo desde showSection consolidado en reportes.js
+window._mkMorphTo = _morphTo;
 
 // ─────────────────────────────────────────────────────────────────
 // 5. COUNT-UP — KPIs dashboard animan desde 0
@@ -392,6 +394,8 @@ function _animateKPIs() {
         if (!isNaN(raw) && raw > 0) _countUp(el, raw, prefix, 820);
     });
 }
+// #23 — Exponer para uso directo desde showSection consolidado en reportes.js
+window._mkAnimateKPIs = _animateKPIs;
 
 // ─────────────────────────────────────────────────────────────────
 // 6. META MENSUAL EDITABLE
@@ -607,6 +611,9 @@ function _lazyLoad(name) {
         setTimeout(_render, 80);
     });
 }
+// #23 — Exponer _lazyLoad en window para uso desde showSection consolidado en reportes.js
+// (reportes.js llama: if (typeof _lazyLoad === 'function') _lazyLoad(sectionName);)
+window._lazyLoad = _lazyLoad;
 
 // ─────────────────────────────────────────────────────────────────
 // 10. DEBOUNCE en inputs de búsqueda
@@ -621,26 +628,14 @@ function _applyDebounces() {
 //     MEJ-08: escuchar CustomEvent 'maneki:ready' en lugar de polling
 //     Cada módulo debe disparar: document.dispatchEvent(new CustomEvent('maneki:ready', {detail:{module:'reportes'}}))
 // ─────────────────────────────────────────────────────────────────
+// #23 — showSection ya NO se parchea aquí.
+// Toda la lógica (morphTo, lazyLoad, animateKPIs, inventoryButtons) está
+// consolidada directamente en la definición de showSection() en reportes.js.
+// Las funciones se exponen vía window._mkMorphTo, window._mkAnimateKPIs, window._lazyLoad.
 function _patchShowSection() {
-    if (window.showSection && !window.showSection._mk4) {
-        const _orig = window.showSection;
-        window.showSection = function(name) {
-            if (window._posSearchTimeout) { clearTimeout(window._posSearchTimeout); window._posSearchTimeout = null; }
-            _morphTo(name);
-            _orig.call(this, name);
-            if (name==='dashboard' || name==='home') {
-                if (typeof updateDashboard === 'function') setTimeout(updateDashboard, 50);
-            }
-            if (name==='dashboard') setTimeout(_animateKPIs, 220);
-            _lazyLoad(name);
-            if (name==='inventory' && window.patchInventoryButtons) {
-                setTimeout(window.patchInventoryButtons, 120);
-            }
-        };
-        window.showSection._mk4 = true;
-        return true;
-    }
-    return false;
+    // No-op: marcamos _mk4 para que el fallback interval se detenga
+    if (window.showSection) window.showSection._mk4 = true;
+    return true;
 }
 
 // ─────────────────────────────────────────────────────────────────

@@ -795,3 +795,41 @@ async function initApp() {
         console.error('initApp error:', err);
     }
 }
+
+// ══════════════════════════════════════════════════════════════
+// MANEKI NAMESPACE — Punto central de acceso a funciones clave
+// Uso: MK.pedidos, MK.products, MK.save('pedidos'), etc.
+// Las variables window.* siguen funcionando — esto es un wrapper.
+// ══════════════════════════════════════════════════════════════
+window.MK = window.MK || {};
+Object.defineProperties(window.MK, {
+    // Data accessors (live references)
+    products:           { get: () => window.products || [] },
+    pedidos:            { get: () => window.pedidos || [] },
+    pedidosFinalizados: { get: () => window.pedidosFinalizados || [] },
+    clients:            { get: () => window.clients || [] },
+    salesHistory:       { get: () => window.salesHistory || [] },
+    expenses:           { get: () => window.expenses || [] },
+    incomes:            { get: () => window.incomes || [] },
+    categories:         { get: () => window.categories || [] },
+    storeConfig:        { get: () => window.storeConfig || {} },
+
+    // Helpers
+    fechaHoy:    { get: () => typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0] },
+    esc:         { get: () => window._esc || (s => String(s||'')) },
+    saldo:       { get: () => window.calcSaldoPendiente || (p => Math.max(0, Number(p.total||0) - Number(p.anticipo||0))) },
+    stockOf:     { get: () => window.getStockEfectivo || (p => p.stock || 0) },
+});
+
+// Convenience methods
+window.MK.save = function(key) {
+    if (typeof sbSave === 'function') return sbSave(key, window[key]);
+    console.warn('[MK] sbSave not available');
+};
+window.MK.toast = function(msg, type) {
+    if (typeof manekiToastExport === 'function') manekiToastExport(msg, type || 'ok');
+};
+window.MK.navigate = function(section) {
+    if (typeof showSection === 'function') showSection(section);
+};
+window.MK.version = '4.1';

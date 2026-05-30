@@ -863,6 +863,12 @@ window.renderSalesHistory = renderSalesHistory;
 function showSection(sectionName) {
     localStorage.setItem('maneki_activeSection', sectionName);
 
+    // #23 — Consolidado: limpiar timeout de búsqueda POS (antes en design-system.js)
+    if (window._posSearchTimeout) { clearTimeout(window._posSearchTimeout); window._posSearchTimeout = null; }
+
+    // #23 — Consolidado: morph de color entre secciones (antes en design-system.js)
+    if (typeof window._mkMorphTo === 'function') window._mkMorphTo(sectionName);
+
     if (sectionName !== 'bienvenida' && window._bienvenidaClock) {
         clearInterval(window._bienvenidaClock); window._bienvenidaClock = null;
     }
@@ -915,15 +921,25 @@ function showSection(sectionName) {
     if (sectionName === 'dashboard') {
         if (typeof window.updateDashboard === 'function') setTimeout(window.updateDashboard, 50);
         setTimeout(() => { if (typeof renderTopClientes === 'function') renderTopClientes(); }, 300);
+        // #23 — Consolidado: animación KPIs al entrar a dashboard (antes en design-system.js)
+        if (typeof window._mkAnimateKPIs === 'function') setTimeout(window._mkAnimateKPIs, 220);
     }
     if (sectionName === 'bienvenida') if (typeof renderBienvenida === 'function') renderBienvenida();
-    if (sectionName === 'inventory')  setTimeout(() => { const s = document.getElementById('inventorySearch'); if (s) s.focus(); }, 200);
+    if (sectionName === 'inventory') {
+        setTimeout(() => { const s = document.getElementById('inventorySearch'); if (s) s.focus(); }, 200);
+        // #23 — Consolidado: parchear botones de inventario (antes en inventory-4.js)
+        if (typeof patchInventoryButtons === 'function') setTimeout(patchInventoryButtons, 100);
+    }
     if (sectionName === 'clientes')   if (typeof renderClientsTable  === 'function') renderClientsTable();
     if (sectionName === 'categorias') if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
     // #5 Breadcrumb
     if (typeof window._mkUpdateBreadcrumb === 'function') window._mkUpdateBreadcrumb(sectionName);
+    // #23 — Consolidado: lazy loading de secciones (antes en design-system.js)
+    if (typeof window._lazyLoad === 'function') window._lazyLoad(sectionName);
 }
 window.showSection = showSection;
+// #23 — Marcar _mk4 para que design-system.js no intente parchear
+window.showSection._mk4 = true;
 
 // ── Flush queue: si showSection fue llamado antes de que cargara este módulo ──
 (function(){

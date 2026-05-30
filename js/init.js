@@ -39,22 +39,9 @@
 
     // ── KPI number counter animation duplicada eliminada (FIX #19) ──
 
-    // ── Animate KPI values when entering dashboard ──
-    let _origShowSection = null;
-    const _ssPatch = setInterval(() => {
-        if (window.showSection && window.showSection !== _patchedShowSection) {
-            _origShowSection = window.showSection;
-            window.showSection = _patchedShowSection;
-            clearInterval(_ssPatch);
-        }
-        if (++_ssAttempts > 30) clearInterval(_ssPatch);
-    }, 200);
-    let _ssAttempts = 0;
-    function _patchedShowSection(name) {
-        if (_origShowSection) _origShowSection.call(this, name);
-        // Nota: la animación de KPIs la maneja updateDashboard() via animarNumero()
-        // No animar aquí para evitar dos animaciones en paralelo con valores aleatorios
-    }
+    // #23 — El patch de showSection que antes vivía aquí (KPI animation) fue
+    // consolidado directamente en la definición de showSection() en reportes.js.
+    // Ya no se parchea showSection desde init.js.
 
     // ── Supabase status bar styling ──
     const supaEl = document.getElementById('supabaseStatus');
@@ -321,5 +308,44 @@
             ).join('') + '</tr>'
         ).join('');
     };
+
+    // ══════════════════════════════════════════════════════════════
+    // #6 ONBOARDING TOUR — primera vez que abre la app
+    // ══════════════════════════════════════════════════════════════
+    (function _onboardingTour() {
+        const KEY = 'mk_onboarding_done';
+        if (localStorage.getItem(KEY)) return;
+        setTimeout(() => {
+            const steps = [
+                { target: '[data-section="pedidos"]', title: '📋 Pedidos por Encargo', text: 'Aquí gestionas todos tus pedidos. Crea nuevos, da seguimiento y cobra.' },
+                { target: '[data-section="inventory"]', title: '📦 Inventario', text: 'Controla tus productos, materias primas y stock en tiempo real.' },
+                { target: '[data-section="balance"]', title: '💰 Balance', text: 'Registra ingresos, gastos y ve cuánto te deben tus clientes.' },
+                { target: '[data-section="clientes"]', title: '👥 Clientes', text: 'Tu base de datos de clientes con historial de pedidos y estadísticas.' },
+                { target: '#mk-help-fab', title: '⌨️ Atajos', text: 'Presiona ? en cualquier momento para ver los atajos de teclado. ¡Bienvenido a Maneki!' }
+            ];
+            let current = 0;
+            const ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,0.5);transition:opacity .3s;';
+            const tip = document.createElement('div');
+            tip.style.cssText = 'position:fixed;z-index:99998;background:#fff;border-radius:16px;padding:20px 24px;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+            function show(idx) {
+                if (idx >= steps.length) { finish(); return; }
+                const s = steps[idx], el = document.querySelector(s.target);
+                document.querySelectorAll('._mk-hl').forEach(e => { e.style.zIndex=''; e.style.boxShadow=''; e.classList.remove('_mk-hl'); });
+                if (el) { el.style.zIndex='99998'; el.style.boxShadow='0 0 0 4px rgba(197,151,59,0.5),0 0 20px rgba(197,151,59,0.3)'; el.classList.add('_mk-hl'); }
+                const r = el ? el.getBoundingClientRect() : { top:innerHeight/2-80, left:innerWidth/2-160, bottom:innerHeight/2 };
+                tip.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h4 style="font-size:1rem;font-weight:800;color:#1a0533;margin:0;">'+s.title+'</h4><span style="font-size:.7rem;color:#9ca3af;">'+(idx+1)+'/'+steps.length+'</span></div><p style="font-size:.82rem;color:#6b7280;margin:0 0 14px;line-height:1.5;">'+s.text+'</p><div style="display:flex;justify-content:space-between;"><button id="_ts" style="background:none;border:none;color:#9ca3af;font-size:.78rem;cursor:pointer;">Saltar</button><button id="_tn" style="background:linear-gradient(135deg,#C5973B,#E8B84B);color:white;border:none;border-radius:10px;padding:8px 20px;font-weight:700;font-size:.82rem;cursor:pointer;">'+(idx===steps.length-1?'¡Empezar! 🚀':'Siguiente →')+'</button></div>';
+                tip.style.top = (r.bottom+12+200>innerHeight ? r.top-180 : r.bottom+12)+'px';
+                tip.style.left = Math.max(16,Math.min(r.left||100,innerWidth-340))+'px';
+                document.getElementById('_tn').onclick = () => { current++; show(current); };
+                document.getElementById('_ts').onclick = finish;
+            }
+            function finish() {
+                localStorage.setItem(KEY,'1'); ov.remove(); tip.remove();
+                document.querySelectorAll('._mk-hl').forEach(e => { e.style.zIndex=''; e.style.boxShadow=''; e.classList.remove('_mk-hl'); });
+            }
+            document.body.appendChild(ov); document.body.appendChild(tip); show(0);
+        }, 2500);
+    })();
 
 })();
