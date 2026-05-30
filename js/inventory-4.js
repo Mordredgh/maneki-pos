@@ -386,23 +386,10 @@ document.addEventListener('DOMContentLoaded', function () {
         _observer.observe(_invSection, { attributes: true });
     }
 
-    // ── Poll para hookear showSection DESPUÉS de que design-system.js lo parchó ──
-    // design-system.js parchea showSection con un intervalo de 250ms hasta 40 intentos (~10s)
-    // Nosotros esperamos a que el patch de design-system esté listo y luego agregamos el nuestro encima
-    let _hookAttempts = 0;
-    const _hookPoll = setInterval(() => {
-        if (window.showSection && !window.showSection._mkInvPatched) {
-            const _prev = window.showSection;
-            window.showSection = function(name) {
-                _prev.apply(this, arguments);
-                if (name === 'inventory') setTimeout(patchInventoryButtons, 100);
-            };
-            window.showSection._mk4 = true;          // mantener flag de design-system
-            window.showSection._mkInvPatched = true;  // nuestro flag
-            clearInterval(_hookPoll);
-        }
-        if (++_hookAttempts > 60) clearInterval(_hookPoll); // timeout 15s
-    }, 250);
+    // #23 — El patch de showSection que antes vivía aquí (patchInventoryButtons)
+    // fue consolidado directamente en la definición de showSection() en reportes.js.
+    // patchInventoryButtons() sigue disponible como función global — solo se eliminó
+    // el intervalo que parcheaba showSection.
 
     // El submit del form addProductForm ya no se usa — el nuevo ptModal tiene su propio botón
     // Mantenemos el listener por si hay código legacy que lo use, pero redirigimos a ptModal
