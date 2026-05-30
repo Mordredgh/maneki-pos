@@ -684,6 +684,9 @@ setTimeout(() => {
     }
 }, 3000);
 
+// PERF-02: debounce del upsert a Supabase por key — SQLite guarda inmediato,
+// Supabase espera 500ms sin nuevas llamadas para la misma key antes de sincronizar.
+const _sbSaveTimers = {};
 async function sbSave(key, data) {
     // FIX #3: __syncedAt ya no se pone en arrays (JSON.stringify lo ignora).
     // El timestamp de sync se guarda como metadato separado en la key '__meta_<key>'.
@@ -700,35 +703,42 @@ async function sbSave(key, data) {
             }
         }
     }
-    // 2) Supabase en la nube — sincronización asíncrona
-    try {
-        if (!db) {
-            // db aún inicializándose — encolar para sync cuando esté listo. SQLite ya guardó.
-            window._pendingSync = true;
-            actualizarIndicadorConexion(false);
-            return;
-        }
-        const { error } = await _withTimeout(db.from('store').upsert(
-            { key, value: JSON.stringify(dataConTimestamp) }, { onConflict: 'key' }
-        ));
-        if (error) {
-            window._pendingSync = true;
-            actualizarIndicadorConexion(false);
-            throw new Error(error.message || 'Error de Supabase');
-        }
-        else {
-            actualizarIndicadorConexion(true);
-            // FIX #3: guardar timestamp de sync como metadato separado
-            sqliteStorage.set('__meta_' + key, { syncedAt: new Date().toISOString() }).catch(e => console.warn('[Maneki DB]', e?.message || e));
-            // #12 Actualizar indicador de sync
-            if (typeof window._mkUpdateSyncTime === 'function') window._mkUpdateSyncTime();
-        }
-    } catch(e) {
-        console.error('sbSave error de red:', e);
-        window._pendingSync = true;
-        actualizarIndicadorConexion(false);
-        throw e;
-    }
+    // 2) Supabase en la nube — sincronización asíncrona (debounced por key)
+    if (_sbSaveTimers[key]) clearTimeout(_sbSaveTimers[key]);
+    return new Promise((resolve, reject) => {
+        _sbSaveTimers[key] = setTimeout(async () => {
+            delete _sbSaveTimers[key];
+            try {
+                if (!db) {
+                    window._pendingSync = true;
+                    actualizarIndicadorConexion(false);
+                    resolve();
+                    return;
+                }
+                const { error } = await _withTimeout(db.from('store').upsert(
+                    { key, value: JSON.stringify(dataConTimestamp) }, { onConflict: 'key' }
+                ));
+                if (error) {
+                    window._pendingSync = true;
+                    actualizarIndicadorConexion(false);
+                    reject(new Error(error.message || 'Error de Supabase'));
+                }
+                else {
+                    actualizarIndicadorConexion(true);
+                    // FIX #3: guardar timestamp de sync como metadato separado
+                    sqliteStorage.set('__meta_' + key, { syncedAt: new Date().toISOString() }).catch(e => console.warn('[Maneki DB]', e?.message || e));
+                    // #12 Actualizar indicador de sync
+                    if (typeof window._mkUpdateSyncTime === 'function') window._mkUpdateSyncTime();
+                    resolve();
+                }
+            } catch(e) {
+                console.error('sbSave error de red:', e);
+                window._pendingSync = true;
+                actualizarIndicadorConexion(false);
+                reject(e);
+            }
+        }, 500);
+    });
 }
 
 async function sbLoad(key, def) {
@@ -812,31 +822,38 @@ window.mostrarEstadoAlmacenamiento = mostrarEstadoAlmacenamiento;
 
 // BUG #15 FIX: getNextFolio con fallback offline
 // ✅ FIX: usar .maybeSingle() en lugar de .single() para evitar error 406
+// PERF-01 FIX: mutex lock para evitar race condition cuando se llama getNextFolio
+// varias veces en rápida sucesión (ej: doble clic en botón de venta)
 let _localFolioCounters = {};
+let _folioLock = false;
 async function getNextFolio(tipo) {
-    const key = 'contador_' + tipo;
+    if (_folioLock) { await new Promise(r => setTimeout(r, 100)); return getNextFolio(tipo); }
+    _folioLock = true;
     try {
-        const { data } = await db.from('store').select('value').eq('key', key).maybeSingle();
-        let actual = 0;
-        if (data) actual = parseInt(JSON.parse(data.value)) || 0;
-        const siguiente = actual + 1;
-        db.from('store').upsert({ key: key, value: JSON.stringify(siguiente) }, { onConflict: 'key' })
-            .catch(e => console.warn('[Maneki DB]', e?.message || e));
-        _localFolioCounters[tipo] = siguiente;
-        return siguiente;
-    } catch(e) {
-        // Fallback offline: usar máximo de folios existentes en salesHistory
-        if (tipo === 'venta') {
-            const maxExistente = salesHistory.reduce((max, s) => {
-                const n = parseInt((s.folio || '').replace('V-', '')) || 0;
-                return n > max ? n : max;
-            }, _localFolioCounters[tipo] || 0);
-            _localFolioCounters[tipo] = maxExistente + 1;
+        const key = 'contador_' + tipo;
+        try {
+            const { data } = await db.from('store').select('value').eq('key', key).maybeSingle();
+            let actual = 0;
+            if (data) actual = parseInt(JSON.parse(data.value)) || 0;
+            const siguiente = actual + 1;
+            db.from('store').upsert({ key: key, value: JSON.stringify(siguiente) }, { onConflict: 'key' })
+                .catch(e => console.warn('[Maneki DB]', e?.message || e));
+            _localFolioCounters[tipo] = siguiente;
+            return siguiente;
+        } catch(e) {
+            // Fallback offline: usar máximo de folios existentes en salesHistory
+            if (tipo === 'venta') {
+                const maxExistente = salesHistory.reduce((max, s) => {
+                    const n = parseInt((s.folio || '').replace('V-', '')) || 0;
+                    return n > max ? n : max;
+                }, _localFolioCounters[tipo] || 0);
+                _localFolioCounters[tipo] = maxExistente + 1;
+                return _localFolioCounters[tipo];
+            }
+            _localFolioCounters[tipo] = (_localFolioCounters[tipo] || 0) + 1;
             return _localFolioCounters[tipo];
         }
-        _localFolioCounters[tipo] = (_localFolioCounters[tipo] || 0) + 1;
-        return _localFolioCounters[tipo];
-    }
+    } finally { _folioLock = false; }
 }
 
 // Wrapper con manejo de errores visible

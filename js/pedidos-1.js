@@ -411,6 +411,13 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     const resta = Math.max(0, total - anticipo);
 
     if (!cliente) {
+        const clienteInput = document.getElementById('pedidoCliente');
+        if (clienteInput) {
+            clienteInput.style.borderColor = '#ef4444';
+            clienteInput.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.15)';
+            clienteInput.focus();
+            setTimeout(() => { clienteInput.style.borderColor = ''; clienteInput.style.boxShadow = ''; }, 3000);
+        }
         manekiToastExport('Por favor escribe el nombre del cliente.', 'warn');
         return;
     }
@@ -684,18 +691,19 @@ function renderPedidosTable() {
     normalizarResta();
     updatePedidosStats();
     // PERF: solo renderizar la vista activa en lugar de todas
+    // SAFE-01: try/catch en cada render para evitar que un error en una vista rompa todo
     const vista = _pedidoVistaActual || 'kanban';
-    if (vista === 'kanban')      renderKanbanBoard();
-    else if (vista === 'tabla')  renderTablaPedidos();
-    else if (vista === 'calendario' && typeof renderCalendarioPedidos === 'function') renderCalendarioPedidos();
+    if (vista === 'kanban')      { try { renderKanbanBoard(); } catch(e) { console.error('[Kanban]', e); } }
+    else if (vista === 'tabla')  { try { renderTablaPedidos(); } catch(e) { console.error('[TablaPedidos]', e); } }
+    else if (vista === 'calendario' && typeof renderCalendarioPedidos === 'function') { try { renderCalendarioPedidos(); } catch(e) { console.error('[Calendario]', e); } }
     // Historial siempre es ligero (contenedor oculto salvo que esté visible)
     const histPanel = document.getElementById('vistaHistorial');
-    if (histPanel && !histPanel.classList.contains('hidden')) renderHistorialPedidos();
-    if (typeof checkAlertasEntregas === 'function') checkAlertasEntregas();
-    if (typeof checkAlertasCobro === 'function') checkAlertasCobro();
+    if (histPanel && !histPanel.classList.contains('hidden')) { try { renderHistorialPedidos(); } catch(e) { console.error('[Historial]', e); } }
+    if (typeof checkAlertasEntregas === 'function') { try { checkAlertasEntregas(); } catch(e) { console.error('[AlertasEntregas]', e); } }
+    if (typeof checkAlertasCobro === 'function') { try { checkAlertasCobro(); } catch(e) { console.error('[AlertasCobro]', e); } }
     // Refresh production list if visible
     const panel = document.getElementById('listaProduccionPanel');
-    if (panel && !panel.classList.contains('hidden')) renderListaProduccion();
+    if (panel && !panel.classList.contains('hidden')) { try { renderListaProduccion(); } catch(e) { console.error('[ListaProduccion]', e); } }
 }
 
 function updatePedidosStats() {
@@ -767,7 +775,10 @@ function renderKanbanBoard() {
                 .some(v => v && _nsKanban(String(v)).includes(_nsKanban(q)))
         ));
         totalVisible += items.length;
-        if (badge) badge.textContent = items.length;
+        if (badge) {
+            badge.textContent = items.length;
+            badge.style.cssText = 'background:rgba(197,151,59,0.15);color:#C5A572;font-size:.7rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:6px;';
+        }
         el.innerHTML = items.length === 0
             ? `<p class="text-center text-gray-400 text-xs py-6">${q || _kanbanUrgenciaFiltro !== 'todos' ? 'Sin resultados' : 'Sin pedidos'}</p>`
             : items.map(p => kanbanCardHTML(p)).join('');

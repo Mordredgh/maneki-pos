@@ -1,3 +1,6 @@
+// ── Validación de email ──────────────────────────────────────────────────────
+function _validEmail(e) { return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
 // ── FIX C1: escape para atributos onclick con datos de cliente ────────────────
 function _escAttr(v) {
     return String(v == null ? '' : v)
@@ -450,6 +453,8 @@ function closeAddClientModal() {
     const phone = document.getElementById('clientPhone').value.trim();
     const facebook = document.getElementById('clientFacebook').value.trim();
     const email = document.getElementById('clientEmail').value.trim();
+    // Validar email antes de guardar
+    if (!_validEmail(email)) { manekiToastExport('Email inválido', 'warn'); return; }
     const type = document.getElementById('clientType').value || 'regular';
     // MEJORA 4: leer notas del cliente
     const notas = (document.getElementById('clientNotas')?.value || '').trim();

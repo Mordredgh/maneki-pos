@@ -95,6 +95,16 @@
   --r-xl:  24px;
   --r-2xl: 32px;
 
+  /* Typography scale */
+  --fs-2xs: 0.625rem;  /* 10px */
+  --fs-xs:  0.72rem;   /* ~11.5px */
+  --fs-sm:  0.82rem;   /* ~13px */
+  --fs-md:  0.92rem;   /* ~14.7px */
+  --fs-lg:  1.05rem;   /* ~16.8px */
+  --fs-xl:  1.25rem;   /* 20px */
+  --fs-2xl: 1.5rem;    /* 24px */
+  --fs-3xl: 1.875rem;  /* 30px */
+
   /* Motion */
   --spring: cubic-bezier(0.34,1.56,0.64,1);
   --out:    cubic-bezier(0.16,1,0.3,1);
@@ -1694,6 +1704,33 @@ body.dark .shortcut-key { background: #2d2d3d; border-color: #404050; color: #d1
   transform: scale(1.1);
   box-shadow: 0 6px 24px rgba(124,58,237,0.5);
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Dark mode for dynamically rendered content
+   ───────────────────────────────────────────────────────────────────── */
+body.dark .hover\:bg-gray-50:hover { background: rgba(255,255,255,0.05) !important; }
+body.dark .bg-gray-50 { background: rgba(255,255,255,0.03) !important; }
+body.dark .bg-white, body.dark [style*="background:#fff"],
+body.dark [style*="background: #fff"], body.dark [style*="background:white"] {
+  background: #1e1e2e !important;
+}
+body.dark .text-gray-800, body.dark .text-gray-700 { color: #e5e7eb !important; }
+body.dark .text-gray-600, body.dark .text-gray-500 { color: #9ca3af !important; }
+body.dark .text-gray-400 { color: #6b7280 !important; }
+body.dark .border-gray-200, body.dark .border-gray-100 { border-color: rgba(255,255,255,0.08) !important; }
+body.dark .bg-amber-50 { background: rgba(197,151,59,0.12) !important; }
+body.dark .bg-green-50 { background: rgba(16,185,129,0.12) !important; }
+body.dark .bg-red-50 { background: rgba(239,68,68,0.12) !important; }
+body.dark .bg-purple-50 { background: rgba(139,92,246,0.12) !important; }
+body.dark .bg-blue-50 { background: rgba(59,130,246,0.12) !important; }
+body.dark .bg-gray-100 { background: rgba(255,255,255,0.06) !important; }
+body.dark [style*="background:#f9fafb"], body.dark [style*="background: #f9fafb"],
+body.dark [style*="background:#f3f4f6"] { background: rgba(255,255,255,0.04) !important; }
+body.dark [style*="color:#374151"], body.dark [style*="color: #374151"],
+body.dark [style*="color:#1f2937"] { color: #e5e7eb !important; }
+body.dark [style*="color:#6b7280"], body.dark [style*="color: #6b7280"] { color: #9ca3af !important; }
+body.dark [style*="border-color:#e5e7eb"], body.dark [style*="border:1px solid #f3f4f6"],
+body.dark [style*="border-bottom:1px solid #f3f4f6"] { border-color: rgba(255,255,255,0.06) !important; }
 
 /* ─────────────────────────────────────────────────────────────────────
    RESPONSIVE

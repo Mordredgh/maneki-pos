@@ -171,15 +171,49 @@ document.getElementById('backupModal').addEventListener('click', function(e) {
     const INTERVAL_MS = 2 * 60 * 60 * 1000; // cada 2 horas
     const LS_KEY      = 'maneki_lastAutoBackup';
 
-    function _doAutoBackup() {
+    // FIX AB-01: guardar auto-backup en SQLite/localStorage en lugar de descargar archivo.
+    // exportarBackupJSON() descargaba un .json al disco, lo cual es intrusivo e inesperado
+    // como acción automática. Ahora se guarda silenciosamente en almacenamiento local.
+    async function _doAutoBackup() {
         try {
-            exportarBackupJSON();
+            const backup = {
+                version: '2.1',
+                fecha: new Date().toISOString(),
+                tienda: (window.storeConfig && window.storeConfig.name) || 'Maneki Store',
+                datos: {
+                    products: window.products || [],
+                    salesHistory: window.salesHistory || [],
+                    pedidos: window.pedidos || [],
+                    pedidosFinalizados: window.pedidosFinalizados || [],
+                    abonos: window.abonos || [],
+                    receivables: window.receivables || [],
+                    payables: window.payables || [],
+                    incomes: window.incomes || [],
+                    expenses: window.expenses || [],
+                    categories: window.categories || [],
+                    quotes: window.quotes || [],
+                    equipos: (typeof equipos !== 'undefined' ? equipos : []),
+                    roiHistorial: (typeof roiHistorial !== 'undefined' ? roiHistorial : []),
+                    roiConfig: (typeof roiConfig !== 'undefined' ? roiConfig : { porcentaje: 10 }),
+                    envioAnillos: (typeof envioAnillos !== 'undefined' ? envioAnillos : []),
+                    notas: window.notas || [],
+                    clients: window.clients || [],
+                    storeConfig: window.storeConfig || {},
+                    gastosRecurrentes: window.gastosRecurrentes || [],
+                    stockMovimientos: window.stockMovimientos || window.stockMovements || [],
+                    folioCounter: window._folioCounter || 0
+                }
+            };
+            // Guardar en SQLite si está disponible, sino en localStorage
+            if (typeof sqliteStorage !== 'undefined' && sqliteStorage.set) {
+                await sqliteStorage.set('autoBackup', backup);
+                await sqliteStorage.set('autoBackupDate', new Date().toISOString());
+            } else {
+                try { localStorage.setItem('maneki_autoBackup', JSON.stringify(backup)); } catch(e) { /* localStorage lleno — silenciar */ }
+            }
             localStorage.setItem(LS_KEY, new Date().toISOString());
-            // FIX 4: no mostrar toast en auto-backup automático — silencioso por defecto
         } catch(e) {
-            console.warn('Auto-backup error:', e);
-            if (typeof manekiToastExport === 'function')
-                manekiToastExport('❌ Error en auto-backup: ' + (e && e.message || e), 'err');
+            console.warn('[AutoBackup]', e);
         }
     }
 

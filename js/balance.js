@@ -1,7 +1,9 @@
 // ============== BALANCE MODULE ==============
 
 // FIX 1 — Timezone: fecha local sin conversión UTC
+// Delegates to global _fechaHoy() (config.js) to avoid duplicate logic
 function _fechaLocal() {
+    if (typeof _fechaHoy === 'function') return _fechaHoy();
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 }

@@ -61,12 +61,13 @@ async function imprimirTicketPedido(id) {
         ? `<img src="${logoBase64}" style="height:72px;object-fit:contain;margin-bottom:8px;" alt="Maneki Store">`
         : `<div style="font-size:2rem;">🐱</div>`;
 
+    const _esc = typeof window._esc==='function'?window._esc:(s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+
     const notasHtml = p.notas ? `
         <div style="margin:20px 0;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
             <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">📝 Notas</div>
             <div style="font-size:12px;color:#78350f;">${_esc(p.notas)}</div>
         </div>` : '';
-    const _esc = typeof window._esc==='function'?window._esc:(s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
 
     const lugarHtml = p.lugarEntrega ? `
         <div style="margin-top:4px;font-size:11px;color:#9ca3af;">📍 ${_esc(p.lugarEntrega)}</div>` : '';

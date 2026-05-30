@@ -134,7 +134,7 @@ function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motiv
         motivo:         motivo || '',
         stockAntes, stockDespues
     });
-    if (window.stockMovements.length > 500) window.stockMovements = window.stockMovements.slice(0, 500); // BUG-012 FIX: conservar los 500 más recientes (unshift → index 0 = más nuevo → slice(0,500) = primeros 500 = más recientes)
+    if (window.stockMovements.length > 500) { window.stockMovements.splice(500); window.stockMovimientos = window.stockMovements; } // BUG-012 FIX: splice in-place para no romper la referencia; sincronizar alias stockMovimientos
     saveStockMovements();
 }
 window.registrarMovimiento = registrarMovimiento;
