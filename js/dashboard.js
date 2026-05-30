@@ -380,6 +380,7 @@ function _updateDashboardImpl() {
     if (ap) ap.textContent = activePedidos;
     try { renderSparkline(); } catch(e) {}
     try { renderComparativaSemanal(); } catch(e) {}
+    try { renderCashFlowChart(); } catch(e) {}
 
     // R2-A5: Desglose "Me deben" por cliente — onclick en la tarjeta
     const arCard = ar ? ar.closest('[onclick]') || ar.parentElement : null;
@@ -960,3 +961,92 @@ function renderAccesosRapidos() {
     }
 }
 window.renderAccesosRapidos = renderAccesosRapidos;
+
+// ══════════════════════════════════════════════════════════════
+// #14 — GRÁFICA FLUJO DE CAJA (Ingresos vs Gastos últimas 8 semanas)
+// ══════════════════════════════════════════════════════════════
+let _cashFlowChart = null;
+function renderCashFlowChart() {
+    const canvas = document.getElementById('dashCashFlowChart');
+    if (!canvas) return;
+    if (typeof Chart === 'undefined') return;
+
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const semanas = 8;
+    const labels = [], ingresos = [], gastos = [];
+
+    for (let i = semanas - 1; i >= 0; i--) {
+        const finSemana = new Date(hoy);
+        finSemana.setDate(finSemana.getDate() - (i * 7));
+        const iniSemana = new Date(finSemana);
+        iniSemana.setDate(iniSemana.getDate() - 6);
+
+        const _fLocal = d => d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+        const ini = _fLocal(iniSemana), fin = _fLocal(finSemana);
+
+        // Ingresos: ventas POS + pedidos finalizados
+        let ingreso = 0;
+        (window.salesHistory||[]).forEach(s => {
+            if (!s.date || s.method==='Cancelado' || s.type==='abono' || s.type==='anticipo') return;
+            if (s.date >= ini && s.date <= fin) ingreso += Number(s.total||0);
+        });
+        (window.pedidosFinalizados||[]).forEach(p => {
+            const f = ((p.fechaFinalizado||p.fecha||'')).split('T')[0];
+            if (f >= ini && f <= fin) ingreso += Number(p.total||0);
+        });
+
+        // Gastos
+        let gasto = 0;
+        (window.expenses||[]).forEach(e => {
+            if (e.date && e.date >= ini && e.date <= fin) gasto += Number(e.amount||0);
+        });
+
+        const label = iniSemana.getDate() + '/' + (iniSemana.getMonth()+1) + ' - ' + finSemana.getDate() + '/' + (finSemana.getMonth()+1);
+        labels.push(label);
+        ingresos.push(Math.round(ingreso));
+        gastos.push(Math.round(gasto));
+    }
+
+    if (_cashFlowChart) { _cashFlowChart.destroy(); _cashFlowChart = null; }
+
+    _cashFlowChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Ingresos',
+                    data: ingresos,
+                    backgroundColor: 'rgba(22, 163, 74, 0.7)',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                },
+                {
+                    label: 'Gastos',
+                    data: gastos,
+                    backgroundColor: 'rgba(220, 38, 38, 0.55)',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: { display: true, position: 'top', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString('es-MX')
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 10 }, callback: v => '$'+v.toLocaleString('es-MX') } }
+            }
+        }
+    });
+}
+window.renderCashFlowChart = renderCashFlowChart;

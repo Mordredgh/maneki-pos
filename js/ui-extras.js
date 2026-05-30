@@ -1462,3 +1462,116 @@ function initResponsive() {
         btn.style.color = '#C9933A';
     });
 }
+
+// ══════════════════════════════════════════════════════════════
+// #10 — UNDO TOAST: toast con botón "Deshacer" para operaciones destructivas
+// ══════════════════════════════════════════════════════════════
+function manekiUndoToast(msg, undoFn, duracion) {
+    duracion = duracion || 6000;
+    let container = document.getElementById('mk-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'mk-toast-container';
+        container.className = 'mk-toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'mk-toast warn';
+    toast.style.cursor = 'default';
+    const _id = 'undo_' + Date.now();
+    toast.innerHTML = `
+        <div class="mk-toast-icon">↩</div>
+        <div class="mk-toast-body" style="flex:1">
+            <div class="mk-toast-msg">${msg}</div>
+        </div>
+        <button id="${_id}" style="background:#C5A572;color:white;border:none;border-radius:8px;padding:6px 16px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;">Deshacer</button>
+        <div class="mk-toast-progress" style="animation-duration:${duracion}ms"></div>`;
+    container.appendChild(toast);
+    let _undone = false;
+    toast.querySelector('#'+_id).addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (_undone) return;
+        _undone = true;
+        if (typeof undoFn === 'function') undoFn();
+        dismissToast(toast);
+        manekiToastExport('✅ Acción revertida', 'ok');
+    });
+    const timer = setTimeout(() => { if (!_undone) dismissToast(toast); }, duracion);
+    toast._timer = timer;
+}
+window.manekiUndoToast = manekiUndoToast;
+
+// ══════════════════════════════════════════════════════════════
+// #9 — LOADING SKELETON: muestra estado de carga al iniciar la app
+// ══════════════════════════════════════════════════════════════
+(function _loadingSkeleton() {
+    const style = document.createElement('style');
+    style.textContent = `
+@keyframes mkShimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+.mk-skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:800px 100%;animation:mkShimmer 1.5s infinite;border-radius:8px;min-height:20px}
+#mk-loading-overlay{position:fixed;inset:0;background:rgba(250,248,245,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}
+#mk-loading-overlay.fade-out{opacity:0;pointer-events:none}
+.mk-loading-spinner{width:44px;height:44px;border:3.5px solid #e5e7eb;border-top-color:#C5A572;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}`;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'mk-loading-overlay';
+    overlay.innerHTML = `
+        <img src="logo.png" alt="" style="height:64px;object-fit:contain;opacity:.85" onerror="this.style.display='none'">
+        <div class="mk-loading-spinner"></div>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:#9ca3af;font-weight:500" id="mk-loading-text">Cargando Maneki Store...</p>`;
+    if (document.body) document.body.appendChild(overlay);
+    else document.addEventListener('DOMContentLoaded', () => document.body.appendChild(overlay));
+
+    // Quitar cuando los datos estén listos (o máximo 5 segundos)
+    function _dismiss() {
+        const el = document.getElementById('mk-loading-overlay');
+        if (!el) return;
+        el.classList.add('fade-out');
+        setTimeout(() => el.remove(), 500);
+    }
+    // Escuchar señal de datos cargados
+    const _check = setInterval(() => {
+        if (window._dbReady !== undefined && (window.products || []).length >= 0 && typeof window.updateDashboard === 'function') {
+            clearInterval(_check);
+            _dismiss();
+        }
+    }, 200);
+    // Fallback: máximo 5 segundos
+    setTimeout(() => { clearInterval(_check); _dismiss(); }, 5000);
+})();
+
+// ══════════════════════════════════════════════════════════════
+// #15 — OFFLINE BANNER: indicador claro de modo sin conexión
+// ══════════════════════════════════════════════════════════════
+(function _offlineBanner() {
+    const style = document.createElement('style');
+    style.textContent = `
+#mk-offline-banner{position:fixed;top:0;left:0;right:0;z-index:10001;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;text-align:center;padding:8px 16px;font-size:.82rem;font-weight:600;transform:translateY(-100%);transition:transform .3s ease;display:flex;align-items:center;justify-content:center;gap:8px}
+#mk-offline-banner.visible{transform:translateY(0)}
+#mk-offline-banner .pulse{width:8px;height:8px;background:#fca5a5;border-radius:50%;animation:offPulse 1.5s infinite}
+@keyframes offPulse{0%,100%{opacity:1}50%{opacity:.3}}`;
+    document.head.appendChild(style);
+
+    const banner = document.createElement('div');
+    banner.id = 'mk-offline-banner';
+    banner.innerHTML = '<span class="pulse"></span> Sin conexión a internet — los cambios se guardan localmente y se sincronizarán al reconectarse';
+    if (document.body) document.body.appendChild(banner);
+    else document.addEventListener('DOMContentLoaded', () => document.body.appendChild(banner));
+
+    function _update() {
+        const el = document.getElementById('mk-offline-banner');
+        if (!el) return;
+        if (!navigator.onLine) el.classList.add('visible');
+        else el.classList.remove('visible');
+    }
+    window.addEventListener('online', () => {
+        _update();
+        manekiToastExport('🌐 Conexión restaurada — sincronizando...', 'ok');
+        // Intentar sincronizar pendientes
+        if (typeof sincronizarPendientes === 'function') setTimeout(sincronizarPendientes, 500);
+    });
+    window.addEventListener('offline', _update);
+    _update();
+})();

@@ -683,9 +683,14 @@ window.pedidoInsertarTemplate = pedidoInsertarTemplate;
 function renderPedidosTable() {
     normalizarResta();
     updatePedidosStats();
-    renderKanbanBoard();
-    renderTablaPedidos();
-    renderHistorialPedidos();
+    // PERF: solo renderizar la vista activa en lugar de todas
+    const vista = _pedidoVistaActual || 'kanban';
+    if (vista === 'kanban')      renderKanbanBoard();
+    else if (vista === 'tabla')  renderTablaPedidos();
+    else if (vista === 'calendario' && typeof renderCalendarioPedidos === 'function') renderCalendarioPedidos();
+    // Historial siempre es ligero (contenedor oculto salvo que esté visible)
+    const histPanel = document.getElementById('vistaHistorial');
+    if (histPanel && !histPanel.classList.contains('hidden')) renderHistorialPedidos();
     if (typeof checkAlertasEntregas === 'function') checkAlertasEntregas();
     checkAlertasCobro();
     // Refresh production list if visible
@@ -896,10 +901,45 @@ function kanbanCardHTML(p) {
 let _pedidosTablePage = 1;
 const _PEDIDOS_PER_PAGE = 25;
 
+function _inyectarBuscadorTabla() {
+    if (document.getElementById('tablaPedidosBuscar')) return;
+    const tabla = document.getElementById('vistaTabla');
+    if (!tabla) return;
+    const bar = document.createElement('div');
+    bar.id = 'tablaBuscadorBar';
+    bar.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;';
+    bar.innerHTML = `
+        <div style="flex:1;min-width:200px;position:relative;">
+            <input id="tablaPedidosBuscar" type="text" placeholder="🔍 Buscar por cliente, folio, concepto..."
+                style="width:100%;padding:10px 14px 10px 36px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;background:#fff;"
+                onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'"
+                oninput="_pedidosTablePage=1;renderTablaPedidos()">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.4;">🔎</span>
+        </div>
+        <select id="tablaFiltroPago" onchange="_pedidosTablePage=1;renderTablaPedidos()"
+            style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.8rem;background:#fff;cursor:pointer;">
+            <option value="">💰 Pago: Todos</option>
+            <option value="liquidado">✅ Liquidado</option>
+            <option value="anticipo">🟡 Con anticipo</option>
+            <option value="pendiente">🔴 Pendiente</option>
+        </select>
+        <select id="tablaFiltroUrgencia" onchange="_pedidosTablePage=1;renderTablaPedidos()"
+            style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.8rem;background:#fff;cursor:pointer;">
+            <option value="">📅 Entrega: Todas</option>
+            <option value="hoy">🔴 Hoy</option>
+            <option value="semana">🟡 Esta semana</option>
+            <option value="vencido">⚫ Vencido</option>
+        </select>`;
+    const firstChild = tabla.querySelector('table, .overflow-x-auto') || tabla.firstElementChild;
+    if (firstChild) tabla.insertBefore(bar, firstChild);
+    else tabla.prepend(bar);
+}
+
 function renderTablaPedidos() {
+    _inyectarBuscadorTabla();
     const tbody = document.getElementById('pedidosTable');
     if (!tbody) return;
-    const q = ((document.getElementById('kanbanBuscar') || {}).value || '').toLowerCase().trim();
+    const q = ((document.getElementById('tablaPedidosBuscar') || document.getElementById('kanbanBuscar') || {}).value || '').toLowerCase().trim();
     // BUG-PED-03 FIX: comparación case-insensitive para status — Realtime puede traer
     // valores con distinto case (ej: 'Confirmado' vs 'confirmado') que causarían filtros vacíos.
     let lista = _pedidoFiltroActivo === 'todos'
@@ -916,6 +956,33 @@ function renderTablaPedidos() {
             (p.whatsapp||'').includes(q)
         );
         _pedidosTablePage = 1;
+    }
+    // Filtro de pago
+    const _fp = (document.getElementById('tablaFiltroPago')||{}).value || '';
+    if (_fp) {
+        lista = lista.filter(p => {
+            const _r = typeof calcSaldoPendiente==='function' ? calcSaldoPendiente(p) : Math.max(0,Number(p.total||0)-Number(p.anticipo||0));
+            const _a = (p.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0) || Number(p.anticipo||0);
+            if (_fp==='liquidado') return _r <= 0;
+            if (_fp==='anticipo')  return _r > 0 && _a > 0;
+            if (_fp==='pendiente') return _r > 0 && _a <= 0;
+            return true;
+        });
+    }
+    // Filtro de urgencia de entrega
+    const _fu = (document.getElementById('tablaFiltroUrgencia')||{}).value || '';
+    if (_fu) {
+        const _hoyMs = new Date(); _hoyMs.setHours(0,0,0,0);
+        const _fin7 = new Date(_hoyMs); _fin7.setDate(_fin7.getDate()+7);
+        lista = lista.filter(p => {
+            if (!p.entrega) return _fu==='vencido';
+            const [yy,mm,dd] = p.entrega.split('-').map(Number);
+            const fe = new Date(yy,mm-1,dd); fe.setHours(0,0,0,0);
+            if (_fu==='hoy')    return fe.getTime()===_hoyMs.getTime();
+            if (_fu==='semana') return fe>=_hoyMs && fe<=_fin7;
+            if (_fu==='vencido') return fe<_hoyMs;
+            return true;
+        });
     }
     const desde = document.getElementById('pedidoFechaDesde')?.value || '';
     const hasta = document.getElementById('pedidoFechaHasta')?.value || '';
@@ -975,6 +1042,7 @@ function renderTablaPedidos() {
                     <button onclick="openPedidoStatusModal('${p.id}')" class="px-2 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600 hover:bg-amber-50">Estado</button>
                     <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg bg-amber-50 text-xs text-amber-700">✏️</button>
                     <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-green-50 text-xs text-green-700">$</button>
+                    <button onclick="exportarPedidoPDF('${p.id}')" class="px-2 py-1 rounded-lg bg-blue-50 text-xs text-blue-700" title="Descargar PDF">📄</button>
                     <button onclick="duplicarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-purple-50 text-xs text-purple-600" title="Duplicar">⧉</button>
                     <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-red-50 text-xs text-red-600">🗑</button>
                 </div>
@@ -1193,7 +1261,9 @@ function eliminarPedido(id) {
             });
         });
     } else {
-        showConfirm('¿Eliminar este pedido? Esta acción no se puede deshacer.', '🗑 Eliminar').then(ok => {
+        const _pagado = (pedido.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0);
+        const _msgExtra = _pagado > 0 ? `\n\n⚠️ Este pedido tiene $${_pagado.toFixed(2)} en pagos registrados que también se eliminarán.` : '';
+        showConfirm('¿Eliminar este pedido? Esta acción no se puede deshacer.' + _msgExtra, '🗑 Eliminar').then(ok => {
             if (!ok) return;
             _ejecutarEliminar(false);
         });

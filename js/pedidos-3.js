@@ -401,6 +401,121 @@ function duplicarPedido(id) {
 }
 window.duplicarPedido = duplicarPedido;
 
+// ══════════════════════════════════════════════════════════════
+// #13 — EXPORTAR PEDIDO A PDF PROFESIONAL
+// ══════════════════════════════════════════════════════════════
+async function exportarPedidoPDF(id) {
+    const p = [...(window.pedidosFinalizados||[]),...(window.pedidos||[])].find(x=>String(x.id)===String(id));
+    if (!p) { manekiToastExport('Pedido no encontrado','warn'); return; }
+
+    // Cargar html2pdf si no está disponible
+    if (typeof html2pdf === 'undefined') {
+        manekiToastExport('⏳ Cargando generador de PDF...','info');
+        try {
+            await new Promise((res,rej)=>{
+                const s=document.createElement('script');
+                s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                s.onload=res; s.onerror=rej; document.head.appendChild(s);
+            });
+        } catch(e) { manekiToastExport('❌ No se pudo cargar el generador PDF','err'); return; }
+    }
+
+    // Logo
+    let logoBase64 = '';
+    try {
+        const resp = await fetch(new URL('logo.png',window.location.href).href);
+        const blob = await resp.blob();
+        logoBase64 = await new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(blob);});
+    } catch(_){}
+
+    const total = Number(p.total||0);
+    const sumPagos = (p.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0);
+    const totalPagado = sumPagos>0?sumPagos:Number(p.anticipo||0);
+    const resta = Math.max(0,total-totalPagado);
+    const items = (p.productosInventario||[]).filter(it=>it.id!=='libre');
+    const storeName = window.storeConfig?.name||'Maneki Store';
+    const storePhone = window.storeConfig?.phone||'';
+    const _e = typeof _esc==='function'?_esc:(s=>String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+
+    const itemsHtml = items.length>0
+        ? items.map(it=>{
+            const qty=Number(it.quantity||1), precio=Number(it.price||0);
+            return `<tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;">${_e(it.name||'—')}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;text-align:center;font-size:13px;">${qty}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;text-align:right;font-size:13px;">$${precio.toFixed(2)}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:700;font-size:13px;">$${(qty*precio).toFixed(2)}</td>
+            </tr>`;}).join('')
+        : `<tr><td colspan="4" style="padding:16px;text-align:center;color:#9ca3af;font-style:italic;">${_e(p.concepto||'Pedido personalizado')}</td></tr>`;
+
+    const pagosHtml = (p.pagos||[]).length>0
+        ? `<div style="margin-top:16px;"><h4 style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">Historial de pagos</h4>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            ${(p.pagos||[]).map(ab=>`<tr><td style="padding:4px 8px;border-bottom:1px solid #f3f4f6;">${ab.fecha||'—'}</td><td style="padding:4px 8px;border-bottom:1px solid #f3f4f6;">${ab.tipo||'abono'}</td><td style="padding:4px 8px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:600;color:#16a34a;">$${Number(ab.monto||0).toFixed(2)}</td></tr>`).join('')}
+            </table></div>` : '';
+
+    const div = document.createElement('div');
+    div.style.cssText = 'width:480px;font-family:Segoe UI,system-ui,sans-serif;background:#fff;';
+    div.innerHTML = `
+        <div style="background:linear-gradient(135deg,#1a0533,#2d0a4e);padding:28px 24px;text-align:center;color:white;border-radius:12px 12px 0 0;">
+            ${logoBase64?`<img src="${logoBase64}" style="height:52px;margin-bottom:8px;">`:''}
+            <div style="font-size:20px;font-weight:800;color:#E8B84B;">${_e(storeName)}</div>
+            ${storePhone?`<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;">${_e(storePhone)}</div>`:''}
+        </div>
+        <div style="padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <div><span style="font-size:18px;font-weight:800;color:#C5A572;">${_e(p.folio||'')}</span></div>
+                <div style="text-align:right;">
+                    <div style="font-size:11px;color:#9ca3af;">Fecha: ${_e(p.fechaPedido||'—')}</div>
+                    <div style="font-size:11px;color:#9ca3af;">Entrega: ${_e(p.entrega||'—')}</div>
+                </div>
+            </div>
+            <div style="background:#faf9f7;border-radius:10px;padding:14px;margin-bottom:20px;">
+                <div style="font-size:14px;font-weight:700;color:#1f2937;">${_e(p.cliente||'—')}</div>
+                ${p.telefono?`<div style="font-size:12px;color:#6b7280;margin-top:2px;">📱 ${_e(p.telefono)}</div>`:''}
+                ${p.lugarEntrega?`<div style="font-size:12px;color:#7c3aed;margin-top:2px;">📍 ${_e(p.lugarEntrega)}</div>`:''}
+            </div>
+            ${p.concepto?`<div style="font-size:12px;color:#6b7280;margin-bottom:12px;"><strong>Concepto:</strong> ${_e(p.concepto)}</div>`:''}
+            <table style="width:100%;border-collapse:collapse;">
+                <thead><tr style="background:#f9fafb;">
+                    <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Producto</th>
+                    <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:700;color:#6b7280;">Cant</th>
+                    <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;">Precio</th>
+                    <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#6b7280;">Subtotal</th>
+                </tr></thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            <div style="margin-top:16px;padding:14px;background:#faf9f7;border-radius:10px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:13px;color:#374151;">Total</span><span style="font-size:16px;font-weight:900;color:#1f2937;">$${total.toFixed(2)}</span></div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:12px;color:#16a34a;">Pagado</span><span style="font-size:13px;font-weight:700;color:#16a34a;">$${totalPagado.toFixed(2)}</span></div>
+                ${resta>0?`<div style="display:flex;justify-content:space-between;padding-top:6px;border-top:2px dashed #fde68a;"><span style="font-size:13px;font-weight:700;color:#dc2626;">Saldo pendiente</span><span style="font-size:15px;font-weight:900;color:#dc2626;">$${resta.toFixed(2)}</span></div>`
+                :`<div style="text-align:center;padding-top:6px;color:#16a34a;font-weight:700;font-size:13px;">✅ LIQUIDADO</div>`}
+            </div>
+            ${pagosHtml}
+            ${p.notas?`<div style="margin-top:16px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:12px;color:#78350f;"><strong>📝 Notas:</strong> ${_e(p.notas)}</div>`:''}
+            <div style="text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #f3f4f6;">
+                <p style="font-size:10px;color:#9ca3af;">Documento generado el ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</p>
+                <p style="font-size:10px;color:#C5A572;font-weight:600;margin-top:4px;">¡Gracias por tu preferencia! 🐱</p>
+            </div>
+        </div>`;
+
+    document.body.appendChild(div);
+    try {
+        await html2pdf().set({
+            margin: 0, filename: `${p.folio||'pedido'}_${_e(p.cliente||'').replace(/\s+/g,'_')}.pdf`,
+            image: { type:'jpeg', quality:.95 },
+            html2canvas: { scale:2, useCORS:true },
+            jsPDF: { unit:'mm', format:[120,280], orientation:'portrait' }
+        }).from(div).save();
+        manekiToastExport('📄 PDF descargado','ok');
+    } catch(e) {
+        console.error('PDF error:',e);
+        manekiToastExport('❌ Error al generar PDF','err');
+    }
+    div.remove();
+}
+window.exportarPedidoPDF = exportarPedidoPDF;
+
 window.openAbonoPedido = openAbonoPedido;
 window.cerrarAbonoPedido = cerrarAbonoPedido;
 window.confirmarAbonoPedido = confirmarAbonoPedido;
@@ -981,7 +1096,7 @@ function renderCalendarioPedidos() {
         const items  = porFecha[fecha] || [];
         celdas += '<div style="min-height:80px;border:1px solid #f3f4f6;border-radius:10px;padding:6px;background:'+(esHoy?'#fef9f0':'#fff')+';'+(esHoy?'border-color:#C5A572;border-width:2px;':'')+';">'
             + '<div style="font-size:.75rem;font-weight:'+(esHoy?'800':'600')+';color:'+(esHoy?'#92400e':'#374151')+';margin-bottom:3px;">'+d+(esHoy?' 📍':'')+'</div>'
-            + items.slice(0,3).map(p => '<div onclick="openPedidoModal(\''+p.id+'\')" style="font-size:.65rem;background:'+(Number(p.resta||0)>0?'#fef2f2':'#f0fdf4')+';color:'+(Number(p.resta||0)>0?'#991b1b':'#166534')+';border-radius:4px;padding:2px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+p.cliente+' — '+p.concepto+'">'+p.folio+' '+p.cliente+'</div>').join('')
+            + items.slice(0,3).map(p => {var _e=typeof _esc==='function'?_esc:function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};return '<div onclick="openPedidoModal(\''+p.id+'\')" style="font-size:.65rem;background:'+(Number(p.resta||0)>0?'#fef2f2':'#f0fdf4')+';color:'+(Number(p.resta||0)>0?'#991b1b':'#166534')+';border-radius:4px;padding:2px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+_e(p.cliente)+' — '+_e(p.concepto)+'">'+_e(p.folio)+' '+_e(p.cliente)+'</div>';}).join('')
             + (items.length > 3 ? '<div style="font-size:.6rem;color:#9ca3af;text-align:center;">+'+(items.length-3)+' más</div>' : '')
             + '</div>';
     }

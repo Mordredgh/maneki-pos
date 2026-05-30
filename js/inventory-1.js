@@ -586,7 +586,7 @@ function exportarInventarioCSV() {
     const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url; a.download = `inventario_${new Date().toISOString().slice(0,10)}.csv`;
+    a.href = url; a.download = `inventario_${typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().slice(0,10)}.csv`;
     a.click(); URL.revokeObjectURL(url);
     manekiToastExport('📥 Inventario exportado como CSV', 'ok');
 }

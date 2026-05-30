@@ -929,7 +929,7 @@ function renderMovimientos() {
     // B3: Resumen visual por tipo — sólo movimientos de hoy
     const hoy = _fechaHoy ? _fechaHoy() : new Date().toISOString().split('T')[0];
     const movsHoy = (window.stockMovements || []).filter(m => {
-        try { return new Date(m.fecha).toISOString().split('T')[0] === hoy; } catch(e) { return false; }
+        try { const f=new Date(m.fecha); return f.getFullYear()+'-'+('0'+(f.getMonth()+1)).slice(-2)+'-'+('0'+f.getDate()).slice(-2) === hoy; } catch(e) { return false; }
     });
     const resumenTipos = {};
     movsHoy.forEach(m => { resumenTipos[m.tipo] = (resumenTipos[m.tipo] || 0) + 1; });

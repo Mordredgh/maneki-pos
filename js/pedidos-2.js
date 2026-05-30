@@ -1281,7 +1281,7 @@ function mostrarResumenMensual() {
 
 (function autoResumenMensual() {
     if (new Date().getDate() !== 1) return;
-    const key = 'maneki_resumen_' + new Date().toISOString().substring(0,7);
+    const key = 'maneki_resumen_' + (typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().split('T')[0]).substring(0,7);
     try {
         if (localStorage.getItem(key)) return;
         setTimeout(() => {

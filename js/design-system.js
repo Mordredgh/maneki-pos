@@ -476,10 +476,11 @@ const _WORKER_SRC = `
 self.onmessage = function(ev) {
     var d = ev.data, sh = d.salesHistory||[], period = d.period, orden = d.orden,
         desde = d.desde||'', hasta = d.hasta||'';
-    var today = (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    function _fLocal(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+    var today = _fLocal(new Date());
     var fom = today.substring(0,7);
-    var d30 = new Date(); d30.setDate(d30.getDate()-30); var s30=d30.toISOString().split('T')[0];
-    var d90 = new Date(); d90.setDate(d90.getDate()-90); var s90=d90.toISOString().split('T')[0];
+    var d30 = new Date(); d30.setDate(d30.getDate()-30); var s30=_fLocal(d30);
+    var d90 = new Date(); d90.setDate(d90.getDate()-90); var s90=_fLocal(d90);
     var filtered = sh.filter(function(s){
         if (!s.date||s.method==='Cancelado') return false;
         if (period==='mes')    return s.date.indexOf(fom)===0;
