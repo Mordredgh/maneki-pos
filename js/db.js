@@ -741,8 +741,66 @@ async function sbSave(key, data) {
     });
 }
 
+// ══════════════════════════════════════════════════════════════
+// RELATIONAL TABLE READS — migración de store → tablas individuales
+// Para las keys que ya tienen tabla relacional, leemos directo
+// de la tabla (más rápido, sin parsear JSON blob gigante).
+// Si falla, sbLoad cae al store como siempre.
+// ══════════════════════════════════════════════════════════════
+const _RELATIONAL_TABLES = {
+    products: { table: 'products', map: row => ({
+        ...row, stockMin: row.stock_min, imageUrl: row.image_url,
+        mpComponentes: row.mp_componentes, historialPrecios: row.historial_precios,
+        publicarTienda: row.publicar_tienda, proveedorUrl: row.proveedor_url,
+        esEmpaque: row.es_empaque, usaVariantes: row.usa_variantes,
+        rendimientoPorHoja: row.rendimiento_por_hoja, puntoReorden: row.punto_reorden,
+        historialCostos: row.historial_costos
+    })},
+    pedidos: { table: 'orders', map: row => ({
+        ...row, fechaPedido: row.fecha, fechaCreacion: row.fecha_creacion,
+        productosInventario: row.productos_inventario, inventarioDescontado: row.inventario_descontado,
+        fromQuote: row.from_quote, lugarEntrega: row.lugar_entrega,
+        costoMateriales: row.costo_materiales, notasInternas: row.notas_internas,
+        historialEstados: row.historial_estados, fechaUltimoEstado: row.fecha_ultimo_estado
+    })},
+    pedidosFinalizados: { table: 'orders_finalizados', map: row => ({
+        ...row, fechaPedido: row.fecha, fechaCreacion: row.fecha_creacion,
+        fechaFinalizado: row.fecha_finalizado,
+        productosInventario: row.productos_inventario, inventarioDescontado: row.inventario_descontado,
+        fromQuote: row.from_quote, lugarEntrega: row.lugar_entrega,
+        costoMateriales: row.costo_materiales, notasInternas: row.notas_internas,
+        historialEstados: row.historial_estados
+    })},
+    salesHistory: { table: 'sales_history', map: row => ({ ...row }) },
+    clients: { table: 'clients', map: row => ({
+        ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase
+    })},
+    categories: { table: 'categories', map: row => ({ ...row }) }
+};
+
+async function _loadFromTable(key) {
+    const cfg = _RELATIONAL_TABLES[key];
+    if (!cfg || !db) return null;
+    try {
+        const { data, error } = await _withTimeout(db.from(cfg.table).select('*'), 10000);
+        if (error || !data) return null;
+        return data.map(cfg.map);
+    } catch(e) {
+        console.warn(`[DB] _loadFromTable(${key}) failed, falling back to store:`, e?.message);
+        return null;
+    }
+}
+
 async function sbLoad(key, def) {
-    // 1) Intentar Supabase primero (datos más frescos / multi-dispositivo)
+    // 0) Intentar tabla relacional primero (más rápido, sin JSON parse)
+    const relational = await _loadFromTable(key);
+    if (relational !== null) {
+        // Cache en SQLite para uso offline
+        sqliteStorage.set(key, relational).catch(() => {});
+        return relational;
+    }
+
+    // 1) Intentar Supabase store (datos más frescos / multi-dispositivo)
     // ✅ FIX: usar .maybeSingle() en lugar de .single()
     // .single() lanza error 406 cuando no existe la fila; .maybeSingle() retorna null sin error
     try {

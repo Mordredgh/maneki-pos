@@ -5,14 +5,18 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "dev": "electron .",
     "build": "electron-builder",
+    "build:renderer": "node build-renderer.js",
+    "build:check": "npx tsc --noEmit",
     "postinstall": "electron-builder install-app-deps"
   },
   "author": "MordredGH",
   "license": "ISC",
   "devDependencies": {
     "electron": "^40.6.1",
-    "electron-builder": "^26.8.1"
+    "electron-builder": "^26.8.1",
+    "esbuild": "^0.28.0"
   },
   "build": {
     "appId": "com.mordredgh.manekipos",
