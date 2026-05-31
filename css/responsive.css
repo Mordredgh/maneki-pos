@@ -1,6 +1,6 @@
 /* ══════════════════════════════
    MANEKI POS — RESPONSIVE SYSTEM
-   Desktop ≥1024 | Tablet 768-1023 | Mobile <768
+   Desktop ≥1024 | Tablet 768-1023 | Mobile <768 | Small <400
 ══════════════════════════════ */
 
 /* ── TABLET (768–1023px) ─────────────────── */
@@ -34,10 +34,6 @@
   /* Topbar con hamburger */
   #mobileTopbar {
     display: flex !important;
-  }
-
-  /* FIX-4: topbar encima del sidebar overlay (199) y sidebar (200) */
-  #mobileTopbar {
     z-index: 201 !important;
   }
 
@@ -48,14 +44,12 @@
     padding-bottom: 12px;
   }
 
-  /* FIX-2: scroll horizontal solo en contenedores, no en la tabla misma (evita desalinear colgroup) */
+  /* Scroll horizontal en tablas */
   .table-responsive, .overflow-x-auto {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     width: 100%;
   }
-
-  /* Para tablas sin contenedor responsive, solo limitar ancho sin romper display */
   table {
     max-width: 100%;
   }
@@ -63,16 +57,69 @@
   /* Cards en grid 2 columnas */
   .grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
   .grid-cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Dashboard: grids inline que no tienen breakpoint */
+  #mkExtraStats { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Bienvenida: morning KPI se queda en 2 cols (ya lo es) */
+
+  /* Global search box */
+  .mk-busqueda-box {
+    max-width: 100% !important;
+    margin: 0 12px !important;
+  }
+
+  /* Mapa de anillos: stack vertical */
+  #tabContentEnvios .grid.grid-cols-1.lg\\:grid-cols-2,
+  #tabContentEnvios > .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tabla padding más compacto */
+  table td, table th {
+    padding: 8px 12px !important;
+  }
+
+  /* Filter bar: reducir min-width */
+  .mk-filter-bar input[type="text"],
+  .mk-filter-bar select {
+    min-width: 120px !important;
+  }
 }
 
 /* ── MOBILE (<768px) ──────────────────────── */
 @media (max-width: 767px) {
   /* Cards en 1 columna */
   .grid-cols-4, .grid-cols-3, .grid-cols-2 {
-    grid-template-columns: repeat(1, 1fr) !important;
+    grid-template-columns: 1fr !important;
   }
 
-  /* FIX-1: Bottom sheet — solo modales de nivel superior (no sub-paneles genéricos) */
+  /* Dashboard: grids inline a 1 columna */
+  #mkExtraStats {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Morning KPI: mantener 2 cols (son cards pequeñas) */
+  #morningKpiGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* KPI grid principal: 2 cols en mobile */
+  .mk-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Main grid y bottom grid: 1 col */
+  .mk-main-grid,
+  .mk-bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modales como bottom sheet */
+  .modal {
+    align-items: flex-end !important;
+  }
+
   .modal-fullpage > div:first-child,
   #pedidoModal > div:first-child,
   #ptModal > div:first-child,
@@ -94,15 +141,10 @@
     overflow-y: auto !important;
   }
 
-  /* Selector genérico [id$="Modal"] — solo max-height y overflow, sin reposicionar */
+  /* Selector genérico — solo max-height y overflow */
   [id$="Modal"] > div:first-child {
     max-height: 92vh !important;
     overflow-y: auto !important;
-  }
-
-  /* Modales como bottom sheet */
-  .modal {
-    align-items: flex-end !important;
   }
 
   /* Kanban: scroll horizontal en mobile */
@@ -112,7 +154,7 @@
     scroll-snap-type: x mandatory;
   }
   .kanban-col {
-    min-width: 280px;
+    min-width: 260px;
     scroll-snap-align: start;
   }
 
@@ -134,16 +176,12 @@
   /* Bottom nav visible en mobile */
   #mobileBottomNav {
     display: flex !important;
-    /* FIX-3: safe area inset para notch/home indicator en iOS */
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Espacio para bottom nav */
-  body { padding-bottom: 60px; }
-
-  /* Accesos rápidos: 3 columnas en mobile */
-  #accesosRapidos {
-    grid-template-columns: repeat(3, 1fr) !important;
+  /* Espacio para bottom nav — solo en main, no en body (evita romper modales) */
+  main {
+    padding-bottom: 68px !important;
   }
 
   /* Búsqueda global: full width */
@@ -171,9 +209,200 @@
     font-size: 1.1rem !important;
   }
 
-  /* FIX-5: botón de sonido encima del home indicator y bottom nav */
+  /* Botón de sonido encima del bottom nav */
   #mk-sound-btn {
     bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Search box en global search bar */
+  #global-search-bar {
+    padding: 8px 12px !important;
+  }
+  #global-search-bar .max-w-xl {
+    max-width: 100% !important;
+  }
+
+  /* Sección header compacta */
+  .mk-section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  /* Botones de acción en header: wrap */
+  .flex.flex-col.sm\\:flex-row {
+    flex-direction: column !important;
+  }
+  .flex.items-center.gap-2.flex-wrap {
+    width: 100% !important;
+  }
+
+  /* Filter bar: stack en mobile */
+  .mk-filter-bar {
+    flex-direction: column !important;
+  }
+  .mk-filter-bar input[type="text"],
+  .mk-filter-bar select {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Filtros de inventario: stack vertical */
+  #inventorySearch {
+    width: 100% !important;
+  }
+  .flex.flex-wrap.gap-2.mb-3.items-center {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .flex.flex-wrap.gap-2.mb-3.items-center > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Toast: reducir min-width */
+  .mk-toast {
+    min-width: 200px !important;
+    max-width: calc(100vw - 32px) !important;
+    left: 16px !important;
+    right: 16px !important;
+    margin: 0 auto !important;
+  }
+
+  /* Empty state icons más chicos */
+  .mk-empty-icon {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  .mk-empty-state {
+    padding: 32px 16px !important;
+  }
+
+  /* Balance: grids de resumen */
+  .grid.grid-cols-2.sm\\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Cotizaciones: tabs más compactos */
+  #quotesHeaderButtons {
+    flex-wrap: wrap !important;
+  }
+  .flex.gap-1.bg-gray-100.rounded-2xl {
+    width: 100% !important;
+  }
+  .flex.gap-1.bg-gray-100.rounded-2xl > button {
+    flex: 1 !important;
+    font-size: 0.75rem !important;
+    padding: 8px 10px !important;
+  }
+
+  /* Envíos: mapa layout stack */
+  #tabContentEnvios .grid {
+    grid-template-columns: 1fr !important;
+  }
+  #mapaCoberturaView {
+    height: 300px !important;
+  }
+
+  /* Anillos config: stack vertical */
+  #anillosGridLayout {
+    grid-template-columns: 1fr !important;
+  }
+  #anillosGridLayout #mapaAnillos {
+    height: 300px !important;
+  }
+
+  /* Acceso rápido: 3 columnas se mantiene */
+  #morningKpiGrid + div + div > div[style*="repeat(3"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* KPI values: font más chico en mobile */
+  .mk-kpi-value {
+    font-size: 1.5rem !important;
+  }
+
+  /* Secciones: padding reducido */
+  section[id$="-section"] {
+    padding: 12px !important;
+  }
+  section[id$="-section"] .max-w-7xl {
+    padding: 0 !important;
+  }
+
+  /* Dashboard header: stack vertical */
+  #dashboard-section .mb-7.flex {
+    flex-direction: column !important;
+  }
+
+  /* Meta mensual: layout vertical */
+  #dashboard-section .mk-card .flex.items-center.justify-between {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  /* Reportes: charts responsivos */
+  canvas {
+    max-width: 100% !important;
+  }
+
+  /* Equipos/ROI cards */
+  #equipos-section .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Configuración: layout vertical */
+  #configuracion-section .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── SMALL PHONES (<400px) ────────────────── */
+@media (max-width: 399px) {
+  /* KPI grid: 1 columna en pantallas muy pequeñas */
+  .mk-kpi-grid,
+  #morningKpiGrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI values aún más pequeños */
+  .mk-kpi-value {
+    font-size: 1.3rem !important;
+  }
+
+  /* Tabla: font mínimo */
+  table td, table th {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+  }
+
+  /* Kanban columnas más estrechas */
+  .kanban-col {
+    min-width: 240px !important;
+  }
+
+  /* Botones en header más compactos */
+  .btn-primary, .mk-btn {
+    font-size: 0.75rem !important;
+    padding: 8px 12px !important;
+  }
+
+  /* Sidebar más estrecho */
+  #sidebar {
+    width: 240px !important;
+  }
+
+  /* Barra de búsqueda global */
+  #globalSearchInput {
+    font-size: 0.8rem !important;
+    padding: 6px 10px 6px 32px !important;
+  }
+
+  /* Toast: ancho completo */
+  .mk-toast {
+    min-width: 0 !important;
+    width: calc(100vw - 24px) !important;
   }
 }
 
@@ -185,6 +414,32 @@
   #mobileTopbar { display: none !important; }
   #mobileBottomNav { display: none !important; }
   #sidebarOverlay { display: none !important; }
+}
+
+/* ── LANDSCAPE MOBILE — ajustes para horizontal ── */
+@media (max-width: 767px) and (orientation: landscape) {
+  /* Modales: max-height más bajo en landscape */
+  .modal > div:first-child,
+  .modal-fullpage > div:first-child,
+  [id$="Modal"] > div:first-child {
+    max-height: 85vh !important;
+  }
+
+  /* Bottom nav más delgado */
+  #mobileBottomNav {
+    height: 48px !important;
+  }
+
+  /* KPI grid: 2 cols en landscape */
+  .mk-kpi-grid,
+  #morningKpiGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Main padding ajustado */
+  main {
+    padding-bottom: 56px !important;
+  }
 }
 
 /* ── PRINT — sin sidebar ni nav mobile ── */
