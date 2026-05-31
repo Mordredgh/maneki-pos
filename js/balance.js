@@ -21,11 +21,7 @@ function _norm(s) {
     return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
-// Helper local de escape XSS (usa el global si está disponible)
-const _escBal = (s) => {
-    if (typeof window._esc === 'function') return window._esc(s);
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-};
+const _escBal = window._esc;
 
 // MEJORA-3: Etiquetas de movimientos — definidas temprano para uso en renders
 const _ETIQUETAS = [

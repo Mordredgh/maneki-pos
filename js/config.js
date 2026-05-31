@@ -792,6 +792,8 @@ async function initApp() {
                     try { showSection('bienvenida'); } catch (e) {}
                     // Activar Live Sync después de que todo esté listo
                     if (typeof _setupRealtime === 'function') _setupRealtime();
+                    // Migrar datos locales a tablas relacionales si están vacías
+                    if (typeof _migrateToRelationalIfEmpty === 'function') _migrateToRelationalIfEmpty();
                     console.log('Maneki - Supabase OK + Realtime activo');
                 });
             });

@@ -453,7 +453,6 @@ function setPedidoStatus(status) {
                 if (_saldoFinal > 0) {
                     window.salesHistory.push(saleRecord);
                     if (typeof saveSalesHistory === 'function') saveSalesHistory();
-                    else if (typeof sbSave === 'function') sbSave('salesHistory', window.salesHistory);
                 }
             }
 
@@ -484,7 +483,6 @@ function setPedidoStatus(status) {
                         manekiToastExport(`⭐ ${cli.name} ascendido a VIP`, 'ok');
                     }
                     if (typeof saveClients === 'function') saveClients();
-                    else if (typeof sbSave === 'function') sbSave('clients', window.clients);
                 }
             }
         });
@@ -734,7 +732,6 @@ async function confirmarAbonoPedido() {
         if (window.incomes !== undefined && typeof saveIncomes === 'function') saveIncomes();
         if (window.salesHistory !== undefined) {
             if (typeof saveSalesHistory === 'function') saveSalesHistory();
-            else if (typeof sbSave === 'function') sbSave('salesHistory', window.salesHistory);
         }
         if (typeof _allVentasCache !== 'undefined') _allVentasCache = null; // invalidar caché de reportes
     } catch (_saveErr) {

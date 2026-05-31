@@ -747,11 +747,8 @@ async function sbSave(key, data) {
 // de la tabla (más rápido, sin parsear JSON blob gigante).
 // Si falla, sbLoad cae al store como siempre.
 // ══════════════════════════════════════════════════════════════
-// NOTA: pedidos y pedidosFinalizados NO usan lectura relacional —
-// la tabla orders tiene registros históricos que no reflejan el estado
-// actual (pedidos ya entregados siguen apareciendo como activos).
-// Estos datos vienen del store JSON que sí tiene el estado correcto.
-// Solo products, clients, categories y salesHistory usan lectura relacional.
+// Todas las entidades principales usan lectura relacional.
+// Si la tabla tiene menos de `min` registros, sbLoad cae al store/SQLite como fallback.
 const _RELATIONAL_TABLES = {
     products: { table: 'products', min: 1, map: row => ({
         ...row, stockMin: row.stock_min, imageUrl: row.image_url,
@@ -766,7 +763,39 @@ const _RELATIONAL_TABLES = {
     clients: { table: 'clients', min: 1, map: row => ({
         ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase
     })},
-    categories: { table: 'categories', min: 1, map: row => ({ ...row }) }
+    categories: { table: 'categories', min: 1, map: row => ({ ...row }) },
+    pedidos: { table: 'orders', min: 1, map: row => ({
+        id: row.id, folio: row.folio, cliente: row.cliente, telefono: row.telefono,
+        redes: row.redes, fecha: row.fecha, entrega: row.entrega, concepto: row.concepto,
+        cantidad: row.cantidad || 1, costo: row.costo || 0, anticipo: row.anticipo || 0,
+        total: row.total || 0, resta: row.resta || 0, notas: row.notas,
+        status: row.status || 'confirmado', fechaCreacion: row.fecha_creacion,
+        productosInventario: row.productos_inventario || [],
+        inventarioDescontado: row.inventario_descontado === true,
+        fromQuote: row.from_quote, whatsapp: row.whatsapp, facebook: row.facebook,
+        lugarEntrega: row.lugar_entrega, costoMateriales: row.costo_materiales || 0,
+        prioridad: row.prioridad || 'normal', notasInternas: row.notas_internas,
+        pagos: row.pagos || [], empaques: row.empaques || [],
+        historialEstados: row.historial_estados || [],
+        fechaUltimoEstado: row.fecha_ultimo_estado, fechaPedido: row.fecha_pedido,
+        empaquesDescontados: row.empaques_descontados === true
+    })},
+    pedidosFinalizados: { table: 'orders_finalizados', min: 1, map: row => ({
+        id: row.id, folio: row.folio, cliente: row.cliente, telefono: row.telefono,
+        redes: row.redes, fecha: row.fecha, entrega: row.entrega, concepto: row.concepto,
+        cantidad: row.cantidad || 1, costo: row.costo || 0, anticipo: row.anticipo || 0,
+        total: row.total || 0, resta: row.resta || 0, notas: row.notas,
+        status: row.status || 'finalizado', fechaCreacion: row.fecha_creacion,
+        fechaFinalizado: row.fecha_finalizado,
+        productosInventario: row.productos_inventario || [],
+        inventarioDescontado: row.inventario_descontado === true,
+        fromQuote: row.from_quote, whatsapp: row.whatsapp, facebook: row.facebook,
+        lugarEntrega: row.lugar_entrega, costoMateriales: row.costo_materiales || 0,
+        prioridad: row.prioridad || 'normal', notasInternas: row.notas_internas,
+        pagos: row.pagos || [], empaques: row.empaques || [],
+        historialEstados: row.historial_estados || [],
+        fechaPedido: row.fecha_pedido, empaquesDescontados: row.empaques_descontados === true
+    })}
 };
 
 async function _loadFromTable(key) {
@@ -786,6 +815,33 @@ async function _loadFromTable(key) {
         return null;
     }
 }
+
+// Migración one-time: si la tabla relacional está vacía pero tenemos datos locales,
+// empuja los datos a la tabla relacional para que las lecturas funcionen.
+async function _migrateToRelationalIfEmpty() {
+    if (!db) return;
+    const pairs = [
+        { key: 'pedidos', saveFn: typeof savePedidos === 'function' ? savePedidos : null },
+        { key: 'pedidosFinalizados', saveFn: typeof savePedidosFinalizados === 'function' ? savePedidosFinalizados : null },
+        { key: 'clients', saveFn: typeof saveClients === 'function' ? saveClients : null },
+    ];
+    for (const { key, saveFn } of pairs) {
+        const cfg = _RELATIONAL_TABLES[key];
+        if (!cfg) continue;
+        try {
+            const { data } = await _withTimeout(db.from(cfg.table).select('id').limit(1), 8000);
+            if (data && data.length > 0) continue;
+            const localData = window[key];
+            if (!Array.isArray(localData) || localData.length === 0) continue;
+            console.log(`[DB] Migrating ${localData.length} ${key} to ${cfg.table}...`);
+            if (saveFn) await saveFn();
+            console.log(`[DB] ✓ ${key} migrated to relational table`);
+        } catch(e) {
+            console.warn(`[DB] Migration ${key} failed:`, e?.message);
+        }
+    }
+}
+window._migrateToRelationalIfEmpty = _migrateToRelationalIfEmpty;
 
 async function sbLoad(key, def) {
     // Lectura relacional: intenta tabla individual primero (más rápido)
@@ -1056,10 +1112,10 @@ function _calcStockParaSupabase(p) {
 
 function saveProducts() {
     return (async () => {
-        // 1) Siempre escribir al store legacy (el CRM lo sigue leyendo de aquí)
-        await sbSave('products', products);
+        // 1) SQLite offline (sin store legacy — lectura ya es relacional)
+        sqliteStorage.set('products', products).catch(e => console.warn('[Maneki DB]', e?.message || e));
 
-        // 2) Dual write a tabla relacional public.products (para Lovable/web)
+        // 2) Tabla relacional public.products
         try {
             // Migrar imágenes base64 a Storage antes de escribir
         await Promise.all(products.map(p => _migrarBase64AStorage(p)));
@@ -1105,8 +1161,8 @@ function saveProducts() {
 }
 function saveClients() {
     (async () => {
-        await sbSave('clients', clients);
-        // Dual write a tabla relacional
+        sqliteStorage.set('clients', clients).catch(e => console.warn('[Maneki DB]', e?.message || e));
+        // Tabla relacional
         try {
             const rows = (window.clients||[]).map(c => ({
                 id: String(c.id), name: c.name||'', phone: c.phone||null,
@@ -1124,8 +1180,8 @@ function saveClients() {
 // ── saveSalesHistory — dual write: store (legacy) + public.sales_history ──
 function saveSalesHistory() {
     (async () => {
-        // 1) Store legacy
-        await sbSave('salesHistory', salesHistory);
+        // 1) SQLite offline
+        sqliteStorage.set('salesHistory', salesHistory).catch(e => console.warn('[Maneki DB]', e?.message || e));
 
         // 2) Tabla relacional public.sales_history
         try {
@@ -1154,7 +1210,7 @@ function saveSalesHistory() {
 function saveQuotes()        { (async () => { await sbSave('quotes', quotes); })(); }
 function saveIncomes() {
     (async () => {
-        await sbSave('incomes', incomes);
+        sqliteStorage.set('incomes', incomes).catch(e => console.warn('[Maneki DB]', e?.message || e));
         try {
             const rows = (window.incomes||[]).map(i => ({
                 id: typeof i.id==='number'?i.id:undefined, concept: i.concept||i.concepto||null,
@@ -1169,7 +1225,7 @@ function saveIncomes() {
 }
 function saveExpenses() {
     (async () => {
-        await sbSave('expenses', expenses);
+        sqliteStorage.set('expenses', expenses).catch(e => console.warn('[Maneki DB]', e?.message || e));
         try {
             const rows = (window.expenses||[]).map(e => ({
                 id: typeof e.id==='number'?e.id:undefined, concept: e.concept||e.concepto||null,
@@ -1188,8 +1244,8 @@ function savePayables()      { (async () => { await sbSave('payables', payables)
 // ── savePedidos — dual write: store (legacy) + public.orders ──
 function savePedidos() {
     return (async () => {
-        // 1) Store legacy
-        await sbSave('pedidos', pedidos);
+        // 1) SQLite offline
+        sqliteStorage.set('pedidos', pedidos).catch(e => console.warn('[Maneki DB]', e?.message || e));
 
         // 2) Tabla relacional public.orders
         try {
@@ -1237,8 +1293,8 @@ function savePedidos() {
 // ── savePedidosFinalizados — dual write: store (legacy) + public.orders_finalizados ──
 function savePedidosFinalizados() {
     return (async () => {
-        // 1) Store legacy
-        await sbSave('pedidosFinalizados', pedidosFinalizados);
+        // 1) SQLite offline
+        sqliteStorage.set('pedidosFinalizados', pedidosFinalizados).catch(e => console.warn('[Maneki DB]', e?.message || e));
 
         // 2) Tabla relacional public.orders_finalizados
         try {

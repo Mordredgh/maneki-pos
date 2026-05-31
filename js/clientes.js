@@ -1,12 +1,7 @@
 // ── Validación de email ──────────────────────────────────────────────────────
 function _validEmail(e) { return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
-// ── FIX C1: escape para atributos onclick con datos de cliente ────────────────
-function _escAttr(v) {
-    return String(v == null ? '' : v)
-        .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
-        .replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+const _escAttr = window._esc;
 
 // ── NTH-10: Ordenamiento de tabla de clientes ────────────────────────────────
 let _clientesSortCol = 'name';
