@@ -335,28 +335,22 @@ function renderBienvenida() {
 }
 
 function updateStorePreview() {
-    // Guard: la sección configuración puede ser un <template> lazy aún no activado
-    const previewEmoji = document.getElementById('previewEmoji');
-    if (!previewEmoji) return;
     if (storeConfig.logoMode === 'image' && typeof storeLogo !== 'undefined' && storeLogo) {
-        previewEmoji.innerHTML =
+        document.getElementById('previewEmoji').innerHTML =
             `<img src="${typeof _validateImgUrl==='function'?_validateImgUrl(storeLogo):storeLogo}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
     } else {
-        previewEmoji.textContent = (document.getElementById('configEmoji')||{}).value || '🐱';
+        document.getElementById('previewEmoji').textContent = document.getElementById('configEmoji').value || '🐱';
     }
-    const pn = document.getElementById('previewName');
-    const ps = document.getElementById('previewSlogan');
-    if (pn) pn.textContent = (document.getElementById('configName')||{}).value || 'Maneki Store';
-    if (ps) ps.textContent = (document.getElementById('configSlogan')||{}).value || '';
-    const phone = (document.getElementById('configPhone')||{}).value || '';
-    const fb    = (document.getElementById('configFacebook')||{}).value || '';
-    const email = (document.getElementById('configEmail')||{}).value || '';
+    document.getElementById('previewName').textContent   = document.getElementById('configName').value || 'Maneki Store';
+    document.getElementById('previewSlogan').textContent = document.getElementById('configSlogan').value || '';
+    const phone = document.getElementById('configPhone').value;
+    const fb    = document.getElementById('configFacebook').value;
+    const email = document.getElementById('configEmail').value;
     let contactHTML = '';
     if (phone) contactHTML += `<p>📱 ${_esc(phone)}</p>`;
     if (fb)    contactHTML += `<p>📘 ${_esc(fb)}</p>`;
     if (email) contactHTML += `<p>✉️ ${_esc(email)}</p>`;
-    const pc = document.getElementById('previewContact');
-    if (pc) pc.innerHTML = contactHTML;
+    document.getElementById('previewContact').innerHTML = contactHTML;
 }
 
 function loadStoreConfigUI() {

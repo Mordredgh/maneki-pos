@@ -280,7 +280,6 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <!-- EXTRACTABLE: dashboard-section (starts here, ~223 lines) -->
 <section id="dashboard-section" class="p-5 md:p-8 animate-fade-in">
-  <template id="dashboard-section-tpl">
   <div class="max-w-7xl mx-auto">
 
     <div class="mb-7 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -503,7 +502,6 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 
   </div>
-  </template>
 </section>
 <!-- END EXTRACTABLE: dashboard-section -->
 
@@ -1596,7 +1594,6 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <!-- EXTRACTABLE: pedidos-section (starts here, ~244 lines) -->
 <section id="pedidos-section" class="p-4 md:p-8 hidden">
-    <template id="pedidos-section-tpl">
     <div class="max-w-full mx-auto">
 
         <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
@@ -1840,13 +1837,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div id="histPaginacion" class="mt-2"></div>
         </div>
     </div>
-    </template>
 </section>
 <!-- END EXTRACTABLE: pedidos-section -->
 
 <!-- EXTRACTABLE: configuracion-section (starts here, ~228 lines) -->
 <section id="configuracion-section" class="p-4 md:p-8 hidden">
-    <template id="configuracion-section-tpl">
     <div class="max-w-3xl mx-auto">
         <div class="mb-8">
             <div class="mk-section-header"><div class="mk-sh-icon">&#9881;&#65039;</div><div class="mk-sh-text"><h2>Configuraci&#243;n</h2><p>Personaliza tu experiencia Maneki Store</p></div></div>
@@ -2074,7 +2069,6 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
     </div>
-    </template>
 </section>
 <!-- END EXTRACTABLE: configuracion-section -->
     </main>
@@ -3413,9 +3407,6 @@ input:focus, select:focus, textarea:focus, button:focus {
        Lazy loading activo: ~317 KB en arranque (antes ~1.1 MB)
        Los módulos de sección se cargan bajo demanda vía lazy-loader.js
   ═══════════════════════════════════════════════ -->
-
-  <!-- 0. Lazy templates — activa <template> al primer showSection -->
-  <script src="js/templates.js"></script>
 
   <!-- 1. Base: Supabase, SQLite, sync, offline -->
   <script src="js/db.js"></script>

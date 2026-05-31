@@ -792,13 +792,13 @@ async function _loadFromTable(key) {
 }
 
 async function sbLoad(key, def) {
-    // 0) Intentar tabla relacional primero (más rápido, sin JSON parse)
-    const relational = await _loadFromTable(key);
-    if (relational !== null) {
-        // Cache en SQLite para uso offline
-        sqliteStorage.set(key, relational).catch(() => {});
-        return relational;
-    }
+    // Lectura relacional DESACTIVADA por ahora — las tablas individuales
+    // no tienen todos los campos que el store JSON sí tiene (movimientos,
+    // compraPaquete, kitComponentes, etc.). El dual WRITE sigue activo.
+    // Para activar: descomentar las 2 líneas siguientes cuando las tablas
+    // tengan paridad completa con el store JSON.
+    // const relational = await _loadFromTable(key);
+    // if (relational !== null) { sqliteStorage.set(key, relational).catch(() => {}); return relational; }
 
     // 1) Intentar Supabase store (datos más frescos / multi-dispositivo)
     // ✅ FIX: usar .maybeSingle() en lugar de .single()
