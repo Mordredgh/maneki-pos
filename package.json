@@ -5,9 +5,11 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron .",
-    "build": "electron-builder",
-    "build:renderer": "node build-renderer.js",
+    "dev": "node build-renderer.js && electron .",
+    "watch": "node build-renderer.js --watch",
+    "build": "node build-renderer.js --prod && electron-builder",
+    "build:ts": "node build-renderer.js",
+    "build:prod": "node build-renderer.js --prod",
     "build:check": "npx tsc --noEmit",
     "postinstall": "electron-builder install-app-deps"
   },

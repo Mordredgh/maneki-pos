@@ -1,102 +1,99 @@
 function _resetMpVariantesUI() {
-    window._mpVariantes = [];
-    const chk = document.getElementById('mpUsaVariantes');
-    if (chk) chk.checked = false;
-    const panel = document.getElementById('mpVariantesPanel');
-    if (panel) panel.style.display = 'none';
-    const slider = document.getElementById('mpVariantesSlider');
-    if (slider) slider.style.background = '#d1d5db';
-    const thumb = document.getElementById('mpVariantesThumb');
-    if (thumb) thumb.style.left = '3px';
-    const stockRow = document.getElementById('mpStockRow');
-    if (stockRow) { stockRow.style.opacity = '1'; }
-    const stockEl = document.getElementById('mpStock');
-    if (stockEl) { stockEl.readOnly = false; stockEl.value = 0; }
-    const listEl = document.getElementById('mpVariantesList');
-    if (listEl) listEl.innerHTML = '<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>';
-    const totalBox = document.getElementById('mpVariantesStockTotal');
-    if (totalBox) totalBox.style.display = 'none';
+  window._mpVariantes = [];
+  const chk = document.getElementById("mpUsaVariantes");
+  if (chk) chk.checked = false;
+  const panel = document.getElementById("mpVariantesPanel");
+  if (panel) panel.style.display = "none";
+  const slider = document.getElementById("mpVariantesSlider");
+  if (slider) slider.style.background = "#d1d5db";
+  const thumb = document.getElementById("mpVariantesThumb");
+  if (thumb) thumb.style.left = "3px";
+  const stockRow = document.getElementById("mpStockRow");
+  if (stockRow) {
+    stockRow.style.opacity = "1";
+  }
+  const stockEl = document.getElementById("mpStock");
+  if (stockEl) {
+    stockEl.readOnly = false;
+    stockEl.value = 0;
+  }
+  const listEl = document.getElementById("mpVariantesList");
+  if (listEl) listEl.innerHTML = '<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>';
+  const totalBox = document.getElementById("mpVariantesStockTotal");
+  if (totalBox) totalBox.style.display = "none";
 }
-
 function closeMateriaPrimaModal() {
-    if (typeof closeModal === 'function') closeModal('mpModal');
-    const form = document.getElementById('mpForm');
-    if (form) form.reset();
-    window.modoEdicion = false; window.edicionProductoId = null;
-    window.currentProductImage = null; window.currentProductImageFile = null;
-    window._mpTagsActuales = [];
-    _resetMpVariantesUI();
-    renderMpTags();
+  if (typeof closeModal === "function") closeModal("mpModal");
+  const form = document.getElementById("mpForm");
+  if (form) form.reset();
+  window.modoEdicion = false;
+  window.edicionProductoId = null;
+  window.currentProductImage = null;
+  window.currentProductImageFile = null;
+  window._mpTagsActuales = [];
+  _resetMpVariantesUI();
+  renderMpTags();
 }
 window.closeMateriaPrimaModal = closeMateriaPrimaModal;
-
 function renderMpTags() {
-    const container = document.getElementById('mpTagsGrid');
-    if (!container) return;
-    container.innerHTML = TAGS_MATERIA_PRIMA.map(tag => {
-        const active = (window._mpTagsActuales || []).includes(tag);
-        return `<button type="button" onclick="toggleMpTag('${tag}')"
-            id="mptag-${tag.replace(/[^a-zA-Z0-9]/g,'')}"
+  const container = document.getElementById("mpTagsGrid");
+  if (!container) return;
+  container.innerHTML = TAGS_MATERIA_PRIMA.map((tag) => {
+    const active = (window._mpTagsActuales || []).includes(tag);
+    return `<button type="button" onclick="toggleMpTag('${tag}')"
+            id="mptag-${tag.replace(/[^a-zA-Z0-9]/g, "")}"
             style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
-                border:1.5px solid ${active ? '#C5A572' : '#e5e7eb'};
-                background:${active ? '#FFF9F0' : '#fff'};
-                color:${active ? '#92400e' : '#6b7280'};">
+                border:1.5px solid ${active ? "#C5A572" : "#e5e7eb"};
+                background:${active ? "#FFF9F0" : "#fff"};
+                color:${active ? "#92400e" : "#6b7280"};">
             ${tag}
         </button>`;
-    }).join('');
-
-    // Mostrar tags personalizados seleccionados
-    const customContainer = document.getElementById('mpTagsCustomSelected');
-    if (customContainer) {
-        const customTags = (window._mpTagsActuales || []).filter(t => !TAGS_MATERIA_PRIMA.includes(t));
-        customContainer.innerHTML = customTags.map(t =>
-            `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fef3c7;border:1px solid #fde68a;border-radius:99px;font-size:12px;font-weight:600;color:#92400e;">
+  }).join("");
+  const customContainer = document.getElementById("mpTagsCustomSelected");
+  if (customContainer) {
+    const customTags = (window._mpTagsActuales || []).filter((t) => !TAGS_MATERIA_PRIMA.includes(t));
+    customContainer.innerHTML = customTags.map(
+      (t) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fef3c7;border:1px solid #fde68a;border-radius:99px;font-size:12px;font-weight:600;color:#92400e;">
                 ${_esc(t)}
                 <button type="button" onclick="removeMpTag('${_esc(t)}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 1px;line-height:1;">✕</button>
             </span>`
-        ).join('');
-    }
+    ).join("");
+  }
 }
 window.renderMpTags = renderMpTags;
-
 function toggleMpTag(tag) {
-    window._mpTagsActuales = window._mpTagsActuales || [];
-    const idx = window._mpTagsActuales.indexOf(tag);
-    if (idx > -1) window._mpTagsActuales.splice(idx, 1);
-    else window._mpTagsActuales.push(tag);
-    renderMpTags();
+  window._mpTagsActuales = window._mpTagsActuales || [];
+  const idx = window._mpTagsActuales.indexOf(tag);
+  if (idx > -1) window._mpTagsActuales.splice(idx, 1);
+  else window._mpTagsActuales.push(tag);
+  renderMpTags();
 }
 window.toggleMpTag = toggleMpTag;
-
 function removeMpTag(tag) {
-    window._mpTagsActuales = (window._mpTagsActuales || []).filter(t => t !== tag);
-    renderMpTags();
+  window._mpTagsActuales = (window._mpTagsActuales || []).filter((t) => t !== tag);
+  renderMpTags();
 }
 window.removeMpTag = removeMpTag;
-
 function agregarMpTagCustom() {
-    const input = document.getElementById('mpTagCustomInput');
-    if (!input) return;
-    const val = input.value.trim();
-    if (!val) return;
-    window._mpTagsActuales = window._mpTagsActuales || [];
-    if (!window._mpTagsActuales.includes(val)) {
-        window._mpTagsActuales.push(val);
-        renderMpTags();
-    }
-    input.value = '';
-    input.focus();
+  const input = document.getElementById("mpTagCustomInput");
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  window._mpTagsActuales = window._mpTagsActuales || [];
+  if (!window._mpTagsActuales.includes(val)) {
+    window._mpTagsActuales.push(val);
+    renderMpTags();
+  }
+  input.value = "";
+  input.focus();
 }
 window.agregarMpTagCustom = agregarMpTagCustom;
-
-// Inyectar el modal de Materia Prima en el DOM cuando esté listo
 function injectMpModal() {
-    if (document.getElementById('mpModal')) return; // Ya existe
-
-    const modal = document.createElement('div');
-    modal.id = 'mpModal';
-    modal.className = 'modal';
-    modal.innerHTML = `
+  if (document.getElementById("mpModal")) return;
+  const modal = document.createElement("div");
+  modal.id = "mpModal";
+  modal.className = "modal";
+  modal.innerHTML = `
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 animate-fade-in" style="margin-left:auto;margin-right:auto;max-height:92vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800">🏭 Nueva Materia Prima</h3>
@@ -324,53 +321,43 @@ function injectMpModal() {
             </button>
         </form>
     </div>`;
-
-    document.body.appendChild(modal);
-
-    // Setup imagen upload para el nuevo modal
-    setTimeout(() => {
-        const input = document.getElementById('mpProductImage');
-        if (input && !input._mkBound) {
-            input._mkBound = true;
-            input.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                window.currentProductImageFile = file;
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    const img = document.getElementById('mpPreviewImg');
-                    const pre = document.getElementById('mpImagePreview');
-                    if (img) img.src = ev.target.result;
-                    if (pre) pre.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Form submit de materia prima
-        const mpForm = document.getElementById('mpForm');
-        if (mpForm && !mpForm._mkSubmitBound) {
-            mpForm._mkSubmitBound = true;
-            mpForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await guardarMateriaPrima();
-            });
-        }
-    }, 100);
+  document.body.appendChild(modal);
+  setTimeout(() => {
+    const input = document.getElementById("mpProductImage");
+    if (input && !input._mkBound) {
+      input._mkBound = true;
+      input.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        window.currentProductImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = document.getElementById("mpPreviewImg");
+          const pre = document.getElementById("mpImagePreview");
+          if (img) img.src = ev.target.result;
+          if (pre) pre.classList.remove("hidden");
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    const mpForm = document.getElementById("mpForm");
+    if (mpForm && !mpForm._mkSubmitBound) {
+      mpForm._mkSubmitBound = true;
+      mpForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        await guardarMateriaPrima();
+      });
+    }
+  }, 100);
 }
 window.injectMpModal = injectMpModal;
-
-// ══════════════════════════════════════════════════════════════════════════════
-// SERVICIOS Y CONSUMIBLES — tipo:'servicio' (sin stock, solo costo por uso)
-// ══════════════════════════════════════════════════════════════════════════════
-const _SVC_EMOJIS = ['⚙️','🔧','💡','🖨️','✂️','🔩','💻','🎨','🔥','⚡','🧲','🛠️'];
-
+const _SVC_EMOJIS = ["⚙️", "🔧", "💡", "🖨️", "✂️", "🔩", "💻", "🎨", "🔥", "⚡", "🧲", "🛠️"];
 function injectSvcModal() {
-    if (document.getElementById('svcModal')) return;
-    const modal = document.createElement('div');
-    modal.id = 'svcModal';
-    modal.className = 'modal';
-    modal.innerHTML = `
+  if (document.getElementById("svcModal")) return;
+  const modal = document.createElement("div");
+  modal.id = "svcModal";
+  modal.className = "modal";
+  modal.innerHTML = `
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in" style="margin:auto;max-height:90vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-gray-800">⚙️ <span id="svcModalTitle">Nuevo Servicio</span></h3>
@@ -388,7 +375,7 @@ function injectSvcModal() {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Ícono</label>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-                    ${_SVC_EMOJIS.map(e=>`<button type="button" onclick="document.getElementById('svcEmoji').value='${e}';document.querySelectorAll('.svc-emoji-btn').forEach(b=>b.style.background='#f3f4f6');this.style.background='#ede9fe';" class="svc-emoji-btn" style="width:38px;height:38px;border-radius:10px;border:1px solid #e5e7eb;background:#f3f4f6;font-size:1.3rem;cursor:pointer;">${e}</button>`).join('')}
+                    ${_SVC_EMOJIS.map((e) => `<button type="button" onclick="document.getElementById('svcEmoji').value='${e}';document.querySelectorAll('.svc-emoji-btn').forEach(b=>b.style.background='#f3f4f6');this.style.background='#ede9fe';" class="svc-emoji-btn" style="width:38px;height:38px;border-radius:10px;border:1px solid #e5e7eb;background:#f3f4f6;font-size:1.3rem;cursor:pointer;">${e}</button>`).join("")}
                 </div>
                 <input type="hidden" id="svcEmoji" value="⚙️">
             </div>
@@ -420,254 +407,251 @@ function injectSvcModal() {
             </button>
         </form>
     </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if (e.target === modal) closeServicioModal(); });
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeServicioModal();
+  });
 }
 window.injectSvcModal = injectSvcModal;
-
 function openServicioModal(editId) {
-    injectSvcModal();
-    document.getElementById('svcEditId').value = editId || '';
-    document.getElementById('svcModalTitle').textContent = editId ? 'Editar Servicio' : 'Nuevo Servicio';
-    document.getElementById('svcNombre').value = '';
-    document.getElementById('svcEmoji').value = '⚙️';
-    document.getElementById('svcCosto').value = '';
-    document.getElementById('svcSku').value = '';
-    document.getElementById('svcNotas').value = '';
-    // Resetear botones emoji
-    document.querySelectorAll('.svc-emoji-btn').forEach(b => b.style.background = '#f3f4f6');
-
-    if (editId) {
-        const p = (window.products||[]).find(x => String(x.id) === String(editId));
-        if (p) {
-            document.getElementById('svcNombre').value = p.name || '';
-            document.getElementById('svcEmoji').value = p.image || '⚙️';
-            document.getElementById('svcCosto').value = p.cost || '';
-            document.getElementById('svcSku').value = p.sku || '';
-            document.getElementById('svcNotas').value = p.notas || '';
-            // Marcar emoji activo
-            document.querySelectorAll('.svc-emoji-btn').forEach(b => {
-                if (b.textContent === (p.image || '⚙️')) b.style.background = '#ede9fe';
-            });
-        }
+  injectSvcModal();
+  document.getElementById("svcEditId").value = editId || "";
+  document.getElementById("svcModalTitle").textContent = editId ? "Editar Servicio" : "Nuevo Servicio";
+  document.getElementById("svcNombre").value = "";
+  document.getElementById("svcEmoji").value = "⚙️";
+  document.getElementById("svcCosto").value = "";
+  document.getElementById("svcSku").value = "";
+  document.getElementById("svcNotas").value = "";
+  document.querySelectorAll(".svc-emoji-btn").forEach((b) => b.style.background = "#f3f4f6");
+  if (editId) {
+    const p = (window.products || []).find((x) => String(x.id) === String(editId));
+    if (p) {
+      document.getElementById("svcNombre").value = p.name || "";
+      document.getElementById("svcEmoji").value = p.image || "⚙️";
+      document.getElementById("svcCosto").value = p.cost || "";
+      document.getElementById("svcSku").value = p.sku || "";
+      document.getElementById("svcNotas").value = p.notas || "";
+      document.querySelectorAll(".svc-emoji-btn").forEach((b) => {
+        if (b.textContent === (p.image || "⚙️")) b.style.background = "#ede9fe";
+      });
     }
-    openModal('svcModal');
+  }
+  openModal("svcModal");
 }
 window.openServicioModal = openServicioModal;
-
 async function guardarServicio() {
-    const nombre = document.getElementById('svcNombre').value.trim();
-    const costo  = parseFloat(document.getElementById('svcCosto').value) || 0;
-    const emoji  = document.getElementById('svcEmoji').value || '⚙️';
-    const notas  = document.getElementById('svcNotas').value.trim();
-    const skuInput = document.getElementById('svcSku').value.trim();
-    const editId = document.getElementById('svcEditId').value;
-
-    if (!nombre) { manekiToastExport('El nombre es requerido.', 'warn'); return; }
-
-    const _skuSuffix = (typeof crypto !== 'undefined' && crypto.randomUUID)
-        ? crypto.randomUUID().split('-')[0].toUpperCase()
-        : Math.random().toString(36).slice(2,7).toUpperCase();
-    const sku = skuInput || `SVC-${_skuSuffix}`;
-    if (!window.products) window.products = [];
-
-    if (editId) {
-        const idx = window.products.findIndex(p => String(p.id) === String(editId));
-        if (idx !== -1) {
-            window.products[idx] = { ...window.products[idx], name: nombre, cost: costo, image: emoji, notas, sku };
-        }
-    } else {
-        window.products.push({
-            id: _genId(), name: nombre, tipo: 'servicio',
-            cost: costo, price: 0, stock: null, stockMin: null,
-            category: 'servicios', image: emoji, notas, sku, tags: []
-        });
+  const nombre = document.getElementById("svcNombre").value.trim();
+  const costo = parseFloat(document.getElementById("svcCosto").value) || 0;
+  const emoji = document.getElementById("svcEmoji").value || "⚙️";
+  const notas = document.getElementById("svcNotas").value.trim();
+  const skuInput = document.getElementById("svcSku").value.trim();
+  const editId = document.getElementById("svcEditId").value;
+  if (!nombre) {
+    manekiToastExport("El nombre es requerido.", "warn");
+    return;
+  }
+  const _skuSuffix = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().split("-")[0].toUpperCase() : Math.random().toString(36).slice(2, 7).toUpperCase();
+  const sku = skuInput || `SVC-${_skuSuffix}`;
+  if (!window.products) window.products = [];
+  if (editId) {
+    const idx = window.products.findIndex((p) => String(p.id) === String(editId));
+    if (idx !== -1) {
+      window.products[idx] = { ...window.products[idx], name: nombre, cost: costo, image: emoji, notas, sku };
     }
-    saveProducts();
-    renderInventoryTable();
-    closeServicioModal();
-    if (window.MKS) MKS.notify();
-    manekiToastExport(`✅ Servicio "${nombre}" guardado.`, 'ok');
+  } else {
+    window.products.push({
+      id: _genId(),
+      name: nombre,
+      tipo: "servicio",
+      cost: costo,
+      price: 0,
+      stock: null,
+      stockMin: null,
+      category: "servicios",
+      image: emoji,
+      notas,
+      sku,
+      tags: []
+    });
+  }
+  saveProducts();
+  renderInventoryTable();
+  closeServicioModal();
+  if (window.MKS) MKS.notify();
+  manekiToastExport(`✅ Servicio "${nombre}" guardado.`, "ok");
 }
 window.guardarServicio = guardarServicio;
-
-function closeServicioModal() { closeModal('svcModal'); }
+function closeServicioModal() {
+  closeModal("svcModal");
+}
 window.closeServicioModal = closeServicioModal;
-
-// ── Funciones de compra por paquete (MP) ─────────────────────────────────
 function mpTogglePaquete() {
-    const chk    = document.getElementById('mpUsaPaquete');
-    const simple = document.getElementById('mpCostoSimple');
-    const paq    = document.getElementById('mpCostoPaquete');
-    const slider = document.getElementById('mpPaqueteSlider');
-    const thumb  = document.getElementById('mpPaqueteThumb');
-    const costoInput = document.getElementById('mpCosto');
-
-    if (!chk || !simple || !paq) return;
-
-    if (chk.checked) {
-        simple.style.display = 'none';
-        paq.style.display = 'block';
-        if (slider) slider.style.background = '#7c3aed';
-        if (thumb)  thumb.style.left = '20px';
-        // mpCosto ya no es requerido directamente — lo llena mpCalcCostoUnidad
-        if (costoInput) costoInput.removeAttribute('required');
-        mpCalcCostoUnidad();
-    } else {
-        simple.style.display = 'block';
-        paq.style.display = 'none';
-        if (slider) slider.style.background = '#d1d5db';
-        if (thumb)  thumb.style.left = '3px';
-        if (costoInput) costoInput.setAttribute('required', '');
-    }
+  const chk = document.getElementById("mpUsaPaquete");
+  const simple = document.getElementById("mpCostoSimple");
+  const paq = document.getElementById("mpCostoPaquete");
+  const slider = document.getElementById("mpPaqueteSlider");
+  const thumb = document.getElementById("mpPaqueteThumb");
+  const costoInput = document.getElementById("mpCosto");
+  if (!chk || !simple || !paq) return;
+  if (chk.checked) {
+    simple.style.display = "none";
+    paq.style.display = "block";
+    if (slider) slider.style.background = "#7c3aed";
+    if (thumb) thumb.style.left = "20px";
+    if (costoInput) costoInput.removeAttribute("required");
+    mpCalcCostoUnidad();
+  } else {
+    simple.style.display = "block";
+    paq.style.display = "none";
+    if (slider) slider.style.background = "#d1d5db";
+    if (thumb) thumb.style.left = "3px";
+    if (costoInput) costoInput.setAttribute("required", "");
+  }
 }
 window.mpTogglePaquete = mpTogglePaquete;
-
 function mpCalcCostoUnidad() {
-    const cant  = parseFloat(document.getElementById('mpPaqueteCantidad')?.value) || 0;
-    const precio = parseFloat(document.getElementById('mpPaquetePrecio')?.value) || 0;
-    const resultEl  = document.getElementById('mpCostoUnidadResult');
-    const costoHidden = document.getElementById('mpCostoCalculado') || document.getElementById('mpCosto');
-
-    if (cant > 0 && precio > 0) {
-        const costoUnidad = precio / cant;
-        if (resultEl) resultEl.textContent = '$' + costoUnidad.toFixed(4).replace(/\.?0+$/, '') ;
-        if (costoHidden) costoHidden.value = costoUnidad.toFixed(4);
-        // Color según el resultado
-        const box = document.getElementById('mpCostoUnidadBox');
-        if (box) box.style.background = '#ede9fe';
-    } else {
-        if (resultEl) resultEl.textContent = '$0.00';
-        if (costoHidden) costoHidden.value = '';
-    }
+  const cant = parseFloat(document.getElementById("mpPaqueteCantidad")?.value) || 0;
+  const precio = parseFloat(document.getElementById("mpPaquetePrecio")?.value) || 0;
+  const resultEl = document.getElementById("mpCostoUnidadResult");
+  const costoHidden = document.getElementById("mpCostoCalculado") || document.getElementById("mpCosto");
+  if (cant > 0 && precio > 0) {
+    const costoUnidad = precio / cant;
+    if (resultEl) resultEl.textContent = "$" + costoUnidad.toFixed(4).replace(/\.?0+$/, "");
+    if (costoHidden) costoHidden.value = costoUnidad.toFixed(4);
+    const box = document.getElementById("mpCostoUnidadBox");
+    if (box) box.style.background = "#ede9fe";
+  } else {
+    if (resultEl) resultEl.textContent = "$0.00";
+    if (costoHidden) costoHidden.value = "";
+  }
 }
 window.mpCalcCostoUnidad = mpCalcCostoUnidad;
-
-// ══════════════════════════════════════════════════════════════════════════
-// ── VARIANTES DE MATERIA PRIMA ────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════════════════════
 window._mpVariantes = window._mpVariantes ?? [];
-
 function mpToggleVariantes() {
-    const chk = document.getElementById('mpUsaVariantes');
-    const panel = document.getElementById('mpVariantesPanel');
-    const slider = document.getElementById('mpVariantesSlider');
-    const thumb = document.getElementById('mpVariantesThumb');
-    const stockRow = document.getElementById('mpStockRow');
-    if (!chk || !panel) return;
-    const on = chk.checked;
-    panel.style.display = on ? 'block' : 'none';
-    if (slider) slider.style.background = on ? '#6366f1' : '#d1d5db';
-    if (thumb) thumb.style.left = on ? '20px' : '3px';
-    // Si activamos variantes, el campo de stock general se oculta (el stock viene de las variantes)
-    if (stockRow) {
-        stockRow.style.opacity = on ? '0.4' : '1';
-        const inp = document.getElementById('mpStock');
-        if (inp) {
-            inp.readOnly = on;
-            if (on) {
-                inp.value = 0;
-            } else {
-                // BUG-INV-STOCK FIX: al desactivar variantes, transferir el total
-                // acumulado al campo de stock simple para no perder los datos.
-                const varTotal = (window._mpVariantes || [])
-                    .reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
-                if (varTotal > 0) inp.value = varTotal;
-            }
-        }
+  const chk = document.getElementById("mpUsaVariantes");
+  const panel = document.getElementById("mpVariantesPanel");
+  const slider = document.getElementById("mpVariantesSlider");
+  const thumb = document.getElementById("mpVariantesThumb");
+  const stockRow = document.getElementById("mpStockRow");
+  if (!chk || !panel) return;
+  const on = chk.checked;
+  panel.style.display = on ? "block" : "none";
+  if (slider) slider.style.background = on ? "#6366f1" : "#d1d5db";
+  if (thumb) thumb.style.left = on ? "20px" : "3px";
+  if (stockRow) {
+    stockRow.style.opacity = on ? "0.4" : "1";
+    const inp = document.getElementById("mpStock");
+    if (inp) {
+      inp.readOnly = on;
+      if (on) {
+        inp.value = 0;
+      } else {
+        const varTotal = (window._mpVariantes || []).reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+        if (varTotal > 0) inp.value = varTotal;
+      }
     }
-    if (!on) { window._mpVariantes = []; renderVariantesMp(); }
+  }
+  if (!on) {
+    window._mpVariantes = [];
+    renderVariantesMp();
+  }
 }
 window.mpToggleVariantes = mpToggleVariantes;
-
 function mpVarTipoRapido(tipo, valor) {
-    const tipoEl = document.getElementById('mpVarTipo');
-    const valorEl = document.getElementById('mpVarValor');
-    if (tipoEl) tipoEl.value = tipo;
-    if (valorEl) {
-        if (valor) { valorEl.value = valor; agregarVarianteMp(); }
-        else { valorEl.value = ''; valorEl.focus(); }
+  const tipoEl = document.getElementById("mpVarTipo");
+  const valorEl = document.getElementById("mpVarValor");
+  if (tipoEl) tipoEl.value = tipo;
+  if (valorEl) {
+    if (valor) {
+      valorEl.value = valor;
+      agregarVarianteMp();
+    } else {
+      valorEl.value = "";
+      valorEl.focus();
     }
+  }
 }
 window.mpVarTipoRapido = mpVarTipoRapido;
-
 function agregarVarianteMp() {
-    const tipo  = (document.getElementById('mpVarTipo')?.value || '').trim();
-    const valor = (document.getElementById('mpVarValor')?.value || '').trim();
-    if (!tipo || !valor) { manekiToastExport('⚠️ Ingresa tipo y valor de la variante', 'warn'); return; }
-    window._mpVariantes = window._mpVariantes || [];
-    // Evitar duplicados exactos
-    const existe = window._mpVariantes.find(v => v.type === tipo && v.value === valor);
-    if (existe) { manekiToastExport('⚠️ Ya existe esta variante', 'warn'); return; }
-    window._mpVariantes.push({ type: tipo, value: valor, qty: 0 });
-    const tipoEl = document.getElementById('mpVarTipo');
-    const valorEl = document.getElementById('mpVarValor');
-    if (tipoEl) tipoEl.value = '';
-    if (valorEl) { valorEl.value = ''; }
-    document.getElementById('mpVarTipo')?.focus();
-    renderVariantesMp();
+  const tipo = (document.getElementById("mpVarTipo")?.value || "").trim();
+  const valor = (document.getElementById("mpVarValor")?.value || "").trim();
+  if (!tipo || !valor) {
+    manekiToastExport("⚠️ Ingresa tipo y valor de la variante", "warn");
+    return;
+  }
+  window._mpVariantes = window._mpVariantes || [];
+  const existe = window._mpVariantes.find((v) => v.type === tipo && v.value === valor);
+  if (existe) {
+    manekiToastExport("⚠️ Ya existe esta variante", "warn");
+    return;
+  }
+  window._mpVariantes.push({ type: tipo, value: valor, qty: 0 });
+  const tipoEl = document.getElementById("mpVarTipo");
+  const valorEl = document.getElementById("mpVarValor");
+  if (tipoEl) tipoEl.value = "";
+  if (valorEl) {
+    valorEl.value = "";
+  }
+  document.getElementById("mpVarTipo")?.focus();
+  renderVariantesMp();
 }
 window.agregarVarianteMp = agregarVarianteMp;
-
 function eliminarVarianteMp(idx) {
-    (window._mpVariantes || []).splice(idx, 1);
-    renderVariantesMp();
+  (window._mpVariantes || []).splice(idx, 1);
+  renderVariantesMp();
 }
 window.eliminarVarianteMp = eliminarVarianteMp;
-
 function updateVarianteMpQty(idx, val) {
-    if (window._mpVariantes && window._mpVariantes[idx]) {
-        window._mpVariantes[idx].qty = Math.max(0, parseInt(val) || 0);
-        actualizarStockTotalMp();
-    }
+  if (window._mpVariantes && window._mpVariantes[idx]) {
+    window._mpVariantes[idx].qty = Math.max(0, parseInt(val) || 0);
+    actualizarStockTotalMp();
+  }
 }
 window.updateVarianteMpQty = updateVarianteMpQty;
-
 function actualizarStockTotalMp() {
-    const total = (window._mpVariantes || []).reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
-    const box = document.getElementById('mpVariantesStockTotal');
-    if (box) {
-        if ((window._mpVariantes || []).length > 0) {
-            box.style.display = 'block';
-            box.textContent = `📦 Stock total: ${total} unidades`;
-        } else {
-            box.style.display = 'none';
-        }
+  const total = (window._mpVariantes || []).reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+  const box = document.getElementById("mpVariantesStockTotal");
+  if (box) {
+    if ((window._mpVariantes || []).length > 0) {
+      box.style.display = "block";
+      box.textContent = `📦 Stock total: ${total} unidades`;
+    } else {
+      box.style.display = "none";
     }
-    // Sincronizar campo mpStock con la suma
-    const stockEl = document.getElementById('mpStock');
-    if (stockEl && document.getElementById('mpUsaVariantes')?.checked) {
-        stockEl.value = total;
-    }
+  }
+  const stockEl = document.getElementById("mpStock");
+  if (stockEl && document.getElementById("mpUsaVariantes")?.checked) {
+    stockEl.value = total;
+  }
 }
-
 function renderVariantesMp() {
-    const container = document.getElementById('mpVariantesList');
-    if (!container) return;
-    if (!window._mpVariantes || !window._mpVariantes.length) {
-        container.innerHTML = '<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>';
-        actualizarStockTotalMp();
-        return;
-    }
-    container.innerHTML = window._mpVariantes.map((v, i) => `
+  const container = document.getElementById("mpVariantesList");
+  if (!container) return;
+  if (!window._mpVariantes || !window._mpVariantes.length) {
+    container.innerHTML = '<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>';
+    actualizarStockTotalMp();
+    return;
+  }
+  container.innerHTML = window._mpVariantes.map((v, i) => `
         <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;">
             <div style="flex:1;min-width:0;">
-                <span style="font-size:.85rem;color:#374151;">${_esc(v.type)}: ${_mkColorDot(v.type,_esc(v.value))}</span>
+                <span style="font-size:.85rem;color:#374151;">${_esc(v.type)}: ${_mkColorDot(v.type, _esc(v.value))}</span>
             </div>
             <label style="font-size:.75rem;color:#6b7280;font-weight:600;white-space:nowrap;">Stock:</label>
             <div style="display:flex;align-items:center;gap:2px;">
-                <button type="button" onclick="updateVarianteMpQty(${i},${(v.qty||0)-1});renderVariantesMp();"
+                <button type="button" onclick="updateVarianteMpQty(${i},${(v.qty || 0) - 1});renderVariantesMp();"
                     style="width:22px;height:22px;border:1px solid #e2e8f0;border-radius:6px;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">−</button>
-                <input type="number" value="${v.qty||0}" min="0"
+                <input type="number" value="${v.qty || 0}" min="0"
                     onchange="updateVarianteMpQty(${i},this.value)"
                     style="width:52px;text-align:center;border:1.5px solid #6366f1;border-radius:8px;padding:2px 4px;font-weight:700;font-size:.85rem;">
-                <button type="button" onclick="updateVarianteMpQty(${i},${(v.qty||0)+1});renderVariantesMp();"
+                <button type="button" onclick="updateVarianteMpQty(${i},${(v.qty || 0) + 1});renderVariantesMp();"
                     style="width:22px;height:22px;border:1px solid #e2e8f0;border-radius:6px;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">+</button>
             </div>
             <span style="font-size:.72rem;color:#9ca3af;">pzs</span>
             <button type="button" onclick="eliminarVarianteMp(${i})"
                 style="width:24px;height:24px;background:#fee2e2;border:none;border-radius:6px;color:#ef4444;cursor:pointer;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;">✕</button>
-        </div>`).join('');
-    actualizarStockTotalMp();
+        </div>`).join("");
+  actualizarStockTotalMp();
 }
 window.renderVariantesMp = renderVariantesMp;
+//# sourceMappingURL=inventory-3.js.map

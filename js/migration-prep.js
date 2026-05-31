@@ -1,60 +1,41 @@
-// ══════════════════════════════════════════════════════════════
-// MANEKI — Preparación para migración de Supabase
-//
-// ESTADO ACTUAL: Todo en tabla `store` como key-value JSON blobs
-//   { key: 'products', value: '[...todo el array como string...]' }
-//   Problema: cada save de 1 producto sube TODOS los productos
-//
-// ESTADO OBJETIVO: Tablas relacionales individuales
-//   products(id, name, sku, price, cost, stock, category_id, ...)
-//   orders(id, folio, cliente, total, status, ...)
-//   order_items(id, order_id, product_id, quantity, price, ...)
-//   clients(id, name, phone, email, type, ...)
-//   sales(id, folio, date, total, method, customer, ...)
-//   expenses(id, concept, amount, date, category, ...)
-//
-// PLAN DE MIGRACIÓN (para ejecutar en sesión dedicada):
-// 1. Crear tablas con RLS en Supabase (SQL)
-// 2. Migrar datos de store.value → tablas individuales
-// 3. Reescribir sbSave/sbLoad para usar INSERT/UPDATE individuales
-// 4. Mantener store como fallback durante transición
-// ══════════════════════════════════════════════════════════════
-
 window._mkMigrationPrep = {
-    // Estimar tamaño de datos actuales
-    async estimateDataSize() {
-        const keys = ['products','pedidos','pedidosFinalizados','salesHistory',
-                      'clients','expenses','incomes','categories','quotes',
-                      'receivables','payables','equipos','stockMovimientos'];
-        const report = {};
-        let totalKB = 0;
-
-        for (const key of keys) {
-            const data = window[key] || [];
-            const json = JSON.stringify(data);
-            const kb = Math.round(json.length / 1024 * 10) / 10;
-            report[key] = {
-                records: Array.isArray(data) ? data.length : 1,
-                sizeKB: kb,
-                avgRecordBytes: Array.isArray(data) && data.length > 0
-                    ? Math.round(json.length / data.length) : 0
-            };
-            totalKB += kb;
-        }
-
-        report._total = { totalKB: Math.round(totalKB * 10) / 10 };
-        report._recommendation = totalKB > 500
-            ? '🔴 URGENTE: Más de 500KB en JSON blobs — migrar a tablas individuales'
-            : totalKB > 100
-                ? '🟡 PRONTO: Datos creciendo — planear migración'
-                : '🟢 OK por ahora, pero migrar antes de llegar a 500 registros por tabla';
-
-        return report;
-    },
-
-    // SQL para crear las tablas objetivo (dry-run — solo muestra el SQL)
-    getTargetSQL() {
-        return `
+  // Estimar tamaño de datos actuales
+  async estimateDataSize() {
+    const keys = [
+      "products",
+      "pedidos",
+      "pedidosFinalizados",
+      "salesHistory",
+      "clients",
+      "expenses",
+      "incomes",
+      "categories",
+      "quotes",
+      "receivables",
+      "payables",
+      "equipos",
+      "stockMovimientos"
+    ];
+    const report = {};
+    let totalKB = 0;
+    for (const key of keys) {
+      const data = window[key] || [];
+      const json = JSON.stringify(data);
+      const kb = Math.round(json.length / 1024 * 10) / 10;
+      report[key] = {
+        records: Array.isArray(data) ? data.length : 1,
+        sizeKB: kb,
+        avgRecordBytes: Array.isArray(data) && data.length > 0 ? Math.round(json.length / data.length) : 0
+      };
+      totalKB += kb;
+    }
+    report._total = { totalKB: Math.round(totalKB * 10) / 10 };
+    report._recommendation = totalKB > 500 ? "🔴 URGENTE: Más de 500KB en JSON blobs — migrar a tablas individuales" : totalKB > 100 ? "🟡 PRONTO: Datos creciendo — planear migración" : "🟢 OK por ahora, pero migrar antes de llegar a 500 registros por tabla";
+    return report;
+  },
+  // SQL para crear las tablas objetivo (dry-run — solo muestra el SQL)
+  getTargetSQL() {
+    return `
 -- ══════════════════════════════════════════════════
 -- MANEKI STORE — Schema objetivo (tablas relacionales)
 -- Ejecutar en Supabase SQL Editor
@@ -191,22 +172,20 @@ CREATE INDEX IF NOT EXISTS idx_sales_date ON mk_sales(date);
 CREATE INDEX IF NOT EXISTS idx_products_tipo ON mk_products(tipo);
 CREATE INDEX IF NOT EXISTS idx_products_category ON mk_products(category);
 `;
-    },
-
-    // Mostrar reporte en consola
-    async report() {
-        const data = await this.estimateDataSize();
-        console.log('%c📊 Maneki Migration Report', 'font-size:14px;font-weight:800;color:#C5A572');
-        console.table(data);
-        console.log(data._recommendation);
-        console.log('%c📝 SQL Schema:', 'font-weight:700');
-        console.log(this.getTargetSQL());
-        if (typeof manekiToastExport === 'function') {
-            manekiToastExport(`📊 Datos: ${data._total.totalKB}KB en JSON blobs. ${data._recommendation}`, 'info');
-        }
-        return data;
+  },
+  // Mostrar reporte en consola
+  async report() {
+    const data = await this.estimateDataSize();
+    console.log("%c📊 Maneki Migration Report", "font-size:14px;font-weight:800;color:#C5A572");
+    console.table(data);
+    console.log(data._recommendation);
+    console.log("%c📝 SQL Schema:", "font-weight:700");
+    console.log(this.getTargetSQL());
+    if (typeof manekiToastExport === "function") {
+      manekiToastExport(`📊 Datos: ${data._total.totalKB}KB en JSON blobs. ${data._recommendation}`, "info");
     }
+    return data;
+  }
 };
-
-// Accesible desde consola: _mkMigrationPrep.report()
-console.log('%c💡 Migration prep loaded — run _mkMigrationPrep.report() to see data analysis', 'color:#9ca3af;font-size:10px');
+console.log("%c💡 Migration prep loaded — run _mkMigrationPrep.report() to see data analysis", "color:#9ca3af;font-size:10px");
+//# sourceMappingURL=migration-prep.js.map
