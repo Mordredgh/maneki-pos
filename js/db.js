@@ -762,11 +762,11 @@ const _RELATIONAL_TABLES = {
         historialCostos: row.historial_costos, compraPaquete: row.compra_paquete,
         kitComponentes: row.kit_componentes, isKit: row.is_kit
     })},
-    salesHistory: { table: 'sales_history', min: 0, map: row => ({ ...row }) },
-    clients: { table: 'clients', min: 0, map: row => ({
+    salesHistory: { table: 'sales_history', min: 1, map: row => ({ ...row }) },
+    clients: { table: 'clients', min: 1, map: row => ({
         ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase
     })},
-    categories: { table: 'categories', min: 0, map: row => ({ ...row }) }
+    categories: { table: 'categories', min: 1, map: row => ({ ...row }) }
 };
 
 async function _loadFromTable(key) {
@@ -789,10 +789,11 @@ async function _loadFromTable(key) {
 
 async function sbLoad(key, def) {
     // Lectura relacional: intenta tabla individual primero (más rápido)
-    // Si falla o no hay datos, cae al store JSON como siempre
+    // NUNCA sobreescribir SQLite con datos relacionales — SQLite puede tener
+    // datos más frescos o completos (campos que la tabla relacional no tiene aún).
+    // Solo usamos la tabla relacional si tiene ≥1 row (min definido en config).
     const relational = await _loadFromTable(key);
     if (relational !== null) {
-        sqliteStorage.set(key, relational).catch(() => {});
         return relational;
     }
 
@@ -804,7 +805,17 @@ async function sbLoad(key, def) {
         if (!error && data) {
             try {
                 const parsed = JSON.parse(data.value);
-                // Guardar en SQLite local como caché (sin esperar)
+                // Si el store devuelve array vacío, verificar si SQLite tiene datos
+                // antes de aceptarlo como válido — evita que un store vacío borre datos reales
+                const _esArrayVacio = Array.isArray(parsed) && parsed.length === 0;
+                if (_esArrayVacio) {
+                    const _sqlite = await sqliteStorage.get(key, null);
+                    if (_sqlite !== null && Array.isArray(_sqlite) && _sqlite.length > 0) {
+                        console.log(`[sbLoad] store devuelve [] para "${key}" pero SQLite tiene ${_sqlite.length} items — usando SQLite`);
+                        return _sqlite;
+                    }
+                }
+                // Store tiene datos reales — guardar en SQLite y usar
                 sqliteStorage.set(key, parsed).catch(e => console.warn('[Maneki DB]', e?.message || e));
                 return parsed;
             } catch(e) { console.warn('Error parseando dato Supabase:', e); }
