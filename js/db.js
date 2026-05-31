@@ -747,6 +747,11 @@ async function sbSave(key, data) {
 // de la tabla (más rápido, sin parsear JSON blob gigante).
 // Si falla, sbLoad cae al store como siempre.
 // ══════════════════════════════════════════════════════════════
+// NOTA: pedidos y pedidosFinalizados NO usan lectura relacional —
+// la tabla orders tiene registros históricos que no reflejan el estado
+// actual (pedidos ya entregados siguen apareciendo como activos).
+// Estos datos vienen del store JSON que sí tiene el estado correcto.
+// Solo products, clients, categories y salesHistory usan lectura relacional.
 const _RELATIONAL_TABLES = {
     products: { table: 'products', min: 1, map: row => ({
         ...row, stockMin: row.stock_min, imageUrl: row.image_url,
@@ -756,23 +761,6 @@ const _RELATIONAL_TABLES = {
         rendimientoPorHoja: row.rendimiento_por_hoja, puntoReorden: row.punto_reorden,
         historialCostos: row.historial_costos, compraPaquete: row.compra_paquete,
         kitComponentes: row.kit_componentes, isKit: row.is_kit
-    })},
-    pedidos: { table: 'orders', min: 0, map: row => ({
-        ...row, fechaPedido: row.fecha_pedido || row.fecha, fechaCreacion: row.fecha_creacion,
-        productosInventario: row.productos_inventario, inventarioDescontado: row.inventario_descontado,
-        empaquesDescontados: row.empaques_descontados,
-        fromQuote: row.from_quote, lugarEntrega: row.lugar_entrega,
-        costoMateriales: row.costo_materiales, notasInternas: row.notas_internas,
-        historialEstados: row.historial_estados, fechaUltimoEstado: row.fecha_ultimo_estado
-    })},
-    pedidosFinalizados: { table: 'orders_finalizados', min: 0, map: row => ({
-        ...row, fechaPedido: row.fecha_pedido || row.fecha, fechaCreacion: row.fecha_creacion,
-        fechaFinalizado: row.fecha_finalizado,
-        productosInventario: row.productos_inventario, inventarioDescontado: row.inventario_descontado,
-        empaquesDescontados: row.empaques_descontados,
-        fromQuote: row.from_quote, lugarEntrega: row.lugar_entrega,
-        costoMateriales: row.costo_materiales, notasInternas: row.notas_internas,
-        historialEstados: row.historial_estados
     })},
     salesHistory: { table: 'sales_history', min: 0, map: row => ({ ...row }) },
     clients: { table: 'clients', min: 0, map: row => ({
