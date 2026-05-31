@@ -1823,9 +1823,9 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div class="flex justify-between items-center mb-4">
+            <div id="historialHeader" class="flex justify-between items-center mb-4">
                 <h3 class="font-bold text-gray-800 text-lg">📋 Historial de Pedidos Finalizados</h3>
-                <div class="flex gap-2 items-center">
+                <div id="historialControls" class="flex gap-2 items-center">
                     <input type="text" id="histPedidoBuscar" placeholder="Buscar..." oninput="(function(){clearTimeout(window._hpT);window._hpT=setTimeout(renderHistorialPedidos,160)})()"
                         class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none w-40">
                     <select id="histPedidoMes" onchange="renderHistorialPedidos()"
