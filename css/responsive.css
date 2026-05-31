@@ -89,8 +89,8 @@
 
 /* ── MOBILE (<768px) ──────────────────────── */
 @media (max-width: 767px) {
-  /* Cards en 1 columna */
-  .grid-cols-4, .grid-cols-3, .grid-cols-2 {
+  /* Cards: 4+ cols a 1, 3 cols a 1, 2 cols SE MANTIENE */
+  .grid-cols-4, .grid-cols-3 {
     grid-template-columns: 1fr !important;
   }
 
@@ -109,10 +109,70 @@
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
+  /* Pedidos KPIs: mantener 2 cols */
+  #pedidos-section .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Balance resumen: mantener 2 cols */
+  #balance-section .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
   /* Main grid y bottom grid: 1 col */
   .mk-main-grid,
   .mk-bottom-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  /* ── Pedidos toolbar: wrap y compactar ── */
+  #pedidos-section .flex.flex-wrap.justify-between {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  #pedidos-section .flex.items-center.gap-3 {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  /* Vista tabs (Kanban/Tabla/Calendario): scroll horizontal */
+  #pedidos-section .flex.bg-gray-100.rounded-xl {
+    overflow-x: auto !important;
+    flex-shrink: 0 !important;
+  }
+  #pedidos-section .flex.bg-gray-100.rounded-xl button {
+    white-space: nowrap !important;
+    font-size: 0.75rem !important;
+    padding: 6px 10px !important;
+  }
+  /* Botones de acción: ancho completo en mobile */
+  #btnListaProduccion,
+  #pedidos-section .flex.items-center.gap-3 > button {
+    flex: 1 1 auto !important;
+    font-size: 0.75rem !important;
+    padding: 8px 12px !important;
+    justify-content: center !important;
+  }
+
+  /* ── Inventario toolbar: wrap ── */
+  #inventory-section .flex.items-center.gap-2.flex-wrap {
+    gap: 6px !important;
+  }
+  #inventory-section .flex.items-center.gap-2.flex-wrap > div,
+  #inventory-section .flex.items-center.gap-2.flex-wrap > button {
+    font-size: 0.75rem !important;
+  }
+
+  /* ── Balance header: stack ── */
+  #balance-section .flex.items-center.justify-between.mb-6 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  /* ── Clientes header: wrap ── */
+  #clientes-section .flex.items-center.gap-3 {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
   }
 
   /* Modales como bottom sheet */
