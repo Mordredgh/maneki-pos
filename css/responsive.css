@@ -318,20 +318,26 @@
      INVENTARIO
   ══════════════════════════════════════════ */
 
-  /* Header botones: wrap limpio */
+  /* Header botones: wrap limpio en 2 cols */
   #inventory-section .flex.items-center.gap-2.flex-wrap {
     flex-wrap: wrap !important;
     gap: 6px !important;
   }
+  #inventory-section .flex.items-center.gap-2.flex-wrap > div,
+  #inventory-section .flex.items-center.gap-2.flex-wrap > button {
+    flex: 1 1 45% !important;
+    font-size: 0.75rem !important;
+  }
   #inventory-section .flex.items-center.gap-2.flex-wrap > div > button,
   #inventory-section .flex.items-center.gap-2.flex-wrap > button {
+    width: 100% !important;
     font-size: 0.75rem !important;
-    padding: 8px 12px !important;
+    padding: 8px 10px !important;
+    justify-content: center !important;
   }
 
-  /* Stats bar: 2x2 */
-  #inventory-section .flex.gap-4,
-  #inventory-section .flex.gap-6 {
+  /* Stats bar (invKpiBar): 2x2 */
+  #invKpiBar {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
@@ -349,22 +355,20 @@
   }
   #inventorySearch { width: 100% !important; }
 
-  /* TABLA INVENTARIO: ocultar columnas no esenciales en mobile */
-  /* Cols: 1-Imagen|2-Producto|3-SKU|4-Categoría|5-Variantes|6-Precio|7-Proveedor|8-Stock|9-Estado|10-Margen|11-Acciones */
-  /* Mostrar: 1,2,6,8,9,11 — Ocultar: 3(SKU),4(Cat),5(Var),7(Prov),10(Margen) */
-  #invTableEl thead tr th:nth-child(3),
-  #inventoryTable tr td:nth-child(3),
-  #invTableEl thead tr th:nth-child(4),
-  #inventoryTable tr td:nth-child(4),
-  #invTableEl thead tr th:nth-child(5),
-  #inventoryTable tr td:nth-child(5),
-  #invTableEl thead tr th:nth-child(7),
-  #inventoryTable tr td:nth-child(7),
-  #invTableEl thead tr th:nth-child(10),
-  #inventoryTable tr td:nth-child(10) { display: none !important; }
+  /* TABLA INVENTARIO DINÁMICA: js genera cols: (check)(img)(Producto)(SKU)(Cat)(Var)(Precio)(Disponible)(Estado)(Margen)(Acciones) */
+  /* Ocultar: 4(SKU), 5(Categoría), 6(Variantes), 10(Margen) */
+  /* Mostrar: 1,2,3,7(Precio),8(Disponible),9(Estado),11(Acciones) */
+  #inventory-section table thead tr th:nth-child(4),
+  #inventory-section table tbody tr td:nth-child(4),
+  #inventory-section table thead tr th:nth-child(5),
+  #inventory-section table tbody tr td:nth-child(5),
+  #inventory-section table thead tr th:nth-child(6),
+  #inventory-section table tbody tr td:nth-child(6),
+  #inventory-section table thead tr th:nth-child(10),
+  #inventory-section table tbody tr td:nth-child(10) { display: none !important; }
 
-  /* Columna acciones: más compacta */
-  #inventoryTable tr td:nth-child(9) { white-space: nowrap; }
+  /* Columna acciones: no wrap */
+  #inventory-section table tbody tr td:nth-child(11) { white-space: nowrap; }
 
   /* ══════════════════════════════════════════
      COTIZACIONES
