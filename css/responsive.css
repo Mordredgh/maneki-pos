@@ -562,6 +562,94 @@
   }
 
   /* ══════════════════════════════════════════
+     HISTORIAL DE PEDIDOS FINALIZADOS
+  ══════════════════════════════════════════ */
+
+  /* Header estático: stack título + filtros */
+  #pedidos-section .mt-8 .flex.justify-between.items-center.mb-4 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  #pedidos-section .mt-8 .flex.justify-between.items-center.mb-4 > div.flex.gap-2.items-center {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  #pedidos-section .mt-8 .flex.justify-between.items-center.mb-4 input,
+  #pedidos-section .mt-8 .flex.justify-between.items-center.mb-4 select {
+    flex: 1 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  /* Filtros dinámicos: wrap, quitar nowrap de labels de fecha */
+  #histFiltrosBloque > div {
+    flex-wrap: wrap !important;
+  }
+  #histFiltrosBloque input[type="text"] {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+  }
+  #histFiltrosBloque select {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+  #histFiltrosBloque label {
+    white-space: normal !important;
+    flex: 1 1 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  #histFiltrosBloque label input[type="date"] {
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Menús laterales de items historial: wrap botones */
+  #historialPedidosLista > div {
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+  }
+  #historialPedidosLista > div > div.text-right {
+    flex-shrink: 0 !important;
+    max-width: 130px !important;
+  }
+  #historialPedidosLista > div .flex.gap-2.justify-end {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  #historialPedidosLista > div .flex.gap-2.justify-end button {
+    font-size: 0.68rem !important;
+    white-space: nowrap !important;
+    padding: 2px 6px !important;
+  }
+
+  /* ══════════════════════════════════════════
+     NUEVO PEDIDO — EMPAQUES
+  ══════════════════════════════════════════ */
+  #pedidoEmpaquesSection .flex.gap-2.mb-2 {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  #pedidoEmpaquesSection .flex.gap-2.mb-2 select {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #pedidoEmpaquesSection .flex.gap-2.mb-2 input[type="number"] {
+    width: 64px !important;
+    flex-shrink: 0 !important;
+  }
+  #pedidoEmpaquesSection .flex.gap-2.mb-2 button {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  /* ══════════════════════════════════════════
      REPORTES
   ══════════════════════════════════════════ */
   #reportes-section .grid {
