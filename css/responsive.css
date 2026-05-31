@@ -336,9 +336,8 @@
     justify-content: center !important;
   }
 
-  /* Stats bar (invKpiBar): 2x2 */
-  #invKpiBar {
-    display: grid !important;
+  /* Stats bar (invKpiBar): 2x2 — el grid está en el hijo directo */
+  #invKpiBar > div {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
@@ -369,6 +368,29 @@
 
   /* Columna acciones: no wrap */
   #inventory-section table tbody tr td:nth-child(11) { white-space: nowrap; }
+
+  /* Filas compactas: imagen pequeña, producto con ancho máximo */
+  #inventory-section table tbody tr td:nth-child(1) { padding: 6px 8px !important; }
+  #inventory-section table tbody tr td:nth-child(2) img {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 8px !important;
+  }
+  #inventory-section table tbody tr td:nth-child(3) {
+    max-width: 130px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Precio, Stock, Estado, Acciones: anchos fijos */
+  #inventory-section table tbody tr td:nth-child(7),
+  #inventory-section table thead tr th:nth-child(7) { min-width: 70px !important; }
+  #inventory-section table tbody tr td:nth-child(8),
+  #inventory-section table thead tr th:nth-child(8) { min-width: 55px !important; }
+  #inventory-section table tbody tr td:nth-child(9),
+  #inventory-section table thead tr th:nth-child(9) { min-width: 80px !important; }
+  #inventory-section table tbody tr td:nth-child(11),
+  #inventory-section table thead tr th:nth-child(11) { min-width: 70px !important; }
 
   /* ══════════════════════════════════════════
      COTIZACIONES
