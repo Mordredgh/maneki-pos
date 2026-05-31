@@ -335,43 +335,46 @@ function renderBienvenida() {
 }
 
 function updateStorePreview() {
+    const pe = document.getElementById('previewEmoji');
+    if (!pe) return; // sección config no activada aún
     if (storeConfig.logoMode === 'image' && typeof storeLogo !== 'undefined' && storeLogo) {
-        document.getElementById('previewEmoji').innerHTML =
-            `<img src="${typeof _validateImgUrl==='function'?_validateImgUrl(storeLogo):storeLogo}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
+        pe.innerHTML = `<img src="${typeof _validateImgUrl==='function'?_validateImgUrl(storeLogo):storeLogo}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
     } else {
-        document.getElementById('previewEmoji').textContent = document.getElementById('configEmoji').value || '🐱';
+        pe.textContent = (document.getElementById('configEmoji')||{}).value || '🐱';
     }
-    document.getElementById('previewName').textContent   = document.getElementById('configName').value || 'Maneki Store';
-    document.getElementById('previewSlogan').textContent = document.getElementById('configSlogan').value || '';
-    const phone = document.getElementById('configPhone').value;
-    const fb    = document.getElementById('configFacebook').value;
-    const email = document.getElementById('configEmail').value;
+    const pn = document.getElementById('previewName');
+    const ps = document.getElementById('previewSlogan');
+    if (pn) pn.textContent = (document.getElementById('configName')||{}).value || 'Maneki Store';
+    if (ps) ps.textContent = (document.getElementById('configSlogan')||{}).value || '';
+    const phone = (document.getElementById('configPhone')||{}).value || '';
+    const fb    = (document.getElementById('configFacebook')||{}).value || '';
+    const email = (document.getElementById('configEmail')||{}).value || '';
     let contactHTML = '';
     if (phone) contactHTML += `<p>📱 ${_esc(phone)}</p>`;
     if (fb)    contactHTML += `<p>📘 ${_esc(fb)}</p>`;
     if (email) contactHTML += `<p>✉️ ${_esc(email)}</p>`;
-    document.getElementById('previewContact').innerHTML = contactHTML;
+    const pc = document.getElementById('previewContact');
+    if (pc) pc.innerHTML = contactHTML;
 }
 
 function loadStoreConfigUI() {
-    document.getElementById('configEmoji').value    = storeConfig.emoji;
-    document.getElementById('configName').value     = storeConfig.name;
-    document.getElementById('configSlogan').value   = storeConfig.slogan;
-    document.getElementById('configPhone').value    = storeConfig.phone;
-    document.getElementById('configFacebook').value = storeConfig.facebook;
-    document.getElementById('configEmail').value    = storeConfig.email;
-    document.getElementById('configFooter').value   = storeConfig.footer;
-    const addrEl = document.getElementById('configAddress');
-    if (addrEl) addrEl.value = storeConfig.address || '';
-    const goalEl = document.getElementById('dashMonthGoal');
+    // Guard: la sección config puede ser un <template> lazy no activado aún
+    const _el = id => document.getElementById(id);
+    const _set = (id, val) => { const e = _el(id); if (e) e.value = val || ''; };
+    _set('configEmoji', storeConfig.emoji);
+    _set('configName', storeConfig.name);
+    _set('configSlogan', storeConfig.slogan);
+    _set('configPhone', storeConfig.phone);
+    _set('configFacebook', storeConfig.facebook);
+    _set('configEmail', storeConfig.email);
+    _set('configFooter', storeConfig.footer);
+    _set('configAddress', storeConfig.address);
+    const goalEl = _el('dashMonthGoal');
     const metaMensual = storeConfig.metaMensual ||
         parseFloat(localStorage.getItem('mk_monthly_goal') || '0') || 5000;
     if (goalEl) goalEl.value = metaMensual;
-    // Feature 2: cargar Chat IDs de Telegram
-    const tg1 = document.getElementById('configTelegramChatId1');
-    const tg2 = document.getElementById('configTelegramChatId2');
-    if (tg1) tg1.value = storeConfig.telegramChatId1 || '';
-    if (tg2) tg2.value = storeConfig.telegramChatId2 || '';
+    _set('configTelegramChatId1', storeConfig.telegramChatId1);
+    _set('configTelegramChatId2', storeConfig.telegramChatId2);
     updateStorePreview();
 }
 

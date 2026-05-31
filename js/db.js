@@ -748,34 +748,37 @@ async function sbSave(key, data) {
 // Si falla, sbLoad cae al store como siempre.
 // ══════════════════════════════════════════════════════════════
 const _RELATIONAL_TABLES = {
-    products: { table: 'products', map: row => ({
+    products: { table: 'products', min: 1, map: row => ({
         ...row, stockMin: row.stock_min, imageUrl: row.image_url,
         mpComponentes: row.mp_componentes, historialPrecios: row.historial_precios,
         publicarTienda: row.publicar_tienda, proveedorUrl: row.proveedor_url,
         esEmpaque: row.es_empaque, usaVariantes: row.usa_variantes,
         rendimientoPorHoja: row.rendimiento_por_hoja, puntoReorden: row.punto_reorden,
-        historialCostos: row.historial_costos
+        historialCostos: row.historial_costos, compraPaquete: row.compra_paquete,
+        kitComponentes: row.kit_componentes, isKit: row.is_kit
     })},
-    pedidos: { table: 'orders', map: row => ({
-        ...row, fechaPedido: row.fecha, fechaCreacion: row.fecha_creacion,
+    pedidos: { table: 'orders', min: 0, map: row => ({
+        ...row, fechaPedido: row.fecha_pedido || row.fecha, fechaCreacion: row.fecha_creacion,
         productosInventario: row.productos_inventario, inventarioDescontado: row.inventario_descontado,
+        empaquesDescontados: row.empaques_descontados,
         fromQuote: row.from_quote, lugarEntrega: row.lugar_entrega,
         costoMateriales: row.costo_materiales, notasInternas: row.notas_internas,
         historialEstados: row.historial_estados, fechaUltimoEstado: row.fecha_ultimo_estado
     })},
-    pedidosFinalizados: { table: 'orders_finalizados', map: row => ({
-        ...row, fechaPedido: row.fecha, fechaCreacion: row.fecha_creacion,
+    pedidosFinalizados: { table: 'orders_finalizados', min: 0, map: row => ({
+        ...row, fechaPedido: row.fecha_pedido || row.fecha, fechaCreacion: row.fecha_creacion,
         fechaFinalizado: row.fecha_finalizado,
         productosInventario: row.productos_inventario, inventarioDescontado: row.inventario_descontado,
+        empaquesDescontados: row.empaques_descontados,
         fromQuote: row.from_quote, lugarEntrega: row.lugar_entrega,
         costoMateriales: row.costo_materiales, notasInternas: row.notas_internas,
         historialEstados: row.historial_estados
     })},
-    salesHistory: { table: 'sales_history', map: row => ({ ...row }) },
-    clients: { table: 'clients', map: row => ({
+    salesHistory: { table: 'sales_history', min: 0, map: row => ({ ...row }) },
+    clients: { table: 'clients', min: 0, map: row => ({
         ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase
     })},
-    categories: { table: 'categories', map: row => ({ ...row }) }
+    categories: { table: 'categories', min: 0, map: row => ({ ...row }) }
 };
 
 async function _loadFromTable(key) {
@@ -784,7 +787,12 @@ async function _loadFromTable(key) {
     try {
         const { data, error } = await _withTimeout(db.from(cfg.table).select('*'), 10000);
         if (error || !data) return null;
-        return data.map(cfg.map);
+        // Validación: si la tabla tiene menos registros de lo esperado, no confiar
+        // (podría ser una tabla vacía vs store con datos reales)
+        if (cfg.min > 0 && data.length < cfg.min) return null;
+        const mapped = data.map(cfg.map);
+        console.log(`[DB] ✓ ${key} loaded from ${cfg.table} (${mapped.length} rows)`);
+        return mapped;
     } catch(e) {
         console.warn(`[DB] _loadFromTable(${key}) failed, falling back to store:`, e?.message);
         return null;
@@ -792,13 +800,13 @@ async function _loadFromTable(key) {
 }
 
 async function sbLoad(key, def) {
-    // Lectura relacional DESACTIVADA por ahora — las tablas individuales
-    // no tienen todos los campos que el store JSON sí tiene (movimientos,
-    // compraPaquete, kitComponentes, etc.). El dual WRITE sigue activo.
-    // Para activar: descomentar las 2 líneas siguientes cuando las tablas
-    // tengan paridad completa con el store JSON.
-    // const relational = await _loadFromTable(key);
-    // if (relational !== null) { sqliteStorage.set(key, relational).catch(() => {}); return relational; }
+    // Lectura relacional: intenta tabla individual primero (más rápido)
+    // Si falla o no hay datos, cae al store JSON como siempre
+    const relational = await _loadFromTable(key);
+    if (relational !== null) {
+        sqliteStorage.set(key, relational).catch(() => {});
+        return relational;
+    }
 
     // 1) Intentar Supabase store (datos más frescos / multi-dispositivo)
     // ✅ FIX: usar .maybeSingle() en lugar de .single()
@@ -1082,6 +1090,10 @@ function saveProducts() {
                 punto_reorden:    p.puntoReorden != null ? Number(p.puntoReorden) : null,
                 historial_costos: p.historialCostos  || [],
                 historial_precios: p.historialPrecios || [],
+                compra_paquete:   p.compraPaquete    || null,
+                kit_componentes:  p.kitComponentes   || [],
+                is_kit:           p.isKit            === true,
+                activo:           p.activo !== false,
                 publicar_tienda:  p.publicarTienda   === true,
                 updated_at:       new Date().toISOString()
             }));
@@ -1212,6 +1224,8 @@ function savePedidos() {
                 empaques:             p.empaques            || [],
                 historial_estados:    p.historialEstados    || [],
                 fecha_ultimo_estado:  p.fechaUltimoEstado   || null,
+                fecha_pedido:         p.fechaPedido         || null,
+                empaques_descontados: p.empaquesDescontados === true,
                 updated_at:           new Date().toISOString()
             }));
             const { error } = await db.from('orders').upsert(rows, { onConflict: 'id' });
@@ -1259,6 +1273,8 @@ function savePedidosFinalizados() {
                 pagos:                 p.pagos                || [],
                 empaques:              p.empaques             || [],
                 historial_estados:     p.historialEstados     || [],
+                fecha_pedido:          p.fechaPedido          || null,
+                empaques_descontados:  p.empaquesDescontados  === true,
                 updated_at:            new Date().toISOString()
             }));
             const { error } = await db.from('orders_finalizados').upsert(rows, { onConflict: 'id' });
