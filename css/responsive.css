@@ -1,198 +1,172 @@
-/* ══════════════════════════════
-   MANEKI POS — RESPONSIVE SYSTEM
-   Desktop ≥1024 | Tablet 768-1023 | Mobile <768 | Small <400
-══════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   MANEKI POS — RESPONSIVE SYSTEM v3.0
+   Desktop ≥1024 | Tablet 768–1023 | Mobile <768 | XS <400
+   Objetivo: app perfectamente funcional y profesional en móvil
+═══════════════════════════════════════════════════════════════ */
 
-/* ── TABLET (768–1023px) ─────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   TABLET (768–1023px)
+───────────────────────────────────────────────────────────── */
 @media (max-width: 1023px) {
-  /* Sidebar se convierte en overlay */
+
+  /* Sidebar → overlay deslizable */
   #sidebar {
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
     z-index: 200;
   }
-  #sidebar.sidebar-open {
-    transform: translateX(0);
-  }
+  #sidebar.sidebar-open { transform: translateX(0); }
 
-  /* Overlay oscuro detrás del sidebar */
   #sidebarOverlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 199;
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 199;
   }
   #sidebarOverlay.visible { display: block; }
 
-  /* Main content ocupa todo el ancho */
+  /* Contenido principal: ancho total */
   .main-content, #mainContent, main, .ml-64 {
     margin-left: 0 !important;
     width: 100% !important;
   }
 
-  /* Topbar con hamburger */
-  #mobileTopbar {
-    display: flex !important;
-    z-index: 201 !important;
-  }
+  /* Topbar móvil */
+  #mobileTopbar { display: flex !important; z-index: 201 !important; }
 
-  /* Kanban: scroll horizontal en tablet */
-  #vistaKanban, .kanban-board, [id*="kanban"] {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 12px;
-  }
-
-  /* Scroll horizontal en tablas */
+  /* Tablas: scroll horizontal */
   .table-responsive, .overflow-x-auto {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     width: 100%;
   }
-  table {
-    max-width: 100%;
-  }
+  table { max-width: 100%; }
 
-  /* Cards en grid 2 columnas */
+  /* Grids adaptativos */
   .grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
   .grid-cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
-
-  /* Dashboard: grids inline que no tienen breakpoint */
   #mkExtraStats { grid-template-columns: repeat(2, 1fr) !important; }
 
-  /* Bienvenida: morning KPI se queda en 2 cols (ya lo es) */
+  /* Search box global */
+  .mk-busqueda-box { max-width: 100% !important; margin: 0 12px !important; }
 
-  /* Global search box */
-  .mk-busqueda-box {
-    max-width: 100% !important;
-    margin: 0 12px !important;
-  }
-
-  /* Mapa de anillos: stack vertical */
-  #tabContentEnvios .grid.grid-cols-1.lg\\:grid-cols-2,
-  #tabContentEnvios > .grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Tabla padding más compacto */
-  table td, table th {
-    padding: 8px 12px !important;
-  }
-
-  /* Filter bar: reducir min-width */
-  .mk-filter-bar input[type="text"],
-  .mk-filter-bar select {
-    min-width: 120px !important;
-  }
+  /* Padding de tabla reducido */
+  table td, table th { padding: 10px 14px !important; }
 }
 
-/* ── MOBILE (<768px) ──────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   MOBILE (<768px) — Reglas principales
+───────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  /* Cards: 4+ cols a 1, 3 cols a 1, 2 cols SE MANTIENE */
-  .grid-cols-4, .grid-cols-3 {
-    grid-template-columns: 1fr !important;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     CORE LAYOUT
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+  /* Prevenir zoom automático de iOS en inputs */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 
-  /* Dashboard: grids inline a 1 columna */
-  #mkExtraStats {
-    grid-template-columns: 1fr !important;
+  /* Espacio para bottom nav */
+  main { padding-bottom: 72px !important; }
+
+  /* Secciones: padding compacto */
+  section[id$="-section"] {
+    padding: 12px 12px 16px !important;
   }
 
-  /* Morning KPI: mantener 2 cols (son cards pequeñas) */
-  #morningKpiGrid {
-    grid-template-columns: repeat(2, 1fr) !important;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TOPBAR Y SIDEBAR
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  #mobileTopbar { display: flex !important; z-index: 201 !important; }
+  #mobileBottomNav {
+    display: flex !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* KPI grid principal: 2 cols en mobile */
-  .mk-kpi-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     SECTION HEADERS — Compactos en mobile
+     El card grande se convierte en header inline
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .mk-section-header {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 0 14px 0 !important;
+    margin-bottom: 0 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 0 !important;
   }
-
-  /* Pedidos KPIs: mantener 2 cols */
-  #pedidos-section .grid.grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  /* Balance resumen: mantener 2 cols */
-  #balance-section .grid.grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  /* Main grid y bottom grid: 1 col */
-  .mk-main-grid,
-  .mk-bottom-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* ── Pedidos toolbar: wrap y compactar ── */
-  #pedidos-section .flex.flex-wrap.justify-between {
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-  #pedidos-section .flex.items-center.gap-3 {
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-  }
-  /* Vista tabs (Kanban/Tabla/Calendario): scroll horizontal */
-  #pedidos-section .flex.bg-gray-100.rounded-xl {
-    overflow-x: auto !important;
+  .mk-sh-icon {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    font-size: 1.0rem !important;
+    border-radius: 10px !important;
     flex-shrink: 0 !important;
   }
-  #pedidos-section .flex.bg-gray-100.rounded-xl button {
-    white-space: nowrap !important;
-    font-size: 0.75rem !important;
-    padding: 6px 10px !important;
+  .mk-sh-text h2 {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
   }
-  /* Botones de acción: ancho completo en mobile */
-  #btnListaProduccion,
-  #pedidos-section .flex.items-center.gap-3 > button {
-    flex: 1 1 auto !important;
-    font-size: 0.75rem !important;
-    padding: 8px 12px !important;
-    justify-content: center !important;
-  }
+  .mk-sh-text p { display: none !important; }
 
-  /* ── Inventario toolbar: wrap ── */
-  #inventory-section .flex.items-center.gap-2.flex-wrap {
-    gap: 6px !important;
-  }
-  #inventory-section .flex.items-center.gap-2.flex-wrap > div,
-  #inventory-section .flex.items-center.gap-2.flex-wrap > button {
-    font-size: 0.75rem !important;
-  }
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     GRIDS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .grid-cols-4, .grid-cols-3 { grid-template-columns: 1fr !important; }
+  .mk-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .mk-main-grid { grid-template-columns: 1fr !important; }
+  .mk-bottom-grid { grid-template-columns: 1fr !important; }
+  #mkExtraStats { grid-template-columns: 1fr !important; }
+  #morningKpiGrid { grid-template-columns: repeat(2, 1fr) !important; }
 
-  /* ── Balance header: stack ── */
-  #balance-section .flex.items-center.justify-between.mb-6 {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 12px !important;
-  }
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     KPI CARDS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .mk-kpi { padding: 14px 14px 10px !important; }
+  .mk-kpi-value { font-size: 1.45rem !important; }
+  .mk-kpi-label { font-size: 0.65rem !important; }
 
-  /* ── Clientes header: wrap ── */
-  #clientes-section .flex.items-center.gap-3 {
-    flex-wrap: wrap !important;
-    gap: 8px !important;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TABLAS GLOBALES
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  table td, table th {
+    font-size: 12px !important;
+    padding: 8px 10px !important;
+    white-space: nowrap;
   }
+  .col-hide-mobile { display: none !important; }
 
-  /* Modales como bottom sheet */
-  .modal {
-    align-items: flex-end !important;
-  }
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     MODALES → BOTTOM SHEETS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .modal { align-items: flex-end !important; }
 
+  .modal > div:first-child,
+  .modal > .bg-white,
+  .modal > [class*="rounded"],
   .modal-fullpage > div:first-child,
   #pedidoModal > div:first-child,
   #ptModal > div:first-child,
   #clientModal > div:first-child,
   #abonoPedidoModal > div:first-child,
-  #bulkPrecioModal > div:first-child,
-  .modal > div:first-child,
-  .modal > .bg-white,
-  .modal > [class*="rounded"] {
+  #bulkPrecioModal > div:first-child {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    border-radius: 16px 16px 0 0 !important;
+    border-radius: 20px 20px 0 0 !important;
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
@@ -201,308 +175,400 @@
     overflow-y: auto !important;
   }
 
-  /* Selector genérico — solo max-height y overflow */
   [id$="Modal"] > div:first-child {
     max-height: 92vh !important;
     overflow-y: auto !important;
   }
 
-  /* Kanban: scroll horizontal en mobile */
-  #vistaKanban, .kanban-board {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-  }
-  .kanban-col {
-    min-width: 260px;
-    scroll-snap-align: start;
-  }
-
-  /* Texto más pequeño en tablas */
-  table td, table th {
-    font-size: 12px !important;
-    padding: 6px 8px !important;
-  }
-
-  /* Ocultar columnas no esenciales en mobile */
-  .col-hide-mobile { display: none !important; }
-
-  /* Formularios: una columna */
-  .grid.grid-cols-2,
-  .grid.grid-cols-3 {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Bottom nav visible en mobile */
-  #mobileBottomNav {
-    display: flex !important;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-
-  /* Espacio para bottom nav — solo en main, no en body (evita romper modales) */
-  main {
-    padding-bottom: 68px !important;
-  }
-
-  /* Búsqueda global: full width */
-  #busquedaGlobalOverlay > div {
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 0 !important;
-    height: 100% !important;
-    max-height: 100% !important;
-  }
-
-  /* Pipeline bar wrap */
-  #_kanbanPipelineBar {
-    flex-direction: column !important;
-    gap: 4px !important;
-  }
-
-  /* Stats cards más compactas */
-  .stat-card {
-    padding: 12px !important;
-  }
-
-  /* Texto de sección header más pequeño */
-  h2.section-title {
-    font-size: 1.1rem !important;
-  }
-
-  /* Botón de sonido encima del bottom nav */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     FAB BUTTONS — sobre el bottom nav
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   #mk-sound-btn {
     bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
   }
-
-  /* Search box en global search bar */
-  #global-search-bar {
-    padding: 8px 12px !important;
-  }
-  #global-search-bar .max-w-xl {
-    max-width: 100% !important;
+  /* FAB + y ? */
+  .fixed.bottom-6.right-6,
+  [style*="bottom:24px"][style*="right:24px"],
+  [style*="bottom: 24px"][style*="right: 24px"] {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  /* Sección header compacta */
-  .mk-section-header {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 8px !important;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     BÚSQUEDA GLOBAL
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  #global-search-bar { padding: 8px 12px !important; }
+  #global-search-bar .max-w-xl { max-width: 100% !important; }
+  #busquedaGlobalOverlay > div {
+    width: 100% !important; max-width: 100% !important;
+    border-radius: 0 !important; height: 100% !important; max-height: 100% !important;
   }
+  .mk-busqueda-box { max-width: 100% !important; }
 
-  /* Botones de acción en header: wrap */
-  .flex.flex-col.sm\\:flex-row {
-    flex-direction: column !important;
-  }
-  .flex.items-center.gap-2.flex-wrap {
-    width: 100% !important;
-  }
-
-  /* Filter bar: stack en mobile */
-  .mk-filter-bar {
-    flex-direction: column !important;
-  }
-  .mk-filter-bar input[type="text"],
-  .mk-filter-bar select {
-    min-width: 0 !important;
-    width: 100% !important;
-  }
-
-  /* Filtros de inventario: stack vertical */
-  #inventorySearch {
-    width: 100% !important;
-  }
-  .flex.flex-wrap.gap-2.mb-3.items-center {
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-  .flex.flex-wrap.gap-2.mb-3.items-center > * {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  /* Toast: reducir min-width */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TOASTS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   .mk-toast {
     min-width: 200px !important;
     max-width: calc(100vw - 32px) !important;
-    left: 16px !important;
-    right: 16px !important;
-    margin: 0 auto !important;
+    left: 16px !important; right: 16px !important;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  /* Empty state icons más chicos */
-  .mk-empty-icon {
-    width: 60px !important;
-    height: 60px !important;
-  }
-  .mk-empty-state {
-    padding: 32px 16px !important;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     EMPTY STATES
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .mk-empty-icon { width: 54px !important; height: 54px !important; }
+  .mk-empty-state { padding: 28px 16px !important; }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     FORMULARIOS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .grid.grid-cols-2,
+  .grid.grid-cols-3 { grid-template-columns: 1fr !important; }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     CHARTS
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  canvas { max-width: 100% !important; }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PIPELINE KANBAN BAR
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  #_kanbanPipelineBar { flex-direction: column !important; gap: 4px !important; }
+
+  /* ══════════════════════════════════════════
+     PEDIDOS POR ENCARGO
+  ══════════════════════════════════════════ */
+
+  /* Header: stack vertical */
+  #pedidos-section .flex.flex-wrap.justify-between {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
   }
 
-  /* Balance: grids de resumen */
-  .grid.grid-cols-2.sm\\:grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  /* Cotizaciones: tabs más compactos */
-  #quotesHeaderButtons {
+  /* Contenedor de botones: wrap */
+  #pedidos-section .flex.items-center.gap-3 {
     flex-wrap: wrap !important;
-  }
-  .flex.gap-1.bg-gray-100.rounded-2xl {
+    gap: 6px !important;
     width: 100% !important;
   }
-  .flex.gap-1.bg-gray-100.rounded-2xl > button {
-    flex: 1 !important;
+
+  /* Vista tabs (Kanban / Tabla / Calendario): scroll horizontal */
+  #pedidos-section .flex.bg-gray-100.rounded-xl {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0 !important;
+    width: auto !important;
+  }
+  #pedidos-section .flex.bg-gray-100.rounded-xl button {
+    white-space: nowrap !important;
+    font-size: 0.72rem !important;
+    padding: 6px 10px !important;
+  }
+
+  /* Botones de acción: mitad de ancho para quedar en fila de 2 */
+  #btnListaProduccion {
+    flex: 1 1 45% !important;
     font-size: 0.75rem !important;
     padding: 8px 10px !important;
+    justify-content: center !important;
+  }
+  #pedidos-section button[onclick*="manekiExportar('pedidos')"] {
+    flex: 1 1 45% !important;
+    font-size: 0.75rem !important;
+    padding: 8px 10px !important;
+    justify-content: center !important;
+  }
+  #pedidos-section button[onclick*="openPedidoModal"] {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 0.85rem !important;
+    padding: 10px !important;
   }
 
-  /* Envíos: mapa layout stack */
-  #tabContentEnvios .grid {
-    grid-template-columns: 1fr !important;
+  /* KPI cards: 2 columnas */
+  #pedidos-section .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
-  #mapaCoberturaView {
-    height: 300px !important;
+  #pedidos-section .grid.grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
-
-  /* Anillos config: stack vertical */
-  #anillosGridLayout {
-    grid-template-columns: 1fr !important;
-  }
-  #anillosGridLayout #mapaAnillos {
-    height: 300px !important;
-  }
-
-  /* Acceso rápido: 3 columnas se mantiene */
-  #morningKpiGrid + div + div > div[style*="repeat(3"] {
+  #pedidos-section .grid.grid-cols-2.lg\\:grid-cols-4 {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  /* KPI values: font más chico en mobile */
-  .mk-kpi-value {
-    font-size: 1.5rem !important;
+  /* Kanban: scroll horizontal */
+  #vistaKanban .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+  .mk-kanban-wrapper, .kanban-col { min-width: 245px !important; }
+
+  /* Pedidos tabla: ocultar columnas no esenciales */
+  /* Cols: Folio|Cliente|Concepto|F.Pedido|F.Entrega|Total|Anticipo|Resta|Estado|Acciones */
+  /* Ocultar: Concepto(3), F.Pedido(4), Anticipo(7), Resta(8) */
+  #pedidosTableEl thead tr th:nth-child(3),
+  #pedidosTable tr td:nth-child(3),
+  #pedidosTableEl thead tr th:nth-child(4),
+  #pedidosTable tr td:nth-child(4),
+  #pedidosTableEl thead tr th:nth-child(7),
+  #pedidosTable tr td:nth-child(7),
+  #pedidosTableEl thead tr th:nth-child(8),
+  #pedidosTable tr td:nth-child(8) { display: none !important; }
+
+  /* ══════════════════════════════════════════
+     INVENTARIO
+  ══════════════════════════════════════════ */
+
+  /* Header botones: wrap limpio */
+  #inventory-section .flex.items-center.gap-2.flex-wrap {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  #inventory-section .flex.items-center.gap-2.flex-wrap > div > button,
+  #inventory-section .flex.items-center.gap-2.flex-wrap > button {
+    font-size: 0.75rem !important;
+    padding: 8px 12px !important;
   }
 
-  /* Secciones: padding reducido */
-  section[id$="-section"] {
-    padding: 12px !important;
-  }
-  section[id$="-section"] .max-w-7xl {
-    padding: 0 !important;
-  }
-
-  /* Dashboard header: stack vertical */
-  #dashboard-section .mb-7.flex {
-    flex-direction: column !important;
-  }
-
-  /* Meta mensual: layout vertical */
-  #dashboard-section .mk-card .flex.items-center.justify-between {
-    flex-direction: column !important;
-    align-items: flex-start !important;
+  /* Stats bar: 2x2 */
+  #inventory-section .flex.gap-4,
+  #inventory-section .flex.gap-6 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
 
-  /* Reportes: charts responsivos */
-  canvas {
-    max-width: 100% !important;
+  /* Filtros: stack vertical */
+  #inventory-section .flex.flex-wrap.gap-2.mb-3.items-center {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  #inventory-section .flex.flex-wrap.gap-2.mb-3.items-center > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #inventorySearch { width: 100% !important; }
+
+  /* TABLA INVENTARIO: ocultar columnas no esenciales en mobile */
+  /* Cols: 1-Imagen|2-Producto|3-SKU|4-Categoría|5-Variantes|6-Precio|7-Proveedor|8-Stock|9-Estado|10-Margen|11-Acciones */
+  /* Mostrar: 1,2,6,8,9,11 — Ocultar: 3(SKU),4(Cat),5(Var),7(Prov),10(Margen) */
+  #invTableEl thead tr th:nth-child(3),
+  #inventoryTable tr td:nth-child(3),
+  #invTableEl thead tr th:nth-child(4),
+  #inventoryTable tr td:nth-child(4),
+  #invTableEl thead tr th:nth-child(5),
+  #inventoryTable tr td:nth-child(5),
+  #invTableEl thead tr th:nth-child(7),
+  #inventoryTable tr td:nth-child(7),
+  #invTableEl thead tr th:nth-child(10),
+  #inventoryTable tr td:nth-child(10) { display: none !important; }
+
+  /* Columna acciones: más compacta */
+  #inventoryTable tr td:nth-child(9) { white-space: nowrap; }
+
+  /* ══════════════════════════════════════════
+     COTIZACIONES
+  ══════════════════════════════════════════ */
+
+  /* Tabs: ancho completo */
+  #quotesHeaderButtons { flex-wrap: wrap !important; gap: 8px !important; }
+  .flex.gap-1.bg-gray-100.rounded-2xl.p-1 {
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+  .flex.gap-1.bg-gray-100.rounded-2xl.p-1 > button {
+    flex: 1 !important;
+    font-size: 0.72rem !important;
+    padding: 8px 6px !important;
+    white-space: nowrap !important;
   }
 
-  /* Equipos/ROI cards */
+  /* Tabla cotizaciones: ocultar Proveedor(6) y Margen(7) */
+  /* Cols: Folio|Cliente|Fecha|Total|Estado|Proveedor|Margen|Acciones */
+  #quotesTableEl thead tr th:nth-child(6),
+  #quotesTable tr td:nth-child(6),
+  #quotesTableEl thead tr th:nth-child(7),
+  #quotesTable tr td:nth-child(7) { display: none !important; }
+
+  /* ══════════════════════════════════════════
+     BALANCE
+  ══════════════════════════════════════════ */
+
+  /* Header: stack */
+  #balance-section .flex.items-center.justify-between.mb-6 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  /* Resumen mes: 2 cols */
+  #balance-section .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  #balance-section .grid.grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* KPI grid balance */
+  #balance-section .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ══════════════════════════════════════════
+     CLIENTES
+  ══════════════════════════════════════════ */
+  #clientes-section .flex.justify-between.items-center,
+  #clientes-section .flex.justify-between.items-start {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  #clientes-section .flex.items-center.gap-3 {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  #clientes-section .flex.items-center.gap-3 > button {
+    flex: 1 1 45% !important;
+    justify-content: center !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* ══════════════════════════════════════════
+     CATEGORÍAS
+  ══════════════════════════════════════════ */
+  #categorias-section .grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  /* ══════════════════════════════════════════
+     EQUIPOS / ROI
+  ══════════════════════════════════════════ */
+  #equipos-section > div > div:first-child.flex {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  #equipos-section .flex.items-start.justify-between,
+  #equipos-section .flex.items-center.justify-between {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  #equipos-section .flex.items-center.gap-3 {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  #equipos-section .flex.items-center.gap-3 > button {
+    flex: 1 1 45% !important;
+    font-size: 0.8rem !important;
+    justify-content: center !important;
+  }
   #equipos-section .grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* Configuración: layout vertical */
+  /* ══════════════════════════════════════════
+     CONFIGURACIÓN
+  ══════════════════════════════════════════ */
   #configuracion-section .grid {
     grid-template-columns: 1fr !important;
   }
-}
 
-/* ── SMALL PHONES (<400px) ────────────────── */
-@media (max-width: 399px) {
-  /* KPI grid: 1 columna en pantallas muy pequeñas */
-  .mk-kpi-grid,
-  #morningKpiGrid {
+  /* ══════════════════════════════════════════
+     ANÁLISIS DE PRODUCTOS
+  ══════════════════════════════════════════ */
+  #analisis-section .grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* KPI values aún más pequeños */
-  .mk-kpi-value {
-    font-size: 1.3rem !important;
+  /* ══════════════════════════════════════════
+     REPORTES
+  ══════════════════════════════════════════ */
+  #reportes-section .grid {
+    grid-template-columns: 1fr !important;
   }
 
-  /* Tabla: font mínimo */
-  table td, table th {
-    font-size: 11px !important;
-    padding: 4px 6px !important;
+  /* ══════════════════════════════════════════
+     ENVÍOS / COTIZADOR
+  ══════════════════════════════════════════ */
+  #tabContentEnvios .grid {
+    grid-template-columns: 1fr !important;
   }
+  #mapaCoberturaView { height: 280px !important; }
+  #anillosGridLayout {
+    grid-template-columns: 1fr !important;
+  }
+  #anillosGridLayout #mapaAnillos { height: 280px !important; }
+}
 
-  /* Kanban columnas más estrechas */
-  .kanban-col {
-    min-width: 240px !important;
-  }
+/* ─────────────────────────────────────────────────────────────
+   SMALL PHONES (<400px)
+───────────────────────────────────────────────────────────── */
+@media (max-width: 399px) {
 
-  /* Botones en header más compactos */
-  .btn-primary, .mk-btn {
-    font-size: 0.75rem !important;
-    padding: 8px 12px !important;
-  }
+  /* KPI a 1 columna */
+  .mk-kpi-grid { grid-template-columns: 1fr !important; }
+
+  /* Texto más pequeño */
+  .mk-kpi-value { font-size: 1.2rem !important; }
+  table td, table th { font-size: 11px !important; padding: 6px 8px !important; }
+
+  /* Kanban columnas */
+  .mk-kanban-wrapper, .kanban-col { min-width: 220px !important; }
 
   /* Sidebar más estrecho */
-  #sidebar {
-    width: 240px !important;
-  }
+  #sidebar { width: 240px !important; }
 
-  /* Barra de búsqueda global */
-  #globalSearchInput {
-    font-size: 0.8rem !important;
-    padding: 6px 10px 6px 32px !important;
-  }
-
-  /* Toast: ancho completo */
+  /* Toast: ancho total */
   .mk-toast {
     min-width: 0 !important;
     width: calc(100vw - 24px) !important;
   }
+
+  /* Sección padding mínimo */
+  section[id$="-section"] { padding: 10px 10px 16px !important; }
 }
 
-/* ── DESKTOP (≥1024px) — asegurar sidebar visible ── */
-@media (min-width: 1024px) {
-  #sidebar {
-    transform: translateX(0) !important;
+/* ─────────────────────────────────────────────────────────────
+   LANDSCAPE MÓVIL
+───────────────────────────────────────────────────────────── */
+@media (max-width: 767px) and (orientation: landscape) {
+
+  /* Modales: menos altura */
+  .modal > div:first-child,
+  [id$="Modal"] > div:first-child { max-height: 82vh !important; }
+
+  /* Bottom nav: más delgado */
+  #mobileBottomNav { height: 46px !important; }
+  main { padding-bottom: 54px !important; }
+
+  /* KPI: 2 cols en landscape */
+  .mk-kpi-grid, #morningKpiGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DESKTOP (≥1024px) — Asegurar estado correcto
+───────────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  #sidebar { transform: translateX(0) !important; }
   #mobileTopbar { display: none !important; }
   #mobileBottomNav { display: none !important; }
   #sidebarOverlay { display: none !important; }
+
+  /* Restaurar columnas de tabla en desktop */
+  #invTableEl thead tr th,
+  #inventoryTable tr td,
+  #pedidosTableEl thead tr th,
+  #pedidosTable tr td,
+  #quotesTableEl thead tr th,
+  #quotesTable tr td { display: table-cell !important; }
 }
 
-/* ── LANDSCAPE MOBILE — ajustes para horizontal ── */
-@media (max-width: 767px) and (orientation: landscape) {
-  /* Modales: max-height más bajo en landscape */
-  .modal > div:first-child,
-  .modal-fullpage > div:first-child,
-  [id$="Modal"] > div:first-child {
-    max-height: 85vh !important;
-  }
-
-  /* Bottom nav más delgado */
-  #mobileBottomNav {
-    height: 48px !important;
-  }
-
-  /* KPI grid: 2 cols en landscape */
-  .mk-kpi-grid,
-  #morningKpiGrid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  /* Main padding ajustado */
-  main {
-    padding-bottom: 56px !important;
-  }
-}
-
-/* ── PRINT — sin sidebar ni nav mobile ── */
+/* ─────────────────────────────────────────────────────────────
+   PRINT
+───────────────────────────────────────────────────────────── */
 @media print {
   #sidebar, #mobileTopbar, #mobileBottomNav, #sidebarOverlay { display: none !important; }
   .main-content, #mainContent, main, .ml-64 { margin-left: 0 !important; }
