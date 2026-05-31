@@ -173,7 +173,7 @@ interface ManekiNamespace {
     version: string;
 }
 
-// Global declarations
+// Global data
 declare var MK: ManekiNamespace;
 declare var products: ManekiProduct[];
 declare var pedidos: ManekiPedido[];
@@ -191,36 +191,88 @@ declare var abonos: any[];
 declare var equipos: any[];
 declare var notas: any[];
 declare var db: any;
+declare var gastosRecurrentes: any[];
+declare var stockMovimientos: any[];
+declare var ipcRenderer: any;
+declare var _allVentasCache: any;
+declare var autocompleteIndex: any;
 
-// Functions
+// External libs
+declare var supabase: any;
+declare var Chart: any;
+declare var html2pdf: any;
+declare var XLSX: any;
+declare var L: any;
+declare var webkitAudioContext: any;
+
+// DB & storage
 declare function _fechaHoy(): string;
 declare function _esc(s: string): string;
 declare function calcSaldoPendiente(p: ManekiPedido): number;
 declare function getStockEfectivo(p: ManekiProduct): number;
 declare function sbSave(key: string, data: any): Promise<void>;
 declare function sbLoad(key: string, def?: any): Promise<any>;
-declare function showSection(name: string): void;
-declare function renderInventoryTable(): void;
-declare function renderPedidosTable(): void;
-declare function renderClientsTable(): void;
-declare function updateDashboard(): void;
-declare function renderBalance(): void;
-declare function openModal(id: string): void;
-declare function closeModal(id: string | HTMLElement): void;
-declare function showConfirm(message: string, title?: string): Promise<boolean>;
-declare function manekiToastExport(msg: string, tipo?: string): void;
-declare function saveProducts(): void;
-declare function savePedidos(): void;
+declare var sqliteStorage: { set(key: string, data: any): Promise<boolean>; get(key: string, def?: any): Promise<any>; getAll(keys: string[]): Promise<any>; getSize(): Promise<any>; };
+declare function _setupRealtime(): void;
+declare function _migrateToRelationalIfEmpty(): Promise<void>;
+declare function sincronizarPendientes(): Promise<void>;
+declare function subirImagenStorage(file: File): Promise<string | null>;
+
+// Save functions
+declare function saveProducts(): Promise<void>;
+declare function savePedidos(): Promise<void>;
+declare function savePedidosFinalizados(): Promise<void>;
 declare function saveClients(): void;
 declare function saveSalesHistory(): void;
 declare function saveIncomes(): void;
 declare function saveExpenses(): void;
-declare function registrarMovimiento(opts: {
-    productoId: string;
-    productoNombre: string;
-    tipo: string;
-    cantidad: number;
-    motivo?: string;
-    stockAntes?: number;
-    stockDespues?: number;
-}): void;
+declare function saveCategories(): void;
+declare function saveQuotes(): void;
+declare function saveReceivables(): void;
+declare function savePayables(): void;
+declare function saveStockMovimientos(): void;
+declare function saveGastosRecurrentes(): void;
+
+// Navigation & UI
+declare function showSection(name: string): void;
+declare function openModal(id: string): void;
+declare function closeModal(id: string | HTMLElement): void;
+declare function showConfirm(message: string, title?: string): Promise<boolean>;
+declare function manekiToastExport(msg: string, tipo?: string): void;
+declare function mostrarBannerConexion(online: boolean, msg: string): void;
+
+// Renders
+declare function renderInventoryTable(): void;
+declare function renderPedidosTable(): void;
+declare function renderClientsTable(): void;
+declare function renderBalance(): void;
+declare function renderSalesHistory(): void;
+declare function renderAnalisis(): void;
+declare function renderBienvenida(): void;
+declare function renderKanban(): void;
+declare function renderQuotesTable(): void;
+declare function updateDashboard(): void;
+declare function initChart(): void;
+declare function initReports(): void;
+declare function initCategoryChart(): void;
+declare function updateStorePreview(): void;
+declare function loadStoreConfigUI(): void;
+
+// Helpers
+declare function _mkAvatar(name: string): string;
+declare function _mkColorDot(color: string): string;
+declare function _mkColorEmoji(status: string): string;
+declare function _mkTimeline(status: string): string;
+declare function _mkUpdatePedidosTotals(): void;
+declare function _money(n: number): string;
+declare function _sumLineas(items: any[]): number;
+declare function setupSearchFilter(): void;
+declare function setupMobileMenu(): void;
+declare function openProductModal(id?: string): void;
+declare function poblarSelectPedido(): void;
+declare function guardarDatos(): void;
+declare function actualizarBadgePOS(): void;
+
+declare function registrarMovimiento(productoId: string, productoNombre: string, tipo: string, cantidad: number, motivo?: string): void;
+
+declare var MKS: any;

@@ -759,7 +759,7 @@ const _RELATIONAL_TABLES = {
         historialCostos: row.historial_costos, compraPaquete: row.compra_paquete,
         kitComponentes: row.kit_componentes, isKit: row.is_kit
     })},
-    salesHistory: { table: 'sales_history', min: 1, map: row => ({ ...row }) },
+    salesHistory: { table: 'sales_history', min: 1, orderBy: 'date', limit: 1000, map: row => ({ ...row }) },
     clients: { table: 'clients', min: 1, map: row => ({
         ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase
     })},
@@ -780,7 +780,7 @@ const _RELATIONAL_TABLES = {
         fechaUltimoEstado: row.fecha_ultimo_estado, fechaPedido: row.fecha_pedido,
         empaquesDescontados: row.empaques_descontados === true
     })},
-    pedidosFinalizados: { table: 'orders_finalizados', min: 1, map: row => ({
+    pedidosFinalizados: { table: 'orders_finalizados', min: 1, orderBy: 'fecha_finalizado', limit: 500, map: row => ({
         id: row.id, folio: row.folio, cliente: row.cliente, telefono: row.telefono,
         redes: row.redes, fecha: row.fecha, entrega: row.entrega, concepto: row.concepto,
         cantidad: row.cantidad || 1, costo: row.costo || 0, anticipo: row.anticipo || 0,
@@ -802,10 +802,11 @@ async function _loadFromTable(key) {
     const cfg = _RELATIONAL_TABLES[key];
     if (!cfg || !db) return null;
     try {
-        const { data, error } = await _withTimeout(db.from(cfg.table).select('*'), 10000);
+        let query = db.from(cfg.table).select('*');
+        if (cfg.orderBy) query = query.order(cfg.orderBy, { ascending: false });
+        if (cfg.limit) query = query.limit(cfg.limit);
+        const { data, error } = await _withTimeout(query, 10000);
         if (error || !data) return null;
-        // Validación: si la tabla tiene menos registros de lo esperado, no confiar
-        // (podría ser una tabla vacía vs store con datos reales)
         if (cfg.min > 0 && data.length < cfg.min) return null;
         const mapped = data.map(cfg.map);
         console.log(`[DB] ✓ ${key} loaded from ${cfg.table} (${mapped.length} rows)`);
@@ -815,6 +816,23 @@ async function _loadFromTable(key) {
         return null;
     }
 }
+
+async function _loadMoreFromTable(key, offset, pageSize) {
+    const cfg = _RELATIONAL_TABLES[key];
+    if (!cfg || !db) return [];
+    try {
+        let query = db.from(cfg.table).select('*');
+        if (cfg.orderBy) query = query.order(cfg.orderBy, { ascending: false });
+        query = query.range(offset, offset + pageSize - 1);
+        const { data, error } = await _withTimeout(query, 10000);
+        if (error || !data) return [];
+        return data.map(cfg.map);
+    } catch(e) {
+        console.warn(`[DB] _loadMoreFromTable(${key}) failed:`, e?.message);
+        return [];
+    }
+}
+window._loadMoreFromTable = _loadMoreFromTable;
 
 // Migración one-time: si la tabla relacional está vacía pero tenemos datos locales,
 // empuja los datos a la tabla relacional para que las lecturas funcionen.

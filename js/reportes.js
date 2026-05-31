@@ -758,7 +758,7 @@ function initCategoryChart() {
 }
 
 // ── Historial de ventas ───────────────────────────────────────────────────
-let salesHistoryPage = 1;
+var salesHistoryPage = 1;
 const SALES_PAGE_SIZE = 20;
 
 function limpiarFiltroFechas() {
@@ -859,105 +859,7 @@ function renderSalesHistory() {
 }
 window.renderSalesHistory = renderSalesHistory;
 
-// ── Navegación entre secciones ─────────────────────────────────────────────
-function showSection(sectionName) {
-    localStorage.setItem('maneki_activeSection', sectionName);
-
-    // #23 — Consolidado: limpiar timeout de búsqueda POS (antes en design-system.js)
-    if (window._posSearchTimeout) { clearTimeout(window._posSearchTimeout); window._posSearchTimeout = null; }
-
-    // #23 — Consolidado: morph de color entre secciones (antes en design-system.js)
-    if (typeof window._mkMorphTo === 'function') window._mkMorphTo(sectionName);
-
-    if (sectionName !== 'bienvenida' && window._bienvenidaClock) {
-        clearInterval(window._bienvenidaClock); window._bienvenidaClock = null;
-    }
-    // MEJ-07: _dashClock es el reloj del dashboard; destruirlo al salir para evitar
-    // work innecesario en el hilo principal mientras el dashboard no está visible.
-    // Se reinicia automáticamente cuando _updateDashboardImpl() se llama al volver.
-    if (sectionName !== 'dashboard' && window._dashClock) {
-        clearInterval(window._dashClock); window._dashClock = null;
-    }
-
-    document.querySelectorAll('main > section, section').forEach(s => {
-        s.classList.add('hidden'); s.style.animation = '';
-    });
-
-    const target = document.getElementById(`${sectionName}-section`);
-    if (target) {
-        target.classList.remove('hidden');
-        void target.offsetWidth;
-        target.style.animation = 'mkSectionIn 0.38s cubic-bezier(0.16,1,0.3,1) both';
-    }
-
-    document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
-    const sidebarBtn = document.querySelector(`[data-section="${sectionName}"]`);
-    if (sidebarBtn) {
-        sidebarBtn.classList.add('active');
-        sidebarBtn.animate([{background:'rgba(197,151,59,0.35)'},{background:'rgba(197,151,59,0.20)'}],{duration:400,easing:'ease-out'});
-    }
-
-    if (window.innerWidth < 768) document.getElementById('sidebar')?.classList.add('collapsed');
-
-    if (sectionName === 'reportes') {
-        salesHistoryPage = 1;
-        const si = document.getElementById('salesSearchInput'); if (si) si.value = '';
-        setTimeout(() => {
-            initCategoryChart();
-            renderSalesHistory();
-            initComparativaMeses();
-            initTopProductosChart();
-            initMargenCategoriaChart();
-        }, 150);
-    }
-    if (sectionName === 'analisis')   setTimeout(() => { if (typeof renderAnalisis === 'function') renderAnalisis(); }, 100);
-    if (sectionName === 'equipos') {
-        const pctInput = document.getElementById('roiPorcentajeGlobal');
-        if (pctInput && typeof roiConfig !== 'undefined') pctInput.value = roiConfig.porcentaje;
-        if (typeof renderEquiposGrid   === 'function') renderEquiposGrid();
-        if (typeof renderRoiHistorial  === 'function') renderRoiHistorial();
-        setTimeout(() => { if (typeof renderGraficaROI === 'function') renderGraficaROI(); }, 300);
-    }
-    if (sectionName === 'dashboard') {
-        if (typeof window.updateDashboard === 'function') setTimeout(window.updateDashboard, 50);
-        setTimeout(() => { if (typeof renderTopClientes === 'function') renderTopClientes(); }, 300);
-        // #23 — Consolidado: animación KPIs al entrar a dashboard (antes en design-system.js)
-        if (typeof window._mkAnimateKPIs === 'function') setTimeout(window._mkAnimateKPIs, 220);
-    }
-    if (sectionName === 'bienvenida') if (typeof renderBienvenida === 'function') renderBienvenida();
-    if (sectionName === 'inventory') {
-        setTimeout(() => { const s = document.getElementById('inventorySearch'); if (s) s.focus(); }, 200);
-        // #23 — Consolidado: parchear botones de inventario (antes en inventory-4.js)
-        if (typeof patchInventoryButtons === 'function') setTimeout(patchInventoryButtons, 100);
-    }
-    if (sectionName === 'clientes')   if (typeof renderClientsTable  === 'function') renderClientsTable();
-    if (sectionName === 'categorias') if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
-    // #5 Breadcrumb
-    if (typeof window._mkUpdateBreadcrumb === 'function') window._mkUpdateBreadcrumb(sectionName);
-    // #23 — Consolidado: lazy loading de secciones (antes en design-system.js)
-    if (typeof window._lazyLoad === 'function') window._lazyLoad(sectionName);
-}
-window.showSection = showSection;
-// #23 — Marcar _mk4 para que design-system.js no intente parchear
-window.showSection._mk4 = true;
-
-// ── Flush queue: si showSection fue llamado antes de que cargara este módulo ──
-(function(){
-    var realFn = showSection;
-    var queue  = window._showSectionQueue || [];
-    window._showSectionStub = false;
-    // Ejecutar sólo la última llamada encolada (la más reciente es la que importa)
-    if (queue.length) {
-        var last = queue[queue.length - 1];
-        try { realFn(last); } catch(e) {}
-    }
-    window._showSectionQueue = [];
-})();
-
-window.safeCall = function(fn, ...args) {
-    if (typeof window[fn] === 'function') window[fn](...args);
-    else document.addEventListener('DOMContentLoaded', () => { if (typeof window[fn] === 'function') window[fn](...args); });
-};
+// showSection() y safeCall() movidos a js/navigation.js
 
 // ── Mobile menu ────────────────────────────────────────────────────────────
 function setupMobileMenu() {
