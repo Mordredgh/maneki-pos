@@ -61,6 +61,27 @@
      CORE LAYOUT
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
+  /* Evitar que el contenido se salga del viewport (causa zoom-out no deseado) */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  /* Contenedores que pueden desbordarse: contenerlos */
+  #pedidos-section,
+  #inventory-section,
+  #balance-section,
+  #clientes-section,
+  #analisis-section,
+  #reportes-section,
+  #equipos-section,
+  #configuracion-section,
+  #categorias-section,
+  #quotes-section {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
   /* Prevenir zoom automático de iOS en inputs */
   input[type="text"],
   input[type="number"],
@@ -234,7 +255,40 @@
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      PIPELINE KANBAN BAR
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  #_kanbanPipelineBar { flex-direction: column !important; gap: 4px !important; }
+  #_kanbanPipelineBar {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+  #_kanbanPipelineBar > * {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* Kanban: scroll horizontal SOLO dentro de su contenedor */
+  .overflow-x-auto {
+    max-width: 100% !important;
+  }
+  #vistaKanban > .overflow-x-auto {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+
+  /* Vista tabla pedidos: filtros wrap */
+  #tablaBuscadorBar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  #tablaBuscadorBar > div,
+  #tablaBuscadorBar > select,
+  #tablaBuscadorBar > button {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
 
   /* ══════════════════════════════════════════
      PEDIDOS POR ENCARGO
