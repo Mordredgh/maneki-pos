@@ -1067,73 +1067,7 @@ function initBusquedaGlobal() {
     });
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ── MEJORA 2: MODO COMPACTO ───────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════════════
-
-function initModoCompacto() {
-    // Inyectar estilos CSS del modo compacto
-    if (!document.getElementById('maneki-compact-styles')) {
-        const style = document.createElement('style');
-        style.id = 'maneki-compact-styles';
-        style.textContent = `
-            body.compact-mode table td,
-            body.compact-mode table th { padding: 4px 8px !important; font-size: 12px !important; }
-            body.compact-mode .card { padding: 8px !important; }
-            body.compact-mode .kanban-card { padding: 6px 8px !important; }
-            body.compact-mode .stat-card { padding: 8px !important; }
-            body.compact-mode h2 { font-size: 1rem !important; }
-            body.compact-mode .text-sm { font-size: 11px !important; }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // Crear botón si no existe
-    if (document.getElementById('compactModeBtn')) return;
-
-    const btn = document.createElement('button');
-    btn.id = 'compactModeBtn';
-    btn.title = 'Modo compacto';
-    btn.style.cssText = 'background:none; border:1px solid #d1d5db; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:16px; color:#6b7280; display:flex; align-items:center; gap:4px; line-height:1';
-
-    const compactoActivo = localStorage.getItem('maneki_compactMode') === '1';
-    if (compactoActivo) {
-        document.body.classList.add('compact-mode');
-        btn.textContent = '⊡';
-        btn.title = 'Modo compacto activo — clic para desactivar';
-    } else {
-        btn.textContent = '⊟';
-        btn.title = 'Activar modo compacto';
-    }
-
-    btn.addEventListener('click', function() {
-        const activo = document.body.classList.toggle('compact-mode');
-        btn.textContent = activo ? '⊡' : '⊟';
-        btn.title = activo ? 'Modo compacto activo — clic para desactivar' : 'Activar modo compacto';
-        localStorage.setItem('maneki_compactMode', activo ? '1' : '0');
-        manekiToastExport(activo ? '⊡ Modo compacto activado' : '⊟ Modo normal', 'info');
-    });
-
-    // Inyectar en la barra de navegación
-    const destino = document.querySelector('nav') ||
-                    document.getElementById('topbar') ||
-                    document.querySelector('[id*="topbar"]') ||
-                    document.querySelector('header') ||
-                    document.querySelector('.navbar') ||
-                    document.querySelector('.topnav');
-
-    if (destino) {
-        // Intentar poner al final de la nav
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:flex; align-items:center; margin-left:auto; padding:0 8px';
-        wrapper.appendChild(btn);
-        destino.appendChild(wrapper);
-    } else {
-        // Fallback: esquina superior derecha fija
-        btn.style.cssText += '; position:fixed; top:8px; right:8px; z-index:8888; background:white; box-shadow:0 1px 4px rgba(0,0,0,0.15)';
-        document.body.appendChild(btn);
-    }
-}
+// initModoCompacto eliminado — botón removido del sidebar
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ── MEJORA 3: LOG DE ERRORES (Ctrl+Shift+L) ──────────────────────────────
@@ -1262,7 +1196,6 @@ function _abrirErrorLog() {
 (function _initMejoras() {
     function _run() {
         initBusquedaGlobal();
-        initModoCompacto();
         initErrorLog();
         initResponsive();
     }
