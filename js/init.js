@@ -202,12 +202,6 @@
       if (e.target === ov) ov.classList.remove("visible");
     });
     document.body.appendChild(ov);
-    const fab = document.createElement("button");
-    fab.id = "mk-help-fab";
-    fab.textContent = "?";
-    fab.setAttribute("data-tip", "Atajos de teclado");
-    fab.addEventListener("click", () => ov.classList.add("visible"));
-    document.body.appendChild(fab);
   }
   setTimeout(_createShortcutsOverlay, 800);
   document.addEventListener("keydown", (e) => {
@@ -315,7 +309,7 @@
         { target: '[data-section="inventory"]', title: "📦 Inventario", text: "Controla tus productos, materias primas y stock en tiempo real." },
         { target: '[data-section="balance"]', title: "💰 Balance", text: "Registra ingresos, gastos y ve cuánto te deben tus clientes." },
         { target: '[data-section="clientes"]', title: "👥 Clientes", text: "Tu base de datos de clientes con historial de pedidos y estadísticas." },
-        { target: "#mk-help-fab", title: "⌨️ Atajos", text: "Presiona ? en cualquier momento para ver los atajos de teclado. ¡Bienvenido a Maneki!" }
+        { target: '[data-section="configuracion"]', title: "⚙️ Listo", text: "Presiona ? en cualquier momento para ver atajos de teclado. ¡Bienvenido a Maneki!" }
       ];
       let current = 0;
       const ov = document.createElement("div");
