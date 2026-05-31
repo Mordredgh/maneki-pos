@@ -856,8 +856,50 @@ function renderSalesHistory() {
     if (btnPrev)  btnPrev.disabled = salesHistoryPage<=1;
     if (btnNext)  btnNext.disabled = salesHistoryPage>=totalPages;
     if (pagEl)    pagEl.style.display = totalPages>1 ? 'flex' : 'none';
+
+    // Botón "Cargar más desde Supabase" — visible cuando cargamos el límite inicial (1000)
+    let _loadMoreBtn = document.getElementById('salesLoadMoreBtn');
+    const _canLoadMore = (window.salesHistory||[]).length >= 1000 && !window._salesHistoryAllLoaded;
+    if (_canLoadMore) {
+        if (!_loadMoreBtn) {
+            _loadMoreBtn = document.createElement('div');
+            _loadMoreBtn.id = 'salesLoadMoreBtn';
+            _loadMoreBtn.style.cssText = 'text-align:center;margin-top:12px;';
+            _loadMoreBtn.innerHTML = `<button onclick="cargarMasVentas()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #C5A572;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más registros ↓</button>`;
+            const tableContainer = document.getElementById('salesHistoryTable')?.parentElement;
+            if (tableContainer) tableContainer.appendChild(_loadMoreBtn);
+        } else {
+            _loadMoreBtn.style.display = '';
+        }
+    } else if (_loadMoreBtn) {
+        _loadMoreBtn.style.display = 'none';
+    }
 }
 window.renderSalesHistory = renderSalesHistory;
+
+async function cargarMasVentas() {
+    const btn = document.querySelector('#salesLoadMoreBtn button');
+    if (btn) { btn.disabled = true; btn.textContent = 'Cargando...'; }
+    try {
+        const offset = (window.salesHistory||[]).length;
+        const mas = await window._loadMoreFromTable('salesHistory', offset, 500);
+        if (mas && mas.length > 0) {
+            (window.salesHistory||[]).push(...mas);
+            window.salesHistory = window.salesHistory;
+            if (mas.length < 500) window._salesHistoryAllLoaded = true;
+            renderSalesHistory();
+            manekiToastExport(`✅ ${mas.length} registros adicionales cargados`, 'ok');
+        } else {
+            window._salesHistoryAllLoaded = true;
+            renderSalesHistory();
+            manekiToastExport('Ya cargaste todos los registros', 'ok');
+        }
+    } catch(e) {
+        manekiToastExport('Error al cargar más registros', 'err');
+        if (btn) { btn.disabled = false; btn.textContent = 'Cargar más registros ↓'; }
+    }
+}
+window.cargarMasVentas = cargarMasVentas;
 
 // showSection() y safeCall() movidos a js/navigation.js
 

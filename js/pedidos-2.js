@@ -1225,6 +1225,23 @@ function renderHistorialPedidos() {
             </div>`;
     }
 
+    // Botón "Cargar más" — visible cuando se llegó al límite inicial (500)
+    let _histLoadMoreBtn = document.getElementById('histLoadMoreBtn');
+    const _puedeCargaMas = (window.pedidosFinalizados||[]).length >= 500 && !window._pedidosFinAllLoaded;
+    if (_puedeCargaMas) {
+        if (!_histLoadMoreBtn) {
+            _histLoadMoreBtn = document.createElement('div');
+            _histLoadMoreBtn.id = 'histLoadMoreBtn';
+            _histLoadMoreBtn.style.cssText = 'text-align:center;margin-top:12px;';
+            _histLoadMoreBtn.innerHTML = `<button onclick="cargarMasPedidosFinalizados()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #C5A572;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más pedidos ↓</button>`;
+            lista.insertAdjacentElement('afterend', _histLoadMoreBtn);
+        } else {
+            _histLoadMoreBtn.style.display = '';
+        }
+    } else if (_histLoadMoreBtn) {
+        _histLoadMoreBtn.style.display = 'none';
+    }
+
     lista.innerHTML = pageItems.length === 0
         ? '<p class="text-center text-gray-400 py-6 text-sm">Sin pedidos en el historial</p>'
         : pageItems.map(p => {
@@ -1267,6 +1284,30 @@ function renderHistorialPedidos() {
         </div>`;
         }).join('');
 }
+
+async function cargarMasPedidosFinalizados() {
+    const btn = document.querySelector('#histLoadMoreBtn button');
+    if (btn) { btn.disabled = true; btn.textContent = 'Cargando...'; }
+    try {
+        const offset = (window.pedidosFinalizados||[]).length;
+        const mas = await window._loadMoreFromTable('pedidosFinalizados', offset, 200);
+        if (mas && mas.length > 0) {
+            (window.pedidosFinalizados||[]).push(...mas);
+            window.pedidosFinalizados = window.pedidosFinalizados;
+            if (mas.length < 200) window._pedidosFinAllLoaded = true;
+            renderHistorialPedidos();
+            manekiToastExport(`✅ ${mas.length} pedidos adicionales cargados`, 'ok');
+        } else {
+            window._pedidosFinAllLoaded = true;
+            renderHistorialPedidos();
+            manekiToastExport('Ya cargaste todos los pedidos', 'ok');
+        }
+    } catch(e) {
+        manekiToastExport('Error al cargar más pedidos', 'err');
+        if (btn) { btn.disabled = false; btn.textContent = 'Cargar más pedidos ↓'; }
+    }
+}
+window.cargarMasPedidosFinalizados = cargarMasPedidosFinalizados;
 
 // ============================================================
 // GRUPO C — GRÁFICA ROI + RESUMEN MENSUAL + TOP CLIENTES
