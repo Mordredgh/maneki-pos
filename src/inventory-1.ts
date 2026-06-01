@@ -1157,6 +1157,199 @@ function exportarSnapshotCSV(fecha) {
 window.exportarSnapshotCSV = exportarSnapshotCSV;
 
 // ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════
+// BULK EDIT DE PRECIOS — aumentar/disminuir % a productos seleccionados
+// ══════════════════════════════════════════════════════════════════════════
+function abrirBulkEditPrecios() {
+    const prods = (window.products || []).filter(p => p.tipo !== 'materia_prima' && p.tipo !== 'servicio' && Number(p.price || 0) > 0);
+    if (prods.length === 0) { manekiToastExport('No hay productos con precio para editar', 'warn'); return; }
+
+    let modal = document.getElementById('_bulkEditModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = '_bulkEditModal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(modal);
+    }
+
+    const cats = [...new Set(prods.map(p => p.category || p.categoria || 'Sin categoría'))];
+
+    modal.innerHTML = `
+        <div style="background:#fff;border-radius:20px;max-width:520px;width:calc(100% - 32px);max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 25px 60px rgba(0,0,0,.25);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="font-size:1.1rem;font-weight:800;color:#1F2937;margin:0;">📊 Actualización masiva de precios</h3>
+                <button onclick="document.getElementById('_bulkEditModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9CA3AF;">×</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                <div>
+                    <label style="font-size:.75rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Aplicar a</label>
+                    <select id="_bulkCatFilter" style="width:100%;padding:8px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:.82rem;">
+                        <option value="">Todos los productos</option>
+                        ${cats.map(c => `<option value="${_esc(c)}">${_esc(c)}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:.75rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Ajuste</label>
+                    <div style="display:flex;gap:6px;">
+                        <select id="_bulkTipo" style="padding:8px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:.82rem;">
+                            <option value="pct_up">▲ % aumento</option>
+                            <option value="pct_dn">▼ % descuento</option>
+                            <option value="fixed">= Precio fijo</option>
+                        </select>
+                        <input type="number" id="_bulkValor" placeholder="10" min="0" step="0.01"
+                            style="width:80px;padding:8px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:.82rem;text-align:center;">
+                    </div>
+                </div>
+            </div>
+            <div id="_bulkPreview" style="max-height:260px;overflow-y:auto;border:1px solid #F3F4F6;border-radius:12px;margin-bottom:14px;">
+                <div style="padding:12px;text-align:center;color:#9CA3AF;font-size:.8rem;">Configura el ajuste para ver la vista previa</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button onclick="document.getElementById('_bulkEditModal').style.display='none'"
+                    style="flex:1;padding:10px;border:1.5px solid #E5E7EB;border-radius:12px;background:#fff;font-size:.85rem;cursor:pointer;">Cancelar</button>
+                <button id="_bulkApplyBtn" onclick="_aplicarBulkPrecios()"
+                    style="flex:2;padding:10px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;">
+                    ✅ Aplicar cambios
+                </button>
+            </div>
+        </div>`;
+
+    modal.style.display = 'flex';
+
+    // Live preview al cambiar filtros
+    const update = () => _renderBulkPreview();
+    modal.querySelector('#_bulkCatFilter')?.addEventListener('change', update);
+    modal.querySelector('#_bulkTipo')?.addEventListener('change', update);
+    modal.querySelector('#_bulkValor')?.addEventListener('input', update);
+}
+window.abrirBulkEditPrecios = abrirBulkEditPrecios;
+
+function _calcBulkPrecio(precioActual: number, tipo: string, valor: number): number {
+    if (tipo === 'pct_up') return precioActual * (1 + valor / 100);
+    if (tipo === 'pct_dn') return precioActual * (1 - valor / 100);
+    if (tipo === 'fixed')  return valor;
+    return precioActual;
+}
+
+function _getBulkProductos() {
+    const catFilter = (document.getElementById('_bulkCatFilter') as HTMLSelectElement)?.value || '';
+    return (window.products || []).filter(p => {
+        if (p.tipo === 'materia_prima' || p.tipo === 'servicio') return false;
+        if (Number(p.price || 0) <= 0) return false;
+        if (catFilter) {
+            const cat = p.category || p.categoria || 'Sin categoría';
+            if (cat !== catFilter) return false;
+        }
+        return true;
+    });
+}
+
+function _renderBulkPreview() {
+    const container = document.getElementById('_bulkPreview');
+    if (!container) return;
+    const tipo  = (document.getElementById('_bulkTipo') as HTMLSelectElement)?.value || 'pct_up';
+    const valor = parseFloat((document.getElementById('_bulkValor') as HTMLInputElement)?.value || '0');
+    const prods = _getBulkProductos();
+
+    if (!valor || valor <= 0) {
+        container.innerHTML = `<div style="padding:12px;text-align:center;color:#9CA3AF;font-size:.8rem;">Ingresa un valor para ver la vista previa</div>`;
+        return;
+    }
+    container.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;">
+            <thead><tr style="background:#F9FAFB;">
+                <th style="padding:8px 10px;text-align:left;font-size:.7rem;color:#6B7280;font-weight:700;">Producto</th>
+                <th style="padding:8px 10px;text-align:right;font-size:.7rem;color:#6B7280;font-weight:700;">Precio actual</th>
+                <th style="padding:8px 10px;text-align:right;font-size:.7rem;color:#6B7280;font-weight:700;">Nuevo precio</th>
+            </tr></thead>
+            <tbody>
+                ${prods.slice(0, 30).map(p => {
+                    const nuevo = _calcBulkPrecio(Number(p.price), tipo, valor);
+                    const diff = nuevo - Number(p.price);
+                    const color = diff > 0 ? '#16A34A' : diff < 0 ? '#DC2626' : '#6B7280';
+                    return `<tr style="border-bottom:1px solid #F3F4F6;">
+                        <td style="padding:6px 10px;font-size:.78rem;color:#374151;">${_esc(p.name)}</td>
+                        <td style="padding:6px 10px;font-size:.78rem;color:#6B7280;text-align:right;">$${Number(p.price).toFixed(2)}</td>
+                        <td style="padding:6px 10px;font-size:.78rem;font-weight:700;color:${color};text-align:right;">$${nuevo.toFixed(2)}</td>
+                    </tr>`;
+                }).join('')}
+                ${prods.length > 30 ? `<tr><td colspan="3" style="padding:6px 10px;font-size:.72rem;color:#9CA3AF;text-align:center;">... y ${prods.length - 30} más</td></tr>` : ''}
+            </tbody>
+        </table>`;
+}
+window._renderBulkPreview = _renderBulkPreview;
+
+async function _aplicarBulkPrecios() {
+    const tipo  = (document.getElementById('_bulkTipo') as HTMLSelectElement)?.value || 'pct_up';
+    const valor = parseFloat((document.getElementById('_bulkValor') as HTMLInputElement)?.value || '0');
+    const prods = _getBulkProductos();
+    if (!valor || valor <= 0 || prods.length === 0) { manekiToastExport('Configura un valor válido', 'warn'); return; }
+
+    const label = tipo === 'pct_up' ? `+${valor}%` : tipo === 'pct_dn' ? `-${valor}%` : `precio fijo $${valor}`;
+    const ok = await (typeof showConfirm === 'function'
+        ? showConfirm(`¿Aplicar ${label} a ${prods.length} producto(s)?`, 'Confirmar cambio masivo')
+        : Promise.resolve(confirm(`¿Aplicar ${label} a ${prods.length} producto(s)?`)));
+    if (!ok) return;
+
+    prods.forEach(p => {
+        const nuevo = Math.max(0.01, _calcBulkPrecio(Number(p.price), tipo, valor));
+        // Guardar en historial de precios si existe
+        if (!p.historialPrecios) p.historialPrecios = [];
+        p.historialPrecios.push({ precio: Number(p.price), fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0]), motivo: `Bulk: ${label}` });
+        p.price = parseFloat(nuevo.toFixed(2));
+    });
+
+    if (typeof saveProducts === 'function') saveProducts();
+    if (typeof renderInventoryTable === 'function') renderInventoryTable();
+    if (typeof window._rebuildProductMap === 'function') window._rebuildProductMap();
+    document.getElementById('_bulkEditModal')!.style.display = 'none';
+    manekiToastExport(`✅ ${label} aplicado a ${prods.length} producto(s)`, 'ok');
+}
+window._aplicarBulkPrecios = _aplicarBulkPrecios;
+
+// ══════════════════════════════════════════════════════════════════════════
+// IMPRESIÓN DE ETIQUETAS BATCH
+// ══════════════════════════════════════════════════════════════════════════
+function imprimirEtiquetasBatch(ids?: string[]) {
+    const prods = ids
+        ? (window.products || []).filter(p => ids.includes(String(p.id)))
+        : (window.products || []).filter(p => p.tipo !== 'materia_prima' && p.tipo !== 'servicio' && Number(p.price || 0) > 0);
+
+    if (prods.length === 0) { manekiToastExport('No hay productos para imprimir etiquetas', 'warn'); return; }
+
+    const etiquetasHTML = prods.map(p => `
+        <div style="width:63mm;height:38mm;border:1px solid #ddd;border-radius:6px;padding:5mm 4mm;
+                    display:inline-flex;flex-direction:column;justify-content:space-between;
+                    margin:2mm;page-break-inside:avoid;box-sizing:border-box;vertical-align:top;">
+            <div>
+                <div style="font-size:9pt;font-weight:800;color:#1a0533;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2;">${_esc(p.name)}</div>
+                ${p.sku ? `<div style="font-size:7pt;color:#9ca3af;margin-top:1mm;">SKU: ${_esc(p.sku)}</div>` : ''}
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                <div style="font-size:16pt;font-weight:900;color:#C5A572;">$${Number(p.price).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:2})}</div>
+                <div style="font-size:7pt;color:#9ca3af;text-align:right;">${_esc(p.category || p.categoria || '')}</div>
+            </div>
+        </div>`).join('');
+
+    const win = window.open('', '_blank');
+    if (!win) { manekiToastExport('Activa ventanas emergentes para imprimir', 'warn'); return; }
+    win.document.write(`<!DOCTYPE html><html><head>
+        <title>Etiquetas — Maneki Store</title>
+        <style>
+            @page { size: A4; margin: 10mm; }
+            body { font-family: 'Outfit', Arial, sans-serif; margin: 0; }
+            .header { text-align:center; padding:4mm 0; color:#9ca3af; font-size:8pt; border-bottom:1px solid #eee; margin-bottom:4mm; }
+            @media print { .no-print { display:none; } }
+        </style>
+    </head><body>
+        <div class="header no-print">${prods.length} etiquetas · Maneki Store · <button onclick="window.print()" style="padding:4px 12px;background:#C5A572;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:8pt;">🖨️ Imprimir</button></div>
+        ${etiquetasHTML}
+    </body></html>`);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+}
+window.imprimirEtiquetasBatch = imprimirEtiquetasBatch;
+
 // ── MODAL PRODUCTO TERMINADO — inyectado dinámicamente ───────────────────
 // ══════════════════════════════════════════════════════════════════════════
 

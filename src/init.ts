@@ -188,10 +188,23 @@
             <div class="shortcut-row"><span>Nuevo pedido / producto</span><span class="shortcut-key">N</span></div>
             <div class="shortcut-row"><span>Búsqueda global</span><span class="shortcut-key">/</span></div>
             <div class="shortcut-row"><span>Búsqueda rápida</span><span class="shortcut-key">Ctrl K</span></div>
+            <div class="shortcut-row"><span>Deshacer última acción</span><span class="shortcut-key">Ctrl Z</span></div>
+            <div class="shortcut-row"><span>Ir a sección 1-9</span><span class="shortcut-key">Ctrl 1…9</span></div>
             <div class="shortcut-row"><span>Cerrar modal / overlay</span><span class="shortcut-key">Esc</span></div>
+            <div class="shortcut-row"><span>Recargar dashboard</span><span class="shortcut-key">R</span></div>
             <div class="shortcut-row"><span>Log de errores</span><span class="shortcut-key">Ctrl ⇧ L</span></div>
             <div class="shortcut-row"><span>Mostrar atajos</span><span class="shortcut-key">?</span></div>
-            <p style="font-size:.65rem;color:#9ca3af;margin-top:12px;text-align:center;">Los atajos solo funcionan cuando no estás escribiendo en un campo</p>
+            <div style="border-top:1px solid #f3f4f6;margin:10px 0 6px;padding-top:6px;">
+                <p style="font-size:.65rem;color:#9ca3af;margin:0;font-weight:600;">Secciones (Ctrl+número)</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:4px;font-size:.65rem;color:#6b7280;">
+                    <span>1 = Inicio</span><span>2 = Pedidos</span>
+                    <span>3 = Inventario</span><span>4 = Balance</span>
+                    <span>5 = Reportes</span><span>6 = Clientes</span>
+                    <span>7 = Envíos</span><span>8 = Equipos</span>
+                    <span>9 = Backup</span>
+                </div>
+            </div>
+            <p style="font-size:.65rem;color:#9ca3af;margin-top:8px;text-align:center;">Los atajos solo funcionan cuando no estás escribiendo en un campo</p>
         </div>`;
         ov.addEventListener('click', e => { if(e.target===ov) ov.classList.remove('visible'); });
         document.body.appendChild(ov);

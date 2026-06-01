@@ -383,6 +383,8 @@ function _updateDashboardImpl() {
     try { renderSparkline(); } catch(e) {}
     try { renderComparativaSemanal(); } catch(e) {}
     try { renderCashFlowChart(); } catch(e) {}
+    try { checkGastosInusuales(); } catch(e) {}
+    try { renderWidgetClima(); } catch(e) {}
 
     // R2-A5: Desglose "Me deben" por cliente — onclick en la tarjeta
     const arCard = ar ? ar.closest('[onclick]') || ar.parentElement : null;
@@ -1052,3 +1054,210 @@ function renderCashFlowChart() {
     });
 }
 window.renderCashFlowChart = renderCashFlowChart;
+
+// ══════════════════════════════════════════════════════════════
+// RESUMEN SEMANAL PARA WHATSAPP
+// ══════════════════════════════════════════════════════════════
+function generarResumenSemanalWA() {
+    const hoy = new Date();
+    const hace7 = new Date(hoy); hace7.setDate(hace7.getDate() - 7);
+    const _f = d => d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    const ini = _f(hace7), fin = _f(hoy);
+
+    let ventasTotal = 0, ventasCount = 0;
+    (window.salesHistory||[]).forEach(s => {
+        if (!s.date || s.method==='Cancelado' || s.type==='abono' || s.type==='anticipo') return;
+        if (s.date >= ini && s.date <= fin) { ventasTotal += Number(s.total||0); ventasCount++; }
+    });
+    (window.pedidosFinalizados||[]).forEach(p => {
+        const f = (p.fechaFinalizado||p.fecha||'').split('T')[0];
+        if (f >= ini && f <= fin) { ventasTotal += Number(p.total||0); ventasCount++; }
+    });
+
+    let gastosTotal = 0;
+    (window.expenses||[]).forEach(e => {
+        if (e.date && e.date >= ini && e.date <= fin) gastosTotal += Number(e.amount||0);
+    });
+
+    const pedidosNuevos = (window.pedidos||[]).filter(p => {
+        const f = (p.fechaPedido||p.fechaCreacion||p.fecha||'').split('T')[0];
+        return f >= ini && f <= fin;
+    }).length;
+
+    const neto = ventasTotal - gastosTotal;
+    const ticket = ventasCount > 0 ? (ventasTotal / ventasCount) : 0;
+
+    const texto = `📊 *Resumen Semanal — Maneki Store*\n` +
+        `📅 ${ini} al ${fin}\n\n` +
+        `💰 Ventas: $${ventasTotal.toLocaleString('es-MX',{minimumFractionDigits:2})} (${ventasCount} ventas)\n` +
+        `💸 Gastos: $${gastosTotal.toLocaleString('es-MX',{minimumFractionDigits:2})}\n` +
+        `📈 Neto: $${neto.toLocaleString('es-MX',{minimumFractionDigits:2})} ${neto >= 0 ? '✅' : '⚠️'}\n` +
+        `🎫 Ticket promedio: $${ticket.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}\n` +
+        `📋 Pedidos nuevos: ${pedidosNuevos}\n\n` +
+        `_Generado desde Maneki POS_`;
+
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(texto).then(() => {
+            manekiToastExport('📋 Resumen copiado — pégalo en WhatsApp', 'ok');
+        });
+    } else {
+        prompt('Copia este texto para WhatsApp:', texto);
+    }
+    return texto;
+}
+window.generarResumenSemanalWA = generarResumenSemanalWA;
+
+// ══════════════════════════════════════════════════════════════
+// ALERTA DE GASTOS INUSUALES
+// ══════════════════════════════════════════════════════════════
+function checkGastosInusuales() {
+    const expenses = window.expenses || [];
+    if (expenses.length < 10) return;
+
+    const hoy = new Date();
+    const mesActual = hoy.getFullYear()+'-'+('0'+(hoy.getMonth()+1)).slice(-2);
+
+    const porCategoria: Record<string, number[]> = {};
+    expenses.forEach(e => {
+        if (!e.date) return;
+        const mes = e.date.substring(0, 7);
+        const cat = e.etiqueta || e.category || 'Otros';
+        if (!porCategoria[cat]) porCategoria[cat] = [];
+        if (mes !== mesActual) porCategoria[cat].push(Number(e.amount || 0));
+    });
+
+    const gastosMesActual: Record<string, number> = {};
+    expenses.forEach(e => {
+        if (!e.date || !e.date.startsWith(mesActual)) return;
+        const cat = e.etiqueta || e.category || 'Otros';
+        gastosMesActual[cat] = (gastosMesActual[cat] || 0) + Number(e.amount || 0);
+    });
+
+    const alertas: Array<{cat: string, actual: number, promedio: number}> = [];
+    for (const [cat, historial] of Object.entries(porCategoria)) {
+        if (historial.length < 2) continue;
+        const promedio = historial.reduce((s, v) => s + v, 0) / historial.length;
+        const actual = gastosMesActual[cat] || 0;
+        if (actual > promedio * 2 && actual > 100) {
+            alertas.push({ cat, actual, promedio });
+        }
+    }
+
+    if (alertas.length === 0) return;
+
+    let banner = document.getElementById('alertaGastosInusuales');
+    if (!banner) {
+        const dashRoot = document.querySelector('#dashboard-section .grid, #dashboardSection .grid') ||
+                         document.getElementById('semanalWidget')?.parentElement;
+        if (!dashRoot) return;
+        banner = document.createElement('div');
+        banner.id = 'alertaGastosInusuales';
+        dashRoot.insertAdjacentElement('beforeend', banner);
+    }
+
+    banner.innerHTML = `
+        <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:14px;padding:14px 16px;margin-top:12px;">
+            <p style="font-size:.78rem;font-weight:800;color:#991B1B;margin:0 0 8px;">⚠️ Gastos inusuales este mes</p>
+            ${alertas.map(a => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #FEE2E2;">
+                    <span style="font-size:.75rem;color:#7F1D1D;">${a.cat}</span>
+                    <span style="font-size:.75rem;font-weight:700;color:#DC2626;">$${a.actual.toFixed(0)} <span style="font-weight:400;color:#9CA3AF;">(prom: $${a.promedio.toFixed(0)})</span></span>
+                </div>
+            `).join('')}
+        </div>`;
+}
+window.checkGastosInusuales = checkGastosInusuales;
+
+// ══════════════════════════════════════════════════════════════
+// WIDGET DE CLIMA — OpenMeteo (gratis, sin API key)
+// ══════════════════════════════════════════════════════════════
+let _climaCache: {data: any, ts: number} | null = null;
+async function renderWidgetClima() {
+    let card = document.getElementById('widgetClima');
+    if (!card) {
+        const target = document.getElementById('semanalWidget')?.parentElement
+            || document.querySelector('#dashboard-section .space-y-4, #dashboardSection .space-y-4');
+        if (!target) return;
+        card = document.createElement('div');
+        card.id = 'widgetClima';
+        target.insertAdjacentElement('beforeend', card);
+    }
+
+    // Cache de 30 minutos
+    if (_climaCache && (Date.now() - _climaCache.ts) < 30 * 60 * 1000) {
+        _renderClimaHTML(card, _climaCache.data);
+        return;
+    }
+
+    card.innerHTML = `<div style="background:#F0F9FF;border:1px solid #BAE6FD;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:1.2rem;">🌡️</span>
+        <span style="font-size:.75rem;color:#0369A1;">Cargando clima...</span>
+    </div>`;
+
+    try {
+        // Coordenadas Monterrey, NL
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.6866&longitude=-100.3161&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMonterrey&forecast_days=1');
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        _climaCache = { data, ts: Date.now() };
+        _renderClimaHTML(card, data);
+    } catch(e) {
+        card.innerHTML = '';
+    }
+}
+
+function _climaIcono(code: number): string {
+    if (code === 0) return '☀️';
+    if (code <= 2) return '🌤️';
+    if (code <= 3) return '☁️';
+    if (code <= 48) return '🌫️';
+    if (code <= 57) return '🌧️';
+    if (code <= 67) return '🌧️';
+    if (code <= 77) return '❄️';
+    if (code <= 82) return '🌦️';
+    if (code <= 99) return '⛈️';
+    return '🌡️';
+}
+
+function _climaDesc(code: number): string {
+    if (code === 0) return 'Despejado';
+    if (code <= 2) return 'Parcialmente nublado';
+    if (code <= 3) return 'Nublado';
+    if (code <= 48) return 'Neblina';
+    if (code <= 57) return 'Llovizna';
+    if (code <= 67) return 'Lluvia';
+    if (code <= 77) return 'Nieve';
+    if (code <= 82) return 'Chubascos';
+    if (code <= 99) return 'Tormenta';
+    return 'Variable';
+}
+
+function _renderClimaHTML(card: HTMLElement, data: any) {
+    const cur = data.current;
+    const daily = data.daily;
+    const temp = Math.round(cur.temperature_2m);
+    const max = Math.round(daily.temperature_2m_max[0]);
+    const min = Math.round(daily.temperature_2m_min[0]);
+    const icon = _climaIcono(cur.weathercode);
+    const desc = _climaDesc(cur.weathercode);
+    const humedad = cur.relativehumidity_2m;
+    const viento = Math.round(cur.windspeed_10m);
+
+    card.innerHTML = `
+        <div style="background:linear-gradient(135deg,#EFF6FF,#F0F9FF);border:1px solid #BFDBFE;border-radius:14px;padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:2rem;line-height:1;">${icon}</span>
+                    <div>
+                        <p style="font-size:1.4rem;font-weight:800;color:#1E40AF;margin:0;line-height:1;">${temp}°C</p>
+                        <p style="font-size:.7rem;color:#3B82F6;margin:1px 0 0;">${desc} · Monterrey</p>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <p style="font-size:.72rem;color:#6B7280;margin:0;">↑${max}° ↓${min}°</p>
+                    <p style="font-size:.7rem;color:#6B7280;margin:2px 0 0;">💧${humedad}% 💨${viento}km/h</p>
+                </div>
+            </div>
+        </div>`;
+}
+window.renderWidgetClima = renderWidgetClima;

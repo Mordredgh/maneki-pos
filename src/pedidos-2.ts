@@ -495,6 +495,22 @@ function setPedidoStatus(status) {
             if (!ok) return;
 
             const aplicarCancelacion = (esMerma) => {
+                // Snapshot para undo
+                const statusAnterior = pedido.status;
+                const folioLabel = pedido.folio || pedido.id;
+                if (typeof window.mkPushUndo === 'function') {
+                    window.mkPushUndo(`Cancelar pedido ${folioLabel}`, () => {
+                        const p = window.pedidos.find(x => String(x.id) === String(pedido.id));
+                        if (p && p.status === 'cancelado') {
+                            p.status = statusAnterior;
+                            delete p.fechaCancelado;
+                            if (typeof savePedidos === 'function') savePedidos();
+                            if (typeof renderPedidosTable === 'function') renderPedidosTable();
+                        }
+                    });
+                    if (typeof window.mkMostrarUndoHint === 'function') window.mkMostrarUndoHint(`Cancelar pedido ${folioLabel}`);
+                }
+
                 window.pedidos[idx].status = 'cancelado';
                 window.pedidos[idx].fechaCancelado = new Date().toISOString();
                 if (!esMerma && pedido.inventarioDescontado) {

@@ -441,7 +441,13 @@ input:focus, select:focus, textarea:focus, button:focus {
 
     <div class="mk-bottom-grid" id="mkBottomGrid">
       <div class="mk-card mk-chart-area">
-        <div class="mk-chart-title"><span>&#128202; Comparativa semanal</span></div>
+        <div class="mk-chart-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>&#128202; Comparativa semanal</span>
+          <button onclick="generarResumenSemanalWA()" title="Copiar resumen para WhatsApp"
+            style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">
+            📋 WA
+          </button>
+        </div>
         <div id="semanalWidget"></div>
       </div>
       <!-- NTH-08: Widget día más rentable -->
@@ -800,6 +806,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
                                 <button onclick="guardarSnapshotInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2">📸 Guardar snapshot</button>
                                 <button onclick="verSnapshotsInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📅 Ver snapshots</button>
+                                <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
+                                <button onclick="abrirBulkEditPrecios();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2">💲 Actualizar precios en masa</button>
+                                <button onclick="imprimirEtiquetasBatch();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 rounded-lg text-gray-700 flex items-center gap-2">🏷️ Imprimir etiquetas (todas)</button>
                             </div>
                         </div>
 

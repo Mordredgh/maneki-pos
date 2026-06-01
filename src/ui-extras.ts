@@ -721,6 +721,20 @@ document.addEventListener('keydown', function(e) {
         return;
     }
 
+    // Ctrl+1..9 — navegación rápida a secciones
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        const _sectionKeys: Record<string, string> = {
+            '1': 'bienvenida', '2': 'pedidos', '3': 'inventory',
+            '4': 'balance', '5': 'reportes', '6': 'clientes',
+            '7': 'envios', '8': 'equipos', '9': 'backup'
+        };
+        if (_sectionKeys[e.key]) {
+            e.preventDefault();
+            if (typeof showSection === 'function') showSection(_sectionKeys[e.key]);
+            return;
+        }
+    }
+
     // Ctrl+K / Cmd+K — global search overlay
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -811,16 +825,65 @@ document.addEventListener('keydown', function(e) {
         return;
     }
 
-    // 1-9 — navegación rápida a secciones
-    const _sectionKeys: Record<string, string> = {
-        '1': 'bienvenida', '2': 'pedidos', '3': 'inventory',
-        '4': 'balance', '5': 'reportes', '6': 'clientes',
-        '7': 'envios', '8': 'equipos', '9': 'backup'
-    };
-    if (_sectionKeys[e.key]) {
-        e.preventDefault();
-        if (typeof showSection === 'function') showSection(_sectionKeys[e.key]);
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// UNDO GLOBAL — Ctrl+Z para deshacer la última acción importante
+// ══════════════════════════════════════════════════════════════════════════
+interface UndoAction {
+    descripcion: string;
+    fn: () => void;
+}
+const _mkUndoStack: UndoAction[] = [];
+const _MK_UNDO_MAX = 10;
+let _undoToastTimer: ReturnType<typeof setTimeout> | null = null;
+
+function mkPushUndo(descripcion: string, fn: () => void) {
+    _mkUndoStack.push({ descripcion, fn });
+    if (_mkUndoStack.length > _MK_UNDO_MAX) _mkUndoStack.shift();
+}
+window.mkPushUndo = mkPushUndo;
+
+function _mkUndo() {
+    const action = _mkUndoStack.pop();
+    if (!action) {
+        manekiToastExport('Nada que deshacer', 'warn');
         return;
+    }
+    try {
+        action.fn();
+        manekiToastExport(`↩️ Deshecho: ${action.descripcion}`, 'ok');
+    } catch(e) {
+        manekiToastExport('Error al deshacer', 'err');
+    }
+}
+
+// Mostrar toast de "Puedes deshacer" después de una acción importante
+function mkMostrarUndoHint(descripcion: string) {
+    if (_undoToastTimer) clearTimeout(_undoToastTimer);
+    let hint = document.getElementById('_mkUndoHint');
+    if (!hint) {
+        hint = document.createElement('div');
+        hint.id = '_mkUndoHint';
+        hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9997;background:#1F2937;color:#fff;padding:8px 16px;border-radius:10px;font-size:.78rem;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .3s;white-space:nowrap;';
+        document.body.appendChild(hint);
+    }
+    hint.innerHTML = `<span>↩️ ${descripcion}</span><kbd onclick="_mkUndo()" style="background:#374151;border:1px solid #4B5563;border-radius:5px;padding:2px 7px;font-size:.72rem;cursor:pointer;font-family:inherit;">Ctrl+Z</kbd>`;
+    hint.style.opacity = '1';
+    hint.style.display = 'flex';
+    _undoToastTimer = setTimeout(() => {
+        if (hint) { hint.style.opacity = '0'; setTimeout(() => { if (hint) hint.style.display = 'none'; }, 300); }
+    }, 5000);
+}
+window.mkMostrarUndoHint = mkMostrarUndoHint;
+
+// Atajo Ctrl+Z — solo si no hay input activo
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        const tag = document.activeElement?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable) return;
+        e.preventDefault();
+        _mkUndo();
     }
 });
 

@@ -823,11 +823,26 @@ function deleteProduct(id) {
     showConfirm(msg, '🗑️ Eliminar producto permanentemente').then(async ok => {
         if (!ok) return;
         if (window.MKS) MKS.del();
+
+        // Snapshot para undo
+        const productoSnapshot = JSON.parse(JSON.stringify(p));
+        const idxSnapshot = window.products.findIndex(x => String(x.id) === String(id));
+        if (typeof window.mkPushUndo === 'function') {
+            window.mkPushUndo(`Eliminar "${p.name}"`, () => {
+                if (!window.products.some(x => String(x.id) === String(productoSnapshot.id))) {
+                    window.products.splice(idxSnapshot, 0, productoSnapshot);
+                    if (typeof saveProducts === 'function') saveProducts();
+                    if (typeof renderInventoryTable === 'function') renderInventoryTable();
+                    if (typeof window._rebuildProductMap === 'function') window._rebuildProductMap();
+                }
+            });
+            if (typeof window.mkMostrarUndoHint === 'function') window.mkMostrarUndoHint(`Eliminar "${p.name}"`);
+        }
+
         window.products = window.products.filter(x => String(x.id) !== String(id));
         try { products = window.products; } catch(e) {}
         saveProducts(); renderInventoryTable();
-            if (typeof updateDashboard === 'function') updateDashboard();
-        // Borrar de la tabla relacional para que desaparezca de la página web
+        if (typeof updateDashboard === 'function') updateDashboard();
         try {
             await db.from('products').delete().eq('id', String(id));
         } catch(e) {
