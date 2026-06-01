@@ -18,6 +18,8 @@ contextBridge.exposeInMainWorld('__mkCfg', {
 
 // ── Exponer IPC seguro (solo los canales que el renderer necesita) ──
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Supabase config
+  getSupabase: () => ipcRenderer.invoke('get-supabase-config'),
   // SQLite
   sqliteLoad:    (key)        => ipcRenderer.invoke('sqlite-load', { key }),
   sqliteSave:    (key, value) => ipcRenderer.invoke('sqlite-save', { key, value }),
@@ -28,15 +30,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Notificaciones y sistema
   notifyStock: (name)    => ipcRenderer.send('notify-stock', name),
   notifyOrder: (msg)     => ipcRenderer.send('notify-order', msg),
+  notifyConnection: (d)  => ipcRenderer.send('notify-connection', d),
   saveVentaPendiente: (r) => ipcRenderer.send('save-venta-pendiente', r),
+  deleteVentaPendiente: (id) => ipcRenderer.send('delete-venta-pendiente', id),
+  getVentasPendientes: () => ipcRenderer.invoke('get-ventas-pendientes'),
+  countVentasPendientes: () => ipcRenderer.invoke('count-ventas-pendientes'),
+  updateTrayBadge: (d)   => ipcRenderer.send('update-tray-badge', d),
 
   // PIN / auth
   pinCheck:  (pin)       => ipcRenderer.invoke('verify-pin', pin),
-  pinSet:    (pin)       => ipcRenderer.invoke('change-pin', pin),
-  pinRemove: ()          => Promise.resolve({ ok: true }),  // canal no existe en main.js — stub seguro
+  pinSet:    (data)      => ipcRenderer.invoke('change-pin', data),
+  pinRemove: ()          => { console.warn("[PIN] pinRemove no implementado"); return Promise.resolve({ ok: false, error: "no implementado" }); },
   pinExists: ()          => ipcRenderer.invoke('pin-exists'),
 
   // Splash
+  splashProgress: (d)    => ipcRenderer.send('splash-progress', d),
+  splashDone: ()         => ipcRenderer.send('splash-done'),
   splashExitDone: ()     => ipcRenderer.send('splash-exit-done'),
 
   // Escuchar eventos del main

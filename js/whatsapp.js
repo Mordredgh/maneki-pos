@@ -10,12 +10,14 @@ const _WA_PROMOS = [
   "🎨 ¿Sabías que personalizamos casi cualquier cosa? ¡Escríbenos sin compromiso!",
   "🛍️ Mira todo nuestro catálogo en: www.manekistore.com.mx"
 ];
-const _WA_FB = "facebook.com/ManekiPrints";
+const _WA_FB = (window.storeConfig && window.storeConfig.facebook) || "facebook.com/ManekiPrints";
 function _waFooter() {
   const key = "maneki_wa_promo_idx";
-  const prev = parseInt(localStorage.getItem(key) || "-1");
+  let prev = -1;
+  try { prev = parseInt(localStorage.getItem(key) || "-1"); } catch(e) {}
   const next = (prev + 1) % _WA_PROMOS.length;
-  localStorage.setItem(key, next);
+  try { localStorage.setItem(key, next); } catch(e) {}
+  if (typeof sqliteStorage !== "undefined") sqliteStorage.set(key, next).catch(() => {});
   return `
 ${_WA_PROMOS[next]}
 📘 Síguenos: ${_WA_FB}`;

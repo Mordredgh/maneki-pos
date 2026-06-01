@@ -1,8 +1,4 @@
-function _fechaLocal() {
-  if (typeof _fechaHoy === "function") return _fechaHoy();
-  const now = /* @__PURE__ */ new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-}
+function _fechaLocal() { return _fechaHoy(); }
 const calcSaldoPendiente = (p) => {
   const sumPagos = (p.pagos || []).reduce((s, ab) => s + Number(ab.monto || 0), 0);
   const totalPagado = sumPagos > 0 ? sumPagos : Number(p.anticipo || 0);

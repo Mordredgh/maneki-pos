@@ -445,8 +445,8 @@ function createWindow() {
     icon: notifIcon(),
     backgroundColor: '#FAFAFE',      // fondo antes del HTML → sin flash blanco al arrancar
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,      // mantenido por compatibilidad con código legacy (ipcRenderer directo)
+      nodeIntegration: false,
+      contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),  // BUG-NEW-02: expone __mkCfg y electronAPI via contextBridge
       backgroundThrottling: false,
       v8CacheOptions: 'bypassHeatCheck',

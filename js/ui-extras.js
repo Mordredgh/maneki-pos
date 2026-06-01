@@ -45,6 +45,10 @@ function clearAllData() {
             sbSave("stockMovimientos", []),
             sbSave("pedidosFinalizados", [])
           ]);
+          if (typeof db !== "undefined" && db) {
+            const tablas = ["products", "orders", "orders_finalizados", "sales_history", "clients", "incomes", "expenses"];
+            await Promise.all(tablas.map(t => db.from(t).delete().neq("id", "").catch(e => console.warn("[clearAll]", t, e))));
+          }
           [
             "renderInventoryTable",
             "renderClientsTable",

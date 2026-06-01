@@ -19,20 +19,16 @@
   } catch (e) {
   }
   function _intentarSQLite() {
-    try {
-      var ipc = require("electron").ipcRenderer;
-      ipc.invoke("sqlite-load", { key: "storeConfig" }).then(function(result) {
+    if (window.electronAPI && window.electronAPI.sqliteLoad) {
+      window.electronAPI.sqliteLoad("storeConfig").then(function(result) {
         if (result && result.ok && result.value) {
           _aplicarConfigSidebar(result.value);
         }
-      }).catch(function() {
+      }).catch(function() {});
+    } else if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(_intentarSQLite, 500);
       });
-    } catch (e) {
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", function() {
-          setTimeout(_intentarSQLite, 500);
-        });
-      }
     }
   }
   _intentarSQLite();

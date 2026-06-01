@@ -1292,13 +1292,12 @@ async function cambiarPIN() {
     manekiToastExport("⚠️ El nuevo PIN debe tener al menos 4 dígitos", "warn");
     return;
   }
-  if (typeof require === "undefined") {
+  if (!window.electronAPI) {
     manekiToastExport("❌ Solo disponible en la app de escritorio", "err");
     return;
   }
   try {
-    const { ipcRenderer } = require("electron");
-    const res = await ipcRenderer.invoke("change-pin", { pinActual: actual, pinNuevo: nuevo });
+    const res = await window.electronAPI.pinSet({ pinActual: actual, pinNuevo: nuevo });
     if (res.ok) {
       manekiToastExport("✅ PIN actualizado correctamente", "ok");
       if (document.getElementById("pinActual")) document.getElementById("pinActual").value = "";

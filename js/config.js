@@ -485,8 +485,8 @@ document.addEventListener("DOMContentLoaded", function() {
 async function initApp() {
   function splashProgress(step, label) {
     try {
-      if (typeof ipcRenderer !== "undefined" && ipcRenderer)
-        ipcRenderer.send("splash-progress", { step, total: 6, label });
+      if (window.electronAPI && window.electronAPI.splashProgress)
+        window.electronAPI.splashProgress({ step, total: 6, label });
     } catch (e) {
     }
   }
@@ -588,7 +588,7 @@ async function initApp() {
     }
     splashProgress(6, "¡Listo!");
     try {
-      if (typeof ipcRenderer !== "undefined" && ipcRenderer) ipcRenderer.send("splash-done");
+      if (window.electronAPI && window.electronAPI.splashDone) window.electronAPI.splashDone();
     } catch (e) {
     }
     const roiPctEl = document.getElementById("roiPorcentajeGlobal");
@@ -614,7 +614,7 @@ async function initApp() {
           if (typeof mostrarBannerConexion === "function")
             mostrarBannerConexion(true, "Conexión restaurada — sincronizando datos...");
           try {
-            if (typeof require !== "undefined") require("electron").ipcRenderer.send("notify-connection", { connected: true });
+            if (window.electronAPI) window.electronAPI.notifyConnection({ connected: true });
           } catch (e) {
           }
         }
@@ -627,7 +627,7 @@ async function initApp() {
           if (typeof mostrarBannerConexion === "function")
             mostrarBannerConexion(false, "Sin conexión a la nube — trabajando en modo offline.");
           try {
-            if (typeof require !== "undefined") require("electron").ipcRenderer.send("notify-connection", { connected: false });
+            if (window.electronAPI) window.electronAPI.notifyConnection({ connected: false });
           } catch (e2) {
           }
         }
@@ -711,7 +711,8 @@ async function initApp() {
           if (typeof initChart === "function") initChart();
           if (typeof initReports === "function") initReports();
           try {
-            showSection("bienvenida");
+            const _savedSection = localStorage.getItem("maneki_activeSection");
+            showSection(_savedSection && _savedSection !== "null" ? _savedSection : "bienvenida");
           } catch (e) {
           }
           if (typeof _setupRealtime === "function") _setupRealtime();

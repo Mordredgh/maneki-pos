@@ -601,8 +601,8 @@ function actualizarSidebarBadges() {
     }
     badgePedidos._lastVal = activos;
     try {
-      if (ipcRenderer) {
-        ipcRenderer.send("update-tray-badge", { urgentes, total: activos });
+      if (window.electronAPI && window.electronAPI.updateTrayBadge) {
+        window.electronAPI.updateTrayBadge({ urgentes, total: activos });
       }
     } catch (e) {
     }

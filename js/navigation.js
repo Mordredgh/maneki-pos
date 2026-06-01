@@ -82,19 +82,6 @@ function showSection(sectionName) {
 }
 window.showSection = showSection;
 window.showSection._mk4 = true;
-(function() {
-  var realFn = showSection;
-  var queue = window._showSectionQueue || [];
-  window._showSectionStub = false;
-  if (queue.length) {
-    var last = queue[queue.length - 1];
-    try {
-      realFn(last);
-    } catch (e) {
-    }
-  }
-  window._showSectionQueue = [];
-})();
 window.safeCall = function(fn, ...args) {
   if (typeof window[fn] === "function") window[fn](...args);
   else document.addEventListener("DOMContentLoaded", () => {

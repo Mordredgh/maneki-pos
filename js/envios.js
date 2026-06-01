@@ -53,6 +53,10 @@ function initMapaCoberturaView() {
     _redrawLeafletAnillos(_mapaCobView, _mapaAnillosLayerGroup, "cob");
     return;
   }
+  if (typeof L === "undefined" || !L.map) {
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#9ca3af;font-size:.85rem;">Mapa no disponible — verifica tu conexión a internet</div>';
+    return;
+  }
   _mapaCobView = L.map(el, { zoomControl: true, attributionControl: false }).setView([ENVIO_BASE.lat, ENVIO_BASE.lng], 12);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 18
@@ -129,7 +133,7 @@ function _geocodeFetch(query, limit) {
   params.set("viewbox", "-100.7,26.0,-99.8,25.4");
   params.set("bounded", "0");
   const nominatimUrl = "https://nominatim.openstreetmap.org/search?" + params.toString();
-  const esElectron = typeof ipcRenderer !== "undefined" && ipcRenderer !== null;
+  const esElectron = !!window.electronAPI;
   const url = esElectron ? nominatimUrl : "https://corsproxy.io/?" + encodeURIComponent(nominatimUrl);
   return fetch(url, { headers: { "Accept": "application/json" } });
 }
@@ -362,6 +366,10 @@ function initMapaConfigLeaflet() {
       _mapaConfig.invalidateSize();
       redrawMapaConfig();
     }, 100);
+    return;
+  }
+  if (typeof L === "undefined" || !L.map) {
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#9ca3af;font-size:.85rem;">Mapa no disponible — verifica tu conexión a internet</div>';
     return;
   }
   _mapaConfig = L.map(el, { zoomControl: true, attributionControl: false }).setView([ENVIO_BASE.lat, ENVIO_BASE.lng], 11);

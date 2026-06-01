@@ -3,29 +3,26 @@ var pedidosFinalizados = [];
 var abonos = [];
 var pedidoProductosSeleccionados = [];
 var abonoProductosSeleccionados = [];
-let ipcRenderer = null;
-try {
-  const { ipcRenderer: _ipc } = require("electron");
-  ipcRenderer = _ipc;
-} catch (e) {
-}
+const _eAPI = window.electronAPI || null;
+const MK_DEBOUNCE_STORE_RT = 800;
+const MK_DEBOUNCE_TABLE_RT = 600;
+const MK_DEBOUNCE_SBSAVE = 500;
+const MK_TIMEOUT_SUPABASE = 8000;
 const sqliteStorage = {
-  // Guardar datos en SQLite local
   async set(key, value) {
-    if (!ipcRenderer) return false;
+    if (!_eAPI) return false;
     try {
-      const result = await ipcRenderer.invoke("sqlite-save", { key, value });
+      const result = await _eAPI.sqliteSave(key, value);
       return result.ok;
     } catch (e) {
       console.warn("sqliteStorage.set error:", key, e);
       return false;
     }
   },
-  // Cargar datos desde SQLite local
   async get(key, defaultValue = null) {
-    if (!ipcRenderer) return defaultValue;
+    if (!_eAPI) return defaultValue;
     try {
-      const result = await ipcRenderer.invoke("sqlite-load", { key });
+      const result = await _eAPI.sqliteLoad(key);
       if (result.ok && result.value !== null) return result.value;
       return defaultValue;
     } catch (e) {
@@ -33,22 +30,20 @@ const sqliteStorage = {
       return defaultValue;
     }
   },
-  // Cargar múltiples claves de una sola vez (más rápido al iniciar)
   async getAll(keys) {
-    if (!ipcRenderer) return {};
+    if (!_eAPI) return {};
     try {
-      const result = await ipcRenderer.invoke("sqlite-load-all", { keys });
+      const result = await _eAPI.sqliteLoadAll(keys);
       return result.ok ? result.data : {};
     } catch (e) {
       console.warn("sqliteStorage.getAll error:", e);
       return {};
     }
   },
-  // Ver cuánto espacio está usando
   async getSize() {
-    if (!ipcRenderer) return { kb: 0, dbKB: 0 };
+    if (!_eAPI) return { kb: 0, dbKB: 0 };
     try {
-      const result = await ipcRenderer.invoke("sqlite-size");
+      const result = await _eAPI.sqliteSize();
       return result.ok ? result : { kb: 0, dbKB: 0 };
     } catch (e) {
       return { kb: 0, dbKB: 0 };
@@ -72,9 +67,9 @@ let db = null;
     };
     var _validarSupabaseCfg = _validarSupabaseCfg2;
     let cfg = null;
-    if (ipcRenderer) {
+    if (_eAPI) {
       try {
-        cfg = await ipcRenderer.invoke("get-supabase-config");
+        cfg = await _eAPI.getSupabase();
       } catch (e) {
       }
     }
@@ -118,7 +113,7 @@ let db = null;
   }
 })();
 function _withTimeout(promise, ms) {
-  ms = ms || 8e3;
+  ms = ms || MK_TIMEOUT_SUPABASE;
   return Promise.race([
     promise,
     new Promise(function(_, reject) {
@@ -128,6 +123,13 @@ function _withTimeout(promise, ms) {
     })
   ]);
 }
+window.mkDebounce = function(fn, ms) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms || 150);
+  };
+};
 window.mkId = function() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
   return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
@@ -233,7 +235,7 @@ function _setupRealtime() {
     const key = payload.new?.key || payload.old?.key;
     if (!key) return;
     clearTimeout(_rtDeskDeb[key]);
-    _rtDeskDeb[key] = setTimeout(() => _applyRTDesktop(key).catch((e) => console.warn("[Realtime] _applyRTDesktop:", e)), 800);
+    _rtDeskDeb[key] = setTimeout(() => _applyRTDesktop(key).catch((e) => console.warn("[Realtime] _applyRTDesktop:", e)), MK_DEBOUNCE_STORE_RT);
   }).subscribe((status) => {
     if (status === "SUBSCRIBED") {
       actualizarIndicadorConexion(true);
@@ -247,7 +249,7 @@ function _setupRealtime() {
     const _chRel = db.channel("maneki-rt-" + tabla).on("postgres_changes", { event: "*", schema: "public", table: tabla }, (payload) => {
       const debKey = "__rel_" + tabla;
       clearTimeout(_rtDeskDeb[debKey]);
-      _rtDeskDeb[debKey] = setTimeout(() => _applyRTRelacional(tabla, payload).catch((e) => console.warn("[Realtime] _applyRTRelacional:", tabla, e)), 600);
+      _rtDeskDeb[debKey] = setTimeout(() => _applyRTRelacional(tabla, payload).catch((e) => console.warn("[Realtime] _applyRTRelacional:", tabla, e)), MK_DEBOUNCE_TABLE_RT);
     }).subscribe((status) => {
       if (status === "SUBSCRIBED") console.log("[Realtime] Canal " + tabla + " activo ✓");
       else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") console.warn("[Realtime] Canal " + tabla + " estado:", status);
@@ -622,24 +624,24 @@ function _ocultarBannerOfflineConexion() {
   }
 }
 function encolarVentaOffline(saleRecord) {
-  if (!ipcRenderer) return;
+  if (!_eAPI) return;
   try {
-    ipcRenderer.send("save-venta-pendiente", {
+    _eAPI.saveVentaPendiente({
       id: String(saleRecord.id),
       folio: saleRecord.folio,
       date: saleRecord.date,
       ...saleRecord
     });
-    ipcRenderer.invoke("count-ventas-pendientes").then((n) => actualizarBannerOffline(n)).catch((e) => console.warn("[Maneki DB]", e?.message || e));
+    _eAPI.countVentasPendientes().then((n) => actualizarBannerOffline(n)).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     manekiToastExport("📦 Venta " + saleRecord.folio + " guardada offline", "warn");
   } catch (e) {
     console.error("Error encolando venta offline:", e);
   }
 }
 async function sincronizarPendientes() {
-  if (ipcRenderer) {
+  if (_eAPI) {
     try {
-      const ventasPendientes = await ipcRenderer.invoke("get-ventas-pendientes");
+      const ventasPendientes = await _eAPI.getVentasPendientes();
       if (ventasPendientes && ventasPendientes.length > 0) {
         let cambiado = false;
         for (const venta of ventasPendientes) {
@@ -656,17 +658,17 @@ async function sincronizarPendientes() {
           );
           if (!error) {
             for (const venta of ventasPendientes) {
-              ipcRenderer.send("delete-venta-pendiente", String(venta.id));
+              _eAPI.deleteVentaPendiente(String(venta.id));
             }
             manekiToastExport("✅ " + ventasPendientes.length + " venta(s) offline sincronizadas", "ok");
           }
         } else {
           for (const venta of ventasPendientes) {
-            ipcRenderer.send("delete-venta-pendiente", String(venta.id));
+            _eAPI.deleteVentaPendiente(String(venta.id));
           }
         }
       }
-      const restantes = await ipcRenderer.invoke("count-ventas-pendientes").catch(() => 0);
+      const restantes = await _eAPI.countVentasPendientes().catch(() => 0);
       actualizarBannerOffline(restantes);
     } catch (e) {
       console.error("Error sincronizando:", e);
@@ -769,8 +771,8 @@ window.addEventListener("offline", () => {
   _scheduleSyncRetry();
 });
 setTimeout(() => {
-  if (ipcRenderer) {
-    ipcRenderer.invoke("count-ventas-pendientes").then((n) => {
+  if (_eAPI && _eAPI.countVentasPendientes) {
+    _eAPI.countVentasPendientes().then((n) => {
       if (n > 0) actualizarBannerOffline(n);
     }).catch((e) => console.warn("[Maneki DB]", e?.message || e));
   }
@@ -792,7 +794,7 @@ async function sbSave(key, data) {
   }
   if (_sbSaveTimers[key]) clearTimeout(_sbSaveTimers[key]);
   return new Promise((resolve, reject) => {
-    _sbSaveTimers[key] = setTimeout(async () => {
+    _sbSaveTimers[key] = setTimeout(async () => {/*debounce*/
       delete _sbSaveTimers[key];
       try {
         if (!db) {
@@ -822,7 +824,7 @@ async function sbSave(key, data) {
         _scheduleSyncRetry();
         reject(e);
       }
-    }, 500);
+    }, MK_DEBOUNCE_SBSAVE);
   });
 }
 const _RELATIONAL_TABLES = {
@@ -1043,7 +1045,7 @@ async function verificarEspacioAlmacenamiento() {
 setTimeout(verificarEspacioAlmacenamiento, 1e4);
 window._storageCheckInterval = setInterval(verificarEspacioAlmacenamiento, 10 * 60 * 1e3);
 (async function _migrateLocalStorageToSQLite() {
-  if (!ipcRenderer) return;
+  if (!_eAPI) return;
   const prefix = "maneki_";
   const keys = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -1075,8 +1077,6 @@ window._storageCheckInterval = setInterval(verificarEspacioAlmacenamiento, 10 * 
   }
   if (migrated > 0) console.log(`[Storage] Migrated ${migrated} keys from localStorage to SQLite`);
 })();
-function saveToLocalStorage(key, data) {
-}
 async function mostrarEstadoAlmacenamiento() {
   const info = await verificarEspacioAlmacenamiento();
   const msg = [
@@ -1088,40 +1088,6 @@ async function mostrarEstadoAlmacenamiento() {
   console.log("Estado almacenamiento:\n" + msg);
 }
 window.mostrarEstadoAlmacenamiento = mostrarEstadoAlmacenamiento;
-let _localFolioCounters = {};
-let _folioLock = false;
-async function getNextFolio(tipo) {
-  if (_folioLock) {
-    await new Promise((r) => setTimeout(r, 100));
-    return getNextFolio(tipo);
-  }
-  _folioLock = true;
-  try {
-    const key = "contador_" + tipo;
-    try {
-      const { data } = await db.from("store").select("value").eq("key", key).maybeSingle();
-      let actual = 0;
-      if (data) actual = parseInt(JSON.parse(data.value)) || 0;
-      const siguiente = actual + 1;
-      db.from("store").upsert({ key, value: JSON.stringify(siguiente) }, { onConflict: "key" }).catch((e) => console.warn("[Maneki DB]", e?.message || e));
-      _localFolioCounters[tipo] = siguiente;
-      return siguiente;
-    } catch (e) {
-      if (tipo === "venta") {
-        const maxExistente = salesHistory.reduce((max, s) => {
-          const n = parseInt((s.folio || "").replace("V-", "")) || 0;
-          return n > max ? n : max;
-        }, _localFolioCounters[tipo] || 0);
-        _localFolioCounters[tipo] = maxExistente + 1;
-        return _localFolioCounters[tipo];
-      }
-      _localFolioCounters[tipo] = (_localFolioCounters[tipo] || 0) + 1;
-      return _localFolioCounters[tipo];
-    }
-  } finally {
-    _folioLock = false;
-  }
-}
 function sbSaveConFeedback(key, data, nombreAmigable) {
   (async () => {
     try {
@@ -1144,17 +1110,35 @@ function saveStockMovimientos() {
     await sbSave("stockMovimientos", stockMovimientos);
   })();
 }
-function registrarMovimiento(productoId, productoNombre, tipo, cantidad, motivo) {
-  stockMovimientos.push({
-    id: mkId(),
-    fecha: _fechaHoy(),
-    hora: (/* @__PURE__ */ new Date()).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
-    productoId,
-    productoNombre,
-    tipo,
-    cantidad,
-    motivo
-  });
+function registrarMovimiento(productoIdOrObj, productoNombre, tipo, cantidad, motivo) {
+  let entry;
+  if (typeof productoIdOrObj === "object" && productoIdOrObj !== null) {
+    const o = productoIdOrObj;
+    entry = {
+      id: mkId(),
+      fecha: _fechaHoy(),
+      hora: (new Date()).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
+      productoId: o.productoId,
+      productoNombre: o.productoNombre,
+      tipo: o.tipo,
+      cantidad: o.cantidad,
+      motivo: o.motivo,
+      stockAntes: o.stockAntes,
+      stockDespues: o.stockDespues
+    };
+  } else {
+    entry = {
+      id: mkId(),
+      fecha: _fechaHoy(),
+      hora: (new Date()).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
+      productoId: productoIdOrObj,
+      productoNombre,
+      tipo,
+      cantidad,
+      motivo
+    };
+  }
+  stockMovimientos.push(entry);
   if ((window.stockMovimientos || []).length > 500) {
     window.stockMovimientos = window.stockMovimientos.slice(-500);
   }
