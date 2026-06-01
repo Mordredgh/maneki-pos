@@ -59,13 +59,23 @@ function renderBalanceMensual() {
   if (el("balMesGastos")) el("balMesGastos").textContent = "$" + totalGastos.toFixed(2);
   if (el("balMesGastosN")) el("balMesGastosN").textContent = gastosMes.length + " gastos";
   if (el("balMesNeto")) el("balMesNeto").textContent = "$" + neto.toFixed(2);
-  if (el("balMesNetoBg")) el("balMesNetoBg").className = "rounded-xl p-4 " + (neto >= 0 ? "bg-green-50" : "bg-red-50");
+  const _bgHero = el("balMesNetoBg");
+  if (_bgHero) {
+    _bgHero.style.background = neto >= 0 ? "#f0fdf4" : "#fef2f2";
+    _bgHero.style.borderColor = neto >= 0 ? "#bbf7d0" : "#fecaca";
+  }
+  const _netoColor = neto >= 0 ? "#166534" : "#dc2626";
+  const _labelColor = neto >= 0 ? "#15803d" : "#dc2626";
+  const _subColor = neto >= 0 ? "#16a34a" : "#ef4444";
   if (el("balMesNetoLabel")) {
     el("balMesNetoLabel").textContent = "Neto del mes";
-    el("balMesNetoLabel").className = "text-xs font-semibold " + (neto >= 0 ? "text-green-600" : "text-red-600");
+    el("balMesNetoLabel").style.color = _labelColor;
   }
-  if (el("balMesNeto")) el("balMesNeto").className = "text-xl font-bold " + (neto >= 0 ? "text-green-800" : "text-red-800");
-  if (el("balMesNetoSub")) el("balMesNetoSub").textContent = neto >= 0 ? "\u2705 Mes positivo" : "\u26A0\uFE0F Mes negativo";
+  if (el("balMesNeto")) el("balMesNeto").style.color = _netoColor;
+  if (el("balMesNetoSub")) {
+    el("balMesNetoSub").textContent = neto >= 0 ? "Mes positivo" : "Mes negativo";
+    el("balMesNetoSub").style.color = _subColor;
+  }
   _renderGraficaCategorias(gastosMes, mesStr);
   _renderExportarBalanceBtn(mesStr);
   _renderUtilidadNeta(totalVentas + totalPedidos, totalGastos);
@@ -75,12 +85,12 @@ const _GASTO_CATEGORIAS = ["Materiales", "Env\xEDo", "Publicidad", "Renta", "Ser
 function _renderGraficaCategorias(gastosMes, mesStr) {
   let container = document.getElementById("balCatGastosContainer");
   if (!container) {
-    const balSection = document.getElementById("balMesNetoSub")?.closest(".rounded-xl")?.closest("div");
-    if (!balSection) return;
+    const anchor = document.getElementById("balMesNetoBg");
+    if (!anchor) return;
     container = document.createElement("div");
     container.id = "balCatGastosContainer";
-    container.className = "mt-4 bg-white rounded-xl p-4 border border-gray-100";
-    balSection.parentElement.insertBefore(container, balSection.nextSibling);
+    container.className = "bg-white rounded-xl p-4 border border-gray-100 mb-4";
+    anchor.parentElement.insertBefore(container, anchor.nextSibling);
   }
   if (!gastosMes.length) {
     container.innerHTML = "";
@@ -777,27 +787,27 @@ function _renderUtilidadNeta(totalIngresos, totalGastos) {
   const margen = totalIngresos > 0 ? utilidad / totalIngresos * 100 : 0;
   const esPos = utilidad > 0;
   const esNeg = utilidad < 0;
-  const bgColor = esPos ? "#f0fdf4" : esNeg ? "#fef2f2" : "#fefce8";
   const textColor = esPos ? "#15803d" : esNeg ? "#dc2626" : "#ca8a04";
-  const borderColor = esPos ? "#bbf7d0" : esNeg ? "#fecaca" : "#fef08a";
-  const icono = esPos ? "\u{1F4C8}" : esNeg ? "\u{1F4C9}" : "\u2796";
   let card = document.getElementById("balUtilidadNetaCard");
   if (!card) {
-    const catContainer = document.getElementById("balCatGastosContainer");
-    const anchor = catContainer || document.getElementById("balMesNetoSub")?.closest(".rounded-xl")?.closest("div");
+    const anchor = document.getElementById("balMesNetoBg");
     if (!anchor) return;
     card = document.createElement("div");
     card.id = "balUtilidadNetaCard";
     anchor.parentElement.insertBefore(card, anchor.nextSibling);
   }
-  card.className = "mt-4 rounded-2xl p-5 border";
-  card.style.cssText = `background:${bgColor};border-color:${borderColor}`;
+  card.className = "bg-white rounded-xl p-4 border border-gray-100 mb-4";
   card.innerHTML = `
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs font-bold uppercase tracking-wide" style="color:${textColor}">Utilidad neta ${icono}</span>
-                </div>
-                <p class="text-3xl font-extrabold" style="color:${textColor}">$${utilidad.toFixed(2)}</p>
-                <p class="text-xs mt-1 font-semibold" style="color:${textColor}">Margen: ${totalIngresos === 0 ? "N/A" : isFinite(margen) ? margen.toFixed(1) + "%" : "N/A"}</p>`;
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-400 mb-0.5">Utilidad neta acumulada</p>
+                        <p class="text-2xl font-extrabold" style="color:${textColor}">$${utilidad.toFixed(2)}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400 mb-0.5">Margen</p>
+                        <p class="text-lg font-bold" style="color:${textColor}">${totalIngresos === 0 ? "N/A" : isFinite(margen) ? margen.toFixed(1) + "%" : "N/A"}</p>
+                    </div>
+                </div>`;
 }
 function renderProyeccionCashflow() {
   const hoy = /* @__PURE__ */ new Date();
@@ -809,17 +819,19 @@ function renderProyeccionCashflow() {
     return diff >= 0 && diff <= 30 && !["finalizado", "cancelado", "entregado"].includes((p.status || "").toLowerCase());
   });
   let card = document.getElementById("balCashflowCard");
+  function _cashflowAnchor() {
+    return document.getElementById("balUtilidadNetaCard") || document.getElementById("balCatGastosContainer") || document.getElementById("balMesNetoBg");
+  }
   if (pedidosActivos.length === 0) {
     if (!card) {
-      const utilCard = document.getElementById("balUtilidadNetaCard");
-      const anchor = utilCard || document.getElementById("balCatGastosContainer") || document.getElementById("balMesNetoSub")?.closest(".rounded-xl")?.closest("div");
+      const anchor = _cashflowAnchor();
       if (!anchor) return;
       card = document.createElement("div");
       card.id = "balCashflowCard";
       anchor.parentElement.insertBefore(card, anchor.nextSibling);
     }
-    card.className = "mt-4 bg-white rounded-xl p-4 border border-gray-100";
-    card.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:12px;padding:12px 0">Sin pedidos activos con fecha de entrega en los pr\xF3ximos 30 d\xEDas</p>';
+    card.className = "bg-white rounded-xl p-4 border border-gray-100 mb-4";
+    card.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:12px;padding:8px 0">Sin pedidos activos con entrega en los pr\xF3ximos 30 d\xEDas</p>';
     return;
   }
   const buckets = [
@@ -849,8 +861,7 @@ function renderProyeccionCashflow() {
     });
   }
   if (!card) {
-    const utilCard = document.getElementById("balUtilidadNetaCard");
-    const anchor = utilCard || document.getElementById("balCatGastosContainer") || document.getElementById("balMesNetoSub")?.closest(".rounded-xl")?.closest("div");
+    const anchor = _cashflowAnchor();
     if (!anchor) return;
     card = document.createElement("div");
     card.id = "balCashflowCard";
@@ -866,10 +877,10 @@ function renderProyeccionCashflow() {
                     <td class="py-1.5 text-xs font-bold text-right" style="color:${netoColor}">$${neto.toFixed(2)}</td>
                 </tr>`;
   }).join("");
-  card.className = "mt-4 bg-white rounded-xl p-4 border border-gray-100";
+  card.className = "bg-white rounded-xl p-4 border border-gray-100 mb-4";
   card.innerHTML = `
                 <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-bold text-gray-700">\u{1F4B8} Proyecci\xF3n de flujo de efectivo</h4>
+                    <h4 class="text-sm font-bold text-gray-700">Flujo de efectivo</h4>
                     <span class="text-xs text-gray-400">${pedidosActivos.length} pedidos activos</span>
                 </div>
                 <table class="w-full">
