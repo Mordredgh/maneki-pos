@@ -366,4 +366,52 @@
         }, 2500);
     })();
 
+    // ══════════════════════════════════════════════════════════════
+    // #13 CHANGELOG — "¿Qué hay de nuevo?" al actualizar versión
+    // ══════════════════════════════════════════════════════════════
+    (function _changelog() {
+        const MK_VERSION = '2.1.0';
+        const KEY = 'mk_last_seen_version';
+        const lastSeen = localStorage.getItem(KEY);
+        if (lastSeen === MK_VERSION) return;
+
+        const changes = [
+            { icon: '⌨️', text: 'Navegación rápida con teclas 1-9 para ir a cualquier sección' },
+            { icon: '📊', text: 'Sugerencia inteligente de reorden al ajustar stock (basada en velocidad de venta)' },
+            { icon: '📦', text: 'Backup comprimido (.gz) — reduce el tamaño hasta 80%' },
+            { icon: '⚡', text: 'Sync offline mejorado — sincroniza en lotes paralelos al reconectar' },
+            { icon: '📋', text: 'Este changelog — te avisaremos cada vez que haya novedades' }
+        ];
+
+        setTimeout(() => {
+            const modal = document.createElement('div');
+            modal.id = 'mk-changelog-modal';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;animation:fadeIn .3s;';
+            modal.innerHTML = `
+                <div style="background:#fff;border-radius:20px;max-width:420px;width:calc(100% - 32px);padding:28px;box-shadow:0 25px 60px rgba(0,0,0,0.25);max-height:80vh;overflow-y:auto;">
+                    <div style="text-align:center;margin-bottom:16px;">
+                        <span style="font-size:2.5rem;">🐱</span>
+                        <h2 style="font-size:1.2rem;font-weight:800;color:#1F2937;margin:8px 0 4px;">¿Qué hay de nuevo?</h2>
+                        <p style="font-size:.78rem;color:#9CA3AF;">Maneki POS v${MK_VERSION}</p>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+                        ${changes.map(c => `
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#F9FAFB;border-radius:12px;border:1px solid #F3F4F6;">
+                                <span style="font-size:1.3rem;flex-shrink:0;">${c.icon}</span>
+                                <p style="font-size:.82rem;color:#374151;margin:0;line-height:1.4;">${c.text}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="localStorage.setItem('${KEY}','${MK_VERSION}');this.closest('#mk-changelog-modal').remove();"
+                        style="width:100%;padding:12px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:white;border:none;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer;">
+                        ¡Entendido! 🚀
+                    </button>
+                </div>`;
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) { localStorage.setItem(KEY, MK_VERSION); modal.remove(); }
+            });
+            document.body.appendChild(modal);
+        }, 3000);
+    })();
+
 })();

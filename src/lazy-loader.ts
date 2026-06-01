@@ -10,6 +10,7 @@
         chartjs:  'https://cdn.jsdelivr.net/npm/chart.js',
         xlsx:     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
         html2pdf: 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+        pako:     'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js',
         leafletCSS: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
         leafletJS:  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
     };

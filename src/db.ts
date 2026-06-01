@@ -625,20 +625,17 @@ async function sincronizarPendientes() {
     }
 
     if (!window._pendingSync) return;
-    // MEJ-03 FIX: usar sqliteStorage como fuente de re-sync (no localStorage).
-    // localStorage puede tener datos desactualizados de sesiones anteriores y
-    // sobrescribir datos más nuevos que ya están en Supabase.
     const keys = ['categories','products','clients','salesHistory','quotes',
                   'incomes','expenses','receivables','payables','pedidos',
                   'equipos','roiHistorial','roiConfig','envioAnillos',
                   'gastosRecurrentes','stockMovimientos','pedidosFinalizados','notas','storeConfig'];
-    let ok = true;
+
+    // Batch sync: preparar todas las upserts en paralelo por lotes de 5
+    const upsertBatch: Array<{key: string, value: string}> = [];
     for (const key of keys) {
         try {
-            // Leer desde sqliteStorage (fuente primaria, siempre actualizada)
             const localData = await sqliteStorage.get(key, null);
             if (localData === null) continue;
-            // FIX #5: usar timestamp de sync para resolver conflictos, no array.length
             const localMeta = await sqliteStorage.get('__meta_' + key, null);
             const localSyncedAt = localMeta?.syncedAt || '1970-01-01T00:00:00.000Z';
             const { data: remote } = await db.from('store').select('value').eq('key', key).maybeSingle().catch(() => ({ data: null }));
@@ -647,23 +644,28 @@ async function sincronizarPendientes() {
                 try {
                     const remoteData = JSON.parse(remote.value);
                     const remoteSyncedAt = remoteData?.__syncedAt || '1970-01-01T00:00:00.000Z';
-                    // Solo sobrescribir si nuestro sync local es más nuevo que el remoto
-                    if (remoteSyncedAt > localSyncedAt) {
-                        shouldSync = false; // Supabase tiene datos más recientes
-                    }
-                } catch(e) { /* si no se puede parsear el remoto, sincronizar */ }
+                    if (remoteSyncedAt > localSyncedAt) shouldSync = false;
+                } catch(e) { /* sync */ }
             }
             if (!shouldSync) continue;
-            const { error } = await db.from('store').upsert(
-                { key, value: JSON.stringify(localData) }, { onConflict: 'key' }
-            );
-            if (error) { ok = false; break; }
-        } catch(e) { ok = false; break; }
+            upsertBatch.push({ key, value: JSON.stringify(localData) });
+        } catch(e) { /* skip key */ }
     }
+
+    let ok = true;
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < upsertBatch.length; i += BATCH_SIZE) {
+        const chunk = upsertBatch.slice(i, i + BATCH_SIZE);
+        const results = await Promise.all(
+            chunk.map(item => db.from('store').upsert(item, { onConflict: 'key' }).then(r => r.error))
+        );
+        if (results.some(err => err)) { ok = false; break; }
+    }
+
     if (ok) {
         window._pendingSync = false;
         actualizarIndicadorConexion(true);
-        manekiToastExport('✅ Datos sincronizados con Supabase', 'ok');
+        manekiToastExport(`✅ ${upsertBatch.length} tablas sincronizadas con Supabase`, 'ok');
     }
 }
 

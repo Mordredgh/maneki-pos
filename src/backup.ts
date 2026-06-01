@@ -24,8 +24,8 @@ function cerrarBackupModal() {
     document.getElementById('backupModal').style.display = 'none';
 }
 
-function exportarBackupJSON() {
-    const backup = {
+function _buildBackupObject() {
+    return {
         version: '2.1',
         fecha: new Date().toISOString(),
         tienda: (window.storeConfig && window.storeConfig.name) || 'Maneki Store',
@@ -33,11 +33,10 @@ function exportarBackupJSON() {
             products: window.products || [],
             salesHistory: window.salesHistory || [],
             pedidos: window.pedidos || [],
-            pedidosFinalizados: window.pedidosFinalizados || [],  // BUG FIX: faltaba historial de pedidos
-            // abonos: incluidos en pedidos[n].pagos — se exportan también por compatibilidad con backups legacy
+            pedidosFinalizados: window.pedidosFinalizados || [],
             abonos: window.abonos || [],
             receivables: window.receivables || [],
-            payables: window.payables || [],                      // BUG FIX: faltaban cuentas por pagar
+            payables: window.payables || [],
             incomes: window.incomes || [],
             expenses: window.expenses || [],
             categories: window.categories || [],
@@ -46,7 +45,7 @@ function exportarBackupJSON() {
             roiHistorial: roiHistorial || [],
             roiConfig: roiConfig || { porcentaje: 10 },
             envioAnillos: envioAnillos || [],
-            notas: window.notas || [],                            // BUG FIX: faltaban notas
+            notas: window.notas || [],
             clients: window.clients || [],
             storeConfig: window.storeConfig || {},
             gastosRecurrentes: window.gastosRecurrentes || [],
@@ -54,7 +53,10 @@ function exportarBackupJSON() {
             folioCounter: window._folioCounter || 0
         }
     };
+}
 
+function exportarBackupJSON() {
+    const backup = _buildBackupObject();
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -65,12 +67,48 @@ function exportarBackupJSON() {
     URL.revokeObjectURL(url);
 }
 
+async function exportarBackupComprimido() {
+    const backup = _buildBackupObject();
+    const json = JSON.stringify(backup);
+    const datosStr = JSON.stringify(backup.datos);
+    let hash = 0;
+    for (let i = 0; i < datosStr.length; i++) {
+        hash = ((hash << 5) - hash + datosStr.charCodeAt(i)) | 0;
+    }
+    backup.checksum = hash;
+
+    const pakoUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js';
+    if (typeof window.pako === 'undefined') {
+        await window._mkLoadCDN(pakoUrl);
+    }
+
+    try {
+        const jsonFinal = JSON.stringify(backup);
+        const compressed = window.pako.gzip(jsonFinal);
+        const blob = new Blob([compressed], { type: 'application/gzip' });
+        const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
+        const originalMB = (jsonFinal.length / 1024 / 1024).toFixed(2);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Maneki_Backup_${(typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0]}.json.gz`;
+        a.click();
+        URL.revokeObjectURL(url);
+        manekiToastExport(`📦 Backup comprimido: ${originalMB}MB → ${sizeMB}MB (${Math.round((1 - blob.size / jsonFinal.length) * 100)}% menos)`, 'ok');
+    } catch (e) {
+        console.error('[Backup] Error comprimiendo:', e);
+        manekiToastExport('⚠️ Error al comprimir, exportando sin comprimir...', 'warn');
+        exportarBackupJSON();
+    }
+}
+window.exportarBackupComprimido = exportarBackupComprimido;
+
 function handleBackupDrop(e) {
     e.preventDefault();
     document.getElementById('dropZone').style.borderColor = '#BFDBFE';
     const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.json')) procesarArchivoBackup(file);
-    else { manekiToastExport('Por favor selecciona un archivo .json válido.', 'err'); }
+    if (file && (file.name.endsWith('.json') || file.name.endsWith('.json.gz') || file.name.endsWith('.gz'))) procesarArchivoBackup(file);
+    else { manekiToastExport('Por favor selecciona un archivo .json o .json.gz válido.', 'err'); }
 }
 
 function cargarArchivoBackup(event) {
@@ -78,25 +116,46 @@ function cargarArchivoBackup(event) {
     if (file) procesarArchivoBackup(file);
 }
 
+function _activarBackupPendiente(data, fileName) {
+    if (!data.datos) throw new Error('Formato inválido');
+    backupDataPendiente = data;
+    const label = document.getElementById('dropZoneFileName');
+    label.textContent = `✅ ${fileName}`;
+    label.classList.remove('hidden');
+    const btn = document.getElementById('btnRestaurar');
+    btn.disabled = false;
+    btn.style.background = '#2563EB';
+    btn.style.color = 'white';
+    btn.style.cursor = 'pointer';
+}
+
 function procesarArchivoBackup(file) {
+    const isGz = file.name.endsWith('.gz');
+
+    if (isGz) {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const pakoUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js';
+                if (typeof window.pako === 'undefined') await window._mkLoadCDN(pakoUrl);
+                const compressed = new Uint8Array(e.target.result);
+                const jsonStr = window.pako.ungzip(compressed, { to: 'string' });
+                const data = JSON.parse(jsonStr);
+                _activarBackupPendiente(data, file.name);
+            } catch(err) {
+                manekiToastExport('El archivo comprimido no es un backup válido.', 'err');
+                backupDataPendiente = null;
+            }
+        };
+        reader.readAsArrayBuffer(file);
+        return;
+    }
+
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
             const data = JSON.parse(e.target.result);
-            if (!data.datos) throw new Error('Formato inválido');
-            backupDataPendiente = data;
-
-            // Mostrar nombre del archivo
-            const label = document.getElementById('dropZoneFileName');
-            label.textContent = `✅ ${file.name}`;
-            label.classList.remove('hidden');
-
-            // Activar botón restaurar
-            const btn = document.getElementById('btnRestaurar');
-            btn.disabled = false;
-            btn.style.background = '#2563EB';
-            btn.style.color = 'white';
-            btn.style.cursor = 'pointer';
+            _activarBackupPendiente(data, file.name);
         } catch(err) {
             manekiToastExport('El archivo no es un backup válido de Maneki Store.', 'err');
             backupDataPendiente = null;

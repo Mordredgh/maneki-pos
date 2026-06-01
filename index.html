@@ -3155,6 +3155,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <button onclick="exportarBackupJSON()" class="w-full py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2" style="background:#4CAF50;">
                     <i class="fas fa-download"></i> Descargar Backup JSON
                 </button>
+                <button onclick="exportarBackupComprimido()" class="w-full py-2 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 mt-2" style="background:#7C3AED;">
+                    📦 Backup Comprimido (.gz) — más ligero
+                </button>
             </div>
 
             <div class="rounded-xl border border-blue-100 p-4" style="background:#F0F7FF;">
@@ -3179,7 +3182,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-xs text-gray-400 mt-1">o haz clic para seleccionarlo</p>
                     <p id="dropZoneFileName" class="text-xs text-green-600 font-semibold mt-2 hidden"></p>
                 </div>
-                <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="cargarArchivoBackup(event)">
+                <input type="file" id="backupFileInput" accept=".json,.json.gz,.gz" class="hidden" onchange="cargarArchivoBackup(event)">
                 <button onclick="restaurarBackup()" id="btnRestaurar" disabled
                     class="w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
                     style="background:#E5E7EB; color:#9CA3AF; cursor:not-allowed;">

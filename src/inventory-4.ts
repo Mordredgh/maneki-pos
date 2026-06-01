@@ -472,6 +472,9 @@ function ajustarStock(id) {
     // Renderizar últimos movimientos del producto
     _renderUltimosMovimientosProducto(id, modal);
 
+    // Sugerencia inteligente de punto de reorden
+    _renderSugerenciaReorden(p, modal);
+
     if (typeof openModal === 'function') openModal('ajustarStockModal');
 }
 window.ajustarStock = ajustarStock;
@@ -673,6 +676,71 @@ function closeAjustarStockModal() {
     if (modal) delete modal.dataset.productId;
 }
 window.closeAjustarStockModal = closeAjustarStockModal;
+
+// ── Sugerencia inteligente de reorden ──────────────────────────────────────
+function _renderSugerenciaReorden(producto, modal) {
+    if (!modal) return;
+    let container = modal.querySelector('#_sugerenciaReorden');
+    if (!container) {
+        const inner = modal.querySelector('.bg-white') || modal.querySelector('.space-y-3')?.parentElement;
+        if (!inner) return;
+        container = document.createElement('div');
+        container.id = '_sugerenciaReorden';
+        container.style.cssText = 'margin-top:12px;padding:10px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;';
+        inner.appendChild(container);
+    }
+
+    const ventas30d = (window.salesHistory || []).filter(s => {
+        if (!s.date || s.method === 'Cancelado') return false;
+        const hace30 = new Date(); hace30.setDate(hace30.getDate() - 30);
+        const fStr = `${hace30.getFullYear()}-${String(hace30.getMonth()+1).padStart(2,'0')}-${String(hace30.getDate()).padStart(2,'0')}`;
+        return s.date >= fStr;
+    });
+
+    let unidadesVendidas = 0;
+    ventas30d.forEach(s => {
+        (s.products || []).forEach(p => {
+            if (String(p.id) === String(producto.id) || (p.name||'').toLowerCase() === (producto.name||'').toLowerCase()) {
+                unidadesVendidas += Number(p.quantity || 1);
+            }
+        });
+    });
+
+    const promDiario = unidadesVendidas / 30;
+    const leadTimeDias = producto.leadTime || 7;
+    const stockSeguridad = Math.ceil(promDiario * 3);
+    const puntoReorden = Math.ceil(promDiario * leadTimeDias) + stockSeguridad;
+    const cantidadSugerida = Math.max(0, Math.ceil(promDiario * 30) - (getStockEfectivo(producto) || 0));
+
+    if (unidadesVendidas === 0) {
+        container.innerHTML = `<p style="font-size:.75rem;color:#92400E;margin:0;">📊 Sin ventas en los últimos 30 días — no hay datos para sugerir reorden.</p>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <p style="font-size:.72rem;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px;">📊 Sugerencia de reorden</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div style="background:#FEF3C7;border-radius:8px;padding:6px 8px;text-align:center;">
+                <p style="font-size:.65rem;color:#92400E;margin:0;">Venta promedio</p>
+                <p style="font-size:.9rem;font-weight:700;color:#78350F;margin:2px 0 0;">${promDiario.toFixed(1)}/día</p>
+            </div>
+            <div style="background:#FEF3C7;border-radius:8px;padding:6px 8px;text-align:center;">
+                <p style="font-size:.65rem;color:#92400E;margin:0;">Punto reorden sugerido</p>
+                <p style="font-size:.9rem;font-weight:700;color:#78350F;margin:2px 0 0;">${puntoReorden} uds</p>
+            </div>
+            <div style="background:#FEF3C7;border-radius:8px;padding:6px 8px;text-align:center;">
+                <p style="font-size:.65rem;color:#92400E;margin:0;">Pedir ahora</p>
+                <p style="font-size:.9rem;font-weight:700;color:#78350F;margin:2px 0 0;">${cantidadSugerida > 0 ? cantidadSugerida + ' uds' : '✅ OK'}</p>
+            </div>
+            <div style="background:#FEF3C7;border-radius:8px;padding:6px 8px;text-align:center;">
+                <p style="font-size:.65rem;color:#92400E;margin:0;">Lead time</p>
+                <p style="font-size:.9rem;font-weight:700;color:#78350F;margin:2px 0 0;">${leadTimeDias}d
+                    <button onclick="(function(){var v=prompt('Días que tarda tu proveedor en entregar:','${leadTimeDias}');if(v&&!isNaN(v)){var p=(window.products||[]).find(x=>String(x.id)==='${producto.id}');if(p){p.leadTime=parseInt(v);if(typeof saveProducts==='function')saveProducts();manekiToastExport('✅ Lead time guardado: '+v+' días','ok');}}})()"
+                       style="font-size:.6rem;background:none;border:none;cursor:pointer;color:#B45309;">✏️</button>
+                </p>
+            </div>
+        </div>`;
+}
 
 // ── Margen sugerido ────────────────────────────────────────────────────────
 function aplicarMargen(margen) {

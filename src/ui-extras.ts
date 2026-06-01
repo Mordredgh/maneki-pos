@@ -810,6 +810,18 @@ document.addEventListener('keydown', function(e) {
         if (typeof updateDashboard === 'function') updateDashboard();
         return;
     }
+
+    // 1-9 — navegación rápida a secciones
+    const _sectionKeys: Record<string, string> = {
+        '1': 'bienvenida', '2': 'pedidos', '3': 'inventory',
+        '4': 'balance', '5': 'reportes', '6': 'clientes',
+        '7': 'envios', '8': 'equipos', '9': 'backup'
+    };
+    if (_sectionKeys[e.key]) {
+        e.preventDefault();
+        if (typeof showSection === 'function') showSection(_sectionKeys[e.key]);
+        return;
+    }
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
