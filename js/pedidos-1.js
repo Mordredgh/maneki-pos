@@ -21,25 +21,28 @@ function generarFolioPedido() {
     window._folioCounter = (window._folioCounter || 0) + 1;
     const folio = "PE-" + String(window._folioCounter).padStart(4, "0");
     const _fc = window._folioCounter;
-    if (typeof db !== "undefined") {
-      (async () => {
-        try {
-          await db.from("store").upsert({ key: "folioCounter", value: String(_fc) });
-        } catch (e) {
-          console.warn("[Folio] Error al persistir contador:", e?.message);
-        }
-      })();
-    }
-    try {
-      localStorage.setItem("maneki_folioCounter", String(_fc));
-    } catch (e) {
-    }
+    _persistirFolio(_fc);
     return folio;
   } catch (e) {
     console.error("[Folio] Error generando folio:", e);
     return null;
   } finally {
     _folioGenerando = false;
+  }
+}
+function _persistirFolio(fc) {
+  if (typeof db !== "undefined") {
+    (async () => {
+      try {
+        await db.from("store").upsert({ key: "folioCounter", value: String(fc) });
+      } catch (e) {
+        console.warn("[Folio] Error al persistir contador:", e?.message);
+      }
+    })();
+  }
+  try { localStorage.setItem("maneki_folioCounter", String(fc)); } catch (e) {}
+  if (typeof sqliteStorage !== "undefined") {
+    sqliteStorage.set("folioCounter", fc).catch(() => {});
   }
 }
 let _folioCounterResolve;
@@ -420,7 +423,7 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
         } else if (anticipo > 0) {
           const _d = /* @__PURE__ */ new Date();
           pagosActualizados.unshift({
-            id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+            id: mkId(),
             tipo: "anticipo",
             monto: anticipo,
             fecha: `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, "0")}-${String(_d.getDate()).padStart(2, "0")}`,
@@ -449,7 +452,7 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
       return;
     }
     const pedido = {
-      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      id: mkId(),
       folio,
       cliente,
       telefono,
@@ -472,7 +475,7 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
       prioridad,
       status: "confirmado",
       pagos: anticipo > 0 ? [{
-        id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        id: mkId(),
         tipo: "anticipo",
         monto: anticipo,
         fecha: (() => {

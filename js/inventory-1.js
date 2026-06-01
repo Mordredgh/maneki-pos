@@ -192,7 +192,7 @@ function saveStockMovements() {
 }
 function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motivo, stockAntes, stockDespues }) {
   window.stockMovements.unshift({
-    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+    id: mkId(),
     fecha: (typeof _fechaHoy === "function" ? _fechaHoy() : (/* @__PURE__ */ new Date()).toISOString().split("T")[0]) + "T" + (/* @__PURE__ */ new Date()).toLocaleTimeString("es-MX"),
     productoId,
     productoNombre,
@@ -216,9 +216,7 @@ if (typeof _esc === "undefined") {
   };
 }
 function _genId() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID)
-    return "p" + crypto.randomUUID().replace(/-/g, "");
-  return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+  return "p" + mkId().replace(/-/g, "");
 }
 function getStockEfectivo(product) {
   if (product.variants && product.variants.length > 0) {
@@ -1034,7 +1032,7 @@ async function importarInventarioCSV(input) {
     }
     const sku = row.sku || "IMP-" + (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().split("-")[0].toUpperCase() : Math.random().toString(36).slice(2, 7).toUpperCase());
     const baseProduct = {
-      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      id: mkId(),
       name: row.nombre,
       sku,
       cost: costo,

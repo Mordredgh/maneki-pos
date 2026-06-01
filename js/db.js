@@ -128,6 +128,17 @@ function _withTimeout(promise, ms) {
     })
   ]);
 }
+window.mkId = function() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+};
+window.mkHandleError = function(err, context, showToast) {
+  const msg = err?.message || String(err);
+  console.error(`[Maneki ${context || "Error"}]`, msg, err);
+  if (showToast !== false && typeof manekiToastExport === "function") {
+    manekiToastExport(`❌ ${context || "Error"}: ${msg.slice(0, 80)}`, "err");
+  }
+};
 window._esc = function(str) {
   if (str === null || str === void 0) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
@@ -252,12 +263,68 @@ function _setupRealtime() {
     });
   });
 }
+window._mkRTQueue = [];
+function _mkUpdateQueueBadge() {
+  let badge = document.getElementById("mk-rt-queue-badge");
+  const n = window._mkRTQueue.length;
+  if (n === 0) {
+    if (badge) badge.style.display = "none";
+    return;
+  }
+  if (!badge) {
+    const box = document.getElementById("supabaseStatus");
+    if (!box) return;
+    badge = document.createElement("span");
+    badge.id = "mk-rt-queue-badge";
+    badge.style.cssText = "display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:99px;background:#f59e0b;color:white;font-size:0.65rem;font-weight:700;margin-left:6px;padding:0 4px;animation:pulse 1.5s infinite;";
+    box.appendChild(badge);
+  }
+  badge.textContent = n;
+  badge.style.display = "";
+}
+function _mkFlushRTQueue() {
+  const queue = window._mkRTQueue.splice(0);
+  queue.forEach(fn => { try { fn(); } catch(e) { console.warn("[Realtime] flush error:", e); } });
+  _mkUpdateQueueBadge();
+}
+function _mkIsModalOpen() {
+  return !!document.querySelector(".modal.active");
+}
+const _origCloseModal = closeModal;
+closeModal = function(idOrEl) {
+  _origCloseModal(idOrEl);
+  setTimeout(() => {
+    if (!_mkIsModalOpen() && window._mkRTQueue.length > 0) {
+      _mkFlushRTQueue();
+    }
+  }, 260);
+};
+window.closeModal = closeModal;
 function _rtInPlace(arr, fresh) {
   if (!Array.isArray(arr) || !Array.isArray(fresh)) return;
-  arr.splice(0, arr.length, ...fresh);
+  const freshMap = new Map(fresh.map(item => [String(item.id), item]));
+  for (let i = arr.length - 1; i >= 0; i--) {
+    const id = String(arr[i].id);
+    if (freshMap.has(id)) {
+      const updated = freshMap.get(id);
+      const localUpdated = arr[i].updated_at || "";
+      const remoteUpdated = updated.updated_at || "";
+      if (!localUpdated || remoteUpdated >= localUpdated) {
+        arr[i] = updated;
+      }
+      freshMap.delete(id);
+    } else {
+      arr.splice(i, 1);
+    }
+  }
+  freshMap.forEach(item => arr.push(item));
 }
 async function _applyRTRelacional(tabla, payload) {
-  if (document.querySelector(".modal.active")) return;
+  if (_mkIsModalOpen()) {
+    window._mkRTQueue.push(() => _applyRTRelacional(tabla, payload));
+    _mkUpdateQueueBadge();
+    return;
+  }
   if (!window.pedidos && !window.products) return;
   const key = _rtTablaAKey[tabla];
   if (!key) return;
@@ -280,6 +347,13 @@ async function _applyRTRelacional(tabla, payload) {
       } else if (eventType === "UPDATE") {
         const i = arr.findIndex((x) => String(x.id) === String(transformed.id));
         if (i >= 0) {
+          const local = arr[i];
+          const localUpdated = local.updated_at || local.fechaUltimoEstado || "";
+          const remoteUpdated = rowData.updated_at || rowData.fecha_ultimo_estado || "";
+          if (localUpdated && remoteUpdated && localUpdated > remoteUpdated) {
+            console.log("[Realtime] Conflicto: local más reciente que remoto, ignorando update para", transformed.id);
+            return;
+          }
           if (tabla === "products") {
             const localP = arr[i];
             if (localP && localP.tipo !== "materia_prima" && localP.tipo !== "servicio" && Array.isArray(localP.mpComponentes) && localP.mpComponentes.length > 0) {
@@ -298,18 +372,22 @@ async function _applyRTRelacional(tabla, payload) {
     await _applyRTDesktopConDatos(key, window[key] || []);
     console.log("[Realtime] " + tabla + " (" + eventType + ") aplicado in-place");
   } catch (e) {
-    console.warn("[Realtime] Error en _applyRTRelacional:", tabla, e);
+    mkHandleError(e, "Realtime " + tabla, false);
   }
 }
 async function _applyRTDesktop(key) {
-  if (document.querySelector(".modal.active")) return;
+  if (_mkIsModalOpen()) {
+    window._mkRTQueue.push(() => _applyRTDesktop(key));
+    _mkUpdateQueueBadge();
+    return;
+  }
   if (!window.pedidos && !window.products) return;
   try {
     const fresh = await sbLoad(key, null);
     if (fresh === null) return;
     await _applyRTDesktopConDatos(key, fresh);
   } catch (e) {
-    console.warn("[Realtime] Error aplicando cambio:", key, e);
+    mkHandleError(e, "Realtime store:" + key, false);
   }
 }
 async function _applyRTDesktopConDatos(key, fresh) {
@@ -321,6 +399,7 @@ async function _applyRTDesktopConDatos(key, fresh) {
     if (typeof updateDashboard === "function") updateDashboard();
   } else if (key === "products") {
     _rtInPlace(window.products, fresh);
+    if (typeof window._rebuildProductMap === "function") window._rebuildProductMap();
     if (typeof renderInventoryTable === "function") renderInventoryTable();
     if (typeof updateDashboard === "function") updateDashboard();
   } else if (key === "clients") {
@@ -490,7 +569,7 @@ function actualizarIndicadorConexion(online) {
     _ocultarBannerOfflineConexion();
   } else {
     dot.className = "w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0 inline-block";
-    txt.textContent = "Sin conexión (local)";
+    txt.textContent = window._pendingSync ? "Sync pendiente..." : "Sin conexión (local)";
     txt.className = "text-yellow-600 truncate";
     if (box) {
       box.style.background = "";
@@ -654,12 +733,40 @@ async function sincronizarPendientes() {
     manekiToastExport("✅ Datos sincronizados con Supabase", "ok");
   }
 }
+let _syncRetryTimer = null;
+let _syncRetryAttempt = 0;
+const _SYNC_MAX_RETRIES = 5;
+function _scheduleSyncRetry() {
+  if (_syncRetryAttempt >= _SYNC_MAX_RETRIES) {
+    _syncRetryAttempt = 0;
+    return;
+  }
+  const delay = Math.min(30000, 1000 * Math.pow(2, _syncRetryAttempt));
+  _syncRetryAttempt++;
+  clearTimeout(_syncRetryTimer);
+  _syncRetryTimer = setTimeout(async () => {
+    try {
+      const { error } = await db.from("store").select("key").limit(1);
+      if (!error) {
+        _syncRetryAttempt = 0;
+        actualizarIndicadorConexion(true);
+        sincronizarPendientes();
+      } else {
+        _scheduleSyncRetry();
+      }
+    } catch (e) {
+      _scheduleSyncRetry();
+    }
+  }, delay);
+}
 window.addEventListener("online", () => {
+  _syncRetryAttempt = 0;
   actualizarIndicadorConexion(true);
   sincronizarPendientes();
 });
 window.addEventListener("offline", () => {
   actualizarIndicadorConexion(false);
+  _scheduleSyncRetry();
 });
 setTimeout(() => {
   if (ipcRenderer) {
@@ -712,6 +819,7 @@ async function sbSave(key, data) {
         console.error("sbSave error de red:", e);
         window._pendingSync = true;
         actualizarIndicadorConexion(false);
+        _scheduleSyncRetry();
         reject(e);
       }
     }, 500);
@@ -934,6 +1042,39 @@ async function verificarEspacioAlmacenamiento() {
 }
 setTimeout(verificarEspacioAlmacenamiento, 1e4);
 window._storageCheckInterval = setInterval(verificarEspacioAlmacenamiento, 10 * 60 * 1e3);
+(async function _migrateLocalStorageToSQLite() {
+  if (!ipcRenderer) return;
+  const prefix = "maneki_";
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(prefix) && k !== "maneki_folioCounter" && k !== "maneki_autoBackup") {
+      keys.push(k);
+    }
+  }
+  if (keys.length === 0) return;
+  let migrated = 0;
+  for (const lsKey of keys) {
+    const dataKey = lsKey.replace(prefix, "");
+    try {
+      const existing = await sqliteStorage.get(dataKey, null);
+      if (existing !== null) {
+        localStorage.removeItem(lsKey);
+        migrated++;
+        continue;
+      }
+      const raw = localStorage.getItem(lsKey);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      const ok = await sqliteStorage.set(dataKey, parsed);
+      if (ok) {
+        localStorage.removeItem(lsKey);
+        migrated++;
+      }
+    } catch (e) {}
+  }
+  if (migrated > 0) console.log(`[Storage] Migrated ${migrated} keys from localStorage to SQLite`);
+})();
 function saveToLocalStorage(key, data) {
 }
 async function mostrarEstadoAlmacenamiento() {
@@ -1005,7 +1146,7 @@ function saveStockMovimientos() {
 }
 function registrarMovimiento(productoId, productoNombre, tipo, cantidad, motivo) {
   stockMovimientos.push({
-    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    id: mkId(),
     fecha: _fechaHoy(),
     hora: (/* @__PURE__ */ new Date()).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
     productoId,
@@ -1098,6 +1239,7 @@ function _calcStockParaSupabase(p) {
 }
 function saveProducts() {
   return (async () => {
+    if (typeof window._rebuildProductMap === "function") window._rebuildProductMap();
     sqliteStorage.set("products", products).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     try {
       await Promise.all(products.map((p) => _migrarBase64AStorage(p)));

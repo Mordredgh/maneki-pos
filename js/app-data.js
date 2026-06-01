@@ -96,7 +96,7 @@ function confirmarCancelPedido() {
   const fecha = typeof _fechaHoy === "function" ? _fechaHoy() : (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
   const hora = (/* @__PURE__ */ new Date()).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
   const cancelacion = {
-    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    id: mkId(),
     tipo: "cancelacion_pedido",
     folio: pedido.folio,
     cliente: pedido.cliente,
@@ -108,7 +108,7 @@ function confirmarCancelPedido() {
     hora
   };
   salesHistory.push({
-    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    id: mkId(),
     folio: pedido.folio + "-CANCEL",
     date: fecha,
     time: hora,
@@ -668,7 +668,7 @@ async function convertQuoteToPedido(quoteId) {
     fechaEntrega.setDate(fechaEntrega.getDate() + 15);
     const fechaEntregaStr = `${fechaEntrega.getFullYear()}-${String(fechaEntrega.getMonth() + 1).padStart(2, "0")}-${String(fechaEntrega.getDate()).padStart(2, "0")}`;
     const nuevoPedido = {
-      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      id: mkId(),
       folio: generarFolioPedido(),
       cliente: quote.customer,
       telefono: "",

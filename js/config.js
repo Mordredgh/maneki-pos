@@ -3,6 +3,14 @@ function _fechaHoy() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 window._fechaHoy = _fechaHoy;
+window._productMap = new Map();
+window._rebuildProductMap = function() {
+  window._productMap.clear();
+  (window.products || []).forEach(p => window._productMap.set(String(p.id), p));
+};
+window._getProductById = function(id) {
+  return window._productMap.get(String(id)) || null;
+};
 function openClientHistory(clientId) {
   const client = (window.clients || clients || []).find((c) => String(c.id) === String(clientId));
   if (!client) return;
@@ -542,6 +550,7 @@ async function initApp() {
       sbLoad("ingresosRecurrentes", [])
     ]);
     products = _products;
+    if (typeof window._rebuildProductMap === "function") window._rebuildProductMap();
     clients = _clients;
     salesHistory = _salesHistory;
     quotes = _quotes;

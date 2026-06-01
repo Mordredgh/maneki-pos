@@ -400,7 +400,7 @@ document.getElementById("addClientForm").addEventListener("submit", function(e) 
     const newClient = {
       // BUG #8 FIX: randomUUID evita colisión de IDs cuando dos clientes
       // se crean en el mismo milisegundo.
-      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2),
+      id: mkId(),
       name,
       phone,
       facebook,

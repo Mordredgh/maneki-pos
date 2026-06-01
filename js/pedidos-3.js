@@ -350,7 +350,7 @@ window.setPedidoStatus = setPedidoStatus;
 function duplicarPedido(id) {
   const original = (window.pedidos || []).find((p) => String(p.id) === String(id)) || (window.pedidosFinalizados || []).find((p) => String(p.id) === String(id));
   if (!original) return;
-  const nuevoId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
+  const nuevoId = mkId();
   const hoy = typeof _fechaHoy === "function" ? _fechaHoy() : (() => {
     const d = /* @__PURE__ */ new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

@@ -8,16 +8,17 @@ async function _eliminarFotoStorageAlFinalizar(pedido) {
   }
 }
 function _descontarInventarioPedido(pedido) {
+  if (pedido.inventarioDescontado) return 0;
   const items = pedido.productosInventario || [];
   if (items.length === 0) return 0;
   let descontados = 0;
   const _rollback = [];
   try {
     for (const item of items) {
-      const prod = (window.products || []).find((p) => String(p.id) === String(item.id));
+      if (item.id === "libre") continue;
+      const prod = typeof _getProductById === "function" ? _getProductById(item.id) : (window.products || []).find((p) => String(p.id) === String(item.id));
       if (!prod) continue;
       if (prod.tipo === "servicio") continue;
-      if (item.id === "libre") continue;
       const cantidad = item.quantity || item.cantidad || 1;
       if (!item.variante && item.variante !== 0) {
       }
@@ -56,7 +57,8 @@ function _descontarInventarioPedido(pedido) {
         manekiToastExport(`⚠️ Stock bajo de "${prod.name}" (disponible: ${_stockDisponible})`, "warn");
       }
       const antesPT = prod.stock || 0;
-      _rollback.push({ id: prod.id, stockBefore: antesPT });
+      const variantsBefore = Array.isArray(prod.variants) ? prod.variants.map(v => ({ ...v })) : null;
+      _rollback.push({ id: prod.id, stockBefore: antesPT, variantsBefore });
       if (Array.isArray(prod.variants) && prod.variants.length > 0) {
         if (item.variante) {
           const _colIdx = item.variante.indexOf(":");
@@ -98,7 +100,8 @@ function _descontarInventarioPedido(pedido) {
           const _rph = prod.rendimientoPorHoja || 1;
           const cantMP = _rph > 0 ? Math.ceil(cantidad / _rph) * (parseFloat(comp.qty) || 1) : (parseFloat(comp.qty) || 1) * cantidad;
           const antesMP = mp.stock || 0;
-          _rollback.push({ id: mp.id, stockBefore: antesMP });
+          const mpVariantsBefore = Array.isArray(mp.variants) ? mp.variants.map(v => ({ ...v })) : null;
+          _rollback.push({ id: mp.id, stockBefore: antesMP, variantsBefore: mpVariantsBefore });
           if (item.variante && Array.isArray(mp.variants) && mp.variants.length > 0) {
             const colonIdx = item.variante.indexOf(":");
             const varType = colonIdx !== -1 ? item.variante.slice(0, colonIdx).trim() : item.variante;
@@ -134,13 +137,20 @@ function _descontarInventarioPedido(pedido) {
   } catch (e) {
     _rollback.forEach((r) => {
       const p = (window.products || []).find((x) => String(x.id) === String(r.id));
-      if (p) p.stock = r.stockBefore;
+      if (!p) return;
+      p.stock = r.stockBefore;
+      if (r.variantsBefore && Array.isArray(p.variants)) {
+        p.variants.splice(0, p.variants.length, ...r.variantsBefore);
+        if (typeof syncStockFromVariants === "function") syncStockFromVariants(p);
+      }
     });
-    console.error("[Inventario] Error al descontar — stock restaurado:", e);
-    manekiToastExport("Error al descontar inventario. Se revirtió el stock.", "err");
+    mkHandleError(e, "Inventario descuento — stock restaurado");
     throw e;
   }
-  if (descontados > 0 && typeof saveProducts === "function") saveProducts();
+  if (descontados > 0) {
+    pedido.inventarioDescontado = true;
+    if (typeof saveProducts === "function") saveProducts();
+  }
   return descontados;
 }
 function _esProductoEmpaque(mp) {
@@ -390,7 +400,7 @@ function setPedidoStatus(status) {
       if (!yaRegistrado && Number(p.total || 0) > 0) {
         const _saldoFinal = typeof calcSaldoPendiente === "function" ? calcSaldoPendiente(p) : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
         const saleRecord = {
-          id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + "-" + Math.random().toString(36).slice(2)),
+          id: mkId(),
           type: "pedido",
           folio: p.folio,
           date: (p.fechaFinalizado || (/* @__PURE__ */ new Date()).toISOString()).split("T")[0],
@@ -491,14 +501,49 @@ function setPedidoStatus(status) {
         manekiToastExport("⚠️ El pedido no tiene total asignado. Agrega un precio antes de pasar a producción.", "warn");
         return;
       }
+      if (!pedido.inventarioDescontado && (pedido.productosInventario || []).length > 0) {
+        const items = pedido.productosInventario;
+        const resumen = items.slice(0, 5).map(it => {
+          const p = typeof _getProductById === "function" ? _getProductById(it.id) : (window.products || []).find(x => String(x.id) === String(it.id));
+          const stock = p ? (typeof getStockEfectivo === "function" ? getStockEfectivo(p) : p.stock || 0) : "?";
+          return `• ${_esc(it.name || p?.name || "?")} — cant: ${it.quantity || 1}, stock: ${stock}`;
+        }).join("<br>");
+        const extra = items.length > 5 ? `<br><small>+${items.length - 5} más...</small>` : "";
+        showConfirm(
+          `Se descontará inventario para ${items.length} material(es):<br><br>${resumen}${extra}<br><br>¿Continuar?`,
+          "📦 Descontar inventario"
+        ).then(ok => {
+          if (!ok) return;
+          const n = _descontarInventarioPedido(pedido);
+          if (n > 0) {
+            window.pedidos[idx].inventarioDescontado = true;
+            manekiToastExport(`📦 ${n} material(es) descontado(s) del inventario.`, "ok");
+          }
+          if ((pedido.empaques || []).length > 0 && !pedido.empaquesDescontados) {
+            const nEmp = _descontarEmpaquesInventario(pedido);
+            if (nEmp > 0) {
+              window.pedidos[idx].empaquesDescontados = true;
+              manekiToastExport(`📦 ${nEmp} empaque(s) descontado(s).`, "ok");
+            }
+          }
+          window.pedidos[idx].status = status;
+          window.pedidos[idx].fechaUltimoEstado = (new Date()).toISOString();
+          if (!window.pedidos[idx].historialEstados) window.pedidos[idx].historialEstados = [];
+          window.pedidos[idx].historialEstados.push({
+            estado: status,
+            fecha: typeof _fechaHoy === "function" ? _fechaHoy() : (new Date()).toISOString().split("T")[0],
+            hora: (new Date()).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
+          });
+          savePedidos();
+          if (window.MKS) MKS.tick();
+          closePedidoStatusModal();
+          renderPedidosTable();
+          manekiToastExport("Estado actualizado ✓", "ok");
+        });
+        return;
+      }
       if (pedido.inventarioDescontado) {
         manekiToastExport("⚠️ El inventario ya fue descontado para este pedido", "warn");
-      } else if ((pedido.productosInventario || []).length > 0) {
-        const n = _descontarInventarioPedido(pedido);
-        if (n > 0) {
-          window.pedidos[idx].inventarioDescontado = true;
-          manekiToastExport(`📦 ${n} material(es) descontado(s) del inventario.`, "ok");
-        }
       }
       if ((pedido.empaques || []).length > 0 && !pedido.empaquesDescontados) {
         const nEmp = _descontarEmpaquesInventario(pedido);
@@ -630,7 +675,7 @@ async function confirmarAbonoPedido() {
     }
     if (!p.pagos) p.pagos = [];
     const _d = /* @__PURE__ */ new Date();
-    const abonoId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + "-" + Math.random().toString(36).slice(2));
+    const abonoId = mkId();
     const _fechaLocal = _d.getFullYear() + "-" + String(_d.getMonth() + 1).padStart(2, "0") + "-" + String(_d.getDate()).padStart(2, "0");
     const _pagosBefore = p.pagos.slice();
     const _incomesBefore = window.incomes !== void 0 ? window.incomes.slice() : void 0;

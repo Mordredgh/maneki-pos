@@ -50,6 +50,12 @@ function exportarBackupJSON() {
       folioCounter: window._folioCounter || 0
     }
   };
+  const datosStr = JSON.stringify(backup.datos);
+  let hash = 0;
+  for (let i = 0; i < datosStr.length; i++) {
+    hash = ((hash << 5) - hash + datosStr.charCodeAt(i)) | 0;
+  }
+  backup.checksum = hash;
   const json = JSON.stringify(backup, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -72,12 +78,41 @@ function cargarArchivoBackup(event) {
   const file = event.target.files[0];
   if (file) procesarArchivoBackup(file);
 }
+function _validarEstructuraBackup(data) {
+  if (!data || typeof data !== "object") return "No es un objeto JSON válido";
+  if (!data.datos || typeof data.datos !== "object") return "Falta la propiedad 'datos'";
+  const keysRequeridas = ["products", "pedidos"];
+  for (const k of keysRequeridas) {
+    if (data.datos[k] !== undefined && !Array.isArray(data.datos[k]))
+      return `'${k}' debe ser un array`;
+  }
+  const keysArray = ["salesHistory","pedidosFinalizados","clients","categories","incomes","expenses","receivables","payables","quotes","equipos"];
+  for (const k of keysArray) {
+    if (data.datos[k] !== undefined && !Array.isArray(data.datos[k]))
+      return `'${k}' debe ser un array`;
+  }
+  if (data.datos.storeConfig !== undefined && typeof data.datos.storeConfig !== "object")
+    return "'storeConfig' debe ser un objeto";
+  return null;
+}
 function procesarArchivoBackup(file) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.datos) throw new Error("Formato inválido");
+      const err = _validarEstructuraBackup(data);
+      if (err) throw new Error("Backup inválido: " + err);
+      if (data.checksum !== undefined) {
+        const datosStr = JSON.stringify(data.datos);
+        let h = 0;
+        for (let i = 0; i < datosStr.length; i++) {
+          h = ((h << 5) - h + datosStr.charCodeAt(i)) | 0;
+        }
+        if (h !== data.checksum) {
+          manekiToastExport("⚠️ El checksum del backup no coincide — el archivo pudo haberse modificado", "warn");
+        }
+      }
       backupDataPendiente = data;
       const label = document.getElementById("dropZoneFileName");
       label.textContent = `✅ ${file.name}`;
