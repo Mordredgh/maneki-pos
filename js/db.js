@@ -7,31 +7,65 @@ const MK_DEBOUNCE_STORE_RT = 800;
 const MK_DEBOUNCE_TABLE_RT = 600;
 const MK_DEBOUNCE_SBSAVE = 500;
 const MK_TIMEOUT_SUPABASE = 8000;
-const _lsCache = {
-  set(key, value) {
-    try { localStorage.setItem("mk_" + key, JSON.stringify(value)); return true; }
-    catch(e) { if (e?.name === "QuotaExceededError") console.warn("[Storage] localStorage lleno"); return false; }
+const _idb = {
+  _db: null,
+  _ready: null,
+  open() {
+    if (this._ready) return this._ready;
+    this._ready = new Promise((resolve) => {
+      try {
+        const req = indexedDB.open("maneki_cache", 1);
+        req.onupgradeneeded = (e) => e.target.result.createObjectStore("kv");
+        req.onsuccess = (e) => { this._db = e.target.result; resolve(true); };
+        req.onerror = () => resolve(false);
+      } catch(e) { resolve(false); }
+    });
+    return this._ready;
   },
-  get(key, def) {
-    try { const raw = localStorage.getItem("mk_" + key); return raw ? JSON.parse(raw) : def; }
-    catch(e) { return def; }
+  async set(key, value) {
+    if (!await this.open() || !this._db) return this._lsFallback("set", key, value);
+    return new Promise((resolve) => {
+      try {
+        const tx = this._db.transaction("kv", "readwrite");
+        tx.objectStore("kv").put(value, key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(this._lsFallback("set", key, value));
+      } catch(e) { resolve(this._lsFallback("set", key, value)); }
+    });
+  },
+  async get(key, def) {
+    if (!await this.open() || !this._db) return this._lsFallback("get", key, def);
+    return new Promise((resolve) => {
+      try {
+        const tx = this._db.transaction("kv", "readonly");
+        const req = tx.objectStore("kv").get(key);
+        req.onsuccess = () => resolve(req.result !== undefined ? req.result : def);
+        req.onerror = () => resolve(this._lsFallback("get", key, def));
+      } catch(e) { resolve(this._lsFallback("get", key, def)); }
+    });
+  },
+  _lsFallback(op, key, value) {
+    try {
+      if (op === "set") { localStorage.setItem("mk_" + key, JSON.stringify(value)); return true; }
+      const raw = localStorage.getItem("mk_" + key);
+      return raw ? JSON.parse(raw) : value;
+    } catch(e) { return op === "set" ? false : value; }
   }
 };
 const sqliteStorage = {
-  async set(key, value) { return _lsCache.set(key, value); },
-  async get(key, defaultValue = null) { return _lsCache.get(key, defaultValue); },
+  async set(key, value) { return _idb.set(key, value); },
+  async get(key, defaultValue = null) { return _idb.get(key, defaultValue); },
   async getAll(keys) {
     const r = {};
-    (keys || []).forEach(k => { const v = _lsCache.get(k, null); if (v !== null) r[k] = v; });
+    for (const k of (keys || [])) { const v = await _idb.get(k, null); if (v !== null) r[k] = v; }
     return r;
   },
   async getSize() {
-    let bytes = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k?.startsWith("mk_")) bytes += (localStorage.getItem(k)?.length || 0) * 2;
+    if (navigator.storage && navigator.storage.estimate) {
+      const est = await navigator.storage.estimate();
+      return { ok: true, kb: Math.round((est.usage || 0) / 1024), dbKB: Math.round((est.quota || 0) / 1024) };
     }
-    return { ok: true, kb: Math.round(bytes / 1024), dbKB: 0 };
+    return { ok: true, kb: 0, dbKB: 0 };
   }
 };
 const _rtDeskDeb = {};
@@ -92,6 +126,15 @@ function _withTimeout(promise, ms) {
     })
   ]);
 }
+window.mkNotify = function(title, body, onclick) {
+  if (!("Notification" in window)) return;
+  const show = () => {
+    const n = new Notification(title, { body, icon: "/logo.png", badge: "/logo.png" });
+    if (onclick) n.onclick = () => { window.focus(); onclick(); n.close(); };
+  };
+  if (Notification.permission === "granted") show();
+  else if (Notification.permission !== "denied") Notification.requestPermission().then(p => { if (p === "granted") show(); });
+};
 window.mkDebounce = function(fn, ms) {
   let timer;
   return function(...args) {

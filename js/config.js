@@ -702,8 +702,8 @@ async function initApp() {
           if (typeof initChart === "function") initChart();
           if (typeof initReports === "function") initReports();
           try {
-            const _savedSection = localStorage.getItem("maneki_activeSection");
-            showSection(_savedSection && _savedSection !== "null" ? _savedSection : "bienvenida");
+            const _initSection = typeof _mkGetInitialSection === "function" ? _mkGetInitialSection() : "bienvenida";
+            showSection(_initSection);
           } catch (e) {
           }
           if (typeof _setupRealtime === "function") _setupRealtime();

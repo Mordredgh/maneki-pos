@@ -20,6 +20,17 @@ function checkAlertasEntregas() {
   }
   banner.classList.add("visible");
   if (typeof window._mkNotifSound === "function") window._mkNotifSound();
+  if (typeof mkNotify === "function" && !window._mkEntregasNotified) {
+    const hoy = pedidosAlerta.filter(p => p.diffDias === 0);
+    if (hoy.length > 0) {
+      mkNotify(
+        "Maneki — Entregas para hoy",
+        hoy.length + " pedido" + (hoy.length > 1 ? "s" : "") + " con entrega hoy",
+        () => showSection("pedidos")
+      );
+      window._mkEntregasNotified = true;
+    }
+  }
   document.getElementById("alertaSubtitulo").textContent = pedidosAlerta.length === 1 ? "1 pedido requiere tu atención" : `${pedidosAlerta.length} pedidos requieren tu atención`;
   lista.innerHTML = pedidosAlerta.map((p) => {
     let clase, etiqueta, icono;

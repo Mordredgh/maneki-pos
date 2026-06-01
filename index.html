@@ -3,11 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; connect-src 'self' https://*.supabase.co https://api.telegram.org wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; worker-src 'self' blob:;">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Sistema de gestión para negocios de regalos personalizados. Dashboard, inventario, pedidos por encargo y reportes.">
+    <meta name="theme-color" content="#C9933A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Maneki POS">
+    <meta property="og:title" content="Maneki Store — Sistema de Gestión">
+    <meta property="og:description" content="Dashboard, inventario, pedidos por encargo y reportes para tu negocio">
+    <meta property="og:image" content="/logo.png">
+    <meta property="og:type" content="website">
     <title>Maneki Store - Sistema de Gestión</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/logo.png">
 
     <!-- Preconnect a dominios CDN para acelerar carga diferida -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
@@ -22,17 +35,17 @@
   <!-- CDN Libraries -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
   <!-- Chart.js: async para no bloquear render; lazy-loader lo prefetchea a 200ms -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" async></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" async crossorigin="anonymous"></script>
   <!-- Supabase: necesario al arranque para autenticación y datos -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 
   <!-- Estilos -->
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/ui-redesign.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/styles.css?v=2.0.0">
+  <link rel="stylesheet" href="css/ui-redesign.css?v=2.0.0">
+  <link rel="stylesheet" href="css/responsive.css?v=2.0.0">
 
   <!-- Scripts de la app (orden importa) -->
-  <script src="js/icons.js"></script>
+  <script src="js/icons.js" defer></script>
   <script src="js/config-init.js"></script>
 
   <!-- ── Stub showSection: evita ReferenceError antes de que carguen los módulos ── -->
@@ -3460,5 +3473,6 @@ input:focus, select:focus, textarea:focus, button:focus {
     <span style="font-size:20px;">☰</span><span>Más</span>
   </button>
 </nav>
+<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(function(){})</script>
 </body>
 </html>

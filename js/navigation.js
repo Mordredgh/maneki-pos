@@ -1,5 +1,6 @@
 function showSection(sectionName) {
   localStorage.setItem("maneki_activeSection", sectionName);
+  try { history.pushState({ section: sectionName }, "", "#" + sectionName); } catch(e) {}
   if (window._posSearchTimeout) {
     clearTimeout(window._posSearchTimeout);
     window._posSearchTimeout = null;
@@ -82,6 +83,17 @@ function showSection(sectionName) {
 }
 window.showSection = showSection;
 window.showSection._mk4 = true;
+window.addEventListener("popstate", function(e) {
+  const section = e.state?.section || location.hash.replace("#", "") || "bienvenida";
+  showSection(section);
+});
+window._mkGetInitialSection = function() {
+  const hash = location.hash.replace("#", "");
+  if (hash) return hash;
+  const saved = localStorage.getItem("maneki_activeSection");
+  if (saved && saved !== "null") return saved;
+  return "bienvenida";
+};
 window.safeCall = function(fn, ...args) {
   if (typeof window[fn] === "function") window[fn](...args);
   else document.addEventListener("DOMContentLoaded", () => {
