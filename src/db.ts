@@ -1,7 +1,6 @@
 // ============================================================
 // SUPABASE CONFIG
 // ============================================================
-// ===== ELECTRON IPC (Notificaciones y SQLite offline) =====
 // ── VARIABLES GLOBALES PARA PEDIDOS (declaradas antes de todo) ──
 var pedidos = [];
 var pedidosFinalizados = [];
@@ -9,72 +8,8 @@ var abonos = [];
 var pedidoProductosSeleccionados = [];
 var abonoProductosSeleccionados = [];
 
-let ipcRenderer = null;
-try {
-    const { ipcRenderer: _ipc } = require('electron');
-    ipcRenderer = _ipc;
-} catch(e) { /* Corriendo fuera de Electron, ipcRenderer no disponible */ }
 
-// ══════════════════════════════════════════════════════════════
-// SQLITE STORAGE — capa de persistencia sin límite de espacio
-// Usa SQLite local (via IPC) como almacenamiento principal,
-// con localStorage como respaldo de emergencia
-// ══════════════════════════════════════════════════════════════
-const sqliteStorage = {
-    // Guardar datos en SQLite local
-    async set(key, value) {
-        if (!ipcRenderer) return false;
-        try {
-            const result = await ipcRenderer.invoke('sqlite-save', { key, value });
-            return result.ok;
-        } catch(e) {
-            console.warn('sqliteStorage.set error:', key, e);
-            return false;
-        }
-    },
 
-    // Cargar datos desde SQLite local
-    async get(key, defaultValue = null) {
-        if (!ipcRenderer) return defaultValue;
-        try {
-            const result = await ipcRenderer.invoke('sqlite-load', { key });
-            if (result.ok && result.value !== null) return result.value;
-            return defaultValue;
-        } catch(e) {
-            console.warn('sqliteStorage.get error:', key, e);
-            return defaultValue;
-        }
-    },
-
-    // Cargar múltiples claves de una sola vez (más rápido al iniciar)
-    async getAll(keys) {
-        if (!ipcRenderer) return {};
-        try {
-            const result = await ipcRenderer.invoke('sqlite-load-all', { keys });
-            return result.ok ? result.data : {};
-        } catch(e) {
-            console.warn('sqliteStorage.getAll error:', e);
-            return {};
-        }
-    },
-
-    // Ver cuánto espacio está usando
-    async getSize() {
-        if (!ipcRenderer) return { kb: 0, dbKB: 0 };
-        try {
-            const result = await ipcRenderer.invoke('sqlite-size');
-            return result.ok ? result : { kb: 0, dbKB: 0 };
-        } catch(e) { return { kb: 0, dbKB: 0 }; }
-    }
-};
-// ==========================================================
-
-// MEJ-02: Las credenciales de Supabase deberían moverse al proceso principal (main.js)
-// y exponerse al renderer via contextBridge en el preload. Mientras se migra,
-// BUG-NEW-02 FIX: Credenciales Supabase fuera del código visible en DevTools como strings.
-// Con contextIsolation:false (requerido por el proyecto por compatibilidad con require() en renderer),
-// contextBridge no expone nada en window. En su lugar usamos ipcRenderer directamente,
-// que sí está disponible con nodeIntegration:true.
 // ── Declaraciones adelantadas para evitar TDZ en _setupRealtime ──
 // _rtTablaAKey y _rtDeskDeb se usan dentro de _setupRealtime(), que es llamada
 // por el bloque async de inicialización de Supabase. Con const/let no hay hoisting,
@@ -91,19 +26,11 @@ let db = null;
 (async () => {
     try {
         let cfg = null;
-        // Intentar via ipcRenderer (ya inicializado en línea 12, mismo que usa SQLite)
-        if (ipcRenderer) {
-            try {
-                cfg = await ipcRenderer.invoke('get-supabase-config');
-            } catch(e) { /* handler no disponible aún — usar fallback */ }
-        }
-        // Fallback: contextBridge (si nodeIntegration:false)
+        // Intentar config inyectada externamente
         if (!cfg && window.__mkCfg) {
             try { cfg = await window.__mkCfg.getSupabase(); } catch(e) {}
         }
-        // Fallback final: config embebida. La seguridad del anon key se garantiza
-        // mediante políticas RLS en Supabase — ocultarla del renderer no aporta
-        // seguridad real en una app Electron de escritorio local.
+        // Config embebida. La seguridad del anon key se garantiza mediante RLS en Supabase.
         if (!cfg) {
             // Anon key decodificada en runtime — no aparece como string literal en búsquedas
             var _p = ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
@@ -145,6 +72,23 @@ let db = null;
     }
 })();
 
+// Unified UUID generator
+function mkId(): string {
+    return (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
+}
+(window as any).mkId = mkId;
+
+function mkHandleError(err: any, context: string): void {
+    const msg = err?.message || String(err);
+    console.error(`[Maneki ${context}]`, msg, err);
+    if (typeof manekiToastExport === 'function') {
+        manekiToastExport(`Error en ${context}: ${msg}`, 'error');
+    }
+}
+(window as any).mkHandleError = mkHandleError;
+
 // ── Timeout wrapper para queries Supabase (evita UI freeze) ──────────
 function _withTimeout(promise, ms) {
     ms = ms || 8000;
@@ -158,9 +102,8 @@ function _withTimeout(promise, ms) {
 
 // ══════════════════════════════════════════════════════════════
 // MEJ-01: _esc() — Sanitizador HTML global anti-XSS
-// En Electron, un XSS en innerHTML con datos de usuario puede
-// escalar a RCE via IPC/Node. Esta función debe usarse en TODOS
-// los puntos donde se inserta texto de usuario en el DOM.
+// Esta función debe usarse en TODOS los puntos donde se inserta
+// texto de usuario en el DOM.
 // ══════════════════════════════════════════════════════════════
 window._esc = function(str) {
     if (str === null || str === undefined) return '';
@@ -173,7 +116,7 @@ window._esc = function(str) {
 };
 
 // ══════════════════════════════════════════════════════
-// ── SUPABASE REALTIME — Live Sync (escritorio)
+// ── SUPABASE REALTIME — Live Sync
 // BUG-010 FIX: ahora escucha tanto la tabla store (legacy)
 // como las tablas relacionales (products, orders, etc.)
 // MEJ-13: UPDATE in-place desde payload — sin SELECT * completo
@@ -219,7 +162,6 @@ function _rtTransformarFila(tabla, row) {
 
 function _setupRealtime() {
     // Guard: db puede ser null si la inicialización async todavía no completó
-    // (ej. config.js llama _setupRealtime() antes de que ipcRenderer.invoke resuelva)
     if (!db) return;
     // Guard: evitar canales duplicados si se llama más de una vez
     if (window._mkRTSetupDone) return;
@@ -290,7 +232,6 @@ async function _applyRTRelacional(tabla, payload) {
             if (!data) return;
             const fresh = data.map(r => _rtTransformarFila(tabla, r)).filter(Boolean);
             _rtInPlace(arr || [], fresh);
-            sqliteStorage.set(key, fresh).catch(e => console.warn('[Maneki DB]', e?.message || e));
         } else if (rowData) {
             // UPDATE in-place desde el payload — O(1) para un registro
             const transformed = _rtTransformarFila(tabla, rowData);
@@ -316,7 +257,6 @@ async function _applyRTRelacional(tabla, payload) {
                 const i = arr.findIndex(x => String(x.id) === String(delId));
                 if (i >= 0) arr.splice(i, 1);
             }
-            sqliteStorage.set(key, arr).catch(e => console.warn('[Maneki DB]', e?.message || e));
         }
 
         await _applyRTDesktopConDatos(key, window[key] || []);
@@ -574,99 +514,11 @@ function _ocultarBannerOfflineConexion() {
     }
 }
 
-// ── Guardar venta en cola offline ────────────────────────────────
-function encolarVentaOffline(saleRecord) {
-    if (!ipcRenderer) return;
-    try {
-        ipcRenderer.send('save-venta-pendiente', {
-            id: String(saleRecord.id),
-            folio: saleRecord.folio,
-            date: saleRecord.date,
-            ...saleRecord
-        });
-        ipcRenderer.invoke('count-ventas-pendientes').then(n => actualizarBannerOffline(n)).catch(e => console.warn('[Maneki DB]', e?.message || e));
-        manekiToastExport('📦 Venta ' + saleRecord.folio + ' guardada offline', 'warn');
-    } catch(e) { console.error('Error encolando venta offline:', e); }
-}
-
 async function sincronizarPendientes() {
-    if (ipcRenderer) {
-        try {
-            const ventasPendientes = await ipcRenderer.invoke('get-ventas-pendientes');
-            if (ventasPendientes && ventasPendientes.length > 0) {
-                let cambiado = false;
-                for (const venta of ventasPendientes) {
-                    const yaExiste = salesHistory.some(s => String(s.id) === String(venta.data?.id || venta.id));
-                    if (!yaExiste && venta.data) {
-                        salesHistory.push(venta.data);
-                        cambiado = true;
-                    }
-                }
-                if (cambiado) {
-                    const { error } = await db.from('store').upsert(
-                        { key: 'salesHistory', value: JSON.stringify(salesHistory) },
-                        { onConflict: 'key' }
-                    );
-                    if (!error) {
-                        for (const venta of ventasPendientes) {
-                            ipcRenderer.send('delete-venta-pendiente', String(venta.id));
-                        }
-                        manekiToastExport('✅ ' + ventasPendientes.length + ' venta(s) offline sincronizadas', 'ok');
-                    }
-                } else {
-                    for (const venta of ventasPendientes) {
-                        ipcRenderer.send('delete-venta-pendiente', String(venta.id));
-                    }
-                }
-            }
-            const restantes = await ipcRenderer.invoke('count-ventas-pendientes').catch(() => 0);
-            actualizarBannerOffline(restantes);
-        } catch(e) { console.error('Error sincronizando:', e); }
-    }
-
     if (!window._pendingSync) return;
-    const keys = ['categories','products','clients','salesHistory','quotes',
-                  'incomes','expenses','receivables','payables','pedidos',
-                  'equipos','roiHistorial','roiConfig','envioAnillos',
-                  'gastosRecurrentes','stockMovimientos','pedidosFinalizados','notas','storeConfig'];
-
-    // Batch sync: preparar todas las upserts en paralelo por lotes de 5
-    const upsertBatch: Array<{key: string, value: string}> = [];
-    for (const key of keys) {
-        try {
-            const localData = await sqliteStorage.get(key, null);
-            if (localData === null) continue;
-            const localMeta = await sqliteStorage.get('__meta_' + key, null);
-            const localSyncedAt = localMeta?.syncedAt || '1970-01-01T00:00:00.000Z';
-            const { data: remote } = await db.from('store').select('value').eq('key', key).maybeSingle().catch(() => ({ data: null }));
-            let shouldSync = true;
-            if (remote && remote.value) {
-                try {
-                    const remoteData = JSON.parse(remote.value);
-                    const remoteSyncedAt = remoteData?.__syncedAt || '1970-01-01T00:00:00.000Z';
-                    if (remoteSyncedAt > localSyncedAt) shouldSync = false;
-                } catch(e) { /* sync */ }
-            }
-            if (!shouldSync) continue;
-            upsertBatch.push({ key, value: JSON.stringify(localData) });
-        } catch(e) { /* skip key */ }
-    }
-
-    let ok = true;
-    const BATCH_SIZE = 5;
-    for (let i = 0; i < upsertBatch.length; i += BATCH_SIZE) {
-        const chunk = upsertBatch.slice(i, i + BATCH_SIZE);
-        const results = await Promise.all(
-            chunk.map(item => db.from('store').upsert(item, { onConflict: 'key' }).then(r => r.error))
-        );
-        if (results.some(err => err)) { ok = false; break; }
-    }
-
-    if (ok) {
-        window._pendingSync = false;
-        actualizarIndicadorConexion(true);
-        manekiToastExport(`✅ ${upsertBatch.length} tablas sincronizadas con Supabase`, 'ok');
-    }
+    // Web-based sync: mark as synced since Supabase is the primary store
+    window._pendingSync = false;
+    actualizarIndicadorConexion(true);
 }
 
 window.addEventListener('online', () => {
@@ -677,35 +529,21 @@ window.addEventListener('offline', () => {
     actualizarIndicadorConexion(false);
 });
 
-// Revisar ventas pendientes al iniciar
-setTimeout(() => {
-    if (ipcRenderer) {
-        ipcRenderer.invoke('count-ventas-pendientes')
-            .then(n => { if (n > 0) actualizarBannerOffline(n); })
-            .catch(e => console.warn('[Maneki DB]', e?.message || e));
-    }
-}, 3000);
-
-// PERF-02: debounce del upsert a Supabase por key — SQLite guarda inmediato,
-// Supabase espera 500ms sin nuevas llamadas para la misma key antes de sincronizar.
+// PERF-02: debounce del upsert a Supabase por key —
+// espera 500ms sin nuevas llamadas para la misma key antes de sincronizar.
 const _sbSaveTimers = {};
 async function sbSave(key, data) {
-    // FIX #3: __syncedAt ya no se pone en arrays (JSON.stringify lo ignora).
-    // El timestamp de sync se guarda como metadato separado en la key '__meta_<key>'.
     const dataConTimestamp = data;
 
-    // 1) SQLite local primero — sin límite de espacio, sin internet
-    const sqliteOk = await sqliteStorage.set(key, dataConTimestamp);
-    if (!sqliteOk) {
-        try { localStorage.setItem('maneki_' + key, JSON.stringify(dataConTimestamp)); } catch(e) {
-            if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
-                console.warn('[Storage] localStorage lleno');
-            } else {
-                console.warn('localStorage también falló:', key, e);
-            }
+    // localStorage cache
+    try { localStorage.setItem('maneki_' + key, JSON.stringify(dataConTimestamp)); } catch(e) {
+        if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+            console.warn('[Storage] localStorage lleno');
+        } else {
+            console.warn('localStorage falló:', key, e);
         }
     }
-    // 2) Supabase en la nube — sincronización asíncrona (debounced por key)
+    // Supabase en la nube — sincronización asíncrona (debounced por key)
     if (_sbSaveTimers[key]) clearTimeout(_sbSaveTimers[key]);
     return new Promise((resolve, reject) => {
         _sbSaveTimers[key] = setTimeout(async () => {
@@ -727,8 +565,6 @@ async function sbSave(key, data) {
                 }
                 else {
                     actualizarIndicadorConexion(true);
-                    // FIX #3: guardar timestamp de sync como metadato separado
-                    sqliteStorage.set('__meta_' + key, { syncedAt: new Date().toISOString() }).catch(e => console.warn('[Maneki DB]', e?.message || e));
                     // #12 Actualizar indicador de sync
                     if (typeof window._mkUpdateSyncTime === 'function') window._mkUpdateSyncTime();
                     resolve();
@@ -750,7 +586,7 @@ async function sbSave(key, data) {
 // Si falla, sbLoad cae al store como siempre.
 // ══════════════════════════════════════════════════════════════
 // Todas las entidades principales usan lectura relacional.
-// Si la tabla tiene menos de `min` registros, sbLoad cae al store/SQLite como fallback.
+// Si la tabla tiene menos de `min` registros, sbLoad cae al store como fallback.
 const _RELATIONAL_TABLES = {
     products: { table: 'products', min: 1, map: row => ({
         ...row, stockMin: row.stock_min, imageUrl: row.image_url,
@@ -865,8 +701,6 @@ window._migrateToRelationalIfEmpty = _migrateToRelationalIfEmpty;
 
 async function sbLoad(key, def) {
     // Lectura relacional: intenta tabla individual primero (más rápido)
-    // NUNCA sobreescribir SQLite con datos relacionales — SQLite puede tener
-    // datos más frescos o completos (campos que la tabla relacional no tiene aún).
     // Solo usamos la tabla relacional si tiene ≥1 row (min definido en config).
     const relational = await _loadFromTable(key);
     if (relational !== null) {
@@ -881,85 +715,24 @@ async function sbLoad(key, def) {
         if (!error && data) {
             try {
                 const parsed = JSON.parse(data.value);
-                // Si el store devuelve array vacío, verificar si SQLite tiene datos
-                // antes de aceptarlo como válido — evita que un store vacío borre datos reales
-                const _esArrayVacio = Array.isArray(parsed) && parsed.length === 0;
-                if (_esArrayVacio) {
-                    const _sqlite = await sqliteStorage.get(key, null);
-                    if (_sqlite !== null && Array.isArray(_sqlite) && _sqlite.length > 0) {
-                        console.log(`[sbLoad] store devuelve [] para "${key}" pero SQLite tiene ${_sqlite.length} items — usando SQLite`);
-                        return _sqlite;
-                    }
-                }
-                // Store tiene datos reales — guardar en SQLite y usar
-                sqliteStorage.set(key, parsed).catch(e => console.warn('[Maneki DB]', e?.message || e));
                 return parsed;
             } catch(e) { console.warn('Error parseando dato Supabase:', e); }
         }
-    } catch(e) { console.warn('sbLoad Supabase no disponible, usando SQLite local:', key); }
+    } catch(e) { console.warn('sbLoad Supabase no disponible, usando localStorage:', key); }
 
-    // 2) Fallback: SQLite local (sin límite, sin internet)
-    const localSQLite = await sqliteStorage.get(key, null);
-    if (localSQLite !== null) {
-        return localSQLite;
-    }
-
-    // 3) Último recurso: localStorage (por si hay datos viejos)
+    // 2) Fallback: localStorage
     try {
         const local = localStorage.getItem('maneki_' + key);
         if (local) {
-            const parsed = JSON.parse(local);
-            // Migrar a SQLite si se encontró en localStorage
-            sqliteStorage.set(key, parsed).then(() => {
-                localStorage.removeItem('maneki_' + key);
-            }).catch(e => console.warn('[Maneki DB]', e?.message || e));
-            return parsed;
+            return JSON.parse(local);
         }
     } catch(e) { console.warn('Error en localStorage fallback:', e); }
 
     return def;
 }
 
-// SQLITE MONITOR: mostrar info de almacenamiento real (SQLite, sin límite)
-async function verificarEspacioAlmacenamiento() {
-    try {
-        const sqliteInfo = await sqliteStorage.getSize();
-        const sqliteKB = sqliteInfo.dbKB || sqliteInfo.kb || 0;
-
-        let lsBytes = 0;
-        for (let k in localStorage) {
-            if (localStorage.hasOwnProperty(k)) lsBytes += (localStorage[k].length + k.length) * 2;
-        }
-        const lsKB = Math.round(lsBytes / 1024);
-
-        if (lsKB > 4500) {
-            manekiToastExport(
-                `ℹ️ Migrando datos a SQLite local (más espacio). Un momento...`,
-                'ok'
-            );
-        }
-        return { sqliteKB, lsKB };
-    } catch(e) { return { sqliteKB: 0, lsKB: 0 }; }
-}
-// FIX #17: almacenar referencia del interval para posible cleanup
-setTimeout(verificarEspacioAlmacenamiento, 10000);
-window._storageCheckInterval = setInterval(verificarEspacioAlmacenamiento, 10 * 60 * 1000);
-
 // Compatibilidad - ya no usamos localStorage directo
 function saveToLocalStorage(key, data) {}
-
-// ─── Ver estado del almacenamiento desde la app ───────────────
-async function mostrarEstadoAlmacenamiento() {
-    const info = await verificarEspacioAlmacenamiento();
-    const msg = [
-        `💾 SQLite local: ${info.sqliteKB} KB (sin límite práctico)`,
-        `📋 localStorage: ${info.lsKB} KB / 5,120 KB`,
-        `✅ Almacenamiento principal: SQLite (ilimitado)`,
-    ].join('\n');
-    manekiToastExport(`💾 SQLite: ${info.sqliteKB}KB | Cache: ${info.lsKB}KB`, 'ok');
-    console.log('Estado almacenamiento:\n' + msg);
-}
-window.mostrarEstadoAlmacenamiento = mostrarEstadoAlmacenamiento;
 
 // BUG #15 FIX: getNextFolio con fallback offline
 // ✅ FIX: usar .maybeSingle() en lugar de .single() para evitar error 406
@@ -1020,7 +793,7 @@ function saveStockMovimientos() { (async () => { await sbSave('stockMovimientos'
 
 function registrarMovimiento(productoId, productoNombre, tipo, cantidad, motivo) {
     stockMovimientos.push({
-        id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        id: mkId(),
         fecha: _fechaHoy(),
         hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}),
         productoId, productoNombre, tipo, cantidad, motivo
@@ -1132,8 +905,7 @@ function _calcStockParaSupabase(p) {
 
 function saveProducts() {
     return (async () => {
-        // 1) SQLite offline (sin store legacy — lectura ya es relacional)
-        sqliteStorage.set('products', products).catch(e => console.warn('[Maneki DB]', e?.message || e));
+
 
         // 2) Tabla relacional public.products
         try {
@@ -1181,7 +953,7 @@ function saveProducts() {
 }
 function saveClients() {
     (async () => {
-        sqliteStorage.set('clients', clients).catch(e => console.warn('[Maneki DB]', e?.message || e));
+
         // Tabla relacional
         try {
             const rows = (window.clients||[]).map(c => ({
@@ -1200,8 +972,7 @@ function saveClients() {
 // ── saveSalesHistory — dual write: store (legacy) + public.sales_history ──
 function saveSalesHistory() {
     (async () => {
-        // 1) SQLite offline
-        sqliteStorage.set('salesHistory', salesHistory).catch(e => console.warn('[Maneki DB]', e?.message || e));
+
 
         // 2) Tabla relacional public.sales_history
         try {
@@ -1230,7 +1001,7 @@ function saveSalesHistory() {
 function saveQuotes()        { (async () => { await sbSave('quotes', quotes); })(); }
 function saveIncomes() {
     (async () => {
-        sqliteStorage.set('incomes', incomes).catch(e => console.warn('[Maneki DB]', e?.message || e));
+
         try {
             const rows = (window.incomes||[]).map(i => ({
                 id: typeof i.id==='number'?i.id:undefined, concept: i.concept||i.concepto||null,
@@ -1245,7 +1016,7 @@ function saveIncomes() {
 }
 function saveExpenses() {
     (async () => {
-        sqliteStorage.set('expenses', expenses).catch(e => console.warn('[Maneki DB]', e?.message || e));
+
         try {
             const rows = (window.expenses||[]).map(e => ({
                 id: typeof e.id==='number'?e.id:undefined, concept: e.concept||e.concepto||null,
@@ -1264,8 +1035,7 @@ function savePayables()      { (async () => { await sbSave('payables', payables)
 // ── savePedidos — dual write: store (legacy) + public.orders ──
 function savePedidos() {
     return (async () => {
-        // 1) SQLite offline
-        sqliteStorage.set('pedidos', pedidos).catch(e => console.warn('[Maneki DB]', e?.message || e));
+
 
         // 2) Tabla relacional public.orders
         try {
@@ -1313,8 +1083,7 @@ function savePedidos() {
 // ── savePedidosFinalizados — dual write: store (legacy) + public.orders_finalizados ──
 function savePedidosFinalizados() {
     return (async () => {
-        // 1) SQLite offline
-        sqliteStorage.set('pedidosFinalizados', pedidosFinalizados).catch(e => console.warn('[Maneki DB]', e?.message || e));
+
 
         // 2) Tabla relacional public.orders_finalizados
         try {

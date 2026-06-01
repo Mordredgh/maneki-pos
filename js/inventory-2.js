@@ -7,15 +7,15 @@ function injectPtModal() {
   modal.innerHTML = `
     <div style="background:#fff;border-radius:20px;box-shadow:0 32px 80px rgba(21,4,50,0.2);max-width:680px;width:100%;margin:auto;max-height:94vh;overflow-y:auto;padding:32px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-            <h3 style="font-size:1.4rem;font-weight:800;color:#1a0533;">📦 Nuevo Producto Terminado</h3>
-            <button onclick="closePtModal()" style="font-size:1.6rem;line-height:1;background:none;border:none;cursor:pointer;color:#9ca3af;">×</button>
+            <h3 style="font-size:1.4rem;font-weight:800;color:#1a0533;">\u{1F4E6} Nuevo Producto Terminado</h3>
+            <button onclick="closePtModal()" style="font-size:1.6rem;line-height:1;background:none;border:none;cursor:pointer;color:#9ca3af;">\xD7</button>
         </div>
 
         <form id="ptForm" class="space-y-5" onsubmit="return false;">
 
             <!-- IMAGEN -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">📷 Imagen del Producto</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F4F7} Imagen del Producto</label>
                 <input type="file" id="ptProductImage" accept="image/*"
                     style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;">
                 <div id="ptImagePreview" class="hidden" style="margin-top:10px;text-align:center;">
@@ -23,17 +23,17 @@ function injectPtModal() {
                 </div>
             </div>
 
-            <!-- GALERÍA DE FOTOS -->
+            <!-- GALER\xCDA DE FOTOS -->
             <div style="background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px;padding:16px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                    <label style="font-size:.85rem;font-weight:700;color:#374151;">🖼️ Galería de fotos <span style="font-weight:400;color:#9ca3af;">(hasta 20)</span></label>
+                    <label style="font-size:.85rem;font-weight:700;color:#374151;">\u{1F5BC}\uFE0F Galer\xEDa de fotos <span style="font-weight:400;color:#9ca3af;">(hasta 20)</span></label>
                     <label style="padding:6px 14px;background:#C5A572;color:#fff;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         + Agregar fotos
                         <input type="file" id="ptGaleriaInput" accept="image/*" multiple style="display:none;" onchange="ptAgregarFotosGaleria(this.files)">
                     </label>
                 </div>
                 <div id="ptGaleriaPreview" style="display:flex;flex-wrap:wrap;gap:8px;min-height:48px;">
-                    <p id="ptGaleriaVacia" style="font-size:.8rem;color:#9ca3af;width:100%;text-align:center;padding:8px 0;">Sin fotos en galería</p>
+                    <p id="ptGaleriaVacia" style="font-size:.8rem;color:#9ca3af;width:100%;text-align:center;padding:8px 0;">Sin fotos en galer\xEDa</p>
                 </div>
             </div>
 
@@ -48,7 +48,7 @@ function injectPtModal() {
             <!-- MATERIAS PRIMAS Y SERVICIOS QUE LO CONFORMAN -->
             <div style="background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px;padding:16px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <label style="font-size:.85rem;font-weight:700;color:#374151;">🏭 Materias Primas y Servicios</label>
+                    <label style="font-size:.85rem;font-weight:700;color:#374151;">\u{1F3ED} Materias Primas y Servicios</label>
                     <button type="button" onclick="abrirSelectorMpPt()"
                         style="padding:6px 14px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         + Agregar componente
@@ -66,7 +66,7 @@ function injectPtModal() {
                 </div>
                 <!-- Disponibilidad estimada -->
                 <div id="ptDisponibilidadBox" style="display:none;margin-top:12px;background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:10px;padding:10px 14px;">
-                    <div style="font-size:.78rem;font-weight:700;color:#065f46;">📊 Piezas que puedes fabricar ahora:</div>
+                    <div style="font-size:.78rem;font-weight:700;color:#065f46;">\u{1F4CA} Piezas que puedes fabricar ahora:</div>
                     <div id="ptDisponibilidadNum" style="font-size:1.6rem;font-weight:800;color:#059669;line-height:1.2;">0</div>
                     <div id="ptDisponibilidadDetalle" style="font-size:.72rem;color:#6b7280;margin-top:4px;"></div>
                 </div>
@@ -74,15 +74,15 @@ function injectPtModal() {
 
             <!-- SKU -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Código SKU</label>
-                <input type="text" id="ptSku" placeholder="Se generará automáticamente si está vacío"
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">C\xF3digo SKU</label>
+                <input type="text" id="ptSku" placeholder="Se generar\xE1 autom\xE1ticamente si est\xE1 vac\xEDo"
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;box-sizing:border-box;"
                     onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
             </div>
 
-            <!-- CATEGORÍA -->
+            <!-- CATEGOR\xCDA -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Categoría</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Categor\xEDa</label>
                 <select id="ptCategory"
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;background:#fff;box-sizing:border-box;">
                 </select>
@@ -90,7 +90,7 @@ function injectPtModal() {
 
             <!-- VARIANTES -->
             <div style="background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px;padding:16px;">
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:12px;">🎨 Variantes (Opcional)</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:12px;">\u{1F3A8} Variantes (Opcional)</label>
                 <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;">
                     <input type="text" id="ptVarTipo" placeholder="Tipo: Talla, Color..."
                         style="padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;"
@@ -109,7 +109,7 @@ function injectPtModal() {
 
             <!-- TAGS -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">🏷️ Tags / Etiquetas</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F3F7}\uFE0F Tags / Etiquetas</label>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;" id="ptTagsGrid"></div>
             </div>
 
@@ -117,7 +117,7 @@ function injectPtModal() {
             <div style="background:linear-gradient(135deg,#fffbeb,#fef9f0);border:1.5px solid #fde68a;border-radius:14px;padding:16px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
                     <div>
-                        <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">💰 Costo total</label>
+                        <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F4B0} Costo total</label>
                         <div style="position:relative;">
                             <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-weight:600;">$</span>
                             <input type="number" id="ptCosto" step="0.01" min="0" value="0"
@@ -127,7 +127,7 @@ function injectPtModal() {
                         <p id="ptCostoDesglose" style="font-size:.72rem;color:#92400e;margin-top:4px;line-height:1.4;"></p>
                     </div>
                     <div>
-                        <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">💡 Margen sugerido</label>
+                        <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F4A1} Margen sugerido</label>
                         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
                             ${[30, 50, 100, 150].map((m) => `<button type="button" onclick="ptAplicarMargen(${m})"
                                 style="padding:5px 10px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;border:1.5px solid #fde68a;background:#fff;color:#92400e;transition:all .15s;"
@@ -145,7 +145,7 @@ function injectPtModal() {
 
             <!-- PRECIO DE VENTA -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">🏷️ Precio de Venta *</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F3F7}\uFE0F Precio de Venta *</label>
                 <div style="position:relative;">
                     <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-weight:600;">$</span>
                     <input type="number" id="ptPrecio" required step="0.01" min="0"
@@ -157,28 +157,28 @@ function injectPtModal() {
 
             <!-- RENDIMIENTO POR HOJA (stickers, etc.) -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">🎯 Piezas por hoja / unidad de MP <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F3AF} Piezas por hoja / unidad de MP <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
                 <input type="number" id="ptRendimientoPorHoja" min="1" placeholder="Ej: 12 (stickers que caben en 1 hoja)"
                     style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;outline:none;box-sizing:border-box;"
                     onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
-                <p style="font-size:.72rem;color:#9ca3af;margin-top:5px;">Si vendes por cantidad (ej. 100 stickers), el sistema divide entre este número para calcular cuántas hojas descontar del inventario y calcular el costo.</p>
+                <p style="font-size:.72rem;color:#9ca3af;margin-top:5px;">Si vendes por cantidad (ej. 100 stickers), el sistema divide entre este n\xFAmero para calcular cu\xE1ntas hojas descontar del inventario y calcular el costo.</p>
             </div>
 
-            <!-- STOCK MÍNIMO -->
+            <!-- STOCK M\xCDNIMO -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">🔔 Stock mínimo de alerta</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F514} Stock m\xEDnimo de alerta</label>
                 <div style="display:flex;align-items:center;gap:10px;">
                     <input type="number" id="ptStockMin" min="0" step="1" value="5"
                         style="width:100px;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;outline:none;box-sizing:border-box;"
                         onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
-                    <span style="font-size:.8rem;color:#6b7280;">Se te notificará cuando el stock baje de este número</span>
+                    <span style="font-size:.8rem;color:#6b7280;">Se te notificar\xE1 cuando el stock baje de este n\xFAmero</span>
                 </div>
             </div>
 
             <!-- PUBLICAR EN TIENDA -->
             <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1.5px solid #6ee7b7;border-radius:14px;">
                 <div>
-                    <div style="font-size:.9rem;font-weight:700;color:#065f46;">🌐 Publicar en tienda online</div>
+                    <div style="font-size:.9rem;font-weight:700;color:#065f46;">\u{1F310} Publicar en tienda online</div>
                     <div style="font-size:.75rem;color:#6b7280;margin-top:2px;">Visible en manekistore.com.mx</div>
                 </div>
                 <label style="position:relative;display:inline-block;width:48px;height:26px;cursor:pointer;">
@@ -192,7 +192,7 @@ function injectPtModal() {
 
             <button type="button" id="ptSubmitBtn" onclick="guardarProductoTerminado()"
                 style="width:100%;padding:16px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-top:8px;letter-spacing:.02em;">
-                ✅ Agregar Producto
+                \u2705 Agregar Producto
             </button>
         </form>
     </div>`;
@@ -236,7 +236,7 @@ function injectPtModal() {
       if (ptSubmitBtn) {
         ptSubmitBtn.insertAdjacentHTML("beforebegin", `
                 <div id="ptProveedorSection" style="background:#f0fdf4;border:1.5px solid #6ee7b7;border-radius:14px;padding:16px;">
-                    <div style="font-size:.85rem;font-weight:700;color:#065f46;margin-bottom:12px;">🏭 Información del Proveedor <span style="font-weight:400;color:#9ca3af;">(opcional)</span></div>
+                    <div style="font-size:.85rem;font-weight:700;color:#065f46;margin-bottom:12px;">\u{1F3ED} Informaci\xF3n del Proveedor <span style="font-weight:400;color:#9ca3af;">(opcional)</span></div>
                     <div style="display:flex;flex-direction:column;gap:10px;">
                         <input type="text" id="ptProveedorNombre" placeholder="Nombre del proveedor"
                             style="width:100%;padding:10px 14px;border:1.5px solid #6ee7b7;border-radius:10px;font-size:.85rem;outline:none;box-sizing:border-box;background:#fff;"
@@ -283,7 +283,7 @@ function poblarCategoriasPv() {
   if (!sel) return;
   const cats = window.categories || [];
   const optsCats = cats.map((c) => `<option value="${_esc(c.id)}">${c.emoji || ""} ${_esc(c.name)}</option>`).join("");
-  sel.innerHTML = '<option value="">Sin categoría</option>' + optsCats;
+  sel.innerHTML = '<option value="">Sin categor\xEDa</option>' + optsCats;
 }
 window.poblarCategoriasPv = poblarCategoriasPv;
 function renderTagsPv() {
@@ -310,13 +310,13 @@ function agregarVariantePt() {
   const tipo = (document.getElementById("ptVarTipo")?.value || "").trim();
   const valor = (document.getElementById("ptVarValor")?.value || "").trim();
   if (!tipo || !valor) {
-    manekiToastExport("⚠️ Ingresa tipo y valor de la variante", "warn");
+    manekiToastExport("\u26A0\uFE0F Ingresa tipo y valor de la variante", "warn");
     return;
   }
   window._ptVariants = window._ptVariants || [];
   const existe = window._ptVariants.some((v) => v.type === tipo && v.value === valor);
   if (existe) {
-    manekiToastExport(`⚠️ La variante ${tipo}: ${valor} ya existe`, "warn");
+    manekiToastExport(`\u26A0\uFE0F La variante ${tipo}: ${valor} ya existe`, "warn");
     return;
   }
   window._ptVariants.push({ type: tipo, value: valor, qty: 0 });
@@ -350,14 +350,14 @@ function renderVariantsListPt() {
             <span style="flex:1;font-size:.85rem;color:#374151;">${_esc(v.type)}: ${_mkColorDot(v.type, _esc(v.value))}</span>
             <div style="display:flex;align-items:center;gap:4px;">
                 <button type="button" onclick="updateVariantQtyPt(${i},${(v.qty || 0) - 1});renderVariantsListPt();"
-                    style="width:22px;height:22px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;">−</button>
+                    style="width:22px;height:22px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;">\u2212</button>
                 <input type="number" value="${v.qty || 0}" min="0" onchange="updateVariantQtyPt(${i},this.value)"
                     style="width:46px;text-align:center;border:1.5px solid #e5e7eb;border-radius:8px;padding:2px 4px;font-weight:700;font-size:.85rem;">
                 <button type="button" onclick="updateVariantQtyPt(${i},${(v.qty || 0) + 1});renderVariantsListPt();"
                     style="width:22px;height:22px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;">+</button>
             </div>
             <button type="button" onclick="eliminarVariantePt(${i})"
-                style="width:24px;height:24px;border-radius:6px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.06);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">✕</button>
+                style="width:24px;height:24px;border-radius:6px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.06);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">\u2715</button>
         </div>`).join("");
 }
 window.renderVariantsListPt = renderVariantsListPt;
@@ -384,8 +384,8 @@ function filtrarMpSelector() {
   res.innerHTML = lista.map((p) => {
     const yaAgregado = (window._ptMpComponentes || []).some((c) => String(c.id) === String(p.id));
     const esSvc = p.tipo === "servicio";
-    const imgH = p.imageUrl ? `<img src="${p.imageUrl}" style="width:32px;height:32px;object-fit:cover;border-radius:6px;">` : `<span style="font-size:1.4rem;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">${p.image || (esSvc ? "⚙️" : "🏭")}</span>`;
-    const infoExtra = esSvc ? `<div style="font-size:.72rem;color:#6d28d9;font-weight:600;">⚙️ Servicio · $${Number(p.cost || 0).toFixed(2)}/uso</div>` : `<div style="font-size:.72rem;color:#6b7280;">Stock: ${p.stock || 0} · Costo: $${Number(p.cost || 0).toFixed(2)}</div>`;
+    const imgH = p.imageUrl ? `<img src="${p.imageUrl}" style="width:32px;height:32px;object-fit:cover;border-radius:6px;">` : `<span style="font-size:1.4rem;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">${p.image || (esSvc ? "\u2699\uFE0F" : "\u{1F3ED}")}</span>`;
+    const infoExtra = esSvc ? `<div style="font-size:.72rem;color:#6d28d9;font-weight:600;">\u2699\uFE0F Servicio \xB7 $${Number(p.cost || 0).toFixed(2)}/uso</div>` : `<div style="font-size:.72rem;color:#6b7280;">Stock: ${p.stock || 0} \xB7 Costo: $${Number(p.cost || 0).toFixed(2)}</div>`;
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:${yaAgregado ? "#f0fdf4" : "#fff"};border:1.5px solid ${yaAgregado ? "#6ee7b7" : "#e5e7eb"};cursor:pointer;transition:all .1s;"
             onclick="seleccionarMpPt('${String(p.id).replace(/'/g, "\\'")}')">
             ${imgH}
@@ -393,7 +393,7 @@ function filtrarMpSelector() {
                 <div style="font-size:.85rem;font-weight:700;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(p.name)}</div>
                 ${infoExtra}
             </div>
-            <span style="font-size:.78rem;font-weight:700;color:${yaAgregado ? "#059669" : "#7c3aed"};">${yaAgregado ? "✓ Agregado" : "+ Agregar"}</span>
+            <span style="font-size:.78rem;font-weight:700;color:${yaAgregado ? "#059669" : "#7c3aed"};">${yaAgregado ? "\u2713 Agregado" : "+ Agregar"}</span>
         </div>`;
   }).join("");
 }
@@ -407,7 +407,7 @@ function seleccionarMpPt(id) {
     manekiToastExport(`"${mp.name}" ya fue agregado`, "warn");
     return;
   }
-  window._ptMpComponentes.push({ id: mp.id, nombre: mp.name, imageUrl: mp.imageUrl || null, imagen: mp.image || "🏭", qty: 1, costUnit: Number(mp.cost || 0) });
+  window._ptMpComponentes.push({ id: mp.id, nombre: mp.name, imageUrl: mp.imageUrl || null, imagen: mp.image || "\u{1F3ED}", qty: 1, costUnit: Number(mp.cost || 0) });
   if (Array.isArray(mp.variants) && mp.variants.length > 0) {
     window._ptVariants = window._ptVariants || [];
     let importadas = 0;
@@ -425,7 +425,7 @@ function seleccionarMpPt(id) {
     });
     if (importadas > 0) {
       renderVariantsListPt();
-      manekiToastExport(`✅ Se importaron ${importadas} variante(s) de "${mp.name}"`, "ok");
+      manekiToastExport(`\u2705 Se importaron ${importadas} variante(s) de "${mp.name}"`, "ok");
     }
   }
   renderPtMpList();
@@ -456,24 +456,24 @@ function renderPtMpList() {
     return;
   }
   el.innerHTML = comps.map((c, i) => {
-    const imgH = c.imageUrl ? `<img src="${c.imageUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;flex-shrink:0;">` : `<span style="font-size:1.4rem;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${c.imagen || "🏭"}</span>`;
+    const imgH = c.imageUrl ? `<img src="${c.imageUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;flex-shrink:0;">` : `<span style="font-size:1.4rem;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${c.imagen || "\u{1F3ED}"}</span>`;
     const subtotal = (c.qty * c.costUnit).toFixed(2);
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;">
             ${imgH}
             <div style="flex:1;min-width:0;">
                 <div style="font-size:.85rem;font-weight:700;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(c.nombre)}</div>
-                <div style="font-size:.72rem;color:#6b7280;">$${c.costUnit.toFixed(2)}/ud · Subtotal: <b style="color:#92400e;">$${subtotal}</b></div>
+                <div style="font-size:.72rem;color:#6b7280;">$${c.costUnit.toFixed(2)}/ud \xB7 Subtotal: <b style="color:#92400e;">$${subtotal}</b></div>
             </div>
             <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
                 <button type="button" onclick="updateMpQtyPt(${i},${(c.qty || 1) - 1});renderPtMpList();"
-                    style="width:24px;height:24px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">−</button>
+                    style="width:24px;height:24px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">\u2212</button>
                 <input type="number" value="${c.qty}" min="0.01" step="0.01" onchange="updateMpQtyPt(${i},this.value)"
                     style="width:52px;text-align:center;border:1.5px solid #e5e7eb;border-radius:8px;padding:3px 4px;font-size:.85rem;font-weight:700;">
                 <button type="button" onclick="updateMpQtyPt(${i},${(c.qty || 1) + 1});renderPtMpList();"
                     style="width:24px;height:24px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">+</button>
             </div>
             <button type="button" onclick="quitarMpPt(${i})"
-                style="width:26px;height:26px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.06);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+                style="width:26px;height:26px;border-radius:8px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.06);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">\u2715</button>
         </div>`;
   }).join("");
   calcularDisponibilidadPt();
@@ -486,7 +486,7 @@ function recalcularCostoPt() {
   if (costoInput) costoInput.value = total.toFixed(2);
   const desglose = document.getElementById("ptCostoDesglose");
   if (desglose && comps.length) {
-    desglose.textContent = comps.map((c) => `${c.nombre} ×${c.qty} = $${(c.qty * c.costUnit).toFixed(2)}`).join(" · ");
+    desglose.textContent = comps.map((c) => `${c.nombre} \xD7${c.qty} = $${(c.qty * c.costUnit).toFixed(2)}`).join(" \xB7 ");
   } else if (desglose) desglose.textContent = "";
   ptMostrarMargenInfo();
   calcularDisponibilidadPt();
@@ -505,11 +505,11 @@ function calcularDisponibilidadPt() {
   let minPiezas = Infinity;
   const detalles = comps.map((c) => {
     const mp = (window.products || []).find((p) => String(p.id) === String(c.id));
-    if (mp && mp.tipo === "servicio") return `${c.nombre}: ⚙️ servicio (sin límite de stock)`;
+    if (mp && mp.tipo === "servicio") return `${c.nombre}: \u2699\uFE0F servicio (sin l\xEDmite de stock)`;
     const stockActual = mp ? mp.stock || 0 : 0;
     const piezas = c.qty > 0 ? Math.floor(stockActual / c.qty) : 0;
     if (piezas < minPiezas) minPiezas = piezas;
-    return `${c.nombre}: ${stockActual} uds ÷ ${c.qty} = ${piezas} piezas`;
+    return `${c.nombre}: ${stockActual} uds \xF7 ${c.qty} = ${piezas} piezas`;
   });
   if (!isFinite(minPiezas)) minPiezas = 0;
   if (num) {
@@ -522,7 +522,7 @@ window.calcularDisponibilidadPt = calcularDisponibilidadPt;
 function ptAplicarMargen(pct) {
   const costo = parseFloat(document.getElementById("ptCosto")?.value || 0) || 0;
   if (!costo) {
-    manekiToastExport("⚠️ Define el costo primero", "warn");
+    manekiToastExport("\u26A0\uFE0F Define el costo primero", "warn");
     return;
   }
   const precio = costo * (1 + pct / 100);
@@ -555,7 +555,7 @@ function ptMostrarMargenInfo() {
   const margen = ((precio - costo) / precio * 100).toFixed(1);
   const ganancia = (precio - costo).toFixed(2);
   const color = parseFloat(margen) >= 40 ? "#059669" : parseFloat(margen) >= 20 ? "#d97706" : "#ef4444";
-  info.innerHTML = `<span style="color:${color};font-weight:700;">${margen}% de margen</span> · Ganancia por pieza: <b style="color:${color};">$${ganancia}</b>`;
+  info.innerHTML = `<span style="color:${color};font-weight:700;">${margen}% de margen</span> \xB7 Ganancia por pieza: <b style="color:${color};">$${ganancia}</b>`;
 }
 window.ptMostrarMargenInfo = ptMostrarMargenInfo;
 async function guardarProductoTerminado() {
@@ -573,17 +573,17 @@ async function guardarProductoTerminado() {
   const proveedorNombre = gv("ptProveedorNombre").trim();
   const proveedorNotas = gv("ptProveedorNotas").trim();
   if (!nombre) {
-    manekiToastExport("⚠️ El nombre es requerido", "warn");
+    manekiToastExport("\u26A0\uFE0F El nombre es requerido", "warn");
     document.getElementById("ptNombre")?.focus();
     return;
   }
   if (!precio || precio <= 0) {
-    manekiToastExport("⚠️ El precio de venta debe ser mayor a $0", "warn");
+    manekiToastExport("\u26A0\uFE0F El precio de venta debe ser mayor a $0", "warn");
     document.getElementById("ptPrecio")?.focus();
     return;
   }
   if (precio < costo) {
-    manekiToastExport("⚠️ El precio no puede ser menor al costo", "warn");
+    manekiToastExport("\u26A0\uFE0F El precio no puede ser menor al costo", "warn");
     document.getElementById("ptPrecio")?.focus();
     return;
   }
@@ -592,12 +592,12 @@ async function guardarProductoTerminado() {
     (p) => p.name.trim().toLowerCase() === nombre.toLowerCase() && String(p.id) !== String(_excludeIdPt)
   );
   if (_nombreDupPt) {
-    manekiToastExport(`⚠️ Ya existe un producto llamado "${_nombreDupPt.name}". Usa un nombre diferente o edita el existente.`, "warn");
+    manekiToastExport(`\u26A0\uFE0F Ya existe un producto llamado "${_nombreDupPt.name}". Usa un nombre diferente o edita el existente.`, "warn");
     document.getElementById("ptNombre")?.focus();
     return;
   }
   if (sku && !skuEsUnico(sku, _excludeIdPt)) {
-    manekiToastExport(`⚠️ El SKU "${sku}" ya está en uso`, "warn");
+    manekiToastExport(`\u26A0\uFE0F El SKU "${sku}" ya est\xE1 en uso`, "warn");
     return;
   }
   let costoFinal = costo;
@@ -609,7 +609,7 @@ async function guardarProductoTerminado() {
         return sum + (comp.qty || 0) * (_mp && _mp.cost ? _mp.cost : comp.costUnit || 0);
       }, 0);
       if (_costoCalculado > 0) {
-        const _usarCosto = confirm(`El costo calculado basado en materias primas es $${_costoCalculado.toFixed(2)}. ¿Deseas usarlo como costo del producto?`);
+        const _usarCosto = confirm(`El costo calculado basado en materias primas es $${_costoCalculado.toFixed(2)}. \xBFDeseas usarlo como costo del producto?`);
         if (_usarCosto) {
           costoFinal = _costoCalculado;
           const _costoInput = document.getElementById("ptCosto");
@@ -617,7 +617,7 @@ async function guardarProductoTerminado() {
         }
       }
     } else {
-      manekiToastExport("⚠️ El costo del producto está en $0. Considera agregar un costo.", "warn");
+      manekiToastExport("\u26A0\uFE0F El costo del producto est\xE1 en $0. Considera agregar un costo.", "warn");
     }
   }
   const _btn = document.getElementById("ptSubmitBtn");
@@ -626,22 +626,22 @@ async function guardarProductoTerminado() {
   if (_btn) _btn.disabled = true;
   try {
     if (window.currentProductImageFile) {
-      manekiToastExport("⏳ Subiendo imagen principal...", "ok");
+      manekiToastExport("\u23F3 Subiendo imagen principal...", "ok");
       const uploaded = await subirImagenStorage(window.currentProductImageFile).catch(() => null);
       if (uploaded) {
         window.currentProductImage = uploaded;
       } else {
-        manekiToastExport("⚠️ No se pudo subir la imagen principal. Intenta de nuevo.", "warn");
+        manekiToastExport("\u26A0\uFE0F No se pudo subir la imagen principal. Intenta de nuevo.", "warn");
       }
       window.currentProductImageFile = null;
     }
     const galeriaFiles = window._ptGaleriaFiles || [];
     if (galeriaFiles.length > 0) {
-      manekiToastExport(`⏳ Subiendo ${galeriaFiles.length} foto(s) de galería...`, "ok");
+      manekiToastExport(`\u23F3 Subiendo ${galeriaFiles.length} foto(s) de galer\xEDa...`, "ok");
       const subidas = await Promise.all(galeriaFiles.map((f) => subirImagenStorage(f).catch(() => null)));
       const urlsNuevas = subidas.filter(Boolean);
       const fallidas = subidas.filter((x) => x === null).length;
-      if (fallidas > 0) manekiToastExport(`⚠️ ${fallidas} foto(s) de galería no se pudieron subir.`, "warn");
+      if (fallidas > 0) manekiToastExport(`\u26A0\uFE0F ${fallidas} foto(s) de galer\xEDa no se pudieron subir.`, "warn");
       window._ptGaleriaUrls = [...window._ptGaleriaUrls || [], ...urlsNuevas];
       window._ptGaleriaFiles = [];
     }
@@ -700,7 +700,7 @@ async function guardarProductoTerminado() {
         productoNombre: nombre,
         tipo: "ajuste",
         cantidad: stNew - stOld,
-        motivo: "Edición",
+        motivo: "Edici\xF3n",
         stockAntes: stOld,
         stockDespues: stNew
       });
@@ -712,7 +712,7 @@ async function guardarProductoTerminado() {
           fecha: _fechaHoy(),
           delta: _deltaStockPt,
           stockResultante: stNew,
-          motivo: "Edición manual",
+          motivo: "Edici\xF3n manual",
           usuario: "local"
         });
         if (window.products[idx].movimientos.length > 30)
@@ -724,7 +724,7 @@ async function guardarProductoTerminado() {
       _done(true);
       closePtModal();
       if (window.MKS) MKS.notify();
-      manekiToastExport("✅ Producto actualizado", "ok");
+      manekiToastExport("\u2705 Producto actualizado", "ok");
     } else {
       const np = {
         id: _genId(),
@@ -739,7 +739,7 @@ async function guardarProductoTerminado() {
         sku: finalSku,
         mpComponentes: mpComps,
         publicarTienda,
-        image: cat ? cat.emoji : "📦",
+        image: cat ? cat.emoji : "\u{1F4E6}",
         imageUrl: window.currentProductImage || null,
         imageUrls,
         variants: [...window.currentVariants],
@@ -756,14 +756,14 @@ async function guardarProductoTerminado() {
       _done(true);
       closePtModal();
       if (window.MKS) MKS.notify();
-      manekiToastExport("✅ Producto agregado exitosamente", "ok");
+      manekiToastExport("\u2705 Producto agregado exitosamente", "ok");
     }
   } finally {
     if (_btn) _btn.disabled = false;
   }
 }
 window.guardarProductoTerminado = guardarProductoTerminado;
-const TAGS_MATERIA_PRIMA = ["Acrílico", "Filamento", "Tintas", "Cuadro", "Metales", "Empaques", "Vasos", "Textil", "Peluches", "Otros"];
+const TAGS_MATERIA_PRIMA = ["Acr\xEDlico", "Filamento", "Tintas", "Cuadro", "Metales", "Empaques", "Vasos", "Textil", "Peluches", "Otros"];
 window._mpTagsActuales = window._mpTagsActuales ?? [];
 function openAddMateriaPrimaModal() {
   window.modoEdicion = false;
@@ -777,9 +777,9 @@ function openAddMateriaPrimaModal() {
   if (pre) pre.classList.add("hidden");
   renderMpTags();
   const title = document.querySelector("#mpModal h3");
-  if (title) title.textContent = "🏭 Nueva Materia Prima";
+  if (title) title.textContent = "\u{1F3ED} Nueva Materia Prima";
   const btn = document.getElementById("mpSubmitBtn");
-  if (btn) btn.textContent = "✅ Guardar Materia Prima";
+  if (btn) btn.textContent = "\u2705 Guardar Materia Prima";
   if (typeof openModal === "function") openModal("mpModal");
 }
 window.openAddMateriaPrimaModal = openAddMateriaPrimaModal;
@@ -793,8 +793,8 @@ function injectPackModal() {
   modal.innerHTML = `
     <div style="background:#fff;border-radius:20px;box-shadow:0 32px 80px rgba(21,4,50,0.2);max-width:640px;width:100%;margin:auto;max-height:94vh;overflow-y:auto;padding:32px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-            <h3 id="packModalTitle" style="font-size:1.4rem;font-weight:800;color:#1a0533;">🎁 Nuevo Pack</h3>
-            <button onclick="closePackModal()" style="font-size:1.6rem;line-height:1;background:none;border:none;cursor:pointer;color:#9ca3af;">×</button>
+            <h3 id="packModalTitle" style="font-size:1.4rem;font-weight:800;color:#1a0533;">\u{1F381} Nuevo Pack</h3>
+            <button onclick="closePackModal()" style="font-size:1.6rem;line-height:1;background:none;border:none;cursor:pointer;color:#9ca3af;">\xD7</button>
         </div>
 
         <form id="packForm" novalidate style="display:flex;flex-direction:column;gap:18px;">
@@ -810,7 +810,7 @@ function injectPackModal() {
             <!-- PRODUCTOS DEL PACK -->
             <div style="background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px;padding:16px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <label style="font-size:.85rem;font-weight:700;color:#374151;">📦 Productos en el Pack</label>
+                    <label style="font-size:.85rem;font-weight:700;color:#374151;">\u{1F4E6} Productos en el Pack</label>
                     <button type="button" onclick="packAbrirSelectorPT()"
                         style="padding:6px 14px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         + Agregar producto
@@ -832,7 +832,7 @@ function injectPackModal() {
             <!-- MATERIAS PRIMAS ADICIONALES -->
             <div style="background:#fafafa;border:1.5px solid #e9d5ff;border-radius:14px;padding:16px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <label style="font-size:.85rem;font-weight:700;color:#374151;">🏭 Materias Primas Adicionales</label>
+                    <label style="font-size:.85rem;font-weight:700;color:#374151;">\u{1F3ED} Materias Primas Adicionales</label>
                     <button type="button" onclick="packAbrirSelectorMP()"
                         style="padding:6px 14px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         + Agregar MP
@@ -876,7 +876,7 @@ function injectPackModal() {
                 </div>
             </div>
 
-            <!-- SKU y CATEGORÍA opcionales -->
+            <!-- SKU y CATEGOR\xCDA opcionales -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div>
                     <label style="display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:6px;">SKU (opcional)</label>
@@ -885,29 +885,29 @@ function injectPackModal() {
                         onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
                 <div>
-                    <label style="display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:6px;">Categoría (opcional)</label>
+                    <label style="display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:6px;">Categor\xEDa (opcional)</label>
                     <select id="packCategory"
                         style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;box-sizing:border-box;background:#fff;">
-                        <option value="">Sin categoría</option>
+                        <option value="">Sin categor\xEDa</option>
                     </select>
                 </div>
             </div>
 
             <!-- FOTO DEL PACK -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">📷 Foto del Pack (opcional)</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F4F7} Foto del Pack (opcional)</label>
                 <input type="file" id="packImageInput" accept="image/*"
                     style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;box-sizing:border-box;cursor:pointer;"
                     onchange="packHandlePhoto(this)">
                 <div id="packImagePreview" style="display:none;margin-top:10px;text-align:center;">
                     <img id="packImagePreviewImg" src="" style="max-width:160px;max-height:160px;border-radius:12px;object-fit:cover;border:1.5px solid #e5e7eb;">
-                    <button type="button" onclick="packQuitarFoto()" style="display:block;margin:6px auto 0;font-size:.75rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:700;">✕ Quitar foto</button>
+                    <button type="button" onclick="packQuitarFoto()" style="display:block;margin:6px auto 0;font-size:.75rem;color:#ef4444;background:none;border:none;cursor:pointer;font-weight:700;">\u2715 Quitar foto</button>
                 </div>
             </div>
 
             <button type="button" id="packSubmitBtn" onclick="guardarPack()"
                 style="width:100%;padding:14px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.02em;">
-                ✅ Guardar Pack
+                \u2705 Guardar Pack
             </button>
         </form>
     </div>`;
@@ -943,9 +943,9 @@ function openPackModal(editId) {
       document.getElementById("packSku").value = pack.sku || "";
       if (sel) sel.value = pack.category || "";
       const title = document.getElementById("packModalTitle");
-      if (title) title.textContent = "✏️ Editar Pack";
+      if (title) title.textContent = "\u270F\uFE0F Editar Pack";
       const btn = document.getElementById("packSubmitBtn");
-      if (btn) btn.textContent = "✅ Actualizar Pack";
+      if (btn) btn.textContent = "\u2705 Actualizar Pack";
       if (pack.imageUrl) {
         window._packImageUrl = pack.imageUrl;
         const prev = document.getElementById("packImagePreview");
@@ -1016,7 +1016,7 @@ function packFiltrarPT() {
     return;
   }
   res.innerHTML = pts.map((p) => {
-    const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">` : `<span style="font-size:1.2rem;">${p.image || "📦"}</span>`;
+    const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">` : `<span style="font-size:1.2rem;">${p.image || "\u{1F4E6}"}</span>`;
     return `<div onclick="packSeleccionarPT('${String(p.id)}')"
             style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;"
             onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background='#fff'">
@@ -1077,7 +1077,7 @@ function packRenderComponentes() {
   }
   lista.innerHTML = comps.map((c) => {
     const pt = (window.products || []).find((p) => String(p.id) === String(c.productoId));
-    const img = pt?.imageUrl ? `<img src="${pt.imageUrl}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;">` : `<span style="font-size:1.3rem;">${pt?.image || "📦"}</span>`;
+    const img = pt?.imageUrl ? `<img src="${pt.imageUrl}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;">` : `<span style="font-size:1.3rem;">${pt?.image || "\u{1F4E6}"}</span>`;
     return `
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:12px;background:#fff;">
             ${img}
@@ -1104,7 +1104,7 @@ function packRenderComponentes() {
                     </div>
                 </div>
                 <button type="button" onclick="packQuitarComponente('${c.productoId}')"
-                    style="width:26px;height:26px;border-radius:7px;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">×</button>
+                    style="width:26px;height:26px;border-radius:7px;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">\xD7</button>
             </div>
         </div>`;
   }).join("");
@@ -1139,7 +1139,7 @@ function packFiltrarMP() {
     return;
   }
   res.innerHTML = mps.map((p) => {
-    const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">` : `<span style="font-size:1.2rem;">${p.image || "🏭"}</span>`;
+    const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">` : `<span style="font-size:1.2rem;">${p.image || "\u{1F3ED}"}</span>`;
     const tipoBadge = p.tipo === "servicio" ? `<span style="font-size:10px;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:99px;">Servicio</span>` : `<span style="font-size:10px;background:#f0fdf4;color:#15803d;padding:1px 6px;border-radius:99px;">MP</span>`;
     return `<div onclick="packSeleccionarMP('${String(p.id)}')"
             style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;"
@@ -1162,7 +1162,7 @@ function packSeleccionarMP(mpId) {
   window._packMpDirectos.push({
     id: String(mpId),
     nombre: mp.name,
-    imagen: mp.image || "🏭",
+    imagen: mp.image || "\u{1F3ED}",
     imageUrl: mp.imageUrl || null,
     unidad: mp.unidad || "pza",
     costoOriginal: Number(mp.cost) || 0,
@@ -1202,7 +1202,7 @@ function packRenderMpDirectos() {
     return;
   }
   lista.innerHTML = mps.map((m) => {
-    const img = m.imageUrl ? `<img src="${m.imageUrl}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;">` : `<span style="font-size:1.3rem;">${m.imagen || "🏭"}</span>`;
+    const img = m.imageUrl ? `<img src="${m.imageUrl}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;">` : `<span style="font-size:1.3rem;">${m.imagen || "\u{1F3ED}"}</span>`;
     return `
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #e9d5ff;border-radius:12px;background:#faf5ff;">
             ${img}
@@ -1229,7 +1229,7 @@ function packRenderMpDirectos() {
                     </div>
                 </div>
                 <button type="button" onclick="packQuitarMP('${m.id}')"
-                    style="width:26px;height:26px;border-radius:7px;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">×</button>
+                    style="width:26px;height:26px;border-radius:7px;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">\xD7</button>
             </div>
         </div>`;
   }).join("");
@@ -1261,13 +1261,13 @@ function packMostrarMargen() {
   const margen = ((precio - costo) / precio * 100).toFixed(1);
   const ganancia = (precio - costo).toFixed(2);
   const color = parseFloat(margen) >= 40 ? "#059669" : parseFloat(margen) >= 20 ? "#d97706" : "#ef4444";
-  info.innerHTML = `<span style="color:${color};font-weight:700;">${margen}% de margen</span> · Ganancia: <b style="color:${color};">$${ganancia}</b>`;
+  info.innerHTML = `<span style="color:${color};font-weight:700;">${margen}% de margen</span> \xB7 Ganancia: <b style="color:${color};">$${ganancia}</b>`;
 }
 window.packMostrarMargen = packMostrarMargen;
 function packAplicarMargen(pct) {
   const costo = parseFloat(document.getElementById("packCosto")?.value || 0) || 0;
   if (!costo) {
-    manekiToastExport("⚠️ Define los componentes primero", "warn");
+    manekiToastExport("\u26A0\uFE0F Define los componentes primero", "warn");
     return;
   }
   const precio = costo * (1 + pct / 100);
@@ -1314,21 +1314,21 @@ async function guardarPack() {
   const comps = window._packComponentes || [];
   const mpDirs = window._packMpDirectos || [];
   if (!nombre) {
-    manekiToastExport("⚠️ El nombre es requerido", "warn");
+    manekiToastExport("\u26A0\uFE0F El nombre es requerido", "warn");
     document.getElementById("packNombre")?.focus();
     return;
   }
   if (comps.length + mpDirs.length < 2) {
-    manekiToastExport("⚠️ Un pack necesita al menos 2 componentes en total", "warn");
+    manekiToastExport("\u26A0\uFE0F Un pack necesita al menos 2 componentes en total", "warn");
     return;
   }
   if (!precio || precio <= 0) {
-    manekiToastExport("⚠️ El precio de venta debe ser mayor a $0", "warn");
+    manekiToastExport("\u26A0\uFE0F El precio de venta debe ser mayor a $0", "warn");
     document.getElementById("packPrecio")?.focus();
     return;
   }
   if (precio <= costo) {
-    manekiToastExport("⚠️ El precio debe ser mayor al costo", "warn");
+    manekiToastExport("\u26A0\uFE0F El precio debe ser mayor al costo", "warn");
     document.getElementById("packPrecio")?.focus();
     return;
   }
@@ -1337,11 +1337,11 @@ async function guardarPack() {
     (p) => p.name.trim().toLowerCase() === nombre.toLowerCase() && String(p.id) !== String(excludeId)
   );
   if (nombreDup) {
-    manekiToastExport(`⚠️ Ya existe un producto llamado "${nombreDup.name}"`, "warn");
+    manekiToastExport(`\u26A0\uFE0F Ya existe un producto llamado "${nombreDup.name}"`, "warn");
     return;
   }
   if (sku && !skuEsUnico(sku, excludeId)) {
-    manekiToastExport(`⚠️ El SKU "${sku}" ya está en uso`, "warn");
+    manekiToastExport(`\u26A0\uFE0F El SKU "${sku}" ya est\xE1 en uso`, "warn");
     return;
   }
   const btn = document.getElementById("packSubmitBtn");
@@ -1349,7 +1349,7 @@ async function guardarPack() {
   try {
     let packImageUrl = window._packImageUrl || null;
     if (window._packImageFile) {
-      manekiToastExport("⏳ Subiendo imagen...", "ok");
+      manekiToastExport("\u23F3 Subiendo imagen...", "ok");
       const uploaded = await subirImagenStorage(window._packImageFile).catch(() => null);
       if (uploaded) {
         packImageUrl = uploaded;
@@ -1376,7 +1376,7 @@ async function guardarPack() {
         cost: costo,
         sku: finalSku,
         category: catId,
-        image: cat ? cat.emoji : "🎁",
+        image: cat ? cat.emoji : "\u{1F381}",
         imageUrl: packImageUrl,
         tipo: "pack",
         packComponentes: JSON.parse(JSON.stringify(comps)),
@@ -1389,7 +1389,7 @@ async function guardarPack() {
       if (typeof updateDashboard === "function") updateDashboard();
       closePackModal();
       if (window.MKS) MKS.notify();
-      manekiToastExport("✅ Pack actualizado", "ok");
+      manekiToastExport("\u2705 Pack actualizado", "ok");
     } else {
       const np = {
         id: _genId(),
@@ -1401,7 +1401,7 @@ async function guardarPack() {
         stockMin: 2,
         sku: finalSku,
         category: catId,
-        image: cat ? cat.emoji : "🎁",
+        image: cat ? cat.emoji : "\u{1F381}",
         imageUrl: packImageUrl,
         imageUrls: [],
         tags: [],
@@ -1418,7 +1418,7 @@ async function guardarPack() {
       if (typeof updateDashboard === "function") updateDashboard();
       closePackModal();
       if (window.MKS) MKS.notify();
-      manekiToastExport("✅ Pack creado exitosamente", "ok");
+      manekiToastExport("\u2705 Pack creado exitosamente", "ok");
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -1436,15 +1436,15 @@ function injectVariableProductModal() {
   modal.innerHTML = `
     <div class="modal-content" style="max-width:580px;max-height:90vh;overflow-y:auto;border-radius:20px;padding:28px 24px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <h3 style="font-size:1.3rem;font-weight:800;color:#1a0533;">🎨 Producto Variable</h3>
-            <button onclick="closeModal('pvModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;">×</button>
+            <h3 style="font-size:1.3rem;font-weight:800;color:#1a0533;">\u{1F3A8} Producto Variable</h3>
+            <button onclick="closeModal('pvModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;">\xD7</button>
         </div>
         <form id="pvForm" onsubmit="guardarProductoVariable(event)" style="display:flex;flex-direction:column;gap:16px;">
             <input type="hidden" id="pvEditId" value="">
 
             <!-- IMAGEN -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">📷 Imagen del Producto</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F4F7} Imagen del Producto</label>
                 <input type="file" id="pvProductImage" accept="image/*"
                     style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;box-sizing:border-box;">
                 <div id="pvImagePreview" class="hidden" style="margin-top:10px;text-align:center;">
@@ -1454,23 +1454,23 @@ function injectVariableProductModal() {
 
             <!-- Nombre -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">📝 Nombre del producto *</label>
-                <input type="text" id="pvNombre" required placeholder="Ej: Stickers 5x5 cm, Tarjetas de presentación"
+                <label class="block text-sm font-semibold text-gray-700 mb-2">\u{1F4DD} Nombre del producto *</label>
+                <input type="text" id="pvNombre" required placeholder="Ej: Stickers 5x5 cm, Tarjetas de presentaci\xF3n"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none">
             </div>
 
             <!-- Rendimiento por hoja -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">🎯 Piezas por hoja / unidad de MP</label>
-                <input type="number" id="pvRendimiento" min="1" placeholder="Ej: 12 (cuántas piezas caben en 1 hoja)"
+                <label class="block text-sm font-semibold text-gray-700 mb-2">\u{1F3AF} Piezas por hoja / unidad de MP</label>
+                <input type="number" id="pvRendimiento" min="1" placeholder="Ej: 12 (cu\xE1ntas piezas caben en 1 hoja)"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none">
-                <p class="text-xs text-gray-400 mt-1">El sistema dividirá la cantidad del pedido entre este número para calcular hojas a descontar.</p>
+                <p class="text-xs text-gray-400 mt-1">El sistema dividir\xE1 la cantidad del pedido entre este n\xFAmero para calcular hojas a descontar.</p>
             </div>
 
             <!-- Materias primas -->
             <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <label class="text-sm font-semibold text-gray-700">🏭 Materias Primas y Servicios</label>
+                    <label class="text-sm font-semibold text-gray-700">\u{1F3ED} Materias Primas y Servicios</label>
                     <button type="button" onclick="pvAgregarComponente()"
                         class="px-3 py-1.5 rounded-lg text-xs font-bold text-white"
                         style="background:linear-gradient(135deg,#7c3aed,#a855f7);">+ Agregar componente</button>
@@ -1487,40 +1487,40 @@ function injectVariableProductModal() {
             <!-- Tabla de precios -->
             <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <label class="text-sm font-semibold text-gray-700">💰 Tabla de precios por cantidad</label>
+                    <label class="text-sm font-semibold text-gray-700">\u{1F4B0} Tabla de precios por cantidad</label>
                     <button type="button" onclick="pvAgregarRangoPrecio()"
                         class="px-3 py-1.5 rounded-lg text-xs font-bold text-white"
                         style="background:#059669;">+ Agregar rango</button>
                 </div>
-                <p class="text-xs text-gray-400 mb-2">Si el cliente pide una cantidad que no está exacta, se usa el precio del rango inferior más cercano.</p>
+                <p class="text-xs text-gray-400 mb-2">Si el cliente pide una cantidad que no est\xE1 exacta, se usa el precio del rango inferior m\xE1s cercano.</p>
                 <div id="pvTablaPreciosList" style="display:flex;flex-direction:column;gap:6px;"></div>
             </div>
 
             <!-- SKU -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Código SKU <span class="text-gray-400 font-normal">(opcional)</span></label>
-                <input type="text" id="pvSku" placeholder="Se genera automáticamente si lo dejas vacío"
+                <label class="block text-sm font-semibold text-gray-700 mb-2">C\xF3digo SKU <span class="text-gray-400 font-normal">(opcional)</span></label>
+                <input type="text" id="pvSku" placeholder="Se genera autom\xE1ticamente si lo dejas vac\xEDo"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none text-sm">
             </div>
 
-            <!-- CATEGORÍA -->
+            <!-- CATEGOR\xCDA -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Categoría</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Categor\xEDa</label>
                 <select id="pvCategory"
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;background:#fff;box-sizing:border-box;">
-                    <option value="">Sin categoría</option>
+                    <option value="">Sin categor\xEDa</option>
                 </select>
             </div>
 
             <!-- TAGS -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">🏷️ Tags / Etiquetas</label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F3F7}\uFE0F Tags / Etiquetas</label>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;" id="pvTagsGrid"></div>
             </div>
 
             <!-- NOTAS -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">📋 Notas internas <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F4CB} Notas internas <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
                 <textarea id="pvNotas" rows="2" placeholder="Especificaciones, materiales, observaciones..."
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
             </div>
@@ -1528,7 +1528,7 @@ function injectVariableProductModal() {
             <button type="submit" id="pvSubmitBtn"
                 class="w-full py-3 rounded-xl text-white font-bold text-base mt-2"
                 style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
-                ✅ Guardar Producto Variable
+                \u2705 Guardar Producto Variable
             </button>
         </form>
     </div>`;
@@ -1559,7 +1559,7 @@ function pvSeleccionarMP(id) {
   const mp = (window.products || []).find((p) => String(p.id) === String(id));
   if (!mp) return;
   if ((window._pvMpComponentes || []).find((c) => String(c.id) === String(id))) {
-    manekiToastExport("Ya está agregado", "warn");
+    manekiToastExport("Ya est\xE1 agregado", "warn");
     return;
   }
   window._pvMpComponentes.push({ id: mp.id, name: mp.name, qty: 1, costUnit: mp.cost || 0 });
@@ -1581,7 +1581,7 @@ function pvRenderMpList() {
   if (!list) return;
   const comps = window._pvMpComponentes || [];
   if (!comps.length) {
-    list.innerHTML = '<p class="text-xs text-gray-400">Sin componentes aún.</p>';
+    list.innerHTML = '<p class="text-xs text-gray-400">Sin componentes a\xFAn.</p>';
     return;
   }
   const costoTotal = comps.reduce((s, c) => s + (parseFloat(c.costUnit) || 0) * (parseFloat(c.qty) || 1), 0);
@@ -1593,7 +1593,7 @@ function pvRenderMpList() {
                 onchange="pvEditarQtyComp(${i}, this.value)"
                 style="width:50px;padding:3px 6px;border:1px solid #ddd6fe;border-radius:6px;text-align:center;font-size:.8rem;">
             <span style="color:#7c3aed;font-weight:600;min-width:55px;text-align:right;">$${((parseFloat(c.costUnit) || 0) * (parseFloat(c.qty) || 1)).toFixed(2)}</span>
-            <button onclick="pvQuitarComp(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;">✕</button>
+            <button onclick="pvQuitarComp(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;">\u2715</button>
         </div>`).join("") + `<div style="text-align:right;font-size:.78rem;color:#7c3aed;font-weight:700;padding:4px 10px 0;">Costo por hoja: $${costoTotal.toFixed(2)}</div>`;
 }
 window.pvRenderMpList = pvRenderMpList;
@@ -1623,12 +1623,12 @@ function pvRenderTablaPreciosList() {
   }
   list.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:4px;padding:0 4px;">
-            <span style="font-size:.72rem;font-weight:700;color:#6b7280;">Cantidad mínima</span>
+            <span style="font-size:.72rem;font-weight:700;color:#6b7280;">Cantidad m\xEDnima</span>
             <span style="font-size:.72rem;font-weight:700;color:#6b7280;">Precio total ($)</span>
             <span style="font-size:.72rem;font-weight:700;color:#0369a1;">$/pieza</span>
             <span></span>
         </div>` + tabla.map((r, i) => {
-    const unitario = r.cantidadMin > 0 && r.precio > 0 ? (r.precio / r.cantidadMin).toFixed(2) : "—";
+    const unitario = r.cantidadMin > 0 && r.precio > 0 ? (r.precio / r.cantidadMin).toFixed(2) : "\u2014";
     return `
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:center;">
             <input type="number" min="1" placeholder="Ej: 10" value="${r.cantidadMin}"
@@ -1640,7 +1640,7 @@ function pvRenderTablaPreciosList() {
                 style="color:#059669;font-weight:600;">
             <span style="font-size:.85rem;font-weight:700;color:#0369a1;text-align:center;padding:8px 4px;background:#e0f2fe;border-radius:8px;">$${unitario}</span>
             <button onclick="pvQuitarRango(${i})"
-                style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;padding:0 4px;">✕</button>
+                style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;padding:0 4px;">\u2715</button>
         </div>`;
   }).join("");
 }
@@ -1714,9 +1714,9 @@ function openVariableProductModal(editId) {
         pvRenderTablaPreciosList();
         renderTagsPv();
         const title = document.querySelector("#pvModal h3");
-        if (title) title.textContent = "🎨 Editar Producto Variable";
+        if (title) title.textContent = "\u{1F3A8} Editar Producto Variable";
         const btn = document.getElementById("pvSubmitBtn");
-        if (btn) btn.textContent = "💾 Guardar Cambios";
+        if (btn) btn.textContent = "\u{1F4BE} Guardar Cambios";
       }, 80);
     }
   } else {
@@ -1742,28 +1742,28 @@ async function guardarProductoVariable(e) {
   const notas = gv("pvNotas").trim();
   const tags = [...window._pvTagsActuales || []];
   if (!nombre) {
-    manekiToastExport("⚠️ El nombre es requerido", "warn");
+    manekiToastExport("\u26A0\uFE0F El nombre es requerido", "warn");
     return;
   }
   const tabla = (window._pvTablaPreciosVariable || []).filter((r) => r.cantidadMin > 0 && r.precio > 0);
   if (!tabla.length) {
-    manekiToastExport("⚠️ Agrega al menos un rango de precio", "warn");
+    manekiToastExport("\u26A0\uFE0F Agrega al menos un rango de precio", "warn");
     return;
   }
   const _btn = document.getElementById("pvSubmitBtn");
   if (_btn) {
     _btn.disabled = true;
-    _btn.textContent = "⏳ Guardando...";
+    _btn.textContent = "\u23F3 Guardando...";
   }
   const _restore = () => {
     if (_btn) {
       _btn.disabled = false;
-      _btn.textContent = editId ? "💾 Guardar Cambios" : "✅ Guardar Producto Variable";
+      _btn.textContent = editId ? "\u{1F4BE} Guardar Cambios" : "\u2705 Guardar Producto Variable";
     }
   };
   let imageUrl = window._pvProductImage || "";
   if (window._pvProductImageFile) {
-    manekiToastExport("⏳ Subiendo imagen...", "ok");
+    manekiToastExport("\u23F3 Subiendo imagen...", "ok");
     const uploaded = await subirImagenStorage(window._pvProductImageFile).catch(() => null);
     if (uploaded) imageUrl = uploaded;
     window._pvProductImageFile = null;
@@ -1771,7 +1771,7 @@ async function guardarProductoVariable(e) {
   tabla.sort((a, b) => a.cantidadMin - b.cantidadMin);
   const mpComps = (window._pvMpComponentes || []).map((c) => ({ ...c }));
   const costoHoja = mpComps.reduce((s, c) => s + (parseFloat(c.costUnit) || 0) * (parseFloat(c.qty) || 1), 0);
-  const finalSku = sku || "PV-" + (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().split("-")[0].toUpperCase() : Math.random().toString(36).slice(2, 7).toUpperCase());
+  const finalSku = sku || "PV-" + mkId().split("-")[0].toUpperCase();
   if (editId) {
     const idx = (window.products || []).findIndex((x) => String(x.id) === String(editId));
     if (idx === -1) {
@@ -1793,7 +1793,7 @@ async function guardarProductoVariable(e) {
       notas,
       imageUrl: imageUrl || window.products[idx].imageUrl || ""
     });
-    manekiToastExport("✅ Producto variable actualizado", "ok");
+    manekiToastExport("\u2705 Producto variable actualizado", "ok");
   } else {
     const np = {
       id: _genId(),
@@ -1806,14 +1806,14 @@ async function guardarProductoVariable(e) {
       cost: costoHoja,
       price: tabla[tabla.length - 1].precio,
       stock: 0,
-      image: "🎨",
+      image: "\u{1F3A8}",
       category,
       tags,
       notas,
       imageUrl
     };
     window.products.unshift(np);
-    manekiToastExport("✅ Producto variable creado", "ok");
+    manekiToastExport("\u2705 Producto variable creado", "ok");
   }
   _restore();
   saveProducts();
@@ -1845,12 +1845,12 @@ function verMovimientosProducto(pid) {
     const bg = m.delta > 0 ? "#d1fae5" : "#fee2e2";
     const signo = m.delta > 0 ? "+" : "";
     return `<tr>
-            <td style="padding:6px 10px;font-size:.8rem;color:#6b7280;">${_esc(m.fecha || "—")}</td>
+            <td style="padding:6px 10px;font-size:.8rem;color:#6b7280;">${_esc(m.fecha || "\u2014")}</td>
             <td style="padding:6px 10px;text-align:center;">
                 <span style="background:${bg};color:${clr};font-weight:700;padding:2px 10px;border-radius:8px;font-size:.8rem;">${signo}${m.delta}</span>
             </td>
             <td style="padding:6px 10px;text-align:center;font-size:.8rem;font-weight:600;color:#374151;">${m.stockResultante}</td>
-            <td style="padding:6px 10px;font-size:.78rem;color:#6b7280;">${_esc(m.motivo || "—")}</td>
+            <td style="padding:6px 10px;font-size:.78rem;color:#6b7280;">${_esc(m.motivo || "\u2014")}</td>
         </tr>`;
   }).join("") : `<tr><td colspan="4" style="padding:14px;text-align:center;font-size:.8rem;color:#9ca3af;">Sin movimientos registrados</td></tr>`;
   const modal = document.createElement("div");
@@ -1860,11 +1860,11 @@ function verMovimientosProducto(pid) {
     <div style="background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.2);max-width:560px;width:95%;padding:24px;max-height:80vh;overflow-y:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <div>
-                <div style="font-size:1.05rem;font-weight:800;color:#1a0533;">📋 Últimos movimientos de stock</div>
+                <div style="font-size:1.05rem;font-weight:800;color:#1a0533;">\u{1F4CB} \xDAltimos movimientos de stock</div>
                 <div style="font-size:.78rem;color:#9ca3af;margin-top:2px;">${_esc(prod.name)}</div>
             </div>
             <button onclick="document.getElementById('_mkMovimientosModal').remove()"
-                style="font-size:1.4rem;background:none;border:none;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+                style="font-size:1.4rem;background:none;border:none;cursor:pointer;color:#9ca3af;line-height:1;">\xD7</button>
         </div>
         <table style="width:100%;border-collapse:collapse;">
             <thead>
@@ -1877,7 +1877,7 @@ function verMovimientosProducto(pid) {
             </thead>
             <tbody>${filas}</tbody>
         </table>
-        ${movs.length === 0 || (prod.movimientos || []).length <= 5 ? "" : `<p style="font-size:.72rem;color:#9ca3af;text-align:center;margin-top:10px;">Mostrando los últimos 5 de ${(prod.movimientos || []).length} movimientos</p>`}
+        ${movs.length === 0 || (prod.movimientos || []).length <= 5 ? "" : `<p style="font-size:.72rem;color:#9ca3af;text-align:center;margin-top:10px;">Mostrando los \xFAltimos 5 de ${(prod.movimientos || []).length} movimientos</p>`}
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener("click", function(e) {

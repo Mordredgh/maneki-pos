@@ -36,7 +36,7 @@ function checkAlertasEntregas() {
       etiqueta = "En 2 d\xEDas";
       icono = "\u{1F7E1}";
     }
-    const saldo = (typeof window.calcSaldoPendiente === "function" ? window.calcSaldoPendiente(p) : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0))).toFixed(2);
+    const saldo = calcSaldoPendiente(p).toFixed(2);
     return `
                     <div class="alerta-pedido-card ${clase}">
                         <span class="text-2xl">${icono}</span>
@@ -247,11 +247,7 @@ function _updateDashboardImpl() {
       }).join("");
     }
   }
-  const _calcSaldo = typeof window.calcSaldoPendiente === "function" ? window.calcSaldoPendiente : (p) => {
-    const sumPagos = (p.pagos || []).reduce((s, ab) => s + Number(ab.monto || 0), 0);
-    const totalPagado = sumPagos > 0 ? sumPagos : Number(p.anticipo || 0);
-    return Math.max(0, Number(p.total || 0) - totalPagado);
-  };
+  const _calcSaldo = calcSaldoPendiente;
   const accountsReceivable = [
     ...receivables.filter((r) => r.status === "pending").map((r) => r.amount || 0),
     ...pedidos.filter((p) => !["finalizado", "cancelado", "entregado"].includes((p.status || "").toLowerCase())).map((p) => _calcSaldo(p)).filter((v) => v > 0)
@@ -340,7 +336,7 @@ function _updateDashboardImpl() {
     arCard.style.cursor = "pointer";
     arCard.addEventListener("click", function() {
       const pedidosArr = window.pedidos || pedidos || [];
-      const _calcS = typeof window.calcSaldoPendiente === "function" ? window.calcSaldoPendiente : (p) => Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
+      const _calcS = calcSaldoPendiente;
       const mapa = {};
       pedidosArr.filter((p) => !["finalizado", "cancelado", "entregado"].includes((p.status || "").toLowerCase())).forEach((p) => {
         const saldo = _calcS(p);
@@ -552,7 +548,7 @@ function _renderAtencionHoy() {
   })();
   const items = [];
   const porCobrar = (window.pedidos || []).filter(
-    (p) => p.status !== "cancelado" && (typeof calcSaldoPendiente === "function" ? calcSaldoPendiente(p) : p.resta || 0) > 0
+    (p) => p.status !== "cancelado" && calcSaldoPendiente(p) > 0
   );
   if (porCobrar.length > 0) {
     items.push(`\u{1F4B3} ${porCobrar.length} pedido${porCobrar.length > 1 ? "s" : ""} con saldo pendiente`);
@@ -770,8 +766,7 @@ function renderResumenDia() {
   );
   const nActivos = pedidosActivos.length;
   const nHoy = pedidosActivos.filter((p) => (p.entrega || p.fechaEntrega) === hoy).length;
-  const _calcS = typeof window.calcSaldoPendiente === "function" ? window.calcSaldoPendiente : (p) => Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
-  const totalPorCobrar = pedidosActivos.reduce((acc, p) => acc + _calcS(p), 0);
+  const totalPorCobrar = pedidosActivos.reduce((acc, p) => acc + calcSaldoPendiente(p), 0);
   const sinFecha = pedidosActivos.filter((p) => !p.entrega && !p.fechaEntrega).length;
   const nombreTienda = window.storeConfig?.name || window.storeConfig?.storeName || window.storeName || "Maneki";
   const html = `

@@ -1786,7 +1786,7 @@ async function guardarProductoVariable(e) {
     const mpComps = (window._pvMpComponentes || []).map(c => ({...c}));
     const costoHoja = mpComps.reduce((s, c) => s + (parseFloat(c.costUnit)||0) * (parseFloat(c.qty)||1), 0);
 
-    const finalSku = sku || ('PV-' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().split('-')[0].toUpperCase() : Math.random().toString(36).slice(2,7).toUpperCase()));
+    const finalSku = sku || ('PV-' + mkId().split('-')[0].toUpperCase());
 
     if (editId) {
         const idx = (window.products || []).findIndex(x => String(x.id) === String(editId));

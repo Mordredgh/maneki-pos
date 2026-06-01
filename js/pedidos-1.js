@@ -21,28 +21,25 @@ function generarFolioPedido() {
     window._folioCounter = (window._folioCounter || 0) + 1;
     const folio = "PE-" + String(window._folioCounter).padStart(4, "0");
     const _fc = window._folioCounter;
-    _persistirFolio(_fc);
+    if (typeof db !== "undefined") {
+      (async () => {
+        try {
+          await db.from("store").upsert({ key: "folioCounter", value: String(_fc) });
+        } catch (e) {
+          console.warn("[Folio] Error al persistir contador:", e?.message);
+        }
+      })();
+    }
+    try {
+      localStorage.setItem("maneki_folioCounter", String(_fc));
+    } catch (e) {
+    }
     return folio;
   } catch (e) {
     console.error("[Folio] Error generando folio:", e);
     return null;
   } finally {
     _folioGenerando = false;
-  }
-}
-function _persistirFolio(fc) {
-  if (typeof db !== "undefined") {
-    (async () => {
-      try {
-        await db.from("store").upsert({ key: "folioCounter", value: String(fc) });
-      } catch (e) {
-        console.warn("[Folio] Error al persistir contador:", e?.message);
-      }
-    })();
-  }
-  try { localStorage.setItem("maneki_folioCounter", String(fc)); } catch (e) {}
-  if (typeof sqliteStorage !== "undefined") {
-    sqliteStorage.set("folioCounter", fc).catch(() => {});
   }
 }
 let _folioCounterResolve;
@@ -128,9 +125,9 @@ function openPedidoModal(id) {
     wrapper.style.cssText = "margin-top:8px;";
     wrapper.innerHTML = `
             <label style="display:block;font-size:.75rem;font-weight:600;color:#6b7280;margin-bottom:4px;">
-                🔒 Notas internas <span style="font-weight:400;font-style:italic;">(solo equipo — no va al cliente)</span>
+                \u{1F512} Notas internas <span style="font-weight:400;font-style:italic;">(solo equipo \u2014 no va al cliente)</span>
             </label>
-            <textarea id="pedidoNotasInternas" rows="2" placeholder="Notas internas (solo equipo — no va al cliente)"
+            <textarea id="pedidoNotasInternas" rows="2" placeholder="Notas internas (solo equipo \u2014 no va al cliente)"
                 style="width:100%;border:2px dashed #d1d5db;border-radius:8px;padding:8px 10px;font-size:.83rem;resize:vertical;outline:none;background:#fafafa;color:#374151;"
                 onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#d1d5db'"></textarea>`;
     taNotas.parentElement.insertAdjacentElement("afterend", wrapper);
@@ -187,7 +184,7 @@ function closePedidoModal() {
     closeModal("pedidoModal");
   }
   if (!editId && (cliente || costo && costo !== "0")) {
-    showConfirm("¿Cerrar sin guardar los cambios?", "⚠️ Cambios sin guardar").then((ok) => {
+    showConfirm("\xBFCerrar sin guardar los cambios?", "\u26A0\uFE0F Cambios sin guardar").then((ok) => {
       if (ok) _cerrar();
     });
   } else if (editId && !editId.startsWith("__finalizado__")) {
@@ -204,7 +201,7 @@ function closePedidoModal() {
       const niOriginal = saved.notasInternas || "";
       const hayCambio = clienteActual !== (saved.cliente || "") || conceptoActual !== (saved.concepto || "") || anticipoActual !== (saved.anticipo || 0) || itemsActuales !== (saved.productosInventario || []).length || entregaActual !== (saved.entrega || "") || notasActuales !== (saved.notas || "") || niActual !== niOriginal;
       if (hayCambio) {
-        showConfirm("¿Cerrar sin guardar los cambios?", "⚠️ Cambios sin guardar").then((ok) => {
+        showConfirm("\xBFCerrar sin guardar los cambios?", "\u26A0\uFE0F Cambios sin guardar").then((ok) => {
           if (ok) _cerrar();
         });
         return;
@@ -261,14 +258,14 @@ function calcPedidoTotal() {
         _calcHint.style.cssText = "display:block;font-size:.68rem;color:#7c3aed;margin-top:2px;";
         dispTotal.parentElement && dispTotal.parentElement.appendChild(_calcHint);
       }
-      _calcHint.textContent = "💡 Precio calculado desde los productos agregados";
+      _calcHint.textContent = "\u{1F4A1} Precio calculado desde los productos agregados";
     } else if (_calcHint) {
       _calcHint.textContent = "";
     }
   }
   if (dispSaldo) dispSaldo.value = "$" + saldo.toFixed(2);
   if (dispGan) {
-    dispGan.value = costoMat > 0 ? "$" + ganancia.toFixed(2) + (total > 0 ? " (" + Math.round(ganancia / total * 100) + "%)" : "") : "—";
+    dispGan.value = costoMat > 0 ? "$" + ganancia.toFixed(2) + (total > 0 ? " (" + Math.round(ganancia / total * 100) + "%)" : "") : "\u2014";
     dispGan.style.color = ganancia >= 0 ? "#16a34a" : "#dc2626";
   }
   if (typeof _calcularCostoProduccionPedido === "function") _calcularCostoProduccionPedido();
@@ -366,14 +363,14 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
     return;
   }
   if (total === 0 && items.length === 0) {
-    manekiToastExport("⚠️ El pedido no tiene precio. Agrega productos del inventario o escribe el precio en el campo amarillo.", "warn");
+    manekiToastExport("\u26A0\uFE0F El pedido no tiene precio. Agrega productos del inventario o escribe el precio en el campo amarillo.", "warn");
     return;
   }
   if (total === 0 && items.length > 0) {
-    manekiToastExport("⚠️ Los productos tienen precio $0. Verifica los precios antes de guardar.", "warn");
+    manekiToastExport("\u26A0\uFE0F Los productos tienen precio $0. Verifica los precios antes de guardar.", "warn");
   }
   if (total > 0 && anticipo > total) {
-    manekiToastExport(`⚠️ El anticipo ($${anticipo.toFixed(2)}) supera el total ($${total.toFixed(2)}). Verifica los montos.`, "warn");
+    manekiToastExport(`\u26A0\uFE0F El anticipo ($${anticipo.toFixed(2)}) supera el total ($${total.toFixed(2)}). Verifica los montos.`, "warn");
     return;
   }
   _pedidoGuardando = true;
@@ -381,7 +378,7 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
   if (_btnSubmit) {
     _btnSubmit.disabled = true;
     _btnSubmit.style.opacity = "0.6";
-    _btnSubmit.innerHTML = "⏳ Guardando...";
+    _btnSubmit.innerHTML = "\u23F3 Guardando...";
   }
   const _lockTimeout = setTimeout(() => {
     if (_pedidoGuardando) {
@@ -392,7 +389,7 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
         _btn.style.opacity = "";
         _btn.innerHTML = "Guardar Pedido";
       }
-      manekiToastExport("⚠️ El guardado tardó demasiado. Intenta de nuevo.", "warn");
+      manekiToastExport("\u26A0\uFE0F El guardado tard\xF3 demasiado. Intenta de nuevo.", "warn");
     }
   }, 3e4);
   if (!window.pedidos) window.pedidos = [];
@@ -436,12 +433,12 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
       window.pedidos[idx] = { ...pActual, cliente, telefono, redes, whatsapp: telefono, facebook: redes, fechaPedido, entrega, concepto, cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad, pagos: pagosActualizados, productosInventario: (window.pedidoProductosSeleccionados || []).map((i) => ({ ...i })), empaques: (window.pedidoEmpaquesSeleccionados || []).map((e2) => ({ ...e2 })) };
       savePedidos();
       if (window.MKS) MKS.notify();
-      manekiToastExport("✅ Pedido actualizado.", "ok");
+      manekiToastExport("\u2705 Pedido actualizado.", "ok");
     }
   } else {
     const folio = generarFolioPedido();
     if (!folio) {
-      manekiToastExport("⚠️ Error al generar folio. Intenta de nuevo.", "err");
+      manekiToastExport("\u26A0\uFE0F Error al generar folio. Intenta de nuevo.", "err");
       clearTimeout(_lockTimeout);
       _pedidoGuardando = false;
       if (_btnSubmit) {
@@ -496,7 +493,7 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
     window.pedidoEmpaquesSeleccionados = [];
     savePedidos();
     if (window.MKS) MKS.sale();
-    manekiToastExport("✅ Pedido creado: " + pedido.folio, "ok");
+    manekiToastExport("\u2705 Pedido creado: " + pedido.folio, "ok");
   }
   clearTimeout(_lockTimeout);
   _pedidoGuardando = false;
@@ -621,7 +618,7 @@ function _calcularCostoProduccionPedido() {
   if (el) {
     if (costoTotal > 0 || items.length > 0) {
       el.style.display = "";
-      el.textContent = `Costo producción: $${costoTotal.toFixed(2)} | Margen estimado: ${margen}%`;
+      el.textContent = `Costo producci\xF3n: $${costoTotal.toFixed(2)} | Margen estimado: ${margen}%`;
       el.style.color = margen >= 30 ? "#166534" : margen >= 10 ? "#92400e" : "#991b1b";
       el.style.background = margen >= 30 ? "#f0fdf4" : margen >= 10 ? "#fffbeb" : "#fef2f2";
       el.style.borderColor = margen >= 30 ? "#bbf7d0" : margen >= 10 ? "#fde68a" : "#fecaca";
@@ -699,7 +696,7 @@ function renderPedidosTable() {
 function updatePedidosStats() {
   const lista = window.pedidos || [];
   const activos = lista.filter((p) => p.status !== "cancelado");
-  const porCobrar = activos.reduce((s, p) => s + (Number(p.resta) || 0), 0);
+  const porCobrar = activos.reduce((s, p) => s + calcSaldoPendiente(p), 0);
   const anticipos = activos.reduce((s, p) => s + (Number(p.anticipo) || 0), 0);
   const mesActual = (/* @__PURE__ */ new Date()).getMonth();
   const mesYear = (/* @__PURE__ */ new Date()).getFullYear();
@@ -772,19 +769,19 @@ function renderKanbanBoard() {
     _noResultsBanner.textContent = q ? `Sin pedidos que coincidan con "${q}"` : "Sin pedidos con este filtro de urgencia";
   }
 }
-const _statusLabel = (s) => ({ confirmado: "✅ Confirmado", pago: "💰 Pagado", produccion: "🔧 Producción", envio: "📦 Envío", salida: "🚚 Salió", retirar: "🏪 Retirar", finalizado: "🎉 Listo", cancelado: "❌ Cancelado" })[s] || s;
+const _statusLabel = (s) => ({ confirmado: "\u2705 Confirmado", pago: "\u{1F4B0} Pagado", produccion: "\u{1F527} Producci\xF3n", envio: "\u{1F4E6} Env\xEDo", salida: "\u{1F69A} Sali\xF3", retirar: "\u{1F3EA} Retirar", finalizado: "\u{1F389} Listo", cancelado: "\u274C Cancelado" })[s] || s;
 function kanbanCardHTML(p) {
-  const _saldo = typeof calcSaldoPendiente === "function" ? calcSaldoPendiente(p) : Number(p.resta || 0);
+  const _saldo = calcSaldoPendiente(p);
   const hoy = /* @__PURE__ */ new Date();
   hoy.setHours(0, 0, 0, 0);
   const entrega = p.entrega ? /* @__PURE__ */ new Date(p.entrega + "T00:00:00") : null;
   const diff = entrega ? Math.round((entrega - hoy) / 864e5) : null;
   let alertaHtml = "";
   if (diff !== null) {
-    if (diff < 0) alertaHtml = '<span class="text-xs font-bold text-red-700">⛔ Vencido</span>';
-    else if (diff === 0) alertaHtml = '<span class="text-xs font-bold text-red-600">🔴 ¡Hoy!</span>';
-    else if (diff === 1) alertaHtml = '<span class="text-xs font-bold text-amber-600">🟡 Mañana</span>';
-    else if (diff === 2) alertaHtml = '<span class="text-xs font-bold text-amber-600">🟡 2 días</span>';
+    if (diff < 0) alertaHtml = '<span class="text-xs font-bold text-red-700">\u26D4 Vencido</span>';
+    else if (diff === 0) alertaHtml = '<span class="text-xs font-bold text-red-600">\u{1F534} \xA1Hoy!</span>';
+    else if (diff === 1) alertaHtml = '<span class="text-xs font-bold text-amber-600">\u{1F7E1} Ma\xF1ana</span>';
+    else if (diff === 2) alertaHtml = '<span class="text-xs font-bold text-amber-600">\u{1F7E1} 2 d\xEDas</span>';
   }
   const _e = window._esc || ((s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"));
   const _isSelected = window._kanbanSeleccionados && window._kanbanSeleccionados.has(String(p.id));
@@ -793,7 +790,7 @@ function kanbanCardHTML(p) {
         onclick="event.stopPropagation()"
         style="position:absolute;top:6px;right:6px;width:16px;height:16px;cursor:pointer;accent-color:#C5A572;opacity:${_isSelected ? "1" : "0"};transition:opacity .15s;"
         class="_kanban-check"
-        title="Seleccionar para acción en lote">`;
+        title="Seleccionar para acci\xF3n en lote">`;
   if (_kanbanCompacto) {
     return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex items-center gap-2"
             style="position:relative;" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
@@ -804,24 +801,24 @@ function kanbanCardHTML(p) {
                 <span class="text-xs text-gray-700 ml-1 truncate">${_e(p.cliente)}</span>
             </div>
             <span class="text-xs ${_saldo > 0 ? "text-red-500" : "text-green-600"} font-bold whitespace-nowrap">$${_saldo.toFixed(0)}</span>
-            <button onclick="openPedidoStatusModal('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-gray-100 hover:bg-amber-100 text-gray-500">⚡</button>
-            <button onclick="eliminarPedido('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-500">🗑</button>
+            <button onclick="openPedidoStatusModal('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-gray-100 hover:bg-amber-100 text-gray-500">\u26A1</button>
+            <button onclick="eliminarPedido('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-500">\u{1F5D1}</button>
         </div>`;
   }
-  const _prioBadge = p.prioridad === "alta" ? `<span class="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 ml-1">🔺 Alta</span>` : p.prioridad === "baja" ? `<span class="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 ml-1">🔻 Baja</span>` : "";
+  const _prioBadge = p.prioridad === "alta" ? `<span class="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 ml-1">\u{1F53A} Alta</span>` : p.prioridad === "baja" ? `<span class="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 ml-1">\u{1F53B} Baja</span>` : "";
   const _thumbUrl = (p.referenciasUrls || [])[0] || p.referenciaUrl || null;
   const _thumbHtml = _thumbUrl ? `<img src="${_thumbUrl}" onclick="abrirFotoReferencia('${p.id}')" class="w-full h-14 object-cover rounded-lg mb-1 cursor-pointer" onerror="this.style.display='none'" alt="Ref">` : "";
   const _hoyStr = typeof _fechaHoy === "function" ? _fechaHoy() : (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
   const _retrasado = p.entrega && p.entrega < _hoyStr && !["finalizado", "cancelado", "retirar", "salida"].includes(p.status || "");
   const _retrasadoHTML = _retrasado ? `<div style="background:#fee2e2;border-radius:8px;padding:3px 8px;margin-bottom:4px;font-size:.72rem;font-weight:700;color:#dc2626;">
-               ⏰ RETRASADO — venció ${p.entrega}
+               \u23F0 RETRASADO \u2014 venci\xF3 ${p.entrega}
            </div>` : "";
-  const _ESTADOS_LABEL = { confirmado: "Conf.", pago: "Pago", produccion: "Prod.", envio: "Envío", salida: "Salió", retirar: "Retirar" };
+  const _ESTADOS_LABEL = { confirmado: "Conf.", pago: "Pago", produccion: "Prod.", envio: "Env\xEDo", salida: "Sali\xF3", retirar: "Retirar" };
   const _timelineHTML = p.historialEstados && p.historialEstados.length > 0 ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin:4px 0;">
             ${p.historialEstados.slice(-4).map((h) => `
                 <span style="font-size:9px;background:#f3f4f6;color:#6b7280;padding:1px 5px;border-radius:99px;">
                     ${_ESTADOS_LABEL[h.estado] || h.estado} ${h.fecha ? h.fecha.slice(5) : ""}
-                </span>`).join("→")}
+                </span>`).join("\u2192")}
            </div>` : "";
   return `<div class="kanban-card mk-kanban-card-${p.status || "confirmado"} bg-white rounded-xl p-3 shadow-sm border border-gray-100 select-none"
         data-status="${p.status || "confirmado"}"
@@ -841,27 +838,27 @@ function kanbanCardHTML(p) {
         ${_timelineHTML}
         ${_thumbHtml}
         <p class="text-xs text-gray-500 mb-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${_e(p.concepto)}</p>
-        ${p.lugarEntrega ? `<p class="text-xs mb-1 truncate" style="color:#7c3aed;">📍 ${_e(p.lugarEntrega)}</p>` : ""}
+        ${p.lugarEntrega ? `<p class="text-xs mb-1 truncate" style="color:#7c3aed;">\u{1F4CD} ${_e(p.lugarEntrega)}</p>` : ""}
         <div class="flex justify-between items-center text-xs text-gray-500 mb-1">
-            <span>📅 ${p.entrega || "—"}</span>
+            <span>\u{1F4C5} ${p.entrega || "\u2014"}</span>
             <span class="${_saldo > 0 ? "text-red-500 font-bold" : "text-green-600 font-bold"}">
-                ${_saldo > 0 ? "💰 $" + _saldo.toFixed(0) : "✅ Pagado"}
+                ${_saldo > 0 ? "\u{1F4B0} $" + _saldo.toFixed(0) : "\u2705 Pagado"}
             </span>
         </div>
         ${diff !== null ? `<div class="kanban-urgency-bar ${diff < 0 ? "urgency-overdue" : diff === 0 ? "urgency-urgent" : diff <= 2 ? "urgency-soon" : "urgency-ok"}" style="width:${diff < 0 ? 100 : Math.max(8, Math.min(100, 100 - diff / 14 * 100))}%"></div>` : ""}
         <div class="flex gap-1 mt-2 items-center" style="position:relative;">
-            <button onclick="openPedidoStatusModal('${p.id}')" class="flex-1 text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">⚡ Estado</button>
-            <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">✏️</button>
+            <button onclick="openPedidoStatusModal('${p.id}')" class="flex-1 text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">\u26A1 Estado</button>
+            <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">\u270F\uFE0F</button>
             <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
             <button onclick="abrirWhatsAppPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
-            <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-red-50 text-xs text-red-500">🗑</button>
+            <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-red-50 text-xs text-red-500">\u{1F5D1}</button>
             <div style="position:relative;">
-                <button onclick="(function(btn){var m=btn.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);})(this)" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-100 text-xs text-gray-500 font-bold" title="Más acciones">⋯</button>
+                <button onclick="(function(btn){var m=btn.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);})(this)" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-100 text-xs text-gray-500 font-bold" title="M\xE1s acciones">\u22EF</button>
                 <div style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 -4px 24px rgba(0,0,0,0.13);min-width:140px;padding:4px;">
-                    <button onclick="abrirFotoReferencia('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 rounded-lg text-gray-700">📷 Fotos ref.${(p.referenciasUrls || []).length ? " (" + (p.referenciasUrls || []).length + ")" : p.referenciaUrl ? " (1)" : ""}</button>
-                    <button onclick="duplicarPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">⧉ Duplicar</button>
-                    <button onclick="generarTicketPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 rounded-lg text-gray-700">🧾 Ticket PDF</button>
-                    <button onclick="imprimirEtiquetaPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700">🏷️ Etiqueta</button>
+                    <button onclick="abrirFotoReferencia('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 rounded-lg text-gray-700">\u{1F4F7} Fotos ref.${(p.referenciasUrls || []).length ? " (" + (p.referenciasUrls || []).length + ")" : p.referenciaUrl ? " (1)" : ""}</button>
+                    <button onclick="duplicarPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">\u29C9 Duplicar</button>
+                    <button onclick="generarTicketPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 rounded-lg text-gray-700">\u{1F9FE} Ticket PDF</button>
+                    <button onclick="imprimirEtiquetaPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700">\u{1F3F7}\uFE0F Etiqueta</button>
                 </div>
             </div>
         </div>
@@ -878,25 +875,25 @@ function _inyectarBuscadorTabla() {
   bar.style.cssText = "display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;";
   bar.innerHTML = `
         <div style="flex:1;min-width:200px;position:relative;">
-            <input id="tablaPedidosBuscar" type="text" placeholder="🔍 Buscar por cliente, folio, concepto..."
+            <input id="tablaPedidosBuscar" type="text" placeholder="\u{1F50D} Buscar por cliente, folio, concepto..."
                 style="width:100%;padding:10px 14px 10px 36px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;background:#fff;"
                 onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'"
                 oninput="_pedidosTablePage=1;renderTablaPedidos()">
-            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.4;">🔎</span>
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.4;">\u{1F50E}</span>
         </div>
         <select id="tablaFiltroPago" onchange="_pedidosTablePage=1;renderTablaPedidos()"
             style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.8rem;background:#fff;cursor:pointer;">
-            <option value="">💰 Pago: Todos</option>
-            <option value="liquidado">✅ Liquidado</option>
-            <option value="anticipo">🟡 Con anticipo</option>
-            <option value="pendiente">🔴 Pendiente</option>
+            <option value="">\u{1F4B0} Pago: Todos</option>
+            <option value="liquidado">\u2705 Liquidado</option>
+            <option value="anticipo">\u{1F7E1} Con anticipo</option>
+            <option value="pendiente">\u{1F534} Pendiente</option>
         </select>
         <select id="tablaFiltroUrgencia" onchange="_pedidosTablePage=1;renderTablaPedidos()"
             style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.8rem;background:#fff;cursor:pointer;">
-            <option value="">📅 Entrega: Todas</option>
-            <option value="hoy">🔴 Hoy</option>
-            <option value="semana">🟡 Esta semana</option>
-            <option value="vencido">⚫ Vencido</option>
+            <option value="">\u{1F4C5} Entrega: Todas</option>
+            <option value="hoy">\u{1F534} Hoy</option>
+            <option value="semana">\u{1F7E1} Esta semana</option>
+            <option value="vencido">\u26AB Vencido</option>
         </select>`;
   const firstChild = tabla.querySelector("table, .overflow-x-auto") || tabla.firstElementChild;
   if (firstChild) tabla.insertBefore(bar, firstChild);
@@ -919,7 +916,7 @@ function renderTablaPedidos() {
   const _fp = (document.getElementById("tablaFiltroPago") || {}).value || "";
   if (_fp) {
     lista = lista.filter((p) => {
-      const _r = typeof calcSaldoPendiente === "function" ? calcSaldoPendiente(p) : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
+      const _r = calcSaldoPendiente(p);
       const _a = (p.pagos || []).reduce((s, ab) => s + Number(ab.monto || 0), 0) || Number(p.anticipo || 0);
       if (_fp === "liquidado") return _r <= 0;
       if (_fp === "anticipo") return _r > 0 && _a > 0;
@@ -961,27 +958,27 @@ function renderTablaPedidos() {
   const start = (_pedidosTablePage - 1) * _PEDIDOS_PER_PAGE;
   const page = lista.slice(start, start + _PEDIDOS_PER_PAGE);
   const statusLabel = {
-    confirmado: "✅ Confirmado",
-    pago: "💰 Pago",
-    produccion: "🔧 Producción",
-    envio: "📦 Envío",
-    salida: "🚚 Salió",
-    retirar: "🏪 Retirar"
+    confirmado: "\u2705 Confirmado",
+    pago: "\u{1F4B0} Pago",
+    produccion: "\u{1F527} Producci\xF3n",
+    envio: "\u{1F4E6} Env\xEDo",
+    salida: "\u{1F69A} Sali\xF3",
+    retirar: "\u{1F3EA} Retirar"
   };
   const _et = window._esc || ((s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"));
   tbody.innerHTML = page.length === 0 ? '<tr><td colspan="10" class="text-center py-10 text-gray-400">Sin pedidos</td></tr>' : page.map((p) => {
     const _wa = p.telefono || p.whatsapp || "";
     const _fb = p.redes || p.facebook || "";
     const _dir = p.lugarEntrega || "";
-    const _r = Number(p.resta || 0), _a = Number(p.anticipo || 0);
+    const _r = calcSaldoPendiente(p), _a = Number(p.anticipo || 0);
     const _badge = _r <= 0 ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#dcfce7;color:#166534;">Liquidado</span>' : _a > 0 ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#fef9c3;color:#854d0e;">Anticipo</span>' : '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#fee2e2;color:#991b1b;">Pendiente</span>';
     const _fbUrl = _fb ? _fb.startsWith("http") ? _fb : `https://facebook.com/${_fb.replace(/^@/, "")}` : "";
     return `<tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm font-bold text-amber-600">${_et(p.folio) || "—"}</td>
+            <td class="px-4 py-3 text-sm font-bold text-amber-600">${_et(p.folio) || "\u2014"}</td>
             <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
                     ${typeof _mkAvatar === "function" ? _mkAvatar(p.cliente) : ""}
-                    <p class="text-sm font-semibold text-gray-800">${_et(p.cliente) || "—"}</p>
+                    <p class="text-sm font-semibold text-gray-800">${_et(p.cliente) || "\u2014"}</p>
                 </div>
                 <div class="flex gap-1 mt-1 flex-wrap">
                     ${_wa ? `<button onclick="abrirWhatsAppPedido('${p.id}')" title="WhatsApp: ${_et(_wa)}" style="color:#fff;background:#25D366;border:none;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;cursor:pointer;letter-spacing:.02em;">WA</button>` : ""}
@@ -989,23 +986,23 @@ function renderTablaPedidos() {
                 </div>
             </td>
             <td class="px-4 py-3 text-xs text-gray-500 max-w-[160px]">
-                <p class="truncate">${_et(p.concepto) || "—"}</p>
-                ${_dir ? `<p class="truncate mt-1" style="color:#7c3aed;">📍 ${_et(_dir)}</p>` : ""}
+                <p class="truncate">${_et(p.concepto) || "\u2014"}</p>
+                ${_dir ? `<p class="truncate mt-1" style="color:#7c3aed;">\u{1F4CD} ${_et(_dir)}</p>` : ""}
             </td>
-            <td class="px-4 py-3 text-xs text-gray-500">${_et(p.fechaPedido) || "—"}</td>
-            <td class="px-4 py-3 text-xs text-gray-500">${_et(p.entrega) || "—"}</td>
+            <td class="px-4 py-3 text-xs text-gray-500">${_et(p.fechaPedido) || "\u2014"}</td>
+            <td class="px-4 py-3 text-xs text-gray-500">${_et(p.entrega) || "\u2014"}</td>
             <td class="px-4 py-3 text-sm font-bold text-gray-800">$${Number(p.total || 0).toFixed(2)}</td>
             <td class="px-4 py-3 text-sm text-green-700">$${Number(p.anticipo || 0).toFixed(2)}</td>
             <td class="px-4 py-3 text-sm font-bold ${_r > 0 ? "text-red-600" : "text-green-600"}">$${_r.toFixed(2)}<br>${_badge}</td>
-            <td class="px-4 py-3 text-xs">${statusLabel[(p.status || "").toLowerCase()] || p.status || "—"}</td>
+            <td class="px-4 py-3 text-xs">${statusLabel[(p.status || "").toLowerCase()] || p.status || "\u2014"}</td>
             <td class="px-4 py-3">
                 <div class="flex gap-1 flex-wrap">
                     <button onclick="openPedidoStatusModal('${p.id}')" class="px-2 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600 hover:bg-amber-50">Estado</button>
-                    <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg bg-amber-50 text-xs text-amber-700">✏️</button>
+                    <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg bg-amber-50 text-xs text-amber-700">\u270F\uFE0F</button>
                     <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-green-50 text-xs text-green-700">$</button>
-                    <button onclick="exportarPedidoPDF('${p.id}')" class="px-2 py-1 rounded-lg bg-blue-50 text-xs text-blue-700" title="Descargar PDF">📄</button>
-                    <button onclick="duplicarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-purple-50 text-xs text-purple-600" title="Duplicar">⧉</button>
-                    <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-red-50 text-xs text-red-600">🗑</button>
+                    <button onclick="exportarPedidoPDF('${p.id}')" class="px-2 py-1 rounded-lg bg-blue-50 text-xs text-blue-700" title="Descargar PDF">\u{1F4C4}</button>
+                    <button onclick="duplicarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-purple-50 text-xs text-purple-600" title="Duplicar">\u29C9</button>
+                    <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-red-50 text-xs text-red-600">\u{1F5D1}</button>
                 </div>
             </td>
         </tr>`;
@@ -1022,10 +1019,10 @@ function renderTablaPedidos() {
     return;
   }
   paginador.innerHTML = `
-        <span>${totalItems} pedidos · Página ${_pedidosTablePage} de ${totalPages}</span>
+        <span>${totalItems} pedidos \xB7 P\xE1gina ${_pedidosTablePage} de ${totalPages}</span>
         <div class="flex gap-1">
-            <button onclick="_pedidosTablePage=Math.max(1,_pedidosTablePage-1);renderTablaPedidos()" ${_pedidosTablePage === 1 ? "disabled" : ""} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">‹ Anterior</button>
-            <button onclick="_pedidosTablePage=Math.min(${totalPages},_pedidosTablePage+1);renderTablaPedidos()" ${_pedidosTablePage === totalPages ? "disabled" : ""} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">Siguiente ›</button>
+            <button onclick="_pedidosTablePage=Math.max(1,_pedidosTablePage-1);renderTablaPedidos()" ${_pedidosTablePage === 1 ? "disabled" : ""} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">\u2039 Anterior</button>
+            <button onclick="_pedidosTablePage=Math.min(${totalPages},_pedidosTablePage+1);renderTablaPedidos()" ${_pedidosTablePage === totalPages ? "disabled" : ""} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">Siguiente \u203A</button>
         </div>`;
   if (typeof _mkUpdatePedidosTotals === "function") setTimeout(_mkUpdatePedidosTotals, 50);
 }
@@ -1059,8 +1056,8 @@ function renderListaProduccion() {
   if (!container) return;
   const hoy = /* @__PURE__ */ new Date();
   hoy.setHours(0, 0, 0, 0);
-  const mañana = new Date(hoy);
-  mañana.setDate(mañana.getDate() + 1);
+  const ma\u00F1ana = new Date(hoy);
+  ma\u00F1ana.setDate(ma\u00F1ana.getDate() + 1);
   const enSemana = new Date(hoy);
   enSemana.setDate(enSemana.getDate() + 7);
   let lista = [...window.pedidos || []].filter((p) => {
@@ -1077,7 +1074,7 @@ function renderListaProduccion() {
     lista = lista.filter((p) => {
       if (!p.entrega) return false;
       const d = /* @__PURE__ */ new Date(p.entrega + "T00:00:00");
-      return d.getTime() === mañana.getTime();
+      return d.getTime() === ma\u00F1ana.getTime();
     });
   } else if (_produccionFiltro === "semana") {
     lista = lista.filter((p) => {
@@ -1094,16 +1091,16 @@ function renderListaProduccion() {
     return new Date(a.entrega) - new Date(b.entrega);
   });
   if (lista.length === 0) {
-    container.innerHTML = '<div class="text-center py-10 text-gray-400"><div class="text-4xl mb-2">🎉</div><p class="text-sm">No hay pedidos para este filtro</p></div>';
+    container.innerHTML = '<div class="text-center py-10 text-gray-400"><div class="text-4xl mb-2">\u{1F389}</div><p class="text-sm">No hay pedidos para este filtro</p></div>';
     return;
   }
   const statusBadge = {
-    confirmado: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">✅ Confirmado</span>',
-    pago: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">💰 Pago</span>',
-    produccion: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">🔧 Producción</span>',
-    envio: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">📦 Envío</span>',
-    salida: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">🚚 Salió</span>',
-    retirar: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">🏪 Retirar</span>'
+    confirmado: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">\u2705 Confirmado</span>',
+    pago: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">\u{1F4B0} Pago</span>',
+    produccion: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">\u{1F527} Producci\xF3n</span>',
+    envio: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">\u{1F4E6} Env\xEDo</span>',
+    salida: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">\u{1F69A} Sali\xF3</span>',
+    retirar: '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">\u{1F3EA} Retirar</span>'
   };
   container.innerHTML = lista.map((p, idx) => {
     const entrega = p.entrega ? /* @__PURE__ */ new Date(p.entrega + "T00:00:00") : null;
@@ -1111,13 +1108,13 @@ function renderListaProduccion() {
     let urgBg = "bg-white border-gray-100", urgText = "";
     if (diff !== null && diff < 0) {
       urgBg = "bg-red-100 border-red-300";
-      urgText = '<span class="text-xs font-bold text-red-700">⛔ Vencido ' + Math.abs(diff) + "d</span>";
+      urgText = '<span class="text-xs font-bold text-red-700">\u26D4 Vencido ' + Math.abs(diff) + "d</span>";
     } else if (diff === 0) {
       urgBg = "bg-red-50 border-red-200";
-      urgText = '<span class="text-xs font-bold text-red-600 animate-pulse">🔴 ¡Hoy!</span>';
+      urgText = '<span class="text-xs font-bold text-red-600 animate-pulse">\u{1F534} \xA1Hoy!</span>';
     } else if (diff !== null && diff <= 2) {
       urgBg = "bg-amber-50 border-amber-200";
-      urgText = `<span class="text-xs font-semibold text-amber-600">🟡 ${diff === 1 ? "Mañana" : diff + " días"}</span>`;
+      urgText = `<span class="text-xs font-semibold text-amber-600">\u{1F7E1} ${diff === 1 ? "Ma\xF1ana" : diff + " d\xEDas"}</span>`;
     }
     const prods = p.productosInventario && p.productosInventario.length > 0 ? p.productosInventario.map((i) => {
       const _escProd = window._esc || ((s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"));
@@ -1127,49 +1124,49 @@ function renderListaProduccion() {
         const t = i.variante.slice(0, p2).trim(), val = i.variante.slice(p2 + 1).trim();
         return t + ": " + (typeof _mkColorDot === "function" ? _mkColorDot(t, val) : val);
       })())})</span>` : "";
-      return `<span class="inline-block px-2 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-xs mr-1 mb-1">${i.name || i.nombre}${varLabel} ×${i.quantity || 1}</span>`;
+      return `<span class="inline-block px-2 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-xs mr-1 mb-1">${i.name || i.nombre}${varLabel} \xD7${i.quantity || 1}</span>`;
     }).join("") : "";
-    const ganancia = p.costoMateriales > 0 ? `<span class="text-xs text-green-600 font-semibold ml-2">💰 Ganancia: $${(p.total - p.costoMateriales).toFixed(2)}</span>` : "";
+    const ganancia = p.costoMateriales > 0 ? `<span class="text-xs text-green-600 font-semibold ml-2">\u{1F4B0} Ganancia: $${(p.total - p.costoMateriales).toFixed(2)}</span>` : "";
     const _escP = window._esc || ((s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"));
     return `<div class="${urgBg} border rounded-xl p-4 flex gap-4 items-start">
             <div class="text-xl font-bold text-gray-300 w-8 text-center flex-shrink-0">${idx + 1}</div>
             <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-2 mb-1">
-                    <span class="text-xs font-bold text-amber-600">${p.folio || "—"}</span>
+                    <span class="text-xs font-bold text-amber-600">${p.folio || "\u2014"}</span>
                     ${statusBadge[p.status] || ""}
                     ${urgText}
                 </div>
-                <p class="font-bold text-gray-800">${_escP(p.cliente) || "—"}</p>
-                <p class="text-sm text-gray-600 mb-1">${_escP(p.concepto) || "—"}</p>
+                <p class="font-bold text-gray-800">${_escP(p.cliente) || "\u2014"}</p>
+                <p class="text-sm text-gray-600 mb-1">${_escP(p.concepto) || "\u2014"}</p>
                 ${prods ? `<div class="mb-1">${prods}</div>` : ""}
                 <div class="flex flex-wrap gap-3 text-xs text-gray-500">
-                    <span>📅 Entrega: <strong>${p.entrega || "—"}</strong></span>
-                    <span>💵 Total: <strong>$${Number(p.total || 0).toFixed(2)}</strong></span>
-                    ${(typeof calcSaldoPendiente === "function" ? calcSaldoPendiente(p) : Number(p.resta || 0)) > 0 ? `<span class="text-red-500 font-bold">⚠️ Resta: $${(typeof calcSaldoPendiente === "function" ? calcSaldoPendiente(p) : Number(p.resta || 0)).toFixed(2)}</span>` : '<span class="text-green-600 font-bold">✅ Pagado</span>'}
+                    <span>\u{1F4C5} Entrega: <strong>${p.entrega || "\u2014"}</strong></span>
+                    <span>\u{1F4B5} Total: <strong>$${Number(p.total || 0).toFixed(2)}</strong></span>
+                    ${calcSaldoPendiente(p) > 0 ? `<span class="text-red-500 font-bold">\u26A0\uFE0F Resta: $${calcSaldoPendiente(p).toFixed(2)}</span>` : '<span class="text-green-600 font-bold">\u2705 Pagado</span>'}
                     ${ganancia}
                 </div>
-                ${p.lugarEntrega ? `<p class="text-xs mt-1" style="color:#7c3aed;">📍 ${_escP(p.lugarEntrega)}</p>` : ""}
-                ${p.notas ? `<p class="text-xs text-gray-400 mt-1 italic">📝 ${_escP(p.notas)}</p>` : ""}
+                ${p.lugarEntrega ? `<p class="text-xs mt-1" style="color:#7c3aed;">\u{1F4CD} ${_escP(p.lugarEntrega)}</p>` : ""}
+                ${p.notas ? `<p class="text-xs text-gray-400 mt-1 italic">\u{1F4DD} ${_escP(p.notas)}</p>` : ""}
             </div>
             <div class="flex flex-col gap-1 flex-shrink-0">
-                <button onclick="openPedidoStatusModal('${p.id}')" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50">⚡</button>
+                <button onclick="openPedidoStatusModal('${p.id}')" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50">\u26A1</button>
                 <button onclick="abrirWhatsAppPedido('${p.id}')" class="px-3 py-1.5 rounded-lg border border-gray-200 text-xs hover:bg-green-50" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
             </div>
         </div>`;
   }).join("");
   const label = document.getElementById("produccionFechaLabel");
-  if (label) label.textContent = `${lista.length} pedido${lista.length !== 1 ? "s" : ""} activo${lista.length !== 1 ? "s" : ""} · ${(/* @__PURE__ */ new Date()).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })}`;
+  if (label) label.textContent = `${lista.length} pedido${lista.length !== 1 ? "s" : ""} activo${lista.length !== 1 ? "s" : ""} \xB7 ${(/* @__PURE__ */ new Date()).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" })}`;
 }
 function imprimirListaProduccion() {
   const content = document.getElementById("listaProduccionContent")?.innerHTML || "";
   const storeName = document.querySelector(".sidebar-store-name")?.textContent || "Maneki Store";
   const win = window.open("", "_blank");
   win.document.write(`<!DOCTYPE html><html><head>
-        <meta charset="UTF-8"><title>Lista de Producción</title>
+        <meta charset="UTF-8"><title>Lista de Producci\xF3n</title>
         <style>body{font-family:sans-serif;padding:2rem;} h1{color:#7c3aed;} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#C5A572;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#4B5563;} .meta{font-size:12px;color:#6B7280;margin-top:4px;} @media print{body{padding:0.5rem;}}</style>
     </head><body>
-        <h1>🔨 Lista de Producción</h1>
-        <p style="color:#6B7280;font-size:13px;">${storeName} · ${(/* @__PURE__ */ new Date()).toLocaleDateString("es-MX", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+        <h1>\u{1F528} Lista de Producci\xF3n</h1>
+        <p style="color:#6B7280;font-size:13px;">${storeName} \xB7 ${(/* @__PURE__ */ new Date()).toLocaleDateString("es-MX", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
         <hr style="margin:1rem 0;">
         ${content}
     </body></html>`);
@@ -1216,8 +1213,8 @@ function eliminarPedido(id) {
     manekiToastExport("Pedido eliminado.", "ok");
   };
   if (tieneInventario) {
-    showConfirm("El inventario fue descontado para este pedido.\n¿Regresar productos y materia prima al inventario?", "📦 Regresar inventario").then((regresarInv) => {
-      showConfirm("¿Eliminar este pedido? Esta acción no se puede deshacer.", "🗑 Eliminar").then((ok) => {
+    showConfirm("El inventario fue descontado para este pedido.\n\xBFRegresar productos y materia prima al inventario?", "\u{1F4E6} Regresar inventario").then((regresarInv) => {
+      showConfirm("\xBFEliminar este pedido? Esta acci\xF3n no se puede deshacer.", "\u{1F5D1} Eliminar").then((ok) => {
         if (!ok) return;
         _ejecutarEliminar(regresarInv);
       });
@@ -1226,8 +1223,8 @@ function eliminarPedido(id) {
     const _pagado = (pedido.pagos || []).reduce((s, ab) => s + Number(ab.monto || 0), 0);
     const _msgExtra = _pagado > 0 ? `
 
-⚠️ Este pedido tiene $${_pagado.toFixed(2)} en pagos registrados que también se eliminarán.` : "";
-    showConfirm("¿Eliminar este pedido? Esta acción no se puede deshacer." + _msgExtra, "🗑 Eliminar").then((ok) => {
+\u26A0\uFE0F Este pedido tiene $${_pagado.toFixed(2)} en pagos registrados que tambi\xE9n se eliminar\xE1n.` : "";
+    showConfirm("\xBFEliminar este pedido? Esta acci\xF3n no se puede deshacer." + _msgExtra, "\u{1F5D1} Eliminar").then((ok) => {
       if (!ok) return;
       _ejecutarEliminar(false);
     });
@@ -1247,22 +1244,22 @@ function abrirFotoReferencia(id) {
   if (!p) return;
   const { urls } = _fotosArray(p);
   const folioEl = document.getElementById("fotoRefFolio");
-  if (folioEl) folioEl.textContent = `${p.folio || id} · ${urls.length}/${_FOTO_MAX} fotos`;
+  if (folioEl) folioEl.textContent = `${p.folio || id} \xB7 ${urls.length}/${_FOTO_MAX} fotos`;
   const content = document.getElementById("fotoRefContent");
   if (!content) return;
   if (!urls.length) {
     content.innerHTML = `<div onclick="document.getElementById('fotoRefInput').click()" style="border:2px dashed #d1d5db;border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='#C5A572'" onmouseout="this.style.borderColor='#d1d5db'">
-            <p style="font-size:2.2rem;">📷</p>
+            <p style="font-size:2.2rem;">\u{1F4F7}</p>
             <p style="font-size:.85rem;color:#6b7280;margin-top:8px;font-weight:600;">Toca para subir fotos de referencia</p>
-            <p style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Hasta ${_FOTO_MAX} fotos · JPG, PNG, WEBP · máx 5 MB c/u</p>
+            <p style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Hasta ${_FOTO_MAX} fotos \xB7 JPG, PNG, WEBP \xB7 m\xE1x 5 MB c/u</p>
         </div>`;
   } else {
     let grid = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px;">';
     urls.forEach((url, i) => {
       grid += `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#f3f4f6;cursor:pointer;" onclick="window.open('${url}','_blank')">
                 <img src="${url}" style="width:100%;height:100%;object-fit:cover;">
-                <button onclick="event.stopPropagation();eliminarFotoReferencia('${id}',${i})" style="position:absolute;top:3px;right:3px;background:rgba(220,38,38,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;">✕</button>
-                <button onclick="event.stopPropagation();descargarFotoReferencia('${id}',${i})" style="position:absolute;bottom:3px;right:3px;background:rgba(59,130,246,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;">⬇</button>
+                <button onclick="event.stopPropagation();eliminarFotoReferencia('${id}',${i})" style="position:absolute;top:3px;right:3px;background:rgba(220,38,38,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;">\u2715</button>
+                <button onclick="event.stopPropagation();descargarFotoReferencia('${id}',${i})" style="position:absolute;bottom:3px;right:3px;background:rgba(59,130,246,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;">\u2B07</button>
             </div>`;
     });
     if (urls.length < _FOTO_MAX) {
@@ -1285,7 +1282,7 @@ async function subirFotoReferencia() {
   const { urls: urlsActuales, paths: pathsActuales } = _fotosArray(p);
   const disponibles = _FOTO_MAX - urlsActuales.length;
   if (disponibles <= 0) {
-    manekiToastExport(`Ya tienes el máximo de ${_FOTO_MAX} fotos.`, "warn");
+    manekiToastExport(`Ya tienes el m\xE1ximo de ${_FOTO_MAX} fotos.`, "warn");
     input.value = "";
     return;
   }
@@ -1294,7 +1291,7 @@ async function subirFotoReferencia() {
   const filesFiltrados = [];
   for (const file of _filesRaw) {
     if (file.size > 5 * 1024 * 1024) {
-      manekiToastExport(`"${file.name}" supera 5 MB — omitida.`, "warn");
+      manekiToastExport(`"${file.name}" supera 5 MB \u2014 omitida.`, "warn");
     } else {
       filesFiltrados.push(file);
     }
@@ -1315,7 +1312,7 @@ async function subirFotoReferencia() {
       nuevasPaths.push(path);
     } catch (e) {
       console.error("[Foto] Error completo:", e);
-      manekiToastExport(`❌ Error: ${e.message || JSON.stringify(e)}`, "warn");
+      manekiToastExport(`\u274C Error: ${e.message || JSON.stringify(e)}`, "warn");
     }
   }
   if (idx !== -1) {
@@ -1325,7 +1322,7 @@ async function subirFotoReferencia() {
     delete window.pedidos[idx].referenciaPath;
     savePedidos();
   }
-  manekiToastExport("✅ Foto(s) subidas correctamente.", "ok");
+  manekiToastExport("\u2705 Foto(s) subidas correctamente.", "ok");
   abrirFotoReferencia(p.id);
 }
 window.subirFotoReferencia = subirFotoReferencia;
@@ -1348,14 +1345,14 @@ async function descargarFotoReferencia(id, fotoIdx = 0) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch (e) {
-    manekiToastExport("❌ Error al descargar.", "warn");
+    manekiToastExport("\u274C Error al descargar.", "warn");
   }
 }
 window.descargarFotoReferencia = descargarFotoReferencia;
 async function eliminarFotoReferencia(id, fotoIdx) {
   const p = (window.pedidos || []).find((x) => String(x.id) === String(id));
   if (!p) return;
-  showConfirm("¿Eliminar esta foto?", "🗑 Eliminar").then(async (ok) => {
+  showConfirm("\xBFEliminar esta foto?", "\u{1F5D1} Eliminar").then(async (ok) => {
     if (!ok) return;
     const { urls, paths } = _fotosArray(p);
     const path = paths[fotoIdx];

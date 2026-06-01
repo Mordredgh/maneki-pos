@@ -369,7 +369,7 @@ function duplicarPedido(id) {
     const original = (window.pedidos || []).find(p => String(p.id) === String(id))
                   || (window.pedidosFinalizados || []).find(p => String(p.id) === String(id));
     if (!original) return;
-    const nuevoId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + Math.random());
+    const nuevoId = mkId();
     const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
     const copia = {
         ...original,
@@ -1018,8 +1018,8 @@ function generarTicketPedido(id) {
         + '<hr class="divider">'
         + '<div class="total-final"><span>Total del pedido</span><span>$'+Number(p.total||0).toFixed(2)+'</span></div>'
         + '<div class="total-row"><span>Anticipo recibido</span><span style="color:#16a34a;font-weight:700;">— $'+Number(p.anticipo||0).toFixed(2)+'</span></div>'
-        + (Number(p.resta||0) > 0
-            ? '<div class="saldo-row"><span>💰 Saldo pendiente</span><span>$'+Number(p.resta||0).toFixed(2)+'</span></div>'
+        + (calcSaldoPendiente(p) > 0
+            ? '<div class="saldo-row"><span>💰 Saldo pendiente</span><span>$'+calcSaldoPendiente(p).toFixed(2)+'</span></div>'
             : '<div class="pagado-row"><span>✅ Liquidado</span><span>$0.00</span></div>')
         + (p.notas ? '<div class="notas"><b>Notas:</b> '+_e(p.notas)+'</div>' : '')
         + '<hr class="divider">'
@@ -1098,7 +1098,7 @@ function renderCalendarioPedidos() {
         const items  = porFecha[fecha] || [];
         celdas += '<div style="min-height:80px;border:1px solid #f3f4f6;border-radius:10px;padding:6px;background:'+(esHoy?'#fef9f0':'#fff')+';'+(esHoy?'border-color:#C5A572;border-width:2px;':'')+';">'
             + '<div style="font-size:.75rem;font-weight:'+(esHoy?'800':'600')+';color:'+(esHoy?'#92400e':'#374151')+';margin-bottom:3px;">'+d+(esHoy?' 📍':'')+'</div>'
-            + items.slice(0,3).map(p => {var _e=typeof _esc==='function'?_esc:function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};return '<div onclick="openPedidoModal(\''+p.id+'\')" style="font-size:.65rem;background:'+(Number(p.resta||0)>0?'#fef2f2':'#f0fdf4')+';color:'+(Number(p.resta||0)>0?'#991b1b':'#166534')+';border-radius:4px;padding:2px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+_e(p.cliente)+' — '+_e(p.concepto)+'">'+_e(p.folio)+' '+_e(p.cliente)+'</div>';}).join('')
+            + items.slice(0,3).map(p => {var _e=typeof _esc==='function'?_esc:function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};return '<div onclick="openPedidoModal(\''+p.id+'\')" style="font-size:.65rem;background:'+(calcSaldoPendiente(p)>0?'#fef2f2':'#f0fdf4')+';color:'+(calcSaldoPendiente(p)>0?'#991b1b':'#166534')+';border-radius:4px;padding:2px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+_e(p.cliente)+' — '+_e(p.concepto)+'">'+_e(p.folio)+' '+_e(p.cliente)+'</div>';}).join('')
             + (items.length > 3 ? '<div style="font-size:.6rem;color:#9ca3af;text-align:center;">+'+(items.length-3)+' más</div>' : '')
             + '</div>';
     }
@@ -1143,7 +1143,7 @@ function checkAlertasCobro() {
 
     // Pedidos con saldo pendiente y entrega vencida o proxima (<=5 dias)
     const pendientes = pedidos.filter(p => {
-        const _saldoAlert = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - (p.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0));
+        const _saldoAlert = calcSaldoPendiente(p);
         if (_saldoAlert <= 0) return false;
         if (!p.entrega) return false;
         const fe = new Date(p.entrega + 'T00:00:00');
@@ -1170,7 +1170,7 @@ function checkAlertasCobro() {
 
     const _e = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;'));
     lista.innerHTML = pendientes.map(p => {
-        const _saldoAlert = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - (p.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0));
+        const _saldoAlert = calcSaldoPendiente(p);
         const fe = new Date(p.entrega + 'T00:00:00');
         const diff = Math.round((fe - hoy) / 86400000);
         let etiquetaDiff = '';
@@ -1227,7 +1227,7 @@ function imprimirEtiquetaPedido(id) {
 
     const total     = Number(p.total    || 0).toFixed(2);
     const anticipo  = Number(p.anticipo || 0).toFixed(2);
-    const resta     = Math.max(0, Number(p.resta || 0)).toFixed(2);
+    const resta     = calcSaldoPendiente(p).toFixed(2);
     // FIX-6: usar _fechaHoy() para evitar UTC shift; reformatear a dd/mm/yyyy para mostrar
     const _hoyISO = typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
     const fechaImpresion = _hoyISO.split('-').reverse().join('/');

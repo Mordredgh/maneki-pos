@@ -14,18 +14,18 @@ function saveRoiConfig() {
   const pct = parseFloat(document.getElementById("roiPorcentajeGlobal").value) || 10;
   roiConfig.porcentaje = Math.min(100, Math.max(1, pct));
   sbSave("roiConfig", roiConfig);
-  manekiToastExport("✅ Porcentaje ROI guardado: " + roiConfig.porcentaje + "%", "ok");
+  manekiToastExport("\u2705 Porcentaje ROI guardado: " + roiConfig.porcentaje + "%", "ok");
 }
 function openEquipoModal(id) {
   const modal = document.getElementById("equipoModal");
   document.getElementById("equipoEditId").value = "";
   document.getElementById("equipoNombre").value = "";
-  document.getElementById("equipoEmoji").value = "🔧";
+  document.getElementById("equipoEmoji").value = "\u{1F527}";
   document.getElementById("equipoCostoOriginal").value = "";
   document.getElementById("equipoMetaReemplazo").value = "";
   document.getElementById("equipoModalTitle").textContent = "Agregar Equipo";
   const display = document.getElementById("equipoEmojiDisplay");
-  if (display) display.textContent = "🔧";
+  if (display) display.textContent = "\u{1F527}";
   const search = document.getElementById("equipoEmojiSearch");
   if (search) search.value = "";
   _ensureMetaMensualField();
@@ -36,8 +36,8 @@ function openEquipoModal(id) {
     if (eq) {
       document.getElementById("equipoEditId").value = eq.id;
       document.getElementById("equipoNombre").value = eq.nombre;
-      document.getElementById("equipoEmoji").value = eq.emoji || "🔧";
-      if (display) display.textContent = eq.emoji || "🔧";
+      document.getElementById("equipoEmoji").value = eq.emoji || "\u{1F527}";
+      if (display) display.textContent = eq.emoji || "\u{1F527}";
       document.getElementById("equipoCostoOriginal").value = eq.costoOriginal;
       document.getElementById("equipoMetaReemplazo").value = eq.metaReemplazo;
       if (metaMensualInput) metaMensualInput.value = eq.metaMensual || "";
@@ -56,7 +56,7 @@ function _ensureMetaMensualField() {
   div.innerHTML = `<label class="block text-sm font-semibold text-gray-600 mb-1" for="equipoMetaMensual">Meta mensual ($)</label>
         <input type="number" id="equipoMetaMensual" placeholder="Ej: 5000" min="0"
                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-400 focus:outline-none">
-        <p class="text-xs text-gray-400 mt-1">Cuánto quieres recuperar por mes con este equipo</p>`;
+        <p class="text-xs text-gray-400 mt-1">Cu\xE1nto quieres recuperar por mes con este equipo</p>`;
   gridCols.insertAdjacentElement("afterend", div);
 }
 function closeEquipoModal() {
@@ -64,16 +64,16 @@ function closeEquipoModal() {
 }
 function saveEquipo() {
   const nombre = document.getElementById("equipoNombre").value.trim();
-  const emoji = document.getElementById("equipoEmoji").value.trim() || "🔧";
+  const emoji = document.getElementById("equipoEmoji").value.trim() || "\u{1F527}";
   const costoOriginal = parseFloat(document.getElementById("equipoCostoOriginal").value) || 0;
   const metaReemplazo = parseFloat(document.getElementById("equipoMetaReemplazo").value) || costoOriginal;
   const metaMensual = parseFloat(document.getElementById("equipoMetaMensual")?.value) || 0;
   if (!nombre) {
-    manekiToastExport("⚠️ Ingresa el nombre del equipo", "warn");
+    manekiToastExport("\u26A0\uFE0F Ingresa el nombre del equipo", "warn");
     return;
   }
   if (!costoOriginal) {
-    manekiToastExport("⚠️ Ingresa el costo original del equipo", "warn");
+    manekiToastExport("\u26A0\uFE0F Ingresa el costo original del equipo", "warn");
     return;
   }
   const editId = document.getElementById("equipoEditId").value;
@@ -91,7 +91,7 @@ function saveEquipo() {
         // FIX-9: preservar historial existente
       };
     }
-    manekiToastExport("✅ Equipo actualizado", "ok");
+    manekiToastExport("\u2705 Equipo actualizado", "ok");
   } else {
     equipos.push({
       id: mkId(),
@@ -104,14 +104,14 @@ function saveEquipo() {
       historialPagos: []
       // MEJ-5: historial de pagos
     });
-    manekiToastExport("✅ Equipo agregado", "ok");
+    manekiToastExport("\u2705 Equipo agregado", "ok");
   }
   saveEquipos();
   closeEquipoModal();
   renderEquiposGrid();
 }
 function deleteEquipo(id) {
-  showConfirm("¿Eliminar este equipo? Se perderá su historial de ROI.", "🗑️ Eliminar equipo").then((ok) => {
+  showConfirm("\xBFEliminar este equipo? Se perder\xE1 su historial de ROI.", "\u{1F5D1}\uFE0F Eliminar equipo").then((ok) => {
     if (!ok) return;
     equipos = equipos.filter((e) => e.id !== id);
     roiHistorial = roiHistorial.filter((h) => !h.equiposIds.includes(id));
@@ -119,7 +119,7 @@ function deleteEquipo(id) {
     saveRoiHistorial();
     renderEquiposGrid();
     renderRoiHistorial();
-    manekiToastExport("🗑️ Equipo eliminado", "ok");
+    manekiToastExport("\u{1F5D1}\uFE0F Equipo eliminado", "ok");
   });
 }
 function renderEquiposGrid() {
@@ -128,7 +128,7 @@ function renderEquiposGrid() {
   if (equipos.length === 0) {
     grid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400">
             <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
-            <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
+            <p class="text-lg font-medium">A\xFAn no tienes equipos registrados</p>
             <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
             <button onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5A572;">+ Agregar equipo</button>
         </div>`;
@@ -158,7 +158,7 @@ function renderEquiposGrid() {
             <!-- MEJ-4: Meta mensual -->
             <div class="mb-3" style="padding-top:8px;border-top:1px solid #f3f4f6;">
                 <div class="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>📅 Meta mensual</span>
+                    <span>\u{1F4C5} Meta mensual</span>
                     <span class="font-semibold" style="color:${barColorMensual}">${pctDisplay.toFixed(1)}%</span>
                 </div>
                 <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
@@ -168,7 +168,7 @@ function renderEquiposGrid() {
             </div>`;
     }
     const ultimos5 = [...eq.historialPagos || []].reverse().slice(0, 5);
-    const pagosHTML = ultimos5.length === 0 ? '<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px 0;">Sin pagos registrados aún</p>' : ultimos5.map((h) => `
+    const pagosHTML = ultimos5.length === 0 ? '<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px 0;">Sin pagos registrados a\xFAn</p>' : ultimos5.map((h) => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f9fafb;font-size:.72rem;">
                     <div>
                         <span style="color:#374151;font-weight:600;">$${Number(h.monto || 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
@@ -179,10 +179,10 @@ function renderEquiposGrid() {
     return `<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center gap-3">
-                    <span class="text-3xl">${_esc(eq.emoji || "🔧")}</span>
+                    <span class="text-3xl">${_esc(eq.emoji || "\u{1F527}")}</span>
                     <div>
                         <h4 class="font-bold text-gray-800 text-lg leading-tight">${_esc(eq.nombre)}</h4>
-                        <p class="text-xs text-gray-400">Inversión: $${eq.costoOriginal.toLocaleString("es-MX")}</p>
+                        <p class="text-xs text-gray-400">Inversi\xF3n: $${eq.costoOriginal.toLocaleString("es-MX")}</p>
                     </div>
                 </div>
                 <div class="flex gap-1">
@@ -191,10 +191,10 @@ function renderEquiposGrid() {
                 </div>
             </div>
 
-            <!-- Recuperado de inversión -->
+            <!-- Recuperado de inversi\xF3n -->
             <div class="mb-3">
                 <div class="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>💰 Recuperado de inversión</span>
+                    <span>\u{1F4B0} Recuperado de inversi\xF3n</span>
                     <span class="font-semibold" style="color:${barColorInv}">${pctRecuperado.toFixed(1)}%</span>
                 </div>
                 <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
@@ -202,29 +202,29 @@ function renderEquiposGrid() {
                 </div>
                 <div class="flex justify-between text-xs mt-1">
                     <span class="text-green-600 font-medium">$${eq.recuperado.toLocaleString("es-MX")} ahorrado</span>
-                    <span class="text-red-400">${faltaInversion > 0 ? "Falta $" + faltaInversion.toLocaleString("es-MX") : "✅ ¡Inversión recuperada!"}</span>
+                    <span class="text-red-400">${faltaInversion > 0 ? "Falta $" + faltaInversion.toLocaleString("es-MX") : "\u2705 \xA1Inversi\xF3n recuperada!"}</span>
                 </div>
             </div>
 
             <!-- Meta de reemplazo -->
             <div class="mb-1">
                 <div class="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>🆕 Meta reemplazo ($${eq.metaReemplazo.toLocaleString("es-MX")})</span>
+                    <span>\u{1F195} Meta reemplazo ($${eq.metaReemplazo.toLocaleString("es-MX")})</span>
                     <span class="font-semibold" style="color:${barColorMeta}">${pctMeta.toFixed(1)}%</span>
                 </div>
                 <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <div class="h-full rounded-full transition-all duration-500" style="width:${pctMeta}%;background:${barColorMeta};"></div>
                 </div>
-                <p class="text-xs mt-1 text-right" style="color:${barColorMeta}">${faltaMeta > 0 ? "Falta $" + faltaMeta.toLocaleString("es-MX") + " para equipo nuevo" : "✅ ¡Ya puedes comprar equipo nuevo!"}</p>
+                <p class="text-xs mt-1 text-right" style="color:${barColorMeta}">${faltaMeta > 0 ? "Falta $" + faltaMeta.toLocaleString("es-MX") + " para equipo nuevo" : "\u2705 \xA1Ya puedes comprar equipo nuevo!"}</p>
             </div>
 
             ${metaMensualHTML}
 
-            <!-- MEJ-5: botón Ver pagos + historial -->
+            <!-- MEJ-5: bot\xF3n Ver pagos + historial -->
             <div style="margin-top:10px;border-top:1px solid #f3f4f6;padding-top:8px;">
                 <button onclick="_togglePagosEquipo('${eq.id}')"
                         style="font-size:.72rem;color:#6b7280;background:none;border:1px solid #e5e7eb;border-radius:8px;padding:3px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                    📋 Ver pagos <span id="pagosCount_${eq.id}" style="background:#f3f4f6;border-radius:99px;padding:1px 6px;">${eq.historialPagos.length}</span>
+                    \u{1F4CB} Ver pagos <span id="pagosCount_${eq.id}" style="background:#f3f4f6;border-radius:99px;padding:1px 6px;">${eq.historialPagos.length}</span>
                 </button>
                 <div id="pagosHistorial_${eq.id}" style="display:none;margin-top:8px;">${pagosHTML}</div>
             </div>
@@ -261,17 +261,17 @@ function renderRoiHistorial() {
   const tbody = document.getElementById("roiHistorialBody");
   if (!tbody) return;
   if (roiHistorial.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5"><div class="mk-empty" style="padding:36px 24px;"><div class="mk-empty-icon">⚖️</div><p class="mk-empty-title">Sin movimientos aún</p><p class="mk-empty-sub">Registra ingresos o gastos para ver tu balance aquí.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5"><div class="mk-empty" style="padding:36px 24px;"><div class="mk-empty-icon">\u2696\uFE0F</div><p class="mk-empty-title">Sin movimientos a\xFAn</p><p class="mk-empty-sub">Registra ingresos o gastos para ver tu balance aqu\xED.</p></div></td></tr>`;
     return;
   }
   const sorted = [...roiHistorial].reverse();
   tbody.innerHTML = sorted.map((h) => {
     const nombres = h.equiposIds.map((id) => {
       const eq = equipos.find((e) => e.id === id);
-      return eq ? `${_esc(eq.emoji || "🔧")} ${_esc(eq.nombre)}` : "(equipo eliminado)";
+      return eq ? `${_esc(eq.emoji || "\u{1F527}")} ${_esc(eq.nombre)}` : "(equipo eliminado)";
     }).join(", ");
     const fechaStr = h.fecha ? `<div class="text-xs text-gray-400">${h.fecha}</div>` : "";
-    const folioLabel = h.folio === "__manual__" ? `<span class="text-xs text-gray-500 italic">${_esc(h.concepto || "Manual")}</span>` : `<span class="font-semibold text-amber-700">${_esc(h.folio || "—")}</span>`;
+    const folioLabel = h.folio === "__manual__" ? `<span class="text-xs text-gray-500 italic">${_esc(h.concepto || "Manual")}</span>` : `<span class="font-semibold text-amber-700">${_esc(h.folio || "\u2014")}</span>`;
     return `<tr class="border-b border-gray-50 hover:bg-gray-50">
             <td class="px-4 py-3">${folioLabel}${fechaStr}</td>
             <td class="px-4 py-3 text-gray-600 text-xs">${nombres}</td>
@@ -293,7 +293,7 @@ function abrirRoiEquiposModal(pedido) {
   lista.innerHTML = equipos.map((eq) => `
         <label class="flex items-center gap-3 p-3 rounded-xl border-2 border-gray-200 hover:border-amber-300 cursor-pointer transition-all" id="roiEqLabel_${eq.id}">
             <input type="checkbox" value="${eq.id}" class="roi-equipo-check w-4 h-4 accent-amber-500" onchange="actualizarCalculoRoi()">
-            <span class="text-xl">${_esc(eq.emoji || "🔧")}</span>
+            <span class="text-xl">${_esc(eq.emoji || "\u{1F527}")}</span>
             <span class="font-medium text-gray-700">${_esc(eq.nombre)}</span>
         </label>
     `).join("");
@@ -371,7 +371,7 @@ function actualizarCalculoRoi() {
 function confirmarRoiEquipos() {
   const checks = Array.from(document.querySelectorAll(".roi-equipo-check:checked"));
   if (checks.length === 0) {
-    manekiToastExport("⚠️ Selecciona al menos un equipo", "warn");
+    manekiToastExport("\u26A0\uFE0F Selecciona al menos un equipo", "warn");
     return;
   }
   const pedido = _roiPedidoData;
@@ -404,7 +404,7 @@ function confirmarRoiEquipos() {
   cerrarRoiEquiposModal();
   renderEquiposGrid();
   renderRoiHistorial();
-  manekiToastExport(`💰 ROI registrado: $${porEquipo.toLocaleString("es-MX", { minimumFractionDigits: 2 })} por equipo`, "ok");
+  manekiToastExport(`\u{1F4B0} ROI registrado: $${porEquipo.toLocaleString("es-MX", { minimumFractionDigits: 2 })} por equipo`, "ok");
 }
 function abrirRoiManualModal() {
   const lista = document.getElementById("roiManualEquiposLista");
@@ -412,7 +412,7 @@ function abrirRoiManualModal() {
     lista.innerHTML = equipos.map((eq) => `
             <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-amber-50" style="border-color:#e5e7eb;">
                 <input type="checkbox" class="roi-manual-check" value="${eq.id}" onchange="calcRoiManual()" style="accent-color:#C5A572;">
-                <span class="text-lg">${eq.emoji || "🔧"}</span>
+                <span class="text-lg">${eq.emoji || "\u{1F527}"}</span>
                 <span class="text-sm font-semibold text-gray-700">${_esc(eq.nombre)}</span>
             </label>`).join("");
   }
@@ -453,15 +453,15 @@ function confirmarRoiManual() {
   const ganancia = parseFloat(document.getElementById("roiManualGanancia")?.value) || 0;
   const checks = Array.from(document.querySelectorAll(".roi-manual-check:checked"));
   if (!concepto) {
-    manekiToastExport("⚠️ Ingresa un concepto", "warn");
+    manekiToastExport("\u26A0\uFE0F Ingresa un concepto", "warn");
     return;
   }
   if (!ganancia) {
-    manekiToastExport("⚠️ Ingresa el monto de ganancia", "warn");
+    manekiToastExport("\u26A0\uFE0F Ingresa el monto de ganancia", "warn");
     return;
   }
   if (checks.length === 0) {
-    manekiToastExport("⚠️ Selecciona al menos un equipo", "warn");
+    manekiToastExport("\u26A0\uFE0F Selecciona al menos un equipo", "warn");
     return;
   }
   const totalRoi = ganancia * (roiConfig.porcentaje / 100);
@@ -492,7 +492,7 @@ function confirmarRoiManual() {
   cerrarRoiManualModal();
   renderEquiposGrid();
   renderRoiHistorial();
-  manekiToastExport(`💰 ROI manual registrado: $${porEquipo.toLocaleString("es-MX", { minimumFractionDigits: 2 })} por equipo`, "ok");
+  manekiToastExport(`\u{1F4B0} ROI manual registrado: $${porEquipo.toLocaleString("es-MX", { minimumFractionDigits: 2 })} por equipo`, "ok");
 }
 let notas = [];
 function agregarNota() {
@@ -543,7 +543,7 @@ function renderNotas() {
             </button>
             <div class="flex-1 min-w-0">
                 <p class="text-sm text-gray-800 ${nota.done ? "line-through text-gray-400" : ""}">${_esc(nota.texto)}</p>
-                <p class="text-xs text-gray-400 mt-0.5">${nota.fecha} · ${nota.hora}</p>
+                <p class="text-xs text-gray-400 mt-0.5">${nota.fecha} \xB7 ${nota.hora}</p>
             </div>
             <button onclick="eliminarNota('${nota.id}')"
                     class="text-gray-300 hover:text-red-400 transition-all flex-shrink-0">

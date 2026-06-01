@@ -273,7 +273,7 @@ function procesarGastosRecurrentes() {
             const diaValido = Math.min(gr.dia || 1, ultimoDia);
             const fecha = `${mesActual}-${String(diaValido).padStart(2,'0')}`;
             expenses.push({
-                id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + '-' + Math.random().toString(36).slice(2)), // BUG-011 FIX: evitar ID número flotante
+                id: mkId(), // BUG-011 FIX: evitar ID número flotante
                 concept: gr.concept,
                 concepto: gr.concept,
                 amount: gr.amount,
@@ -778,7 +778,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
 
     // ── MODO CREAR ──
     const newItem = {
-        id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        id: mkId(),
         concept: concept,
         concepto: concept,
         amount: amount,
@@ -904,7 +904,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
                     const diaValido = Math.min(ir.dia || 1, ultimoDia);
                     const fecha = `${mesActual}-${String(diaValido).padStart(2,'0')}`;
                     incomes.push({
-                        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + '-' + Math.random().toString(36).slice(2)),
+                        id: mkId(),
                         concept: ir.concept,
                         concepto: ir.concept,
                         amount: ir.amount,
@@ -1065,7 +1065,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
                     // FIX #10: concepto descriptivo con nombre del cliente
                     const concept = `Cobro realizado: ${rec.client || rec.concept || 'CxC #' + id}`;
                     receivables.splice(index, 1);
-                    incomes.push({ id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())), concept, amount, date: _fechaLocal() }); // FIX 1: fecha local
+                    incomes.push({ id: mkId(), concept, amount, date: _fechaLocal() }); // FIX 1: fecha local
                     saveReceivables();
                     saveIncomes();
                 }
@@ -1077,7 +1077,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
                     // FIX #10: concepto descriptivo con nombre del proveedor
                     const concept = `Pago realizado: ${pay.supplier || pay.concept || 'CxP #' + id}`;
                     payables.splice(index, 1);
-                    expenses.push({ id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())), concept, amount, date: _fechaLocal(), fromPayable: true }); // FIX 1: fecha local; fromPayable: evitar doble conteo
+                    expenses.push({ id: mkId(), concept, amount, date: _fechaLocal(), fromPayable: true }); // FIX 1: fecha local; fromPayable: evitar doble conteo
                     savePayables();
                     saveExpenses();
                 }

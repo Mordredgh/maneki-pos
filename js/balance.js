@@ -1,4 +1,8 @@
-function _fechaLocal() { return _fechaHoy(); }
+function _fechaLocal() {
+  if (typeof _fechaHoy === "function") return _fechaHoy();
+  const now = /* @__PURE__ */ new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
 const calcSaldoPendiente = (p) => {
   const sumPagos = (p.pagos || []).reduce((s, ab) => s + Number(ab.monto || 0), 0);
   const totalPagado = sumPagos > 0 ? sumPagos : Number(p.anticipo || 0);
@@ -10,13 +14,13 @@ function _norm(s) {
 }
 const _escBal = window._esc;
 const _ETIQUETAS = [
-  { valor: "produccion", label: "Producción", color: "#7c3aed", bg: "#ede9fe" },
+  { valor: "produccion", label: "Producci\xF3n", color: "#7c3aed", bg: "#ede9fe" },
   { valor: "marketing", label: "Marketing", color: "#db2777", bg: "#fce7f3" },
-  { valor: "envios", label: "Envíos", color: "#0284c7", bg: "#e0f2fe" },
+  { valor: "envios", label: "Env\xEDos", color: "#0284c7", bg: "#e0f2fe" },
   { valor: "servicios", label: "Servicios", color: "#0f766e", bg: "#ccfbf1" },
   { valor: "materiales", label: "Materiales", color: "#b45309", bg: "#fef3c7" },
   { valor: "ventas", label: "Ventas", color: "#16a34a", bg: "#dcfce7" },
-  { valor: "nomina", label: "Nómina", color: "#dc2626", bg: "#fee2e2" },
+  { valor: "nomina", label: "N\xF3mina", color: "#dc2626", bg: "#fee2e2" },
   { valor: "otro", label: "Otro", color: "#6b7280", bg: "#f3f4f6" }
 ];
 window._ETIQUETAS = _ETIQUETAS;
@@ -61,13 +65,13 @@ function renderBalanceMensual() {
     el("balMesNetoLabel").className = "text-xs font-semibold " + (neto >= 0 ? "text-green-600" : "text-red-600");
   }
   if (el("balMesNeto")) el("balMesNeto").className = "text-xl font-bold " + (neto >= 0 ? "text-green-800" : "text-red-800");
-  if (el("balMesNetoSub")) el("balMesNetoSub").textContent = neto >= 0 ? "✅ Mes positivo" : "⚠️ Mes negativo";
+  if (el("balMesNetoSub")) el("balMesNetoSub").textContent = neto >= 0 ? "\u2705 Mes positivo" : "\u26A0\uFE0F Mes negativo";
   _renderGraficaCategorias(gastosMes, mesStr);
   _renderExportarBalanceBtn(mesStr);
   _renderUtilidadNeta(totalVentas + totalPedidos, totalGastos);
   renderProyeccionCashflow();
 }
-const _GASTO_CATEGORIAS = ["Materiales", "Envío", "Publicidad", "Renta", "Servicios", "Personal", "Otros"];
+const _GASTO_CATEGORIAS = ["Materiales", "Env\xEDo", "Publicidad", "Renta", "Servicios", "Personal", "Otros"];
 function _renderGraficaCategorias(gastosMes, mesStr) {
   let container = document.getElementById("balCatGastosContainer");
   if (!container) {
@@ -105,7 +109,7 @@ function _renderGraficaCategorias(gastosMes, mesStr) {
   }).join("");
   container.innerHTML = `
         <div class="flex items-center justify-between mb-3">
-            <h4 class="text-sm font-bold text-gray-700">📊 Gastos por categoría</h4>
+            <h4 class="text-sm font-bold text-gray-700">\u{1F4CA} Gastos por categor\xEDa</h4>
             <span class="text-xs text-gray-400">${gastosMes.length} egresos</span>
         </div>
         ${barras}`;
@@ -119,7 +123,7 @@ function _renderExportarBalanceBtn(mesStr) {
     btn = document.createElement("button");
     btn.id = "btnExportarBalance";
     btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors";
-    btn.innerHTML = "📥 Exportar mes";
+    btn.innerHTML = "\u{1F4E5} Exportar mes";
     labelEl.parentElement.appendChild(btn);
   }
   btn.onclick = () => exportarBalanceMesCSV(mesStr);
@@ -129,8 +133,8 @@ function exportarBalanceMesCSV(mesStr) {
   const ingMes = (window.incomes || []).filter((i) => (i.date || "").startsWith(mesStr));
   const expMes = (window.expenses || []).filter((e) => (e.date || "").startsWith(mesStr) && !e.fromPayable);
   const todos = [
-    ...ingMes.map((i) => ({ fecha: i.date || "", tipo: "ingreso", concepto: i.concept || "", monto: Number(i.amount || 0), etiqueta: i.etiqueta || "", recurrente: i.recurrente ? "sí" : "no" })),
-    ...expMes.map((e) => ({ fecha: e.date || "", tipo: "gasto", concepto: e.concept || "", monto: Number(e.amount || 0), etiqueta: e.etiqueta || "", recurrente: e.recurrente || e.recurrenteAuto ? "sí" : "no" }))
+    ...ingMes.map((i) => ({ fecha: i.date || "", tipo: "ingreso", concepto: i.concept || "", monto: Number(i.amount || 0), etiqueta: i.etiqueta || "", recurrente: i.recurrente ? "s\xED" : "no" })),
+    ...expMes.map((e) => ({ fecha: e.date || "", tipo: "gasto", concepto: e.concept || "", monto: Number(e.amount || 0), etiqueta: e.etiqueta || "", recurrente: e.recurrente || e.recurrenteAuto ? "s\xED" : "no" }))
   ].sort((a2, b) => a2.fecha.localeCompare(b.fecha));
   todos.forEach((r) => filas.push([r.fecha, r.tipo, r.concepto, r.monto.toFixed(2), r.etiqueta, r.recurrente]));
   const csv = filas.map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\r\n");
@@ -141,7 +145,7 @@ function exportarBalanceMesCSV(mesStr) {
   a.download = `balance_${mesStr}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  manekiToastExport(`✅ CSV balance_${mesStr}.csv descargado`, "ok");
+  manekiToastExport(`\u2705 CSV balance_${mesStr}.csv descargado`, "ok");
 }
 window.exportarBalanceMesCSV = exportarBalanceMesCSV;
 function toggleMovimientos() {
@@ -160,7 +164,7 @@ function renderMovimientos() {
     return;
   }
   const colores = { salida: "bg-red-50 text-red-600", entrada: "bg-green-50 text-green-600", ajuste: "bg-blue-50 text-blue-600" };
-  const iconos = { salida: "↓", entrada: "↑", ajuste: "⇄" };
+  const iconos = { salida: "\u2193", entrada: "\u2191", ajuste: "\u21C4" };
   lista.innerHTML = filtrados.map((m) => `
         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
             <div class="flex items-center gap-3">
@@ -178,19 +182,19 @@ function renderMovimientos() {
     `).join("");
 }
 function limpiarMovimientos() {
-  showConfirm("Se borrará todo el historial de movimientos de stock. Esta acción no se puede deshacer.", "⚠️ Limpiar historial").then((ok) => {
+  showConfirm("Se borrar\xE1 todo el historial de movimientos de stock. Esta acci\xF3n no se puede deshacer.", "\u26A0\uFE0F Limpiar historial").then((ok) => {
     if (!ok) return;
     window.stockMovimientos = [];
     window.stockMovements = [];
     saveStockMovimientos();
     renderMovimientos();
-    manekiToastExport("🗑️ Historial limpiado", "ok");
+    manekiToastExport("\u{1F5D1}\uFE0F Historial limpiado", "ok");
   });
 }
 function eliminarPedidoFinalizado(id) {
   const pedido = pedidosFinalizados.find((p) => String(p.id) === String(id));
   if (!pedido) return;
-  showConfirm(`El pedido ${pedido.folio || id} será eliminado del historial de ventas.`, "⚠️ Eliminar pedido").then((ok) => {
+  showConfirm(`El pedido ${pedido.folio || id} ser\xE1 eliminado del historial de ventas.`, "\u26A0\uFE0F Eliminar pedido").then((ok) => {
     if (!ok) return;
     pedidosFinalizados = pedidosFinalizados.filter((p) => String(p.id) !== String(id));
     savePedidosFinalizados();
@@ -198,7 +202,7 @@ function eliminarPedidoFinalizado(id) {
     saveSalesHistory();
     renderHistorialPedidos();
     renderSalesHistory();
-    manekiToastExport("🗑️ Pedido eliminado", "ok");
+    manekiToastExport("\u{1F5D1}\uFE0F Pedido eliminado", "ok");
   });
 }
 function procesarGastosRecurrentes() {
@@ -247,20 +251,20 @@ function renderRecurrentesPanel() {
     return;
   }
   lista.innerHTML = gastosRecurrentes.map((gr, i) => {
-    const diaStr = gr.dia ? `<span class="text-xs text-gray-400 ml-1">(día ${gr.dia})</span>` : "";
+    const diaStr = gr.dia ? `<span class="text-xs text-gray-400 ml-1">(d\xEDa ${gr.dia})</span>` : "";
     return `<div class="flex justify-between items-center py-1">
-            <span class="text-xs text-amber-800 font-semibold">${_escBal(gr.concept)} — $${Number(gr.amount).toFixed(2)}/mes ${diaStr}</span>
-            <button onclick="eliminarRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+            <span class="text-xs text-amber-800 font-semibold">${_escBal(gr.concept)} \u2014 $${Number(gr.amount).toFixed(2)}/mes ${diaStr}</span>
+            <button onclick="eliminarRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">\u2715</button>
         </div>`;
   }).join("");
 }
 function eliminarRecurrente(idx) {
-  showConfirm("Este gasto recurrente ya no se registrará automáticamente.", "¿Eliminar gasto recurrente?").then((ok) => {
+  showConfirm("Este gasto recurrente ya no se registrar\xE1 autom\xE1ticamente.", "\xBFEliminar gasto recurrente?").then((ok) => {
     if (!ok) return;
     gastosRecurrentes.splice(idx, 1);
     saveGastosRecurrentes();
     renderRecurrentesPanel();
-    manekiToastExport("🗑️ Gasto recurrente eliminado", "ok");
+    manekiToastExport("\u{1F5D1}\uFE0F Gasto recurrente eliminado", "ok");
   });
 }
 function toggleIngresosRecurrentesPanel() {
@@ -286,10 +290,10 @@ function renderIngresosRecurrentesPanel() {
     return;
   }
   lista.innerHTML = arr.map((ir, i) => {
-    const diaStr = ir.dia ? `<span class="text-xs text-gray-400 ml-1">(día ${ir.dia})</span>` : "";
+    const diaStr = ir.dia ? `<span class="text-xs text-gray-400 ml-1">(d\xEDa ${ir.dia})</span>` : "";
     return `<div class="flex justify-between items-center py-1">
-            <span class="text-xs text-green-800 font-semibold">${_escBal(ir.concept)} — $${Number(ir.amount).toFixed(2)}/mes ${diaStr}</span>
-            <button onclick="eliminarIngresoRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">🗑️ Eliminar</button>
+            <span class="text-xs text-green-800 font-semibold">${_escBal(ir.concept)} \u2014 $${Number(ir.amount).toFixed(2)}/mes ${diaStr}</span>
+            <button onclick="eliminarIngresoRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">\u{1F5D1}\uFE0F Eliminar</button>
         </div>`;
   }).join("");
 }
@@ -297,7 +301,7 @@ function eliminarIngresoRecurrente(idx) {
   window.ingresosRecurrentes.splice(idx, 1);
   saveIngresosRecurrentes();
   renderIngresosRecurrentesPanel();
-  manekiToastExport("✅ Ingreso recurrente eliminado", "ok");
+  manekiToastExport("\u2705 Ingreso recurrente eliminado", "ok");
 }
 window.toggleIngresosRecurrentesPanel = toggleIngresosRecurrentesPanel;
 window.renderIngresosRecurrentesPanel = renderIngresosRecurrentesPanel;
@@ -331,11 +335,11 @@ function renderIncomeList() {
   const container = document.getElementById("incomeList");
   let listaInc = q ? incomes.filter((i) => _norm(i.concept).includes(q) || (i.date || "").includes(q)) : incomes;
   if (etqFiltro) listaInc = listaInc.filter((i) => (i.etiqueta || "") === etqFiltro);
-  container.innerHTML = listaInc.length === 0 ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p></div>' : listaInc.slice().reverse().map((income) => `
+  container.innerHTML = listaInc.length === 0 ? '<div class="mk-empty-state"><div class="mk-empty-icon">\u{1F4ED}</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p></div>' : listaInc.slice().reverse().map((income) => `
             <div class="mk-tx-income flex justify-between items-center p-3 bg-green-50 rounded-xl mb-2">
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(income.concept)}</p>
-                    <p class="text-xs text-gray-500">${_esc(income.date)}${income.etiqueta ? " " + _etiquetaBadge(income.etiqueta) : ""}${income.recurrente ? ' <span class="text-xs text-blue-500 font-semibold">↺</span>' : ""}</p>
+                    <p class="text-xs text-gray-500">${_esc(income.date)}${income.etiqueta ? " " + _etiquetaBadge(income.etiqueta) : ""}${income.recurrente ? ' <span class="text-xs text-blue-500 font-semibold">\u21BA</span>' : ""}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="font-bold text-green-600">+$${Number(income.amount || 0).toFixed(2)}</span>
@@ -356,11 +360,11 @@ function renderExpenseList() {
   const container = document.getElementById("expenseList");
   let listaExp = q ? expenses.filter((e) => _norm(e.concept).includes(q) || (e.date || "").includes(q)) : expenses;
   if (etqFiltro) listaExp = listaExp.filter((e) => (e.etiqueta || "") === etqFiltro);
-  container.innerHTML = listaExp.length === 0 ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p></div>' : listaExp.slice().reverse().map((expense) => `
+  container.innerHTML = listaExp.length === 0 ? '<div class="mk-empty-state"><div class="mk-empty-icon">\u{1F4ED}</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p></div>' : listaExp.slice().reverse().map((expense) => `
             <div class="mk-tx-expense flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(expense.concept)}</p>
-                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#C5A572;font-weight:600">${_esc(expense.categoria)}</span>` : ""}${expense.etiqueta ? " " + _etiquetaBadge(expense.etiqueta) : ""}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">↺</span>' : ""}</p>
+                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` \xB7 <span style="color:#C5A572;font-weight:600">${_esc(expense.categoria)}</span>` : ""}${expense.etiqueta ? " " + _etiquetaBadge(expense.etiqueta) : ""}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">\u21BA</span>' : ""}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="font-bold text-red-600">-$${Number(expense.amount || 0).toFixed(2)}</span>
@@ -395,11 +399,11 @@ function renderReceivablesList() {
     resumen.innerHTML = `
                     <div class="px-3 py-1.5 rounded-xl bg-blue-50 text-xs font-semibold text-blue-700">Total: $${totalCxC.toFixed(2)}</div>
                     <div class="px-3 py-1.5 rounded-xl bg-red-50 text-xs font-semibold text-red-700">${lista.length} deudores</div>
-                    ${vencidas > 0 ? `<div class="px-3 py-1.5 rounded-xl bg-orange-50 text-xs font-semibold text-orange-700">⚠️ ${vencidas} +30 días</div>` : ""}`;
+                    ${vencidas > 0 ? `<div class="px-3 py-1.5 rounded-xl bg-orange-50 text-xs font-semibold text-orange-700">\u26A0\uFE0F ${vencidas} +30 d\xEDas</div>` : ""}`;
   }
   container.innerHTML = lista.map((rec) => {
     const urgencia = rec.diasPendiente > 30 ? "bg-red-50 border-red-200" : rec.diasPendiente > 14 ? "bg-orange-50 border-orange-200" : "bg-blue-50 border-blue-200";
-    const diasLabel = rec.diasPendiente === 0 ? "Hoy" : rec.diasPendiente > 0 ? `${rec.diasPendiente} días` : "—";
+    const diasLabel = rec.diasPendiente === 0 ? "Hoy" : rec.diasPendiente > 0 ? `${rec.diasPendiente} d\xEDas` : "\u2014";
     const diasColor = rec.diasPendiente > 30 ? "text-red-600" : rec.diasPendiente > 14 ? "text-orange-600" : "text-blue-600";
     const waLink = rec.phone ? `<a href="https://wa.me/52${rec.phone.replace(/\\D/g, "")}" target="_blank" class="p-1.5 rounded-lg hover:bg-green-100 transition-all" style="color:#25D366" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>` : "";
     return `
@@ -412,7 +416,7 @@ function renderReceivablesList() {
                     <div class="text-right flex items-center gap-2">
                         <div>
                             <p class="font-bold text-blue-600">$${Number(rec.amount || 0).toFixed(2)}</p>
-                            <p class="text-xs font-semibold ${diasColor}">⏱ ${diasLabel}</p>
+                            <p class="text-xs font-semibold ${diasColor}">\u23F1 ${diasLabel}</p>
                         </div>
                         <div class="flex flex-col gap-1">
                             ${waLink}
@@ -420,7 +424,7 @@ function renderReceivablesList() {
                         </div>
                     </div>
                 </div>`;
-  }).join("") || '<div class="mk-empty"><div class="mk-empty-icon">📭</div><div class="mk-empty-title">Sin cuentas por cobrar</div><div class="mk-empty-sub">No hay saldos pendientes de clientes</div></div>';
+  }).join("") || '<div class="mk-empty"><div class="mk-empty-icon">\u{1F4ED}</div><div class="mk-empty-title">Sin cuentas por cobrar</div><div class="mk-empty-sub">No hay saldos pendientes de clientes</div></div>';
   renderCxCPedidos();
 }
 function renderCxCPedidos() {
@@ -434,7 +438,7 @@ function renderCxCPedidos() {
     return { ...p, dias, _saldo: calcSaldoPendiente(p) };
   }).sort((a, b) => b.dias - a.dias);
   if (conSaldo.length === 0) {
-    container.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">Todos los pedidos están al corriente 🎉</p>';
+    container.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">Todos los pedidos est\xE1n al corriente \u{1F389}</p>';
     return;
   }
   container.innerHTML = conSaldo.map((p) => {
@@ -469,7 +473,7 @@ function renderPayablesList() {
                         </button>
                     </div>
                 </div>
-            `).join("") || '<div class="mk-empty"><div class="mk-empty-icon">🗂️</div><div class="mk-empty-title">Sin cuentas por pagar</div><div class="mk-empty-sub">No hay pagos pendientes a proveedores</div></div>';
+            `).join("") || '<div class="mk-empty"><div class="mk-empty-icon">\u{1F5C2}\uFE0F</div><div class="mk-empty-title">Sin cuentas por pagar</div><div class="mk-empty-sub">No hay pagos pendientes a proveedores</div></div>';
 }
 function openIncomeModal() {
   document.getElementById("transactionForm").reset();
@@ -478,7 +482,7 @@ function openIncomeModal() {
   document.getElementById("clientFieldContainer").classList.add("hidden");
   document.getElementById("recurrenteContainer").classList.remove("hidden");
   document.getElementById("transactionRecurrente").checked = false;
-  document.getElementById("transactionSubmitBtn").textContent = "💾 Guardar";
+  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
   const modal = document.getElementById("transactionModal");
   modal.dataset.editId = "";
   modal.dataset.editType = "";
@@ -493,7 +497,7 @@ function openExpenseModal() {
   document.getElementById("clientFieldContainer").classList.add("hidden");
   document.getElementById("recurrenteContainer").classList.remove("hidden");
   document.getElementById("transactionRecurrente").checked = false;
-  document.getElementById("transactionSubmitBtn").textContent = "💾 Guardar";
+  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
   const modal = document.getElementById("transactionModal");
   modal.dataset.editId = "";
   modal.dataset.editType = "";
@@ -506,7 +510,7 @@ function openReceivableModal() {
   document.getElementById("transactionModalTitle").textContent = "Nueva Cuenta por Cobrar";
   document.getElementById("transactionType").value = "receivable";
   document.getElementById("clientFieldContainer").classList.remove("hidden");
-  document.getElementById("transactionSubmitBtn").textContent = "💾 Guardar";
+  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
   const modal = document.getElementById("transactionModal");
   modal.dataset.editId = "";
   modal.dataset.editType = "";
@@ -516,7 +520,7 @@ function openPayableModal() {
   document.getElementById("transactionModalTitle").textContent = "Nueva Cuenta por Pagar";
   document.getElementById("transactionType").value = "payable";
   document.getElementById("clientFieldContainer").classList.remove("hidden");
-  document.getElementById("transactionSubmitBtn").textContent = "💾 Guardar";
+  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
   const modal = document.getElementById("transactionModal");
   modal.dataset.editId = "";
   modal.dataset.editType = "";
@@ -536,7 +540,7 @@ function editBalanceItem(type, id) {
   document.getElementById("clientFieldContainer").classList.add("hidden");
   document.getElementById("recurrenteContainer").classList.remove("hidden");
   document.getElementById("transactionRecurrente").checked = !!item.recurrente;
-  document.getElementById("transactionSubmitBtn").textContent = "💾 Guardar";
+  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
   const modal = document.getElementById("transactionModal");
   modal.dataset.editId = String(item.id);
   modal.dataset.editType = type;
@@ -561,9 +565,9 @@ function _toggleCatField(show) {
     wrap = document.createElement("div");
     wrap.id = "transactionCategoriaWrap";
     wrap.className = "mb-3";
-    wrap.innerHTML = `<label class="block text-xs font-semibold text-gray-600 mb-1">Categoría del gasto</label>
+    wrap.innerHTML = `<label class="block text-xs font-semibold text-gray-600 mb-1">Categor\xEDa del gasto</label>
                     <select id="transactionCategoria" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
-                        <option value="">Sin categoría</option>
+                        <option value="">Sin categor\xEDa</option>
                         ${_GASTO_CATEGORIAS.map((c) => `<option value="${c}">${c}</option>`).join("")}
                     </select>`;
     recContainer.parentElement.insertBefore(wrap, recContainer);
@@ -597,7 +601,7 @@ if (_txForm && !_txForm._mkBound) {
     const _restoreBtn = () => {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = "💾 Guardar";
+        submitBtn.textContent = "\u{1F4BE} Guardar";
       }
     };
     const modal = document.getElementById("transactionModal");
@@ -610,17 +614,17 @@ if (_txForm && !_txForm._mkBound) {
     const client = document.getElementById("transactionClient")?.value || "";
     if (!concept) {
       _restoreBtn();
-      manekiToastExport("⚠️ Escribe un concepto para la transacción.", "warn");
+      manekiToastExport("\u26A0\uFE0F Escribe un concepto para la transacci\xF3n.", "warn");
       return;
     }
     if (!Number.isFinite(amount) || amount <= 0) {
       _restoreBtn();
-      manekiToastExport("⚠️ Ingresa un monto válido mayor a $0.", "warn");
+      manekiToastExport("\u26A0\uFE0F Ingresa un monto v\xE1lido mayor a $0.", "warn");
       return;
     }
     if (!date) {
       _restoreBtn();
-      manekiToastExport("⚠️ Selecciona una fecha.", "warn");
+      manekiToastExport("\u26A0\uFE0F Selecciona una fecha.", "warn");
       return;
     }
     if (editId && editType) {
@@ -776,7 +780,7 @@ function _renderUtilidadNeta(totalIngresos, totalGastos) {
   const bgColor = esPos ? "#f0fdf4" : esNeg ? "#fef2f2" : "#fefce8";
   const textColor = esPos ? "#15803d" : esNeg ? "#dc2626" : "#ca8a04";
   const borderColor = esPos ? "#bbf7d0" : esNeg ? "#fecaca" : "#fef08a";
-  const icono = esPos ? "📈" : esNeg ? "📉" : "➖";
+  const icono = esPos ? "\u{1F4C8}" : esNeg ? "\u{1F4C9}" : "\u2796";
   let card = document.getElementById("balUtilidadNetaCard");
   if (!card) {
     const catContainer = document.getElementById("balCatGastosContainer");
@@ -815,12 +819,12 @@ function renderProyeccionCashflow() {
       anchor.parentElement.insertBefore(card, anchor.nextSibling);
     }
     card.className = "mt-4 bg-white rounded-xl p-4 border border-gray-100";
-    card.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:12px;padding:12px 0">Sin pedidos activos con fecha de entrega en los próximos 30 días</p>';
+    card.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:12px;padding:12px 0">Sin pedidos activos con fecha de entrega en los pr\xF3ximos 30 d\xEDas</p>';
     return;
   }
   const buckets = [
     { label: "Esta semana", min: 0, max: 7, cobros: 0, gastos: 0 },
-    { label: "Próximas 2 semanas", min: 8, max: 14, cobros: 0, gastos: 0 },
+    { label: "Pr\xF3ximas 2 semanas", min: 8, max: 14, cobros: 0, gastos: 0 },
     { label: "Este mes", min: 15, max: 30, cobros: 0, gastos: 0 }
   ];
   pedidosActivos.forEach((p) => {
@@ -865,12 +869,12 @@ function renderProyeccionCashflow() {
   card.className = "mt-4 bg-white rounded-xl p-4 border border-gray-100";
   card.innerHTML = `
                 <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-bold text-gray-700">💸 Proyección de flujo de efectivo</h4>
+                    <h4 class="text-sm font-bold text-gray-700">\u{1F4B8} Proyecci\xF3n de flujo de efectivo</h4>
                     <span class="text-xs text-gray-400">${pedidosActivos.length} pedidos activos</span>
                 </div>
                 <table class="w-full">
                     <thead><tr>
-                        <th class="text-left text-xs text-gray-400 pb-1 pr-2">Período</th>
+                        <th class="text-left text-xs text-gray-400 pb-1 pr-2">Per\xEDodo</th>
                         <th class="text-right text-xs text-gray-400 pb-1 pr-2">Cobros esperados</th>
                         <th class="text-right text-xs text-gray-400 pb-1 pr-2">Gastos prog.</th>
                         <th class="text-right text-xs text-gray-400 pb-1">Neto proyectado</th>

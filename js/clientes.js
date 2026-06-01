@@ -35,8 +35,8 @@ function _getSortedClients() {
   });
 }
 function _sortArrow(col) {
-  if (_clientesSortCol !== col) return '<span style="opacity:.3;font-size:.65rem">↕</span>';
-  return `<span style="font-size:.65rem;color:#C5A572">${_clientesSortDir === "asc" ? "↑" : "↓"}</span>`;
+  if (_clientesSortCol !== col) return '<span style="opacity:.3;font-size:.65rem">\u2195</span>';
+  return `<span style="font-size:.65rem;color:#C5A572">${_clientesSortDir === "asc" ? "\u2191" : "\u2193"}</span>`;
 }
 function _calcClienteStats(clienteNombreOrId) {
   const todos = [...window.pedidos || [], ...window.pedidosFinalizados || []];
@@ -109,22 +109,22 @@ function renderHistorialClienteModal(clienteNombre) {
   }
   const statusEmoji = (s) => {
     const st = (s || "").toLowerCase();
-    if (st === "entregado" || st === "finalizado") return "✅";
-    if (st === "cancelado") return "❌";
-    if (st === "en proceso" || st === "produccion" || st === "producción") return "🔄";
-    if (st === "pendiente") return "⏳";
-    if (st === "listo") return "📦";
-    return "🔵";
+    if (st === "entregado" || st === "finalizado") return "\u2705";
+    if (st === "cancelado") return "\u274C";
+    if (st === "en proceso" || st === "produccion" || st === "producci\xF3n") return "\u{1F504}";
+    if (st === "pendiente") return "\u23F3";
+    if (st === "listo") return "\u{1F4E6}";
+    return "\u{1F535}";
   };
   const filas = ultimos.map((p) => {
     const saldo = typeof window.calcSaldoPendiente === "function" ? window.calcSaldoPendiente(p) : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
-    const saldoHtml = saldo > 0 ? `<span style="color:#dc2626">$${saldo.toFixed(2)}</span>` : `<span style="color:#15803d">Pagado ✓</span>`;
+    const saldoHtml = saldo > 0 ? `<span style="color:#dc2626">$${saldo.toFixed(2)}</span>` : `<span style="color:#15803d">Pagado \u2713</span>`;
     return `<tr style="border-bottom:1px solid #f3f4f6">
-            <td style="padding:6px 8px;font-size:.75rem;font-weight:600;color:#374151">${_esc(p.folio || "—")}</td>
-            <td style="padding:6px 8px;font-size:.75rem;color:#6b7280">${p.fechaPedido || "—"}</td>
+            <td style="padding:6px 8px;font-size:.75rem;font-weight:600;color:#374151">${_esc(p.folio || "\u2014")}</td>
+            <td style="padding:6px 8px;font-size:.75rem;color:#6b7280">${p.fechaPedido || "\u2014"}</td>
             <td style="padding:6px 8px;font-size:.75rem;font-weight:600;color:#111827">$${Number(p.total || 0).toFixed(2)}</td>
             <td style="padding:6px 8px;font-size:.75rem">${saldoHtml}</td>
-            <td style="padding:6px 8px;font-size:.75rem">${statusEmoji(p.status)} ${_esc(p.status || "—")}</td>
+            <td style="padding:6px 8px;font-size:.75rem">${statusEmoji(p.status)} ${_esc(p.status || "\u2014")}</td>
         </tr>`;
   }).join("");
   return `<table style="width:100%;border-collapse:collapse">
@@ -191,8 +191,8 @@ function renderClientsTable() {
   if (clients.length === 0) {
     tbody.innerHTML = `<tr><td colspan="7">
   <div class="mk-empty">
-    <div class="mk-empty-icon">👥</div>
-    <p class="mk-empty-title">Sin clientes aún</p>
+    <div class="mk-empty-icon">\u{1F465}</div>
+    <p class="mk-empty-title">Sin clientes a\xFAn</p>
     <p class="mk-empty-sub">Agrega tu primer cliente para llevar un registro de compras y datos de contacto.</p>
     <div class="mk-empty-action">
       <button onclick="openAddClientModal()" class="btn-primary px-6 py-2.5 rounded-xl text-sm">
@@ -216,7 +216,7 @@ function renderClientsTable() {
       { key: null, label: "Contacto" },
       { key: null, label: "Email" },
       { key: "totalPurchases", label: "Total Compras" },
-      { key: "lastPurchase", label: "Última Compra" },
+      { key: "lastPurchase", label: "\xDAltima Compra" },
       { key: null, label: "Tipo" },
       { key: null, label: "Acciones" }
     ];
@@ -265,19 +265,19 @@ function renderClientsTable() {
     const notasCliente = (window.notas || []).filter(
       (n) => n.cliente && n.cliente.toLowerCase() === (client.name || "").toLowerCase()
     ).sort((a, b) => (b.fechaCreacion || b.fecha || "").localeCompare(a.fechaCreacion || a.fecha || ""));
-    const snippetNota = notasCliente.length > 0 ? `<div class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]" title="${_escAttr(notasCliente[0].texto)}">📝 ${_esc((notasCliente[0].texto || "").substring(0, 40))}${(notasCliente[0].texto || "").length > 40 ? "…" : ""}</div>` : "";
-    const notasClienteSnippet = client.notas ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? "…" : ""}</div>` : "";
+    const snippetNota = notasCliente.length > 0 ? `<div class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]" title="${_escAttr(notasCliente[0].texto)}">\u{1F4DD} ${_esc((notasCliente[0].texto || "").substring(0, 40))}${(notasCliente[0].texto || "").length > 40 ? "\u2026" : ""}</div>` : "";
+    const notasClienteSnippet = client.notas ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">\u{1F4DD} ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? "\u2026" : ""}</div>` : "";
     const _cacheKey = client.id || client.nombre || client.name || "";
     const stats = _statsCache[_cacheKey] || _calcClienteStats(_cacheKey);
     const statsHtml = `<div style="font-size:.7rem;color:#6b7280;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
-                    <span title="Total pedidos">📦 ${stats.totalPedidos}</span>
-                    <span title="Total gastado">💰 $${stats.totalGastado.toFixed(0)}</span>
-                    <span title="Ticket promedio">🎯 $${stats.ticketPromedio.toFixed(0)}</span>
-                    ${stats.ultimoPedido ? `<span title="Último pedido">🕐 ${stats.ultimoPedido}</span>` : ""}
+                    <span title="Total pedidos">\u{1F4E6} ${stats.totalPedidos}</span>
+                    <span title="Total gastado">\u{1F4B0} $${stats.totalGastado.toFixed(0)}</span>
+                    <span title="Ticket promedio">\u{1F3AF} $${stats.ticketPromedio.toFixed(0)}</span>
+                    ${stats.ultimoPedido ? `<span title="\xDAltimo pedido">\u{1F550} ${stats.ultimoPedido}</span>` : ""}
                 </div>`;
     const tag = _tagActividad(client);
     const tagBadge = `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:.68rem;font-weight:700;${tag.color}">${tag.label}</span>`;
-    const waBtn = client.phone ? `<button onclick="_abrirWhatsApp('${_escAttr(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer" title="Abrir WhatsApp">📱 WhatsApp</button>` : "";
+    const waBtn = client.phone ? `<button onclick="_abrirWhatsApp('${_escAttr(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer" title="Abrir WhatsApp">\u{1F4F1} WhatsApp</button>` : "";
     return `
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">
@@ -302,11 +302,11 @@ function renderClientsTable() {
         ${waBtn}
     </div>` : ""}
 ${client.facebook ? `<a href="${_esc(client.facebook).startsWith("http") ? _esc(client.facebook) : "https://" + _esc(client.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ""}
-${!client.phone && !client.facebook ? "—" : ""}
+${!client.phone && !client.facebook ? "\u2014" : ""}
 </td>
-<td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : "—"}</td>
+<td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : "\u2014"}</td>
                     <td class="px-6 py-4 text-gray-800 font-semibold">$${(client.totalPurchases || 0).toFixed(2)}</td>
-                    <td class="px-6 py-4 text-gray-600">${client.lastPurchase || "—"}</td>
+                    <td class="px-6 py-4 text-gray-600">${client.lastPurchase || "\u2014"}</td>
                     <td class="px-6 py-4">
                         ${esVIP ? '<span class="badge-vip">VIP</span>' : '<span class="badge-success">Regular</span>'}
                     </td>
@@ -376,7 +376,7 @@ document.getElementById("addClientForm").addEventListener("submit", function(e) 
   const facebook = document.getElementById("clientFacebook").value.trim();
   const email = document.getElementById("clientEmail").value.trim();
   if (!_validEmail(email)) {
-    manekiToastExport("Email inválido", "warn");
+    manekiToastExport("Email inv\xE1lido", "warn");
     return;
   }
   const type = document.getElementById("clientType").value || "regular";
@@ -421,7 +421,7 @@ document.getElementById("addClientForm").addEventListener("submit", function(e) 
       return mismoNombre || mismoTel;
     });
     if (_posibleDuplicado) {
-      manekiToastExport(`⚠️ Ya existe un cliente similar: "${_posibleDuplicado.name}". Verifica si es el mismo.`, "warn");
+      manekiToastExport(`\u26A0\uFE0F Ya existe un cliente similar: "${_posibleDuplicado.name}". Verifica si es el mismo.`, "warn");
     }
     clients.push(newClient);
   }
@@ -454,10 +454,10 @@ function deleteClient(id) {
   const _pedidosActivos = _pedidosCliente.filter(
     (p) => p.status !== "finalizado" && p.status !== "cancelado" && p.status !== "entregado"
   );
-  const _msgConfirm = _pedidosActivos.length > 0 ? `Este cliente tiene ${_pedidosActivos.length} pedido(s) activo(s). ¿Deseas eliminarlo de todas formas? Los pedidos quedarán sin cliente asignado.
+  const _msgConfirm = _pedidosActivos.length > 0 ? `Este cliente tiene ${_pedidosActivos.length} pedido(s) activo(s). \xBFDeseas eliminarlo de todas formas? Los pedidos quedar\xE1n sin cliente asignado.
 
-"${c ? c.name : "este cliente"}" y su historial serán eliminados.` : `"${c ? c.name : "este cliente"}" y su historial serán eliminados.`;
-  const _titleConfirm = _pedidosActivos.length > 0 ? "⚠️ Eliminar cliente con pedidos" : "⚠️ Eliminar cliente";
+"${c ? c.name : "este cliente"}" y su historial ser\xE1n eliminados.` : `"${c ? c.name : "este cliente"}" y su historial ser\xE1n eliminados.`;
+  const _titleConfirm = _pedidosActivos.length > 0 ? "\u26A0\uFE0F Eliminar cliente con pedidos" : "\u26A0\uFE0F Eliminar cliente";
   showConfirm(_msgConfirm, _titleConfirm).then((ok) => {
     if (!ok) return;
     clients = clients.filter((c2) => String(c2.id) !== String(id));
@@ -485,8 +485,8 @@ function setupClientSearch() {
         const esVIP = client.isVIP || client.type === "vip";
         const tag = _tagActividad(client);
         const tagBadge = `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:.68rem;font-weight:700;${tag.color}">${tag.label}</span>`;
-        const notasSnippet = client.notas ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? "…" : ""}</div>` : "";
-        const waBtn = client.phone ? `<button onclick="_abrirWhatsApp('${_escAttr(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;margin-top:4px">📱 WhatsApp</button>` : "";
+        const notasSnippet = client.notas ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">\u{1F4DD} ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? "\u2026" : ""}</div>` : "";
+        const waBtn = client.phone ? `<button onclick="_abrirWhatsApp('${_escAttr(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;margin-top:4px">\u{1F4F1} WhatsApp</button>` : "";
         return `
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
@@ -509,11 +509,11 @@ function setupClientSearch() {
         ${waBtn}
     </div>` : ""}
 ${client.facebook ? `<a href="${_esc(client.facebook).startsWith("http") ? _esc(client.facebook) : "https://" + _esc(client.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ""}
-${!client.phone && !client.facebook ? "—" : ""}
+${!client.phone && !client.facebook ? "\u2014" : ""}
 </td>
-                        <td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : "—"}</td>
+                        <td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : "\u2014"}</td>
                         <td class="px-6 py-4 text-gray-800 font-semibold">$${(client.totalPurchases || 0).toFixed(2)}</td>
-                        <td class="px-6 py-4 text-gray-600">${client.lastPurchase || "—"}</td>
+                        <td class="px-6 py-4 text-gray-600">${client.lastPurchase || "\u2014"}</td>
                         <td class="px-6 py-4">
                             ${esVIP ? '<span class="badge-vip">VIP</span>' : '<span class="badge-success">Regular</span>'}
                         </td>

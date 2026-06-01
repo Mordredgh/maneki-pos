@@ -9,11 +9,11 @@ function _validateImgUrl(url) {
   }
 }
 const defaultCategories = [
-  { id: "tazas", name: "Tazas", emoji: "☕" },
-  { id: "llaveros", name: "Llaveros", emoji: "🔑" },
-  { id: "libretas", name: "Libretas", emoji: "📓" },
-  { id: "peluches", name: "Peluches", emoji: "🧸" },
-  { id: "otros", name: "Otros", emoji: "🎁" }
+  { id: "tazas", name: "Tazas", emoji: "\u2615" },
+  { id: "llaveros", name: "Llaveros", emoji: "\u{1F511}" },
+  { id: "libretas", name: "Libretas", emoji: "\u{1F4D3}" },
+  { id: "peluches", name: "Peluches", emoji: "\u{1F9F8}" },
+  { id: "otros", name: "Otros", emoji: "\u{1F381}" }
 ];
 let categories = [];
 let products = [];
@@ -31,7 +31,7 @@ let currentProductImage = null;
 let currentProductImageFile = null;
 let currentQuoteProducts = [];
 function deleteBalanceItem(type, id) {
-  showConfirm("Este registro será eliminado. Esta acción no se puede deshacer.", "⚠️ Eliminar registro").then((ok) => {
+  showConfirm("Este registro ser\xE1 eliminado. Esta acci\xF3n no se puede deshacer.", "\u26A0\uFE0F Eliminar registro").then((ok) => {
     if (!ok) return;
     if (type === "income") {
       incomes = incomes.filter((i) => String(i.id) !== String(id));
@@ -65,7 +65,7 @@ function editBalanceItem(type, id) {
   editModal.dataset.editId = id;
   editModal.dataset.editType = type;
   const submitBtn = document.getElementById("transactionSubmitBtn");
-  if (submitBtn) submitBtn.textContent = "💾 Actualizar";
+  if (submitBtn) submitBtn.textContent = "\u{1F4BE} Actualizar";
   openModal(editModal);
 }
 function closeTransactionModal() {
@@ -80,8 +80,8 @@ function openCancelPedidoModal(pedidoId) {
   const pedido = pedidos.find((p) => p.id === pedidoId);
   if (!pedido) return;
   pedidoACancelar = pedidoId;
-  document.getElementById("cancelPedidoFolio").textContent = pedido.folio || "—";
-  document.getElementById("cancelPedidoCliente").textContent = `Cliente: ${pedido.cliente || "—"} · Total: $${(pedido.total || 0).toFixed(2)}`;
+  document.getElementById("cancelPedidoFolio").textContent = pedido.folio || "\u2014";
+  document.getElementById("cancelPedidoCliente").textContent = `Cliente: ${pedido.cliente || "\u2014"} \xB7 Total: $${(pedido.total || 0).toFixed(2)}`;
   document.getElementById("cancelMotivo").value = "";
   openModal("cancelPedidoModal");
 }
@@ -112,8 +112,8 @@ function confirmarCancelPedido() {
     folio: pedido.folio + "-CANCEL",
     date: fecha,
     time: hora,
-    customer: pedido.cliente || "—",
-    concept: "❌ Cancelación: " + (pedido.concepto || ""),
+    customer: pedido.cliente || "\u2014",
+    concept: "\u274C Cancelaci\xF3n: " + (pedido.concepto || ""),
     note: "Motivo: " + (motivo || "Sin motivo especificado"),
     products: [],
     subtotal: 0,
@@ -144,14 +144,14 @@ function confirmarCancelPedido() {
     closeCancelPedidoModal();
     renderPedidosTable();
     updateDashboard();
-    const msgStock = regresarStock ? " ✅ Stock regresado al inventario." : tieneProductos ? " ⚠️ Stock NO regresado (producto ya terminado)." : "";
-    manekiToastExport("✅ Pedido " + pedido.folio + " cancelado." + msgStock, "ok");
+    const msgStock = regresarStock ? " \u2705 Stock regresado al inventario." : tieneProductos ? " \u26A0\uFE0F Stock NO regresado (producto ya terminado)." : "";
+    manekiToastExport("\u2705 Pedido " + pedido.folio + " cancelado." + msgStock, "ok");
   }
   if (tieneProductos) {
     const lista = pedido.productosInventario.map(function(i) {
       return i.name + " x" + i.quantity;
     }).join(", ");
-    showConfirm("¿Regresar productos al inventario?\n(" + lista + ")\n\nAceptar = NO está hecho, regresa al stock.\nCancelar = ya terminado.", "¿Regresar stock?").then(function(regresar) {
+    showConfirm("\xBFRegresar productos al inventario?\n(" + lista + ")\n\nAceptar = NO est\xE1 hecho, regresa al stock.\nCancelar = ya terminado.", "\xBFRegresar stock?").then(function(regresar) {
       _ejecutarCancelacion(regresar);
     });
   } else {
@@ -214,44 +214,44 @@ function loadLogoUI() {
 }
 const emojiCategories = [
   {
-    label: "🎁 Regalos y accesorios",
-    emojis: ["🎁", "🎀", "🎊", "🎉", "🎈", "🧧", "💝", "💖", "💗", "💓", "💞", "💕", "🎗️", "🛍️", "👜", "👛", "💍", "💎", "📿", "🪬"]
+    label: "\u{1F381} Regalos y accesorios",
+    emojis: ["\u{1F381}", "\u{1F380}", "\u{1F38A}", "\u{1F389}", "\u{1F388}", "\u{1F9E7}", "\u{1F49D}", "\u{1F496}", "\u{1F497}", "\u{1F493}", "\u{1F49E}", "\u{1F495}", "\u{1F397}\uFE0F", "\u{1F6CD}\uFE0F", "\u{1F45C}", "\u{1F45B}", "\u{1F48D}", "\u{1F48E}", "\u{1F4FF}", "\u{1FAAC}"]
   },
   {
-    label: "🐾 Animales",
-    emojis: ["🐱", "🐶", "🐰", "🐻", "🐼", "🐨", "🦊", "🐸", "🐙", "🦋", "🐝", "🦄", "🐯", "🦁", "🐮", "🐷", "🐧", "🦆", "🐺", "🦝"]
+    label: "\u{1F43E} Animales",
+    emojis: ["\u{1F431}", "\u{1F436}", "\u{1F430}", "\u{1F43B}", "\u{1F43C}", "\u{1F428}", "\u{1F98A}", "\u{1F438}", "\u{1F419}", "\u{1F98B}", "\u{1F41D}", "\u{1F984}", "\u{1F42F}", "\u{1F981}", "\u{1F42E}", "\u{1F437}", "\u{1F427}", "\u{1F986}", "\u{1F43A}", "\u{1F99D}"]
   },
   {
-    label: "☕ Hogar y cocina",
-    emojis: ["☕", "🍵", "🧁", "🎂", "🍰", "🍩", "🧇", "🫖", "🥂", "🍷", "🫙", "🍶", "🥛", "🧃", "🪴", "🕯️", "🪔", "🫗", "🍽️", "🥄"]
+    label: "\u2615 Hogar y cocina",
+    emojis: ["\u2615", "\u{1F375}", "\u{1F9C1}", "\u{1F382}", "\u{1F370}", "\u{1F369}", "\u{1F9C7}", "\u{1FAD6}", "\u{1F942}", "\u{1F377}", "\u{1FAD9}", "\u{1F376}", "\u{1F95B}", "\u{1F9C3}", "\u{1FAB4}", "\u{1F56F}\uFE0F", "\u{1FA94}", "\u{1FAD7}", "\u{1F37D}\uFE0F", "\u{1F944}"]
   },
   {
-    label: "👗 Moda y ropa",
-    emojis: ["👗", "👘", "🥻", "👙", "👒", "🎩", "👟", "👠", "👡", "🧣", "🧤", "🧥", "👔", "👕", "🩱", "🩲", "🩳", "🧦", "🪖", "💄"]
+    label: "\u{1F457} Moda y ropa",
+    emojis: ["\u{1F457}", "\u{1F458}", "\u{1F97B}", "\u{1F459}", "\u{1F452}", "\u{1F3A9}", "\u{1F45F}", "\u{1F460}", "\u{1F461}", "\u{1F9E3}", "\u{1F9E4}", "\u{1F9E5}", "\u{1F454}", "\u{1F455}", "\u{1FA71}", "\u{1FA72}", "\u{1FA73}", "\u{1F9E6}", "\u{1FA96}", "\u{1F484}"]
   },
   {
-    label: "📚 Papelería y arte",
-    emojis: ["📚", "📓", "📒", "📔", "📕", "📗", "📘", "📙", "📝", "✏️", "🖊️", "🖌️", "🎨", "🖍️", "📐", "📏", "✂️", "🗂️", "📌", "🔖"]
+    label: "\u{1F4DA} Papeler\xEDa y arte",
+    emojis: ["\u{1F4DA}", "\u{1F4D3}", "\u{1F4D2}", "\u{1F4D4}", "\u{1F4D5}", "\u{1F4D7}", "\u{1F4D8}", "\u{1F4D9}", "\u{1F4DD}", "\u270F\uFE0F", "\u{1F58A}\uFE0F", "\u{1F58C}\uFE0F", "\u{1F3A8}", "\u{1F58D}\uFE0F", "\u{1F4D0}", "\u{1F4CF}", "\u2702\uFE0F", "\u{1F5C2}\uFE0F", "\u{1F4CC}", "\u{1F516}"]
   },
   {
-    label: "🧸 Juguetes y bebés",
-    emojis: ["🧸", "🪆", "🎮", "🎯", "🎲", "🪀", "🪁", "🧩", "🎠", "🎡", "🪄", "🎭", "🪅", "🛹", "🤸", "🧒", "👶", "🍼", "🧷", "🪃"]
+    label: "\u{1F9F8} Juguetes y beb\xE9s",
+    emojis: ["\u{1F9F8}", "\u{1FA86}", "\u{1F3AE}", "\u{1F3AF}", "\u{1F3B2}", "\u{1FA80}", "\u{1FA81}", "\u{1F9E9}", "\u{1F3A0}", "\u{1F3A1}", "\u{1FA84}", "\u{1F3AD}", "\u{1FA85}", "\u{1F6F9}", "\u{1F938}", "\u{1F9D2}", "\u{1F476}", "\u{1F37C}", "\u{1F9F7}", "\u{1FA83}"]
   },
   {
-    label: "💆 Bienestar y spa",
-    emojis: ["💆", "🧘", "🛁", "🪷", "🌸", "🌺", "🌻", "🌹", "💐", "🍃", "🌿", "🌱", "🫧", "🧴", "🧼", "💅", "💊", "🩺", "🫁", "🪽"]
+    label: "\u{1F486} Bienestar y spa",
+    emojis: ["\u{1F486}", "\u{1F9D8}", "\u{1F6C1}", "\u{1FAB7}", "\u{1F338}", "\u{1F33A}", "\u{1F33B}", "\u{1F339}", "\u{1F490}", "\u{1F343}", "\u{1F33F}", "\u{1F331}", "\u{1FAE7}", "\u{1F9F4}", "\u{1F9FC}", "\u{1F485}", "\u{1F48A}", "\u{1FA7A}", "\u{1FAC1}", "\u{1FABD}"]
   },
   {
-    label: "🏠 Casa y decoración",
-    emojis: ["🏠", "🛋️", "🪑", "🛏️", "🪞", "🖼️", "🪟", "🚪", "🧹", "🪣", "🪤", "💡", "🔦", "🪔", "⏰", "📦", "🗑️", "🪣", "🧺", "🪴"]
+    label: "\u{1F3E0} Casa y decoraci\xF3n",
+    emojis: ["\u{1F3E0}", "\u{1F6CB}\uFE0F", "\u{1FA91}", "\u{1F6CF}\uFE0F", "\u{1FA9E}", "\u{1F5BC}\uFE0F", "\u{1FA9F}", "\u{1F6AA}", "\u{1F9F9}", "\u{1FAA3}", "\u{1FAA4}", "\u{1F4A1}", "\u{1F526}", "\u{1FA94}", "\u23F0", "\u{1F4E6}", "\u{1F5D1}\uFE0F", "\u{1FAA3}", "\u{1F9FA}", "\u{1FAB4}"]
   },
   {
-    label: "⭐ Estrellas y símbolos",
-    emojis: ["⭐", "🌟", "✨", "💫", "🌈", "☀️", "🌙", "❄️", "🔥", "💧", "🌊", "🍀", "🌺", "🌸", "🌼", "🌻", "🦋", "🌍", "🎵", "🎶"]
+    label: "\u2B50 Estrellas y s\xEDmbolos",
+    emojis: ["\u2B50", "\u{1F31F}", "\u2728", "\u{1F4AB}", "\u{1F308}", "\u2600\uFE0F", "\u{1F319}", "\u2744\uFE0F", "\u{1F525}", "\u{1F4A7}", "\u{1F30A}", "\u{1F340}", "\u{1F33A}", "\u{1F338}", "\u{1F33C}", "\u{1F33B}", "\u{1F98B}", "\u{1F30D}", "\u{1F3B5}", "\u{1F3B6}"]
   },
   {
-    label: "🔑 Objetos variados",
-    emojis: ["🔑", "🗝️", "📷", "📸", "🎙️", "📱", "💻", "⌚", "🔮", "🪄", "🧲", "🔧", "🪛", "⚙️", "🔩", "🧰", "📦", "🗃️", "🪝", "🎪"]
+    label: "\u{1F511} Objetos variados",
+    emojis: ["\u{1F511}", "\u{1F5DD}\uFE0F", "\u{1F4F7}", "\u{1F4F8}", "\u{1F399}\uFE0F", "\u{1F4F1}", "\u{1F4BB}", "\u231A", "\u{1F52E}", "\u{1FA84}", "\u{1F9F2}", "\u{1F527}", "\u{1FA9B}", "\u2699\uFE0F", "\u{1F529}", "\u{1F9F0}", "\u{1F4E6}", "\u{1F5C3}\uFE0F", "\u{1FA9D}", "\u{1F3AA}"]
   }
 ];
 let allEmojis = emojiCategories.flatMap((cat) => cat.emojis.map((e) => ({ emoji: e, label: cat.label })));
@@ -261,26 +261,26 @@ function renderEmojiGrid(filter = "") {
   const q = filter.toLowerCase().trim();
   if (q) {
     const keywords = {
-      "regalo": ["🎁", "🎀", "🎊", "🎉", "💝", "🛍️"],
-      "caja": ["📦", "🗃️"],
-      "gato": ["🐱"],
-      "perro": ["🐶"],
-      "conejo": ["🐰"],
-      "ropa": ["👗", "👘", "👕", "👔", "🧥"],
-      "taza": ["☕", "🍵", "🫖"],
-      "libro": ["📚", "📓", "📒", "📔"],
-      "bebe": ["👶", "🍼", "🧸", "🧷"],
-      "bebé": ["👶", "🍼", "🧸", "🧷"],
-      "flor": ["🌸", "🌺", "🌻", "🌹", "💐", "🌼"],
-      "estrella": ["⭐", "🌟", "✨", "💫"],
-      "corazon": ["💝", "💖", "💗", "💓", "💞", "💕"],
-      "corazón": ["💝", "💖", "💗", "💓", "💞", "💕"],
-      "joya": ["💍", "💎", "📿"],
-      "joyeria": ["💍", "💎", "📿"],
-      "joyería": ["💍", "💎", "📿"],
-      "spa": ["💆", "🧘", "🛁", "🪷", "🌿"],
-      "juguete": ["🧸", "🪆", "🎮", "🎯", "🎲"],
-      "arte": ["🎨", "🖌️", "✏️", "🖍️"]
+      "regalo": ["\u{1F381}", "\u{1F380}", "\u{1F38A}", "\u{1F389}", "\u{1F49D}", "\u{1F6CD}\uFE0F"],
+      "caja": ["\u{1F4E6}", "\u{1F5C3}\uFE0F"],
+      "gato": ["\u{1F431}"],
+      "perro": ["\u{1F436}"],
+      "conejo": ["\u{1F430}"],
+      "ropa": ["\u{1F457}", "\u{1F458}", "\u{1F455}", "\u{1F454}", "\u{1F9E5}"],
+      "taza": ["\u2615", "\u{1F375}", "\u{1FAD6}"],
+      "libro": ["\u{1F4DA}", "\u{1F4D3}", "\u{1F4D2}", "\u{1F4D4}"],
+      "bebe": ["\u{1F476}", "\u{1F37C}", "\u{1F9F8}", "\u{1F9F7}"],
+      "beb\xE9": ["\u{1F476}", "\u{1F37C}", "\u{1F9F8}", "\u{1F9F7}"],
+      "flor": ["\u{1F338}", "\u{1F33A}", "\u{1F33B}", "\u{1F339}", "\u{1F490}", "\u{1F33C}"],
+      "estrella": ["\u2B50", "\u{1F31F}", "\u2728", "\u{1F4AB}"],
+      "corazon": ["\u{1F49D}", "\u{1F496}", "\u{1F497}", "\u{1F493}", "\u{1F49E}", "\u{1F495}"],
+      "coraz\xF3n": ["\u{1F49D}", "\u{1F496}", "\u{1F497}", "\u{1F493}", "\u{1F49E}", "\u{1F495}"],
+      "joya": ["\u{1F48D}", "\u{1F48E}", "\u{1F4FF}"],
+      "joyeria": ["\u{1F48D}", "\u{1F48E}", "\u{1F4FF}"],
+      "joyer\xEDa": ["\u{1F48D}", "\u{1F48E}", "\u{1F4FF}"],
+      "spa": ["\u{1F486}", "\u{1F9D8}", "\u{1F6C1}", "\u{1FAB7}", "\u{1F33F}"],
+      "juguete": ["\u{1F9F8}", "\u{1FA86}", "\u{1F3AE}", "\u{1F3AF}", "\u{1F3B2}"],
+      "arte": ["\u{1F3A8}", "\u{1F58C}\uFE0F", "\u270F\uFE0F", "\u{1F58D}\uFE0F"]
     };
     let found = [];
     Object.entries(keywords).forEach(([key, emojis]) => {
@@ -326,28 +326,28 @@ function filterEmojis(value) {
 }
 const equipoEmojiCats = [
   {
-    label: "🖨️ Impresión",
-    emojis: ["🖨️", "📠", "🖥️", "💻", "📱", "📷", "📸", "🎞️", "🗃️", "📋", "🗄️", "🖱️", "⌨️", "🖲️"]
+    label: "\u{1F5A8}\uFE0F Impresi\xF3n",
+    emojis: ["\u{1F5A8}\uFE0F", "\u{1F4E0}", "\u{1F5A5}\uFE0F", "\u{1F4BB}", "\u{1F4F1}", "\u{1F4F7}", "\u{1F4F8}", "\u{1F39E}\uFE0F", "\u{1F5C3}\uFE0F", "\u{1F4CB}", "\u{1F5C4}\uFE0F", "\u{1F5B1}\uFE0F", "\u2328\uFE0F", "\u{1F5B2}\uFE0F"]
   },
   {
-    label: "⚙️ Herramientas y máquinas",
-    emojis: ["⚙️", "🔧", "🪛", "🔩", "🧰", "🔨", "🪚", "⛏️", "🪝", "🪤", "🧲", "🔬", "🔭", "⚗️", "🧪", "🔋", "💡", "🔌", "🪫", "🛠️"]
+    label: "\u2699\uFE0F Herramientas y m\xE1quinas",
+    emojis: ["\u2699\uFE0F", "\u{1F527}", "\u{1FA9B}", "\u{1F529}", "\u{1F9F0}", "\u{1F528}", "\u{1FA9A}", "\u26CF\uFE0F", "\u{1FA9D}", "\u{1FAA4}", "\u{1F9F2}", "\u{1F52C}", "\u{1F52D}", "\u2697\uFE0F", "\u{1F9EA}", "\u{1F50B}", "\u{1F4A1}", "\u{1F50C}", "\u{1FAAB}", "\u{1F6E0}\uFE0F"]
   },
   {
-    label: "✂️ Corte y diseño",
-    emojis: ["✂️", "🪡", "🧵", "📐", "📏", "🖊️", "🖌️", "✏️", "🎨", "🖍️", "📌", "🗂️", "📎", "🖋️", "✒️"]
+    label: "\u2702\uFE0F Corte y dise\xF1o",
+    emojis: ["\u2702\uFE0F", "\u{1FAA1}", "\u{1F9F5}", "\u{1F4D0}", "\u{1F4CF}", "\u{1F58A}\uFE0F", "\u{1F58C}\uFE0F", "\u270F\uFE0F", "\u{1F3A8}", "\u{1F58D}\uFE0F", "\u{1F4CC}", "\u{1F5C2}\uFE0F", "\u{1F4CE}", "\u{1F58B}\uFE0F", "\u2712\uFE0F"]
   },
   {
-    label: "🔥 Calor y prensado",
-    emojis: ["🔥", "♨️", "🌡️", "💨", "⚡", "☀️", "🌊", "❄️", "💧", "🫧", "🌬️"]
+    label: "\u{1F525} Calor y prensado",
+    emojis: ["\u{1F525}", "\u2668\uFE0F", "\u{1F321}\uFE0F", "\u{1F4A8}", "\u26A1", "\u2600\uFE0F", "\u{1F30A}", "\u2744\uFE0F", "\u{1F4A7}", "\u{1FAE7}", "\u{1F32C}\uFE0F"]
   },
   {
-    label: "🤖 Tecnología",
-    emojis: ["🤖", "💾", "💿", "📀", "🖧", "📡", "🛰️", "🔐", "🔑", "🗝️", "📟", "📠", "⌚", "🕹️", "🎮"]
+    label: "\u{1F916} Tecnolog\xEDa",
+    emojis: ["\u{1F916}", "\u{1F4BE}", "\u{1F4BF}", "\u{1F4C0}", "\u{1F5A7}", "\u{1F4E1}", "\u{1F6F0}\uFE0F", "\u{1F510}", "\u{1F511}", "\u{1F5DD}\uFE0F", "\u{1F4DF}", "\u{1F4E0}", "\u231A", "\u{1F579}\uFE0F", "\u{1F3AE}"]
   },
   {
-    label: "📦 Producción",
-    emojis: ["📦", "🏭", "🏗️", "🚜", "🔄", "♻️", "📤", "📥", "🪣", "🗑️", "📊", "📈", "📉", "🗺️", "📍"]
+    label: "\u{1F4E6} Producci\xF3n",
+    emojis: ["\u{1F4E6}", "\u{1F3ED}", "\u{1F3D7}\uFE0F", "\u{1F69C}", "\u{1F504}", "\u267B\uFE0F", "\u{1F4E4}", "\u{1F4E5}", "\u{1FAA3}", "\u{1F5D1}\uFE0F", "\u{1F4CA}", "\u{1F4C8}", "\u{1F4C9}", "\u{1F5FA}\uFE0F", "\u{1F4CD}"]
   }
 ];
 const allEquipoEmojis = equipoEmojiCats.flatMap((cat) => cat.emojis);
@@ -356,26 +356,26 @@ function renderEquipoEmojiGrid(filter = "") {
   if (!grid) return;
   const q = filter.toLowerCase().trim();
   const equipoKeywords = {
-    "impresora": ["🖨️", "📠"],
-    "laser": ["🔬", "⚡", "💡", "🔥"],
-    "cricut": ["✂️", "🪡", "🖊️"],
-    "plancha": ["🔥", "♨️", "🌡️"],
-    "prensa": ["🔧", "⚙️", "🛠️"],
-    "dtf": ["🖨️", "🔥", "♨️"],
-    "sublimacion": ["🖨️", "♨️", "🔥"],
-    "sublimación": ["🖨️", "♨️", "🔥"],
-    "laminadora": ["📋", "🗃️", "⚙️"],
-    "3d": ["🤖", "⚙️", "🔧"],
-    "rotador": ["🔄", "⚙️"],
-    "atomstack": ["🔬", "⚡", "💡"],
-    "mini": ["⚙️", "🔧"],
-    "cpu": ["💻", "🖥️", "🖱️"],
-    "computadora": ["💻", "🖥️"],
-    "herramienta": ["🔧", "🪛", "🛠️", "🧰"],
-    "corte": ["✂️", "🪚"],
-    "calor": ["🔥", "♨️"],
-    "maquina": ["⚙️", "🏭", "🤖"],
-    "máquina": ["⚙️", "🏭", "🤖"]
+    "impresora": ["\u{1F5A8}\uFE0F", "\u{1F4E0}"],
+    "laser": ["\u{1F52C}", "\u26A1", "\u{1F4A1}", "\u{1F525}"],
+    "cricut": ["\u2702\uFE0F", "\u{1FAA1}", "\u{1F58A}\uFE0F"],
+    "plancha": ["\u{1F525}", "\u2668\uFE0F", "\u{1F321}\uFE0F"],
+    "prensa": ["\u{1F527}", "\u2699\uFE0F", "\u{1F6E0}\uFE0F"],
+    "dtf": ["\u{1F5A8}\uFE0F", "\u{1F525}", "\u2668\uFE0F"],
+    "sublimacion": ["\u{1F5A8}\uFE0F", "\u2668\uFE0F", "\u{1F525}"],
+    "sublimaci\xF3n": ["\u{1F5A8}\uFE0F", "\u2668\uFE0F", "\u{1F525}"],
+    "laminadora": ["\u{1F4CB}", "\u{1F5C3}\uFE0F", "\u2699\uFE0F"],
+    "3d": ["\u{1F916}", "\u2699\uFE0F", "\u{1F527}"],
+    "rotador": ["\u{1F504}", "\u2699\uFE0F"],
+    "atomstack": ["\u{1F52C}", "\u26A1", "\u{1F4A1}"],
+    "mini": ["\u2699\uFE0F", "\u{1F527}"],
+    "cpu": ["\u{1F4BB}", "\u{1F5A5}\uFE0F", "\u{1F5B1}\uFE0F"],
+    "computadora": ["\u{1F4BB}", "\u{1F5A5}\uFE0F"],
+    "herramienta": ["\u{1F527}", "\u{1FA9B}", "\u{1F6E0}\uFE0F", "\u{1F9F0}"],
+    "corte": ["\u2702\uFE0F", "\u{1FA9A}"],
+    "calor": ["\u{1F525}", "\u2668\uFE0F"],
+    "maquina": ["\u2699\uFE0F", "\u{1F3ED}", "\u{1F916}"],
+    "m\xE1quina": ["\u2699\uFE0F", "\u{1F3ED}", "\u{1F916}"]
   };
   if (q) {
     let found = [];
@@ -419,8 +419,8 @@ function filterEquipoEmojis(value) {
 const _origOpenAddCategoryModal = typeof openAddCategoryModal === "function" ? openAddCategoryModal : null;
 function openAddCategoryModal() {
   openModal("addCategoryModal");
-  document.getElementById("categoryEmoji").value = "📦";
-  document.getElementById("selectedEmojiDisplay").textContent = "📦";
+  document.getElementById("categoryEmoji").value = "\u{1F4E6}";
+  document.getElementById("selectedEmojiDisplay").textContent = "\u{1F4E6}";
   document.getElementById("emojiSearch").value = "";
   document.getElementById("categoryColor").value = "#C5A572";
   setTimeout(() => selectCategoryColor("#C5A572"), 50);
@@ -459,7 +459,7 @@ function refrescarPagina() {
       renderEquiposGrid();
       renderRoiHistorial();
     }
-    manekiToastExport("🔄 Página refrescada", "ok");
+    manekiToastExport("\u{1F504} P\xE1gina refrescada", "ok");
   } catch (e) {
     location.reload();
   }
@@ -575,7 +575,7 @@ function selectTheme(themeName) {
     selected.style.background = themes[themeName].primaryLight;
   }
   storeConfig.theme = themeName;
-  sbSave("storeConfig", storeConfig).then(() => manekiToastExport("Tema guardado en la nube ✓", "ok")).catch(() => manekiToastExport("Error al guardar en la nube", "err"));
+  sbSave("storeConfig", storeConfig).then(() => manekiToastExport("Tema guardado en la nube \u2713", "ok")).catch(() => manekiToastExport("Error al guardar en la nube", "err"));
 }
 function applyTheme(themeName) {
   const t = themes[themeName];
@@ -659,9 +659,9 @@ function loadThemeUI() {
 async function convertQuoteToPedido(quoteId) {
   const quote = quotes.find((q) => q.id === quoteId);
   if (!quote) return;
-  showConfirm(`¿Convertir la cotización ${quote.folio} de ${quote.customer} en un pedido por encargo?`, "Convertir cotización").then((ok) => {
+  showConfirm(`\xBFConvertir la cotizaci\xF3n ${quote.folio} de ${quote.customer} en un pedido por encargo?`, "Convertir cotizaci\xF3n").then((ok) => {
     if (!ok) return;
-    const concepto = quote.products && quote.products.length > 0 ? quote.products.map((p) => `${p.quantity}x ${p.name}`).join(", ") : quote.notes || "Pedido desde cotización";
+    const concepto = quote.products && quote.products.length > 0 ? quote.products.map((p) => `${p.quantity}x ${p.name}`).join(", ") : quote.notes || "Pedido desde cotizaci\xF3n";
     const _dCot = /* @__PURE__ */ new Date();
     const hoy = `${_dCot.getFullYear()}-${String(_dCot.getMonth() + 1).padStart(2, "0")}-${String(_dCot.getDate()).padStart(2, "0")}`;
     const fechaEntrega = new Date(_dCot);
@@ -695,8 +695,8 @@ async function convertQuoteToPedido(quoteId) {
     if (typeof renderQuotesTable === "function") renderQuotesTable();
     renderPedidosTable();
     updateDashboard();
-    manekiToastExport(`✅ Pedido ${nuevoPedido.folio} creado desde cotización`, "ok");
-    showConfirm(`Pedido ${nuevoPedido.folio} creado exitosamente. ¿Ir a Pedidos para ajustar detalles?`, "✅ Pedido creado").then((ir) => {
+    manekiToastExport(`\u2705 Pedido ${nuevoPedido.folio} creado desde cotizaci\xF3n`, "ok");
+    showConfirm(`Pedido ${nuevoPedido.folio} creado exitosamente. \xBFIr a Pedidos para ajustar detalles?`, "\u2705 Pedido creado").then((ir) => {
       if (ir) showSection("pedidos");
     });
   });

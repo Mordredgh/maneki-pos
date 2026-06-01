@@ -143,7 +143,7 @@ function manekiExportar(tipo) {
         num(p.costo),
         num(p.total),
         num(p.anticipo),
-        num(p.resta),
+        num(calcSaldoPendiente(p)),
         p.status || "",
         p.notas || ""
       ]);

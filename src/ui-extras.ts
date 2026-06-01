@@ -106,7 +106,7 @@ function manekiExportar(tipo) {
                 p._tipo||'Activo', p.folio||p.id||'', p.cliente||'', p.telefono||'', p.redes||'',
                 fmt(p.fechaCreacion||p.fecha), fmt(p.entrega), fmt(p.fechaFinalizado||''),
                 p.concepto||'', p.cantidad||1, num(p.costo), num(p.total),
-                num(p.anticipo), num(p.resta), p.status||'', p.notas||''
+                num(p.anticipo), num(calcSaldoPendiente(p)), p.status||'', p.notas||''
             ]);
         });
 

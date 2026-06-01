@@ -89,7 +89,7 @@ function saveEquipo() {
         manekiToastExport('✅ Equipo actualizado', 'ok');
     } else {
         equipos.push({
-            id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+            id: mkId(),
             nombre, emoji, costoOriginal, metaReemplazo, metaMensual,
             recuperado: 0,
             historialPagos: []  // MEJ-5: historial de pagos
@@ -530,7 +530,7 @@ function agregarNota() {
     if (!texto) return;
 
     const nota = {
-        id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        id: mkId(),
         texto: texto,
         fecha: new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }),
         hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),

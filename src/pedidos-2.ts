@@ -426,7 +426,7 @@ function setPedidoStatus(status) {
                     ? calcSaldoPendiente(p)
                     : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
                 const saleRecord = {
-                    id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + '-' + Math.random().toString(36).slice(2)),
+                    id: mkId(),
                     type: 'pedido',
                     folio: p.folio,
                     date: (p.fechaFinalizado || new Date().toISOString()).split('T')[0],
@@ -694,7 +694,7 @@ async function confirmarAbonoPedido() {
     }
     if (!p.pagos) p.pagos = [];
     const _d = new Date();
-    const abonoId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + '-' + Math.random().toString(36).slice(2));
+    const abonoId = mkId();
     const _fechaLocal = _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
 
     // ── ROLLBACK FIX: guardar copias antes de mutar para poder restaurar si falla el save ──

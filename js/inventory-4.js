@@ -56,7 +56,7 @@ async function guardarMateriaPrima() {
   }
   const esEmpaque = document.getElementById("mpEsEmpaque")?.checked || false;
   const tags = [...window._mpTagsActuales || []];
-  const _skuRandom = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().split("-")[0].toUpperCase() : Math.random().toString(36).slice(2, 7).toUpperCase();
+  const _skuRandom = mkId().split("-")[0].toUpperCase();
   const finalSku = sku || "MP-" + _skuRandom;
   const usaVariantes = document.getElementById("mpUsaVariantes")?.checked || false;
   const variantesGuardar = usaVariantes ? [...window._mpVariantes || []] : [];

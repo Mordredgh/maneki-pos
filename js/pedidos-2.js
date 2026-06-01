@@ -390,7 +390,7 @@ function setPedidoStatus(status) {
       if (!yaRegistrado && Number(p.total || 0) > 0) {
         const _saldoFinal = typeof calcSaldoPendiente === "function" ? calcSaldoPendiente(p) : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
         const saleRecord = {
-          id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + "-" + Math.random().toString(36).slice(2)),
+          id: mkId(),
           type: "pedido",
           folio: p.folio,
           date: (p.fechaFinalizado || (/* @__PURE__ */ new Date()).toISOString()).split("T")[0],
@@ -644,7 +644,7 @@ async function confirmarAbonoPedido() {
     }
     if (!p.pagos) p.pagos = [];
     const _d = /* @__PURE__ */ new Date();
-    const abonoId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + "-" + Math.random().toString(36).slice(2));
+    const abonoId = mkId();
     const _fechaLocal = _d.getFullYear() + "-" + String(_d.getMonth() + 1).padStart(2, "0") + "-" + String(_d.getDate()).padStart(2, "0");
     const _pagosBefore = p.pagos.slice();
     const _incomesBefore = window.incomes !== void 0 ? window.incomes.slice() : void 0;

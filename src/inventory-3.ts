@@ -465,9 +465,7 @@ async function guardarServicio() {
 
     if (!nombre) { manekiToastExport('El nombre es requerido.', 'warn'); return; }
 
-    const _skuSuffix = (typeof crypto !== 'undefined' && crypto.randomUUID)
-        ? crypto.randomUUID().split('-')[0].toUpperCase()
-        : Math.random().toString(36).slice(2,7).toUpperCase();
+    const _skuSuffix = mkId().split('-')[0].toUpperCase();
     const sku = skuInput || `SVC-${_skuSuffix}`;
     if (!window.products) window.products = [];
 

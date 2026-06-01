@@ -55,7 +55,7 @@ function renderMpTags() {
     customContainer.innerHTML = customTags.map(
       (t) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fef3c7;border:1px solid #fde68a;border-radius:99px;font-size:12px;font-weight:600;color:#92400e;">
                 ${_esc(t)}
-                <button type="button" onclick="removeMpTag('${_esc(t)}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 1px;line-height:1;">✕</button>
+                <button type="button" onclick="removeMpTag('${_esc(t)}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 1px;line-height:1;">\u2715</button>
             </span>`
     ).join("");
   }
@@ -96,9 +96,9 @@ function injectMpModal() {
   modal.innerHTML = `
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 animate-fade-in" style="margin-left:auto;margin-right:auto;max-height:92vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-2xl font-bold text-gray-800">🏭 Nueva Materia Prima</h3>
+            <h3 class="text-2xl font-bold text-gray-800">\u{1F3ED} Nueva Materia Prima</h3>
             <button onclick="closeMateriaPrimaModal()" class="text-gray-400 hover:text-gray-600" style="font-size:1.4rem;line-height:1;background:none;border:none;cursor:pointer;">
-                ×
+                \xD7
             </button>
         </div>
 
@@ -106,7 +106,7 @@ function injectMpModal() {
 
             <!-- Imagen -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">📷 Imagen (opcional)</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">\u{1F4F7} Imagen (opcional)</label>
                 <input type="file" id="mpProductImage" accept="image/*"
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none">
                 <div id="mpImagePreview" class="mt-3 hidden">
@@ -124,15 +124,15 @@ function injectMpModal() {
 
             <!-- SKU -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Código SKU</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">C\xF3digo SKU</label>
                 <input type="text" id="mpSku"
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none"
-                       placeholder="Se generará automáticamente si está vacío">
+                       placeholder="Se generar\xE1 autom\xE1ticamente si est\xE1 vac\xEDo">
             </div>
 
             <!-- Tags de material -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-3">🏷️ Tipo de Material</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">\u{1F3F7}\uFE0F Tipo de Material</label>
                 <div id="mpTagsGrid" class="flex flex-wrap gap-2 mb-3"></div>
                 <div class="flex gap-2 mt-2">
                     <input type="text" id="mpTagCustomInput"
@@ -148,9 +148,9 @@ function injectMpModal() {
             <!-- Compra por paquete o unidad -->
             <div style="background:linear-gradient(135deg,#faf5ff,#f5f3ff);border:1.5px solid #e9d5ff;border-radius:14px;padding:16px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                    <label class="block text-sm font-semibold" style="color:#7c3aed;">💰 Costo</label>
+                    <label class="block text-sm font-semibold" style="color:#7c3aed;">\u{1F4B0} Costo</label>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="font-size:.78rem;color:#9ca3af;">¿Compras por paquete?</span>
+                        <span style="font-size:.78rem;color:#9ca3af;">\xBFCompras por paquete?</span>
                         <label style="position:relative;display:inline-block;width:38px;height:21px;cursor:pointer;">
                             <input type="checkbox" id="mpUsaPaquete" onchange="mpTogglePaquete()"
                                 style="opacity:0;width:0;height:0;position:absolute;">
@@ -202,12 +202,12 @@ function injectMpModal() {
                             <div style="font-size:1.4rem;font-weight:800;color:#5b21b6;" id="mpCostoUnidadResult">$0.00</div>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-size:.72rem;color:#9ca3af;">Este valor se usa para producción</div>
+                            <div style="font-size:.72rem;color:#9ca3af;">Este valor se usa para producci\xF3n</div>
                             <input type="number" id="mpCostoCalculado" step="0.001" min="0" style="display:none;">
                         </div>
                     </div>
                     <p style="font-size:.72rem;color:#9ca3af;margin-top:6px;text-align:center;">
-                        💡 Cuando agregues stock, ingresa las unidades totales (no paquetes)
+                        \u{1F4A1} Cuando agregues stock, ingresa las unidades totales (no paquetes)
                     </p>
                 </div>
             </div>
@@ -215,7 +215,7 @@ function injectMpModal() {
             <!-- VARIANTES de Materia Prima (Talla, Color, etc.) -->
             <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                    <label style="font-size:.88rem;font-weight:700;color:#374151;">🎨 ¿Tiene variantes? (Talla, Color, etc.)</label>
+                    <label style="font-size:.88rem;font-weight:700;color:#374151;">\u{1F3A8} \xBFTiene variantes? (Talla, Color, etc.)</label>
                     <label style="position:relative;display:inline-block;width:38px;height:21px;cursor:pointer;">
                         <input type="checkbox" id="mpUsaVariantes" onchange="mpToggleVariantes()"
                             style="opacity:0;width:0;height:0;position:absolute;">
@@ -226,7 +226,7 @@ function injectMpModal() {
                     </label>
                 </div>
                 <div id="mpVariantesPanel" style="display:none;">
-                    <p style="font-size:.75rem;color:#9ca3af;margin-bottom:10px;">Cada variante tiene su propio stock. El stock total se calculará sumando todas las variantes.</p>
+                    <p style="font-size:.75rem;color:#9ca3af;margin-bottom:10px;">Cada variante tiene su propio stock. El stock total se calcular\xE1 sumando todas las variantes.</p>
                     <div style="display:flex;gap:8px;margin-bottom:10px;">
                         <input type="text" id="mpVarTipo" placeholder="Tipo: Talla, Color..."
                             style="flex:1;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.85rem;outline:none;"
@@ -239,9 +239,9 @@ function injectMpModal() {
                         <button type="button" onclick="agregarVarianteMp()"
                             style="padding:8px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;">+ Agregar</button>
                     </div>
-                    <!-- Accesos rápidos de tipos comunes -->
+                    <!-- Accesos r\xE1pidos de tipos comunes -->
                     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-                        <span style="font-size:.72rem;color:#9ca3af;align-self:center;">Rápidos:</span>
+                        <span style="font-size:.72rem;color:#9ca3af;align-self:center;">R\xE1pidos:</span>
                         <button type="button" onclick="mpVarTipoRapido('Talla')" style="padding:3px 10px;border:1px solid #e2e8f0;border-radius:99px;font-size:.75rem;background:#f9fafb;cursor:pointer;">Talla</button>
                         <button type="button" onclick="mpVarTipoRapido('Color')" style="padding:3px 10px;border:1px solid #e2e8f0;border-radius:99px;font-size:.75rem;background:#f9fafb;cursor:pointer;">Color</button>
                         <button type="button" onclick="mpVarTipoRapido('Talla','S')" style="padding:3px 10px;border:1px solid #e2e8f0;border-radius:99px;font-size:.75rem;background:#f9fafb;cursor:pointer;">S</button>
@@ -258,30 +258,30 @@ function injectMpModal() {
                 </div>
             </div>
 
-            <!-- Stock y Stock Mínimo -->
+            <!-- Stock y Stock M\xEDnimo -->
             <div class="grid grid-cols-2 gap-4">
                 <div id="mpStockRow">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">📦 Stock Inicial</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">\u{1F4E6} Stock Inicial</label>
                     <input type="number" id="mpStock" required min="0" value="0"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">⚠️ Stock Mínimo</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">\u26A0\uFE0F Stock M\xEDnimo</label>
                     <input type="number" id="mpStockMin" min="0" value="5"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
-                    <p class="text-xs text-gray-400 mt-1">Alerta cuando baje de este número</p>
+                    <p class="text-xs text-gray-400 mt-1">Alerta cuando baje de este n\xFAmero</p>
                 </div>
             </div>
 
             <!-- Unidad de medida -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">📐 Unidad de medida</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">\u{1F4D0} Unidad de medida</label>
                 <select id="mpUnidad" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none" style="background:#fff;">
                     <option value="pza">Pieza (pza)</option>
                     <option value="hoja">Hoja</option>
                     <option value="rollo">Rollo</option>
                     <option value="m">Metro (m)</option>
-                    <option value="cm">Centímetro (cm)</option>
+                    <option value="cm">Cent\xEDmetro (cm)</option>
                     <option value="ml">Mililitro (ml)</option>
                     <option value="g">Gramo (g)</option>
                     <option value="kg">Kilogramo (kg)</option>
@@ -292,7 +292,7 @@ function injectMpModal() {
 
             <!-- Proveedor -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">🏭 Proveedor</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">\u{1F3ED} Proveedor</label>
                 <input type="text" id="mpProveedor"
                        placeholder="Ej: Mercado Libre, Proveedor ABC"
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
@@ -300,7 +300,7 @@ function injectMpModal() {
 
             <!-- Link del proveedor -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">🔗 Link del proveedor (opcional)</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">\u{1F517} Link del proveedor (opcional)</label>
                 <input type="url" id="mpProveedorUrl"
                        placeholder="https://www.mercadolibre.com.mx/..."
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
@@ -308,7 +308,7 @@ function injectMpModal() {
 
             <!-- Notas -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">📝 Notas internas</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">\u{1F4DD} Notas internas</label>
                 <textarea id="mpNotas" rows="2"
                     placeholder="Ej: usar solo para impresora X, guardar en lugar seco..."
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none text-sm resize-none"></textarea>
@@ -317,7 +317,7 @@ function injectMpModal() {
             <button type="submit" id="mpSubmitBtn"
                     class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg mt-4"
                     style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
-                ✅ Guardar Materia Prima
+                \u2705 Guardar Materia Prima
             </button>
         </form>
     </div>`;
@@ -351,7 +351,7 @@ function injectMpModal() {
   }, 100);
 }
 window.injectMpModal = injectMpModal;
-const _SVC_EMOJIS = ["⚙️", "🔧", "💡", "🖨️", "✂️", "🔩", "💻", "🎨", "🔥", "⚡", "🧲", "🛠️"];
+const _SVC_EMOJIS = ["\u2699\uFE0F", "\u{1F527}", "\u{1F4A1}", "\u{1F5A8}\uFE0F", "\u2702\uFE0F", "\u{1F529}", "\u{1F4BB}", "\u{1F3A8}", "\u{1F525}", "\u26A1", "\u{1F9F2}", "\u{1F6E0}\uFE0F"];
 function injectSvcModal() {
   if (document.getElementById("svcModal")) return;
   const modal = document.createElement("div");
@@ -360,24 +360,24 @@ function injectSvcModal() {
   modal.innerHTML = `
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in" style="margin:auto;max-height:90vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-gray-800">⚙️ <span id="svcModalTitle">Nuevo Servicio</span></h3>
-            <button onclick="closeServicioModal()" style="font-size:1.4rem;background:none;border:none;cursor:pointer;color:#9ca3af;">×</button>
+            <h3 class="text-xl font-bold text-gray-800">\u2699\uFE0F <span id="svcModalTitle">Nuevo Servicio</span></h3>
+            <button onclick="closeServicioModal()" style="font-size:1.4rem;background:none;border:none;cursor:pointer;color:#9ca3af;">\xD7</button>
         </div>
         <form id="svcForm" class="space-y-5" onsubmit="event.preventDefault();guardarServicio();">
             <input type="hidden" id="svcEditId">
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre *</label>
-                <input type="text" id="svcNombre" required placeholder="Ej: Uso de láser, Vinil textil (pieza)..."
+                <input type="text" id="svcNombre" required placeholder="Ej: Uso de l\xE1ser, Vinil textil (pieza)..."
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-indigo-400">
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Ícono</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">\xCDcono</label>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
                     ${_SVC_EMOJIS.map((e) => `<button type="button" onclick="document.getElementById('svcEmoji').value='${e}';document.querySelectorAll('.svc-emoji-btn').forEach(b=>b.style.background='#f3f4f6');this.style.background='#ede9fe';" class="svc-emoji-btn" style="width:38px;height:38px;border-radius:10px;border:1px solid #e5e7eb;background:#f3f4f6;font-size:1.3rem;cursor:pointer;">${e}</button>`).join("")}
                 </div>
-                <input type="hidden" id="svcEmoji" value="⚙️">
+                <input type="hidden" id="svcEmoji" value="\u2699\uFE0F">
             </div>
 
             <div>
@@ -387,23 +387,23 @@ function injectSvcModal() {
                     <input type="number" id="svcCosto" required min="0" step="0.01" placeholder="0.00"
                         class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-indigo-400">
                 </div>
-                <p class="text-xs text-gray-400 mt-1">Cuánto cuesta cada vez que usas este servicio en un producto</p>
+                <p class="text-xs text-gray-400 mt-1">Cu\xE1nto cuesta cada vez que usas este servicio en un producto</p>
             </div>
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">SKU (opcional)</label>
-                <input type="text" id="svcSku" placeholder="Se genera automáticamente si está vacío"
+                <input type="text" id="svcSku" placeholder="Se genera autom\xE1ticamente si est\xE1 vac\xEDo"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-indigo-400">
             </div>
 
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Notas</label>
-                <textarea id="svcNotas" rows="2" placeholder="Ej: Costo incluye electricidad + depreciación de la máquina"
+                <textarea id="svcNotas" rows="2" placeholder="Ej: Costo incluye electricidad + depreciaci\xF3n de la m\xE1quina"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none focus:border-indigo-400"></textarea>
             </div>
 
             <button type="submit" class="w-full py-3 rounded-xl text-white font-bold text-base" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);">
-                💾 Guardar Servicio
+                \u{1F4BE} Guardar Servicio
             </button>
         </form>
     </div>`;
@@ -418,7 +418,7 @@ function openServicioModal(editId) {
   document.getElementById("svcEditId").value = editId || "";
   document.getElementById("svcModalTitle").textContent = editId ? "Editar Servicio" : "Nuevo Servicio";
   document.getElementById("svcNombre").value = "";
-  document.getElementById("svcEmoji").value = "⚙️";
+  document.getElementById("svcEmoji").value = "\u2699\uFE0F";
   document.getElementById("svcCosto").value = "";
   document.getElementById("svcSku").value = "";
   document.getElementById("svcNotas").value = "";
@@ -427,12 +427,12 @@ function openServicioModal(editId) {
     const p = (window.products || []).find((x) => String(x.id) === String(editId));
     if (p) {
       document.getElementById("svcNombre").value = p.name || "";
-      document.getElementById("svcEmoji").value = p.image || "⚙️";
+      document.getElementById("svcEmoji").value = p.image || "\u2699\uFE0F";
       document.getElementById("svcCosto").value = p.cost || "";
       document.getElementById("svcSku").value = p.sku || "";
       document.getElementById("svcNotas").value = p.notas || "";
       document.querySelectorAll(".svc-emoji-btn").forEach((b) => {
-        if (b.textContent === (p.image || "⚙️")) b.style.background = "#ede9fe";
+        if (b.textContent === (p.image || "\u2699\uFE0F")) b.style.background = "#ede9fe";
       });
     }
   }
@@ -442,7 +442,7 @@ window.openServicioModal = openServicioModal;
 async function guardarServicio() {
   const nombre = document.getElementById("svcNombre").value.trim();
   const costo = parseFloat(document.getElementById("svcCosto").value) || 0;
-  const emoji = document.getElementById("svcEmoji").value || "⚙️";
+  const emoji = document.getElementById("svcEmoji").value || "\u2699\uFE0F";
   const notas = document.getElementById("svcNotas").value.trim();
   const skuInput = document.getElementById("svcSku").value.trim();
   const editId = document.getElementById("svcEditId").value;
@@ -450,7 +450,7 @@ async function guardarServicio() {
     manekiToastExport("El nombre es requerido.", "warn");
     return;
   }
-  const _skuSuffix = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID().split("-")[0].toUpperCase() : Math.random().toString(36).slice(2, 7).toUpperCase();
+  const _skuSuffix = mkId().split("-")[0].toUpperCase();
   const sku = skuInput || `SVC-${_skuSuffix}`;
   if (!window.products) window.products = [];
   if (editId) {
@@ -478,7 +478,7 @@ async function guardarServicio() {
   renderInventoryTable();
   closeServicioModal();
   if (window.MKS) MKS.notify();
-  manekiToastExport(`✅ Servicio "${nombre}" guardado.`, "ok");
+  manekiToastExport(`\u2705 Servicio "${nombre}" guardado.`, "ok");
 }
 window.guardarServicio = guardarServicio;
 function closeServicioModal() {
@@ -576,13 +576,13 @@ function agregarVarianteMp() {
   const tipo = (document.getElementById("mpVarTipo")?.value || "").trim();
   const valor = (document.getElementById("mpVarValor")?.value || "").trim();
   if (!tipo || !valor) {
-    manekiToastExport("⚠️ Ingresa tipo y valor de la variante", "warn");
+    manekiToastExport("\u26A0\uFE0F Ingresa tipo y valor de la variante", "warn");
     return;
   }
   window._mpVariantes = window._mpVariantes || [];
   const existe = window._mpVariantes.find((v) => v.type === tipo && v.value === valor);
   if (existe) {
-    manekiToastExport("⚠️ Ya existe esta variante", "warn");
+    manekiToastExport("\u26A0\uFE0F Ya existe esta variante", "warn");
     return;
   }
   window._mpVariantes.push({ type: tipo, value: valor, qty: 0 });
@@ -614,7 +614,7 @@ function actualizarStockTotalMp() {
   if (box) {
     if ((window._mpVariantes || []).length > 0) {
       box.style.display = "block";
-      box.textContent = `📦 Stock total: ${total} unidades`;
+      box.textContent = `\u{1F4E6} Stock total: ${total} unidades`;
     } else {
       box.style.display = "none";
     }
@@ -640,7 +640,7 @@ function renderVariantesMp() {
             <label style="font-size:.75rem;color:#6b7280;font-weight:600;white-space:nowrap;">Stock:</label>
             <div style="display:flex;align-items:center;gap:2px;">
                 <button type="button" onclick="updateVarianteMpQty(${i},${(v.qty || 0) - 1});renderVariantesMp();"
-                    style="width:22px;height:22px;border:1px solid #e2e8f0;border-radius:6px;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">−</button>
+                    style="width:22px;height:22px;border:1px solid #e2e8f0;border-radius:6px;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">\u2212</button>
                 <input type="number" value="${v.qty || 0}" min="0"
                     onchange="updateVarianteMpQty(${i},this.value)"
                     style="width:52px;text-align:center;border:1.5px solid #6366f1;border-radius:8px;padding:2px 4px;font-weight:700;font-size:.85rem;">
@@ -649,7 +649,7 @@ function renderVariantesMp() {
             </div>
             <span style="font-size:.72rem;color:#9ca3af;">pzs</span>
             <button type="button" onclick="eliminarVarianteMp(${i})"
-                style="width:24px;height:24px;background:#fee2e2;border:none;border-radius:6px;color:#ef4444;cursor:pointer;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;">✕</button>
+                style="width:24px;height:24px;background:#fee2e2;border:none;border-radius:6px;color:#ef4444;cursor:pointer;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;">\u2715</button>
         </div>`).join("");
   actualizarStockTotalMp();
 }

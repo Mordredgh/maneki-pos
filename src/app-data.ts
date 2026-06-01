@@ -120,7 +120,7 @@ function confirmarCancelPedido() {
     const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
     const cancelacion = {
-        id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        id: mkId(),
         tipo: 'cancelacion_pedido',
         folio: pedido.folio,
         cliente: pedido.cliente,
@@ -133,7 +133,7 @@ function confirmarCancelPedido() {
     };
 
     salesHistory.push({
-        id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        id: mkId(),
         folio: pedido.folio + '-CANCEL',
         date: fecha,
         time: hora,
@@ -749,7 +749,7 @@ async function convertQuoteToPedido(quoteId) {
 
         // Crear el pedido
         const nuevoPedido = {
-            id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+            id: mkId(),
             folio: generarFolioPedido(),
             cliente: quote.customer,
             telefono: '',

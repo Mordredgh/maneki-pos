@@ -3,21 +3,13 @@ function _fechaHoy() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 window._fechaHoy = _fechaHoy;
-window._productMap = new Map();
-window._rebuildProductMap = function() {
-  window._productMap.clear();
-  (window.products || []).forEach(p => window._productMap.set(String(p.id), p));
-};
-window._getProductById = function(id) {
-  return window._productMap.get(String(id)) || null;
-};
 function openClientHistory(clientId) {
   const client = (window.clients || clients || []).find((c) => String(c.id) === String(clientId));
   if (!client) return;
   document.getElementById("historyClientName").textContent = client.name;
-  document.getElementById("historyClientPhone").textContent = client.phone ? "📱 " + client.phone : "";
-  document.getElementById("historyClientEmail").textContent = client.email ? "✉️ " + client.email : "";
-  document.getElementById("historyClientEmoji").textContent = client.type === "vip" ? "⭐" : "👤";
+  document.getElementById("historyClientPhone").textContent = client.phone ? "\u{1F4F1} " + client.phone : "";
+  document.getElementById("historyClientEmail").textContent = client.email ? "\u2709\uFE0F " + client.email : "";
+  document.getElementById("historyClientEmoji").textContent = client.type === "vip" ? "\u2B50" : "\u{1F464}";
   const clientName = client.name.toLowerCase().trim();
   const ventas = salesHistory.filter(
     (s) => s.customer && s.customer.toLowerCase().trim() === clientName
@@ -45,7 +37,7 @@ function openClientHistory(clientId) {
   document.getElementById("historyTotalSpent").textContent = "$" + totalGastado.toFixed(2);
   document.getElementById("historyTotalSales").textContent = ventas.length;
   document.getElementById("historyTotalPedidos").textContent = pedidosCliente.length + abonosCliente.length;
-  document.getElementById("historyLastPurchase").textContent = todasFechas[0] || "—";
+  document.getElementById("historyLastPurchase").textContent = todasFechas[0] || "\u2014";
   const ventasList = document.getElementById("historyVentasList");
   if (ventas.length === 0) {
     ventasList.innerHTML = '<p class="text-gray-400 text-center py-8 text-sm">Sin ventas registradas</p>';
@@ -53,8 +45,8 @@ function openClientHistory(clientId) {
     ventasList.innerHTML = ventas.slice().reverse().map((v) => `
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
                 <div>
-                    <p class="font-semibold text-gray-800 text-sm">${v.folio || "—"}</p>
-                    <p class="text-xs text-gray-500">${v.date} · ${v.method || ""}</p>
+                    <p class="font-semibold text-gray-800 text-sm">${v.folio || "\u2014"}</p>
+                    <p class="text-xs text-gray-500">${v.date} \xB7 ${v.method || ""}</p>
                     <p class="text-xs text-gray-400">${(v.products || []).map((p) => _esc(p.name)).join(", ")}</p>
                 </div>
                 <span class="font-bold text-gray-800">$${(v.total || 0).toFixed(2)}</span>
@@ -70,14 +62,14 @@ function openClientHistory(clientId) {
       return `
             <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
                 <div>
-                    <p class="font-semibold text-gray-800 text-sm">${p.folio || "—"}</p>
-                    <p class="text-xs text-gray-500">${p.fechaPedido || ""} · Entrega: ${p.fechaEntrega || "—"}</p>
+                    <p class="font-semibold text-gray-800 text-sm">${p.folio || "\u2014"}</p>
+                    <p class="text-xs text-gray-500">${p.fechaPedido || ""} \xB7 Entrega: ${p.fechaEntrega || "\u2014"}</p>
                     <p class="text-xs text-gray-400">${_esc(p.concepto || "")}</p>
                 </div>
                 <div class="text-right">
                     <p class="font-bold text-gray-800">$${(p.total || 0).toFixed(2)}</p>
                     <p class="text-xs ${saldoP > 0 ? "text-red-500" : "text-green-500"}">
-                        ${saldoP > 0 ? "Resta $" + saldoP.toFixed(2) : "Pagado ✓"}
+                        ${saldoP > 0 ? "Resta $" + saldoP.toFixed(2) : "Pagado \u2713"}
                     </p>
                 </div>
             </div>
@@ -93,7 +85,7 @@ function openClientHistory(clientId) {
     saldoEl.textContent = "$" + saldoTotal.toFixed(2);
     saldoEl.style.color = saldoTotal > 0 ? "#B91C1C" : "#15803D";
   }
-  if (saldoDetEl) saldoDetEl.textContent = saldoTotal > 0 ? `Pedidos: $${saldoPedidos.toFixed(2)} · Abonos: $${saldoAbonos.toFixed(2)}` : "✅ Todo pagado";
+  if (saldoDetEl) saldoDetEl.textContent = saldoTotal > 0 ? `Pedidos: $${saldoPedidos.toFixed(2)} \xB7 Abonos: $${saldoAbonos.toFixed(2)}` : "\u2705 Todo pagado";
   const notasEl = document.getElementById("historyClientNotas");
   if (notasEl) notasEl.textContent = client.notas || "Sin notas";
   const prodMap = {};
@@ -105,7 +97,7 @@ function openClientHistory(clientId) {
   });
   const topProds = Object.entries(prodMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const topEl = document.getElementById("historyTopProductos");
-  if (topEl) topEl.innerHTML = topProds.length > 0 ? topProds.map(([name, qty]) => `<span class="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-semibold">${_esc(name)} ×${qty}</span>`).join("") : '<span class="text-xs text-gray-400">Sin datos</span>';
+  if (topEl) topEl.innerHTML = topProds.length > 0 ? topProds.map(([name, qty]) => `<span class="px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-semibold">${_esc(name)} \xD7${qty}</span>`).join("") : '<span class="text-xs text-gray-400">Sin datos</span>';
   const histHtml = typeof renderHistorialClienteModal === "function" ? renderHistorialClienteModal(client.nombre || client.name || "") : "";
   if (histHtml) {
     let histContainer = document.getElementById("clientHistorialPedidos");
@@ -143,14 +135,14 @@ function switchHistoryTab(tab) {
   }
 }
 let storeConfig = {
-  emoji: "🐱",
+  emoji: "\u{1F431}",
   name: "Maneki Store",
   slogan: "Regalos Personalizados",
   phone: "",
   facebook: "",
   email: "",
   address: "",
-  footer: "¡Gracias por tu compra!",
+  footer: "\xA1Gracias por tu compra!",
   logo: null,
   logoMode: "image"
 };
@@ -176,7 +168,7 @@ function saveStoreConfig() {
     metaMensual: parseFloat(localStorage.getItem("mk_monthly_goal") || "0") || storeConfig.metaMensual || 5e3
   };
   if (!storeConfig.logo) {
-    manekiToastExport("Agrega un logo válido antes de guardar", "warn");
+    manekiToastExport("Agrega un logo v\xE1lido antes de guardar", "warn");
   }
   sbSave("storeConfig", storeConfig).then(() => done(true)).catch(() => done(false));
   const sidebarH1 = document.querySelector("#sidebar .sidebar-store-name");
@@ -184,7 +176,7 @@ function saveStoreConfig() {
   if (sidebarH1) sidebarH1.textContent = storeConfig.name;
   if (sidebarP) sidebarP.textContent = storeConfig.slogan;
   updateSidebarLogo();
-  manekiToastExport("Configuración guardada ✓", "ok");
+  manekiToastExport("Configuraci\xF3n guardada \u2713", "ok");
 }
 function updateSidebarLogo() {
   const c = document.getElementById("sidebarLogoContainer");
@@ -192,16 +184,16 @@ function updateSidebarLogo() {
   if (storeConfig.logo) {
     c.innerHTML = `<img src="${storeConfig.logo}" style="width:52px;height:52px;object-fit:contain;border-radius:12px;" alt="Logo">`;
   } else {
-    c.innerHTML = `<span style="font-size:30px">${storeConfig.emoji || "🐱"}</span>`;
+    c.innerHTML = `<span style="font-size:30px">${storeConfig.emoji || "\u{1F431}"}</span>`;
   }
 }
 function renderBienvenida() {
   const now = /* @__PURE__ */ new Date();
   const h = now.getHours();
-  const saludo = h < 12 ? "¡Buenos días!" : h < 19 ? "¡Buenas tardes!" : "¡Buenas noches!";
+  const saludo = h < 12 ? "\xA1Buenos d\xEDas!" : h < 19 ? "\xA1Buenas tardes!" : "\xA1Buenas noches!";
   const lc = document.getElementById("welcomeLogoContainer");
   if (lc) {
-    lc.innerHTML = storeConfig.logo ? `<img src="${storeConfig.logo}" style="width:56px;height:56px;object-fit:contain;border-radius:12px;" alt="Logo">` : `<span style="font-size:28px">${storeConfig.emoji || "🐱"}</span>`;
+    lc.innerHTML = storeConfig.logo ? `<img src="${storeConfig.logo}" style="width:56px;height:56px;object-fit:contain;border-radius:12px;" alt="Logo">` : `<span style="font-size:28px">${storeConfig.emoji || "\u{1F431}"}</span>`;
   }
   const elSet = (id, val) => {
     const e = document.getElementById(id);
@@ -225,7 +217,7 @@ function renderBienvenida() {
       timeEl.textContent = n.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
       const hh = n.getHours();
       const greetEl = document.getElementById("welcomeGreeting");
-      if (greetEl) greetEl.textContent = hh < 12 ? "¡Buenos días!" : hh < 19 ? "¡Buenas tardes!" : "¡Buenas noches!";
+      if (greetEl) greetEl.textContent = hh < 12 ? "\xA1Buenos d\xEDas!" : hh < 19 ? "\xA1Buenas tardes!" : "\xA1Buenas noches!";
     }, 6e4);
   }
   try {
@@ -245,7 +237,7 @@ function renderBienvenida() {
     if (diffEl) {
       if (totalAyer > 0) {
         const pct = ((totalHoy - totalAyer) / totalAyer * 100).toFixed(0);
-        diffEl.textContent = (pct >= 0 ? "▲ +" : "▼ ") + Math.abs(pct) + "% vs ayer";
+        diffEl.textContent = (pct >= 0 ? "\u25B2 +" : "\u25BC ") + Math.abs(pct) + "% vs ayer";
         diffEl.style.color = pct >= 0 ? "#16a34a" : "#dc2626";
       } else {
         diffEl.textContent = `${ventasHoy.length} venta${ventasHoy.length !== 1 ? "s" : ""} hoy`;
@@ -258,15 +250,15 @@ function renderBienvenida() {
     if (urgCard) urgCard.style.background = urgentes.length > 0 ? "linear-gradient(135deg,#fef2f2,#fee2e2)" : "linear-gradient(135deg,#f0fdf9,#ecfdf5)";
     const listEl = document.getElementById("mornUrgentList");
     if (listEl) {
-      listEl.innerHTML = urgentes.length === 0 ? '<p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:12px 0;">✅ Sin entregas urgentes para hoy</p>' : urgentes.slice(0, 4).map((p) => `
+      listEl.innerHTML = urgentes.length === 0 ? '<p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:12px 0;">\u2705 Sin entregas urgentes para hoy</p>' : urgentes.slice(0, 4).map((p) => `
                     <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fff5f5;border-left:3px solid #ef4444;margin-bottom:6px;cursor:pointer;" onclick="showSection('pedidos')">
                         <div style="flex:1;">
                             <p style="font-size:.78rem;font-weight:700;color:#1f2937;margin:0;">${_esc(p.customer || p.cliente || "Sin nombre")}</p>
-                            <p style="font-size:.68rem;color:#6b7280;margin:1px 0 0;">${p.items?.length || 0} producto${(p.items?.length || 0) !== 1 ? "s" : ""} · ${_esc(p.status || "pendiente")}</p>
+                            <p style="font-size:.68rem;color:#6b7280;margin:1px 0 0;">${p.items?.length || 0} producto${(p.items?.length || 0) !== 1 ? "s" : ""} \xB7 ${_esc(p.status || "pendiente")}</p>
                         </div>
                         <span style="font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:99px;background:#fee2e2;color:#dc2626;">HOY</span>
                     </div>
-                `).join("") + (urgentes.length > 4 ? `<p style="font-size:.7rem;color:#9ca3af;text-align:center;margin-top:4px;">+${urgentes.length - 4} más...</p>` : "");
+                `).join("") + (urgentes.length > 4 ? `<p style="font-size:.7rem;color:#9ca3af;text-align:center;margin-top:4px;">+${urgentes.length - 4} m\xE1s...</p>` : "");
     }
     const productos = window.products || JSON.parse(localStorage.getItem("maneki_productos") || "[]");
     const criticos = productos.filter((p) => (parseInt(p.stock) || 0) <= (storeConfig.stockMinimo || 5) && p.activo !== false);
@@ -286,7 +278,7 @@ function updateStorePreview() {
   if (storeConfig.logoMode === "image" && typeof storeLogo !== "undefined" && storeLogo) {
     pe.innerHTML = `<img src="${typeof _validateImgUrl === "function" ? _validateImgUrl(storeLogo) : storeLogo}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
   } else {
-    pe.textContent = (document.getElementById("configEmoji") || {}).value || "🐱";
+    pe.textContent = (document.getElementById("configEmoji") || {}).value || "\u{1F431}";
   }
   const pn = document.getElementById("previewName");
   const ps = document.getElementById("previewSlogan");
@@ -296,9 +288,9 @@ function updateStorePreview() {
   const fb = (document.getElementById("configFacebook") || {}).value || "";
   const email = (document.getElementById("configEmail") || {}).value || "";
   let contactHTML = "";
-  if (phone) contactHTML += `<p>📱 ${_esc(phone)}</p>`;
-  if (fb) contactHTML += `<p>📘 ${_esc(fb)}</p>`;
-  if (email) contactHTML += `<p>✉️ ${_esc(email)}</p>`;
+  if (phone) contactHTML += `<p>\u{1F4F1} ${_esc(phone)}</p>`;
+  if (fb) contactHTML += `<p>\u{1F4D8} ${_esc(fb)}</p>`;
+  if (email) contactHTML += `<p>\u2709\uFE0F ${_esc(email)}</p>`;
   const pc = document.getElementById("previewContact");
   if (pc) pc.innerHTML = contactHTML;
 }
@@ -330,7 +322,7 @@ function renderTagsSeleccionados(tags) {
   if (!cont) return;
   cont.innerHTML = _tagsActuales.map(
     (t) => `<span class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
-            ${t} <button type="button" onclick="eliminarTag('${t}')" class="ml-1 text-amber-600 hover:text-red-500">✕</button>
+            ${t} <button type="button" onclick="eliminarTag('${t}')" class="ml-1 text-amber-600 hover:text-red-500">\u2715</button>
         </span>`
   ).join("");
   const tagInput = document.getElementById("productTags");
@@ -423,7 +415,7 @@ function renderKitComponentesList() {
   container.innerHTML = _kitComponentes.length === 0 ? '<p class="text-xs text-gray-400">Sin componentes</p>' : _kitComponentes.map(
     (c, i) => `<div class="flex justify-between items-center bg-white rounded-lg px-3 py-1 text-sm border border-gray-100">
                 <span>${c.name} x${c.quantity}</span>
-                <button type="button" onclick="eliminarComponenteKit(${i})" class="text-red-400 hover:text-red-600">✕</button>
+                <button type="button" onclick="eliminarComponenteKit(${i})" class="text-red-400 hover:text-red-600">\u2715</button>
             </div>`
   ).join("");
   document.getElementById("productKitComponentes").value = JSON.stringify(_kitComponentes);
@@ -462,12 +454,12 @@ function imprimirInventario() {
             @media print { button { display:none; } }
         </style>
     </head><body>
-        <h1>📦 Inventario</h1>
-        <p>Generado el ${fecha} · ${products.length} productos</p>
-        <button onclick="window.print()" style="margin-bottom:16px;padding:8px 16px;background:#6366f1;color:white;border:none;border-radius:8px;cursor:pointer;">🖨️ Imprimir / Guardar PDF</button>
+        <h1>\u{1F4E6} Inventario</h1>
+        <p>Generado el ${fecha} \xB7 ${products.length} productos</p>
+        <button onclick="window.print()" style="margin-bottom:16px;padding:8px 16px;background:#6366f1;color:white;border:none;border-radius:8px;cursor:pointer;">\u{1F5A8}\uFE0F Imprimir / Guardar PDF</button>
         <table>
             <thead><tr>
-                <th>Producto</th><th>SKU</th><th>Categoría</th>
+                <th>Producto</th><th>SKU</th><th>Categor\xEDa</th>
                 <th>Precio</th><th>Stock</th><th>Estado</th><th>Tags</th>
             </tr></thead>
             <tbody>${filas}</tbody>
@@ -483,7 +475,13 @@ document.addEventListener("DOMContentLoaded", function() {
   initApp();
 });
 async function initApp() {
-  function splashProgress(step, label) {}
+  function splashProgress(step, label) {
+    try {
+      if (typeof ipcRenderer !== "undefined" && ipcRenderer)
+        ipcRenderer.send("splash-progress", { step, total: 6, label });
+    } catch (e) {
+    }
+  }
   try {
     let _syncWindowVars2 = function() {
       window.pedidos = pedidos;
@@ -544,7 +542,6 @@ async function initApp() {
       sbLoad("ingresosRecurrentes", [])
     ]);
     products = _products;
-    if (typeof window._rebuildProductMap === "function") window._rebuildProductMap();
     clients = _clients;
     salesHistory = _salesHistory;
     quotes = _quotes;
@@ -558,7 +555,7 @@ async function initApp() {
     pedidosFinalizados = _pedidosFin;
     storeConfig = _storeConf;
     window.ingresosRecurrentes = _ingresosRec;
-    splashProgress(4, "Cargando configuración...");
+    splashProgress(4, "Cargando configuraci\xF3n...");
     const [_notas, _equipos, _roiHist, _roiConf, _envioAnillos] = await Promise.all([
       sbLoad("notas", []),
       sbLoad("equipos", []),
@@ -580,8 +577,9 @@ async function initApp() {
       ENVIO_BASE.lat = storeConfig.baseLat;
       ENVIO_BASE.lng = storeConfig.baseLng;
     }
-    splashProgress(6, "¡Listo!");
+    splashProgress(6, "\xA1Listo!");
     try {
+      if (typeof ipcRenderer !== "undefined" && ipcRenderer) ipcRenderer.send("splash-done");
     } catch (e) {
     }
     const roiPctEl = document.getElementById("roiPorcentajeGlobal");
@@ -605,20 +603,22 @@ async function initApp() {
         txt.className = "text-green-700";
         if (_sbConectado === false) {
           if (typeof mostrarBannerConexion === "function")
-            mostrarBannerConexion(true, "Conexión restaurada — sincronizando datos...");
+            mostrarBannerConexion(true, "Conexi\xF3n restaurada \u2014 sincronizando datos...");
           try {
+            if (typeof require !== "undefined") require("electron").ipcRenderer.send("notify-connection", { connected: true });
           } catch (e) {
           }
         }
         _sbConectado = true;
       } catch (e) {
         dot.className = "w-2 h-2 rounded-full bg-red-500 inline-block";
-        txt.textContent = "Sin conexión";
+        txt.textContent = "Sin conexi\xF3n";
         txt.className = "text-red-600";
         if (_sbConectado !== false) {
           if (typeof mostrarBannerConexion === "function")
-            mostrarBannerConexion(false, "Sin conexión a la nube — trabajando en modo offline.");
+            mostrarBannerConexion(false, "Sin conexi\xF3n a la nube \u2014 trabajando en modo offline.");
           try {
+            if (typeof require !== "undefined") require("electron").ipcRenderer.send("notify-connection", { connected: false });
           } catch (e2) {
           }
         }
@@ -683,7 +683,7 @@ async function initApp() {
           products: [],
           total: anticipoInicial,
           method: p.metodoPago || "Efectivo",
-          note: "Anticipo inicial (generado automáticamente)"
+          note: "Anticipo inicial (generado autom\xE1ticamente)"
         });
         shIds.add(syntheticId);
       });
@@ -702,8 +702,7 @@ async function initApp() {
           if (typeof initChart === "function") initChart();
           if (typeof initReports === "function") initReports();
           try {
-            const _initSection = typeof _mkGetInitialSection === "function" ? _mkGetInitialSection() : "bienvenida";
-            showSection(_initSection);
+            showSection("bienvenida");
           } catch (e) {
           }
           if (typeof _setupRealtime === "function") _setupRealtime();

@@ -3,58 +3,6 @@ var pedidosFinalizados = [];
 var abonos = [];
 var pedidoProductosSeleccionados = [];
 var abonoProductosSeleccionados = [];
-let ipcRenderer = null;
-try {
-  const { ipcRenderer: _ipc } = require("electron");
-  ipcRenderer = _ipc;
-} catch (e) {
-}
-const sqliteStorage = {
-  // Guardar datos en SQLite local
-  async set(key, value) {
-    if (!ipcRenderer) return false;
-    try {
-      const result = await ipcRenderer.invoke("sqlite-save", { key, value });
-      return result.ok;
-    } catch (e) {
-      console.warn("sqliteStorage.set error:", key, e);
-      return false;
-    }
-  },
-  // Cargar datos desde SQLite local
-  async get(key, defaultValue = null) {
-    if (!ipcRenderer) return defaultValue;
-    try {
-      const result = await ipcRenderer.invoke("sqlite-load", { key });
-      if (result.ok && result.value !== null) return result.value;
-      return defaultValue;
-    } catch (e) {
-      console.warn("sqliteStorage.get error:", key, e);
-      return defaultValue;
-    }
-  },
-  // Cargar múltiples claves de una sola vez (más rápido al iniciar)
-  async getAll(keys) {
-    if (!ipcRenderer) return {};
-    try {
-      const result = await ipcRenderer.invoke("sqlite-load-all", { keys });
-      return result.ok ? result.data : {};
-    } catch (e) {
-      console.warn("sqliteStorage.getAll error:", e);
-      return {};
-    }
-  },
-  // Ver cuánto espacio está usando
-  async getSize() {
-    if (!ipcRenderer) return { kb: 0, dbKB: 0 };
-    try {
-      const result = await ipcRenderer.invoke("sqlite-size");
-      return result.ok ? result : { kb: 0, dbKB: 0 };
-    } catch (e) {
-      return { kb: 0, dbKB: 0 };
-    }
-  }
-};
 const _rtDeskDeb = {};
 const _rtTablaAKey = {
   "products": "products",
@@ -72,12 +20,6 @@ let db = null;
     };
     var _validarSupabaseCfg = _validarSupabaseCfg2;
     let cfg = null;
-    if (ipcRenderer) {
-      try {
-        cfg = await ipcRenderer.invoke("get-supabase-config");
-      } catch (e) {
-      }
-    }
     if (!cfg && window.__mkCfg) {
       try {
         cfg = await window.__mkCfg.getSupabase();
@@ -117,6 +59,18 @@ let db = null;
     window._dbReady = false;
   }
 })();
+function mkId() {
+  return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+}
+window.mkId = mkId;
+function mkHandleError(err, context) {
+  const msg = err?.message || String(err);
+  console.error(`[Maneki ${context}]`, msg, err);
+  if (typeof manekiToastExport === "function") {
+    manekiToastExport(`Error en ${context}: ${msg}`, "error");
+  }
+}
+window.mkHandleError = mkHandleError;
 function _withTimeout(promise, ms) {
   ms = ms || 8e3;
   return Promise.race([
@@ -270,7 +224,6 @@ async function _applyRTRelacional(tabla, payload) {
       if (!data) return;
       const fresh = data.map((r) => _rtTransformarFila(tabla, r)).filter(Boolean);
       _rtInPlace(arr || [], fresh);
-      sqliteStorage.set(key, fresh).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     } else if (rowData) {
       const transformed = _rtTransformarFila(tabla, rowData);
       if (!transformed) return;
@@ -293,7 +246,6 @@ async function _applyRTRelacional(tabla, payload) {
         const i = arr.findIndex((x) => String(x.id) === String(delId));
         if (i >= 0) arr.splice(i, 1);
       }
-      sqliteStorage.set(key, arr).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     }
     await _applyRTDesktopConDatos(key, window[key] || []);
     console.log("[Realtime] " + tabla + " (" + eventType + ") aplicado in-place");
@@ -542,118 +494,10 @@ function _ocultarBannerOfflineConexion() {
     }, 320);
   }
 }
-function encolarVentaOffline(saleRecord) {
-  if (!ipcRenderer) return;
-  try {
-    ipcRenderer.send("save-venta-pendiente", {
-      id: String(saleRecord.id),
-      folio: saleRecord.folio,
-      date: saleRecord.date,
-      ...saleRecord
-    });
-    ipcRenderer.invoke("count-ventas-pendientes").then((n) => actualizarBannerOffline(n)).catch((e) => console.warn("[Maneki DB]", e?.message || e));
-    manekiToastExport("\u{1F4E6} Venta " + saleRecord.folio + " guardada offline", "warn");
-  } catch (e) {
-    console.error("Error encolando venta offline:", e);
-  }
-}
 async function sincronizarPendientes() {
-  if (ipcRenderer) {
-    try {
-      const ventasPendientes = await ipcRenderer.invoke("get-ventas-pendientes");
-      if (ventasPendientes && ventasPendientes.length > 0) {
-        let cambiado = false;
-        for (const venta of ventasPendientes) {
-          const yaExiste = salesHistory.some((s) => String(s.id) === String(venta.data?.id || venta.id));
-          if (!yaExiste && venta.data) {
-            salesHistory.push(venta.data);
-            cambiado = true;
-          }
-        }
-        if (cambiado) {
-          const { error } = await db.from("store").upsert(
-            { key: "salesHistory", value: JSON.stringify(salesHistory) },
-            { onConflict: "key" }
-          );
-          if (!error) {
-            for (const venta of ventasPendientes) {
-              ipcRenderer.send("delete-venta-pendiente", String(venta.id));
-            }
-            manekiToastExport("\u2705 " + ventasPendientes.length + " venta(s) offline sincronizadas", "ok");
-          }
-        } else {
-          for (const venta of ventasPendientes) {
-            ipcRenderer.send("delete-venta-pendiente", String(venta.id));
-          }
-        }
-      }
-      const restantes = await ipcRenderer.invoke("count-ventas-pendientes").catch(() => 0);
-      actualizarBannerOffline(restantes);
-    } catch (e) {
-      console.error("Error sincronizando:", e);
-    }
-  }
   if (!window._pendingSync) return;
-  const keys = [
-    "categories",
-    "products",
-    "clients",
-    "salesHistory",
-    "quotes",
-    "incomes",
-    "expenses",
-    "receivables",
-    "payables",
-    "pedidos",
-    "equipos",
-    "roiHistorial",
-    "roiConfig",
-    "envioAnillos",
-    "gastosRecurrentes",
-    "stockMovimientos",
-    "pedidosFinalizados",
-    "notas",
-    "storeConfig"
-  ];
-  const upsertBatch = [];
-  for (const key of keys) {
-    try {
-      const localData = await sqliteStorage.get(key, null);
-      if (localData === null) continue;
-      const localMeta = await sqliteStorage.get("__meta_" + key, null);
-      const localSyncedAt = localMeta?.syncedAt || "1970-01-01T00:00:00.000Z";
-      const { data: remote } = await db.from("store").select("value").eq("key", key).maybeSingle().catch(() => ({ data: null }));
-      let shouldSync = true;
-      if (remote && remote.value) {
-        try {
-          const remoteData = JSON.parse(remote.value);
-          const remoteSyncedAt = remoteData?.__syncedAt || "1970-01-01T00:00:00.000Z";
-          if (remoteSyncedAt > localSyncedAt) shouldSync = false;
-        } catch (e) {
-        }
-      }
-      if (!shouldSync) continue;
-      upsertBatch.push({ key, value: JSON.stringify(localData) });
-    } catch (e) {
-    }
-  }
-  let ok = true;
-  const BATCH_SIZE = 5;
-  for (let i = 0; i < upsertBatch.length; i += BATCH_SIZE) {
-    const chunk = upsertBatch.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(
-      chunk.map((item) => db.from("store").upsert(item, { onConflict: "key" }).then((r) => r.error))
-    );
-    if (results.some((err) => err)) {
-      ok = false;
-      break;
-    }
-  }
-  if (ok) {
-    window._pendingSync = false;
-    actualizarIndicadorConexion(true);
-    manekiToastExport(`\u2705 ${upsertBatch.length} tablas sincronizadas con Supabase`, "ok");
-  }
+  window._pendingSync = false;
+  actualizarIndicadorConexion(true);
 }
 window.addEventListener("online", () => {
   actualizarIndicadorConexion(true);
@@ -662,26 +506,16 @@ window.addEventListener("online", () => {
 window.addEventListener("offline", () => {
   actualizarIndicadorConexion(false);
 });
-setTimeout(() => {
-  if (ipcRenderer) {
-    ipcRenderer.invoke("count-ventas-pendientes").then((n) => {
-      if (n > 0) actualizarBannerOffline(n);
-    }).catch((e) => console.warn("[Maneki DB]", e?.message || e));
-  }
-}, 3e3);
 const _sbSaveTimers = {};
 async function sbSave(key, data) {
   const dataConTimestamp = data;
-  const sqliteOk = await sqliteStorage.set(key, dataConTimestamp);
-  if (!sqliteOk) {
-    try {
-      localStorage.setItem("maneki_" + key, JSON.stringify(dataConTimestamp));
-    } catch (e) {
-      if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
-        console.warn("[Storage] localStorage lleno");
-      } else {
-        console.warn("localStorage tambi\xE9n fall\xF3:", key, e);
-      }
+  try {
+    localStorage.setItem("maneki_" + key, JSON.stringify(dataConTimestamp));
+  } catch (e) {
+    if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
+      console.warn("[Storage] localStorage lleno");
+    } else {
+      console.warn("localStorage fall\xF3:", key, e);
     }
   }
   if (_sbSaveTimers[key]) clearTimeout(_sbSaveTimers[key]);
@@ -705,7 +539,6 @@ async function sbSave(key, data) {
           reject(new Error(error.message || "Error de Supabase"));
         } else {
           actualizarIndicadorConexion(true);
-          sqliteStorage.set("__meta_" + key, { syncedAt: (/* @__PURE__ */ new Date()).toISOString() }).catch((e) => console.warn("[Maneki DB]", e?.message || e));
           if (typeof window._mkUpdateSyncTime === "function") window._mkUpdateSyncTime();
           resolve();
         }
@@ -878,76 +711,26 @@ async function sbLoad(key, def) {
     if (!error && data) {
       try {
         const parsed = JSON.parse(data.value);
-        const _esArrayVacio = Array.isArray(parsed) && parsed.length === 0;
-        if (_esArrayVacio) {
-          const _sqlite = await sqliteStorage.get(key, null);
-          if (_sqlite !== null && Array.isArray(_sqlite) && _sqlite.length > 0) {
-            console.log(`[sbLoad] store devuelve [] para "${key}" pero SQLite tiene ${_sqlite.length} items \u2014 usando SQLite`);
-            return _sqlite;
-          }
-        }
-        sqliteStorage.set(key, parsed).catch((e) => console.warn("[Maneki DB]", e?.message || e));
         return parsed;
       } catch (e) {
         console.warn("Error parseando dato Supabase:", e);
       }
     }
   } catch (e) {
-    console.warn("sbLoad Supabase no disponible, usando SQLite local:", key);
-  }
-  const localSQLite = await sqliteStorage.get(key, null);
-  if (localSQLite !== null) {
-    return localSQLite;
+    console.warn("sbLoad Supabase no disponible, usando localStorage:", key);
   }
   try {
     const local = localStorage.getItem("maneki_" + key);
     if (local) {
-      const parsed = JSON.parse(local);
-      sqliteStorage.set(key, parsed).then(() => {
-        localStorage.removeItem("maneki_" + key);
-      }).catch((e) => console.warn("[Maneki DB]", e?.message || e));
-      return parsed;
+      return JSON.parse(local);
     }
   } catch (e) {
     console.warn("Error en localStorage fallback:", e);
   }
   return def;
 }
-async function verificarEspacioAlmacenamiento() {
-  try {
-    const sqliteInfo = await sqliteStorage.getSize();
-    const sqliteKB = sqliteInfo.dbKB || sqliteInfo.kb || 0;
-    let lsBytes = 0;
-    for (let k in localStorage) {
-      if (localStorage.hasOwnProperty(k)) lsBytes += (localStorage[k].length + k.length) * 2;
-    }
-    const lsKB = Math.round(lsBytes / 1024);
-    if (lsKB > 4500) {
-      manekiToastExport(
-        `\u2139\uFE0F Migrando datos a SQLite local (m\xE1s espacio). Un momento...`,
-        "ok"
-      );
-    }
-    return { sqliteKB, lsKB };
-  } catch (e) {
-    return { sqliteKB: 0, lsKB: 0 };
-  }
-}
-setTimeout(verificarEspacioAlmacenamiento, 1e4);
-window._storageCheckInterval = setInterval(verificarEspacioAlmacenamiento, 10 * 60 * 1e3);
 function saveToLocalStorage(key, data) {
 }
-async function mostrarEstadoAlmacenamiento() {
-  const info = await verificarEspacioAlmacenamiento();
-  const msg = [
-    `\u{1F4BE} SQLite local: ${info.sqliteKB} KB (sin l\xEDmite pr\xE1ctico)`,
-    `\u{1F4CB} localStorage: ${info.lsKB} KB / 5,120 KB`,
-    `\u2705 Almacenamiento principal: SQLite (ilimitado)`
-  ].join("\n");
-  manekiToastExport(`\u{1F4BE} SQLite: ${info.sqliteKB}KB | Cache: ${info.lsKB}KB`, "ok");
-  console.log("Estado almacenamiento:\n" + msg);
-}
-window.mostrarEstadoAlmacenamiento = mostrarEstadoAlmacenamiento;
 let _localFolioCounters = {};
 let _folioLock = false;
 async function getNextFolio(tipo) {
@@ -1006,7 +789,7 @@ function saveStockMovimientos() {
 }
 function registrarMovimiento(productoId, productoNombre, tipo, cantidad, motivo) {
   stockMovimientos.push({
-    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+    id: mkId(),
     fecha: _fechaHoy(),
     hora: (/* @__PURE__ */ new Date()).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
     productoId,
@@ -1099,7 +882,6 @@ function _calcStockParaSupabase(p) {
 }
 function saveProducts() {
   return (async () => {
-    sqliteStorage.set("products", products).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     try {
       await Promise.all(products.map((p) => _migrarBase64AStorage(p)));
       const rows = products.map((p) => ({
@@ -1144,7 +926,6 @@ function saveProducts() {
 }
 function saveClients() {
   (async () => {
-    sqliteStorage.set("clients", clients).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     try {
       const rows = (window.clients || []).map((c) => ({
         id: String(c.id),
@@ -1166,7 +947,6 @@ function saveClients() {
 }
 function saveSalesHistory() {
   (async () => {
-    sqliteStorage.set("salesHistory", salesHistory).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     try {
       const rows = salesHistory.map((s) => ({
         id: String(s.id),
@@ -1197,7 +977,6 @@ function saveQuotes() {
 }
 function saveIncomes() {
   (async () => {
-    sqliteStorage.set("incomes", incomes).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     try {
       const rows = (window.incomes || []).map((i) => ({
         id: typeof i.id === "number" ? i.id : void 0,
@@ -1216,7 +995,6 @@ function saveIncomes() {
 }
 function saveExpenses() {
   (async () => {
-    sqliteStorage.set("expenses", expenses).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     try {
       const rows = (window.expenses || []).map((e) => ({
         id: typeof e.id === "number" ? e.id : void 0,
@@ -1251,7 +1029,6 @@ function savePayables() {
 }
 function savePedidos() {
   return (async () => {
-    sqliteStorage.set("pedidos", pedidos).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     try {
       const rows = pedidos.map((p) => ({
         id: String(p.id),
@@ -1297,7 +1074,6 @@ function savePedidos() {
 }
 function savePedidosFinalizados() {
   return (async () => {
-    sqliteStorage.set("pedidosFinalizados", pedidosFinalizados).catch((e) => console.warn("[Maneki DB]", e?.message || e));
     try {
       const rows = pedidosFinalizados.map((p) => ({
         id: String(p.id),

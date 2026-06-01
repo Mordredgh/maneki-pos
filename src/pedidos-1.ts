@@ -487,7 +487,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
                     // Pedido legacy sin pagos[] — crear entrada de anticipo
                     const _d = new Date();
                     pagosActualizados.unshift({
-                        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
+                        id: mkId(),
                         tipo: 'anticipo', monto: anticipo,
                         fecha: `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`,
                         hora: _d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
@@ -512,7 +512,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
             return;
         }
         const pedido = {
-            id: (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+            id: mkId(),
             folio: folio,
             cliente, telefono, redes,
             whatsapp: telefono, facebook: redes,  // alias móvil para compatibilidad
@@ -520,7 +520,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
             cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad,
             status: 'confirmado',
             pagos: anticipo > 0 ? [{
-                id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
+                id: mkId(),
                 tipo: 'anticipo',
                 monto: anticipo,
                 fecha: (()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })(),
@@ -710,7 +710,7 @@ function updatePedidosStats() {
     const lista = window.pedidos || [];
     // BUG-S06 FIX: excluir cancelados — no representan dinero real por cobrar
     const activos = lista.filter(p => p.status !== 'cancelado');
-    const porCobrar = activos.reduce((s, p) => s + (Number(p.resta) || 0), 0);
+    const porCobrar = activos.reduce((s, p) => s + calcSaldoPendiente(p), 0);
     const anticipos = activos.reduce((s, p) => s + (Number(p.anticipo) || 0), 0);
     const mesActual = new Date().getMonth();
     const mesYear = new Date().getFullYear();
@@ -797,7 +797,7 @@ function renderKanbanBoard() {
 const _statusLabel = s => ({confirmado:'✅ Confirmado',pago:'💰 Pagado',produccion:'🔧 Producción',envio:'📦 Envío',salida:'🚚 Salió',retirar:'🏪 Retirar',finalizado:'🎉 Listo',cancelado:'❌ Cancelado'})[s] || s;
 
 function kanbanCardHTML(p) {
-    const _saldo = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Number(p.resta || 0);
+    const _saldo = calcSaldoPendiente(p);
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     const entrega = p.entrega ? new Date(p.entrega + 'T00:00:00') : null;
     const diff = entrega ? Math.round((entrega - hoy) / 86400000) : null;
@@ -972,7 +972,7 @@ function renderTablaPedidos() {
     const _fp = (document.getElementById('tablaFiltroPago')||{}).value || '';
     if (_fp) {
         lista = lista.filter(p => {
-            const _r = typeof calcSaldoPendiente==='function' ? calcSaldoPendiente(p) : Math.max(0,Number(p.total||0)-Number(p.anticipo||0));
+            const _r = calcSaldoPendiente(p);
             const _a = (p.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0) || Number(p.anticipo||0);
             if (_fp==='liquidado') return _r <= 0;
             if (_fp==='anticipo')  return _r > 0 && _a > 0;
@@ -1022,7 +1022,7 @@ function renderTablaPedidos() {
             const _wa  = p.telefono || p.whatsapp || '';
             const _fb  = p.redes   || p.facebook  || '';
             const _dir = p.lugarEntrega || '';
-            const _r   = Number(p.resta||0), _a = Number(p.anticipo||0);
+            const _r   = calcSaldoPendiente(p), _a = Number(p.anticipo||0);
             const _badge = _r<=0
                 ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#dcfce7;color:#166534;">Liquidado</span>'
                 : _a>0
@@ -1187,7 +1187,7 @@ function renderListaProduccion() {
                 <div class="flex flex-wrap gap-3 text-xs text-gray-500">
                     <span>📅 Entrega: <strong>${p.entrega||'—'}</strong></span>
                     <span>💵 Total: <strong>$${Number(p.total||0).toFixed(2)}</strong></span>
-                    ${(typeof calcSaldoPendiente==='function'?calcSaldoPendiente(p):Number(p.resta||0)) > 0 ? `<span class="text-red-500 font-bold">⚠️ Resta: $${(typeof calcSaldoPendiente==='function'?calcSaldoPendiente(p):Number(p.resta||0)).toFixed(2)}</span>` : '<span class="text-green-600 font-bold">✅ Pagado</span>'}
+                    ${calcSaldoPendiente(p) > 0 ? `<span class="text-red-500 font-bold">⚠️ Resta: $${calcSaldoPendiente(p).toFixed(2)}</span>` : '<span class="text-green-600 font-bold">✅ Pagado</span>'}
                     ${ganancia}
                 </div>
                 ${p.lugarEntrega ? `<p class="text-xs mt-1" style="color:#7c3aed;">📍 ${_escP(p.lugarEntrega)}</p>` : ''}
