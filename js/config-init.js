@@ -18,19 +18,9 @@
     if (raw) _aplicarConfigSidebar(JSON.parse(raw));
   } catch (e) {
   }
-  function _intentarSQLite() {
-    if (window.electronAPI && window.electronAPI.sqliteLoad) {
-      window.electronAPI.sqliteLoad("storeConfig").then(function(result) {
-        if (result && result.ok && result.value) {
-          _aplicarConfigSidebar(result.value);
-        }
-      }).catch(function() {});
-    } else if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", function() {
-        setTimeout(_intentarSQLite, 500);
-      });
-    }
-  }
-  _intentarSQLite();
+  try {
+    var cached = localStorage.getItem("mk_storeConfig");
+    if (cached) _aplicarConfigSidebar(JSON.parse(cached));
+  } catch (e) {}
 })();
 //# sourceMappingURL=config-init.js.map

@@ -1292,22 +1292,7 @@ async function cambiarPIN() {
     manekiToastExport("⚠️ El nuevo PIN debe tener al menos 4 dígitos", "warn");
     return;
   }
-  if (!window.electronAPI) {
-    manekiToastExport("❌ Solo disponible en la app de escritorio", "err");
-    return;
-  }
-  try {
-    const res = await window.electronAPI.pinSet({ pinActual: actual, pinNuevo: nuevo });
-    if (res.ok) {
-      manekiToastExport("✅ PIN actualizado correctamente", "ok");
-      if (document.getElementById("pinActual")) document.getElementById("pinActual").value = "";
-      if (document.getElementById("pinNuevo")) document.getElementById("pinNuevo").value = "";
-    } else {
-      manekiToastExport("❌ " + (res.error || "Error al cambiar PIN"), "err");
-    }
-  } catch (e) {
-    manekiToastExport("❌ Error: " + e.message, "err");
-  }
+  manekiToastExport("ℹ️ La protección con PIN se maneja desde el servidor (nginx Basic Auth)", "info");
 }
 window.cambiarPIN = cambiarPIN;
 function mostrarResumenDia() {

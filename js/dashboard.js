@@ -600,12 +600,6 @@ function actualizarSidebarBadges() {
       badgePedidos.style.display = "none";
     }
     badgePedidos._lastVal = activos;
-    try {
-      if (window.electronAPI && window.electronAPI.updateTrayBadge) {
-        window.electronAPI.updateTrayBadge({ urgentes, total: activos });
-      }
-    } catch (e) {
-    }
   }
   const badgeInv = document.getElementById("sidebarBadgeInventory");
   if (badgeInv) {

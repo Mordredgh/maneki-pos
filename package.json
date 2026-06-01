@@ -1,59 +1,14 @@
 {
   "name": "maneki-store",
-  "version": "1.0.0",
-  "description": "Sistema POS Maneki",
-  "main": "main.js",
+  "version": "2.0.0",
+  "description": "Maneki Store POS — Web App (Coolify)",
   "scripts": {
-    "start": "electron .",
-    "dev": "node build-renderer.js && electron .",
-    "watch": "node build-renderer.js --watch",
-    "build": "node build-renderer.js --prod && electron-builder",
-    "build:ts": "node build-renderer.js",
-    "build:prod": "node build-renderer.js --prod",
-    "build:check": "npx tsc --noEmit",
-    "postinstall": "electron-builder install-app-deps"
+    "build:check": "npx tsc --noEmit"
   },
   "author": "MordredGH",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^40.6.1",
-    "electron-builder": "^26.8.1",
     "esbuild": "^0.28.0",
     "typescript": "^6.0.3"
-  },
-  "build": {
-    "appId": "com.mordredgh.manekipos",
-    "productName": "Maneki Store POS",
-    "files": [
-      "main.js",
-      "index.html",
-      "login.html",
-      "splash.html",
-      "logo.png",
-      "icon.ico",
-      "icon.png",
-      "js/**/*",
-      "css/**/*",
-      "node_modules/**/*"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Maneki Store POS"
-    },
-    "directories": {
-      "output": "dist"
-    },
-    "npmRebuild": true
-  },
-  "dependencies": {
-    "run": "^1.5.0",
-    "sqlite3": "^5.0.2"
   }
 }

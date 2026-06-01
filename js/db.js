@@ -3,51 +3,35 @@ var pedidosFinalizados = [];
 var abonos = [];
 var pedidoProductosSeleccionados = [];
 var abonoProductosSeleccionados = [];
-const _eAPI = window.electronAPI || null;
 const MK_DEBOUNCE_STORE_RT = 800;
 const MK_DEBOUNCE_TABLE_RT = 600;
 const MK_DEBOUNCE_SBSAVE = 500;
 const MK_TIMEOUT_SUPABASE = 8000;
+const _lsCache = {
+  set(key, value) {
+    try { localStorage.setItem("mk_" + key, JSON.stringify(value)); return true; }
+    catch(e) { if (e?.name === "QuotaExceededError") console.warn("[Storage] localStorage lleno"); return false; }
+  },
+  get(key, def) {
+    try { const raw = localStorage.getItem("mk_" + key); return raw ? JSON.parse(raw) : def; }
+    catch(e) { return def; }
+  }
+};
 const sqliteStorage = {
-  async set(key, value) {
-    if (!_eAPI) return false;
-    try {
-      const result = await _eAPI.sqliteSave(key, value);
-      return result.ok;
-    } catch (e) {
-      console.warn("sqliteStorage.set error:", key, e);
-      return false;
-    }
-  },
-  async get(key, defaultValue = null) {
-    if (!_eAPI) return defaultValue;
-    try {
-      const result = await _eAPI.sqliteLoad(key);
-      if (result.ok && result.value !== null) return result.value;
-      return defaultValue;
-    } catch (e) {
-      console.warn("sqliteStorage.get error:", key, e);
-      return defaultValue;
-    }
-  },
+  async set(key, value) { return _lsCache.set(key, value); },
+  async get(key, defaultValue = null) { return _lsCache.get(key, defaultValue); },
   async getAll(keys) {
-    if (!_eAPI) return {};
-    try {
-      const result = await _eAPI.sqliteLoadAll(keys);
-      return result.ok ? result.data : {};
-    } catch (e) {
-      console.warn("sqliteStorage.getAll error:", e);
-      return {};
-    }
+    const r = {};
+    (keys || []).forEach(k => { const v = _lsCache.get(k, null); if (v !== null) r[k] = v; });
+    return r;
   },
   async getSize() {
-    if (!_eAPI) return { kb: 0, dbKB: 0 };
-    try {
-      const result = await _eAPI.sqliteSize();
-      return result.ok ? result : { kb: 0, dbKB: 0 };
-    } catch (e) {
-      return { kb: 0, dbKB: 0 };
+    let bytes = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith("mk_")) bytes += (localStorage.getItem(k)?.length || 0) * 2;
     }
+    return { ok: true, kb: Math.round(bytes / 1024), dbKB: 0 };
   }
 };
 const _rtDeskDeb = {};
@@ -66,30 +50,15 @@ let db = null;
       return true;
     };
     var _validarSupabaseCfg = _validarSupabaseCfg2;
-    let cfg = null;
-    if (_eAPI) {
-      try {
-        cfg = await _eAPI.getSupabase();
-      } catch (e) {
-      }
-    }
-    if (!cfg && window.__mkCfg) {
-      try {
-        cfg = await window.__mkCfg.getSupabase();
-      } catch (e) {
-      }
-    }
-    if (!cfg) {
-      var _p = [
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-        "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvcWNybGpnbWFtYXVtdGRydHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTAwOTgsImV4cCI6MjA4Njk2NjA5OH0",
-        "x_gYRz29tK7InMxQaDyZL2bdD1-hCCJ1qg6tgvmRO5o"
-      ];
-      cfg = {
-        url: "https://hoqcrljgmamaumtdrtzi.supabase.co",
-        key: _p.join(".")
-      };
-    }
+    var _p = [
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+      "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvcWNybGpnbWFtYXVtdGRydHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTAwOTgsImV4cCI6MjA4Njk2NjA5OH0",
+      "x_gYRz29tK7InMxQaDyZL2bdD1-hCCJ1qg6tgvmRO5o"
+    ];
+    const cfg = {
+      url: "https://hoqcrljgmamaumtdrtzi.supabase.co",
+      key: _p.join(".")
+    };
     if (!_validarSupabaseCfg2(cfg.url, cfg.key)) {
       console.error("[db.js] Configuración de Supabase inválida — URL o API key incorrectos.");
       window._dbReady = false;
@@ -624,55 +593,42 @@ function _ocultarBannerOfflineConexion() {
   }
 }
 function encolarVentaOffline(saleRecord) {
-  if (!_eAPI) return;
   try {
-    _eAPI.saveVentaPendiente({
-      id: String(saleRecord.id),
-      folio: saleRecord.folio,
-      date: saleRecord.date,
-      ...saleRecord
-    });
-    _eAPI.countVentasPendientes().then((n) => actualizarBannerOffline(n)).catch((e) => console.warn("[Maneki DB]", e?.message || e));
+    const queue = JSON.parse(localStorage.getItem("mk_offlineQueue") || "[]");
+    queue.push(saleRecord);
+    localStorage.setItem("mk_offlineQueue", JSON.stringify(queue));
+    actualizarBannerOffline(queue.length);
     manekiToastExport("📦 Venta " + saleRecord.folio + " guardada offline", "warn");
   } catch (e) {
     console.error("Error encolando venta offline:", e);
   }
 }
 async function sincronizarPendientes() {
-  if (_eAPI) {
-    try {
-      const ventasPendientes = await _eAPI.getVentasPendientes();
-      if (ventasPendientes && ventasPendientes.length > 0) {
-        let cambiado = false;
-        for (const venta of ventasPendientes) {
-          const yaExiste = salesHistory.some((s) => String(s.id) === String(venta.data?.id || venta.id));
-          if (!yaExiste && venta.data) {
-            salesHistory.push(venta.data);
-            cambiado = true;
-          }
-        }
-        if (cambiado) {
-          const { error } = await db.from("store").upsert(
-            { key: "salesHistory", value: JSON.stringify(salesHistory) },
-            { onConflict: "key" }
-          );
-          if (!error) {
-            for (const venta of ventasPendientes) {
-              _eAPI.deleteVentaPendiente(String(venta.id));
-            }
-            manekiToastExport("✅ " + ventasPendientes.length + " venta(s) offline sincronizadas", "ok");
-          }
-        } else {
-          for (const venta of ventasPendientes) {
-            _eAPI.deleteVentaPendiente(String(venta.id));
-          }
-        }
+  try {
+    const queue = JSON.parse(localStorage.getItem("mk_offlineQueue") || "[]");
+    if (queue.length > 0 && db) {
+      let cambiado = false;
+      for (const venta of queue) {
+        const yaExiste = salesHistory.some((s) => String(s.id) === String(venta.id));
+        if (!yaExiste) { salesHistory.push(venta); cambiado = true; }
       }
-      const restantes = await _eAPI.countVentasPendientes().catch(() => 0);
-      actualizarBannerOffline(restantes);
-    } catch (e) {
-      console.error("Error sincronizando:", e);
+      if (cambiado) {
+        const { error } = await db.from("store").upsert(
+          { key: "salesHistory", value: JSON.stringify(salesHistory) },
+          { onConflict: "key" }
+        );
+        if (!error) {
+          localStorage.removeItem("mk_offlineQueue");
+          actualizarBannerOffline(0);
+          manekiToastExport("✅ " + queue.length + " venta(s) offline sincronizadas", "ok");
+        }
+      } else {
+        localStorage.removeItem("mk_offlineQueue");
+        actualizarBannerOffline(0);
+      }
     }
+  } catch (e) {
+    console.error("Error sincronizando:", e);
   }
   if (!window._pendingSync) return;
   const keys = [
@@ -771,27 +727,15 @@ window.addEventListener("offline", () => {
   _scheduleSyncRetry();
 });
 setTimeout(() => {
-  if (_eAPI && _eAPI.countVentasPendientes) {
-    _eAPI.countVentasPendientes().then((n) => {
-      if (n > 0) actualizarBannerOffline(n);
-    }).catch((e) => console.warn("[Maneki DB]", e?.message || e));
-  }
+  try {
+    const q = JSON.parse(localStorage.getItem("mk_offlineQueue") || "[]");
+    if (q.length > 0) actualizarBannerOffline(q.length);
+  } catch(e) {}
 }, 3e3);
 const _sbSaveTimers = {};
 async function sbSave(key, data) {
   const dataConTimestamp = data;
-  const sqliteOk = await sqliteStorage.set(key, dataConTimestamp);
-  if (!sqliteOk) {
-    try {
-      localStorage.setItem("maneki_" + key, JSON.stringify(dataConTimestamp));
-    } catch (e) {
-      if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
-        console.warn("[Storage] localStorage lleno");
-      } else {
-        console.warn("localStorage también falló:", key, e);
-      }
-    }
-  }
+  sqliteStorage.set(key, dataConTimestamp);
   if (_sbSaveTimers[key]) clearTimeout(_sbSaveTimers[key]);
   return new Promise((resolve, reject) => {
     _sbSaveTimers[key] = setTimeout(async () => {/*debounce*/
@@ -995,97 +939,27 @@ async function sbLoad(key, def) {
             return _sqlite;
           }
         }
-        sqliteStorage.set(key, parsed).catch((e) => console.warn("[Maneki DB]", e?.message || e));
+        sqliteStorage.set(key, parsed);
         return parsed;
       } catch (e) {
         console.warn("Error parseando dato Supabase:", e);
       }
     }
   } catch (e) {
-    console.warn("sbLoad Supabase no disponible, usando SQLite local:", key);
+    console.warn("sbLoad Supabase no disponible, usando cache local:", key);
   }
-  const localSQLite = await sqliteStorage.get(key, null);
-  if (localSQLite !== null) {
-    return localSQLite;
-  }
-  try {
-    const local = localStorage.getItem("maneki_" + key);
-    if (local) {
-      const parsed = JSON.parse(local);
-      sqliteStorage.set(key, parsed).then(() => {
-        localStorage.removeItem("maneki_" + key);
-      }).catch((e) => console.warn("[Maneki DB]", e?.message || e));
-      return parsed;
-    }
-  } catch (e) {
-    console.warn("Error en localStorage fallback:", e);
-  }
+  const localCache = await sqliteStorage.get(key, null);
+  if (localCache !== null) return localCache;
   return def;
 }
-async function verificarEspacioAlmacenamiento() {
-  try {
-    const sqliteInfo = await sqliteStorage.getSize();
-    const sqliteKB = sqliteInfo.dbKB || sqliteInfo.kb || 0;
-    let lsBytes = 0;
-    for (let k in localStorage) {
-      if (localStorage.hasOwnProperty(k)) lsBytes += (localStorage[k].length + k.length) * 2;
-    }
-    const lsKB = Math.round(lsBytes / 1024);
-    if (lsKB > 4500) {
-      manekiToastExport(
-        `ℹ️ Migrando datos a SQLite local (más espacio). Un momento...`,
-        "ok"
-      );
-    }
-    return { sqliteKB, lsKB };
-  } catch (e) {
-    return { sqliteKB: 0, lsKB: 0 };
-  }
-}
-setTimeout(verificarEspacioAlmacenamiento, 1e4);
-window._storageCheckInterval = setInterval(verificarEspacioAlmacenamiento, 10 * 60 * 1e3);
-(async function _migrateLocalStorageToSQLite() {
-  if (!_eAPI) return;
-  const prefix = "maneki_";
-  const keys = [];
+function mostrarEstadoAlmacenamiento() {
+  let bytes = 0;
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(prefix) && k !== "maneki_folioCounter" && k !== "maneki_autoBackup") {
-      keys.push(k);
-    }
+    bytes += (k.length + (localStorage.getItem(k)?.length || 0)) * 2;
   }
-  if (keys.length === 0) return;
-  let migrated = 0;
-  for (const lsKey of keys) {
-    const dataKey = lsKey.replace(prefix, "");
-    try {
-      const existing = await sqliteStorage.get(dataKey, null);
-      if (existing !== null) {
-        localStorage.removeItem(lsKey);
-        migrated++;
-        continue;
-      }
-      const raw = localStorage.getItem(lsKey);
-      if (!raw) continue;
-      const parsed = JSON.parse(raw);
-      const ok = await sqliteStorage.set(dataKey, parsed);
-      if (ok) {
-        localStorage.removeItem(lsKey);
-        migrated++;
-      }
-    } catch (e) {}
-  }
-  if (migrated > 0) console.log(`[Storage] Migrated ${migrated} keys from localStorage to SQLite`);
-})();
-async function mostrarEstadoAlmacenamiento() {
-  const info = await verificarEspacioAlmacenamiento();
-  const msg = [
-    `💾 SQLite local: ${info.sqliteKB} KB (sin límite práctico)`,
-    `📋 localStorage: ${info.lsKB} KB / 5,120 KB`,
-    `✅ Almacenamiento principal: SQLite (ilimitado)`
-  ].join("\n");
-  manekiToastExport(`💾 SQLite: ${info.sqliteKB}KB | Cache: ${info.lsKB}KB`, "ok");
-  console.log("Estado almacenamiento:\n" + msg);
+  const kb = Math.round(bytes / 1024);
+  manekiToastExport(`💾 Cache local: ${kb}KB / 5,120KB | Datos: Supabase (nube)`, "ok");
 }
 window.mostrarEstadoAlmacenamiento = mostrarEstadoAlmacenamiento;
 function sbSaveConFeedback(key, data, nombreAmigable) {

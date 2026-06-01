@@ -483,13 +483,7 @@ document.addEventListener("DOMContentLoaded", function() {
   initApp();
 });
 async function initApp() {
-  function splashProgress(step, label) {
-    try {
-      if (window.electronAPI && window.electronAPI.splashProgress)
-        window.electronAPI.splashProgress({ step, total: 6, label });
-    } catch (e) {
-    }
-  }
+  function splashProgress(step, label) {}
   try {
     let _syncWindowVars2 = function() {
       window.pedidos = pedidos;
@@ -588,7 +582,6 @@ async function initApp() {
     }
     splashProgress(6, "¡Listo!");
     try {
-      if (window.electronAPI && window.electronAPI.splashDone) window.electronAPI.splashDone();
     } catch (e) {
     }
     const roiPctEl = document.getElementById("roiPorcentajeGlobal");
@@ -614,7 +607,6 @@ async function initApp() {
           if (typeof mostrarBannerConexion === "function")
             mostrarBannerConexion(true, "Conexión restaurada — sincronizando datos...");
           try {
-            if (window.electronAPI) window.electronAPI.notifyConnection({ connected: true });
           } catch (e) {
           }
         }
@@ -627,7 +619,6 @@ async function initApp() {
           if (typeof mostrarBannerConexion === "function")
             mostrarBannerConexion(false, "Sin conexión a la nube — trabajando en modo offline.");
           try {
-            if (window.electronAPI) window.electronAPI.notifyConnection({ connected: false });
           } catch (e2) {
           }
         }
