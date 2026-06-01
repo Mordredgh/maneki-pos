@@ -1,357 +1,873 @@
-var _ = (() => {
-  if (typeof _esc !== "function") {
-    window._esc = function(s) {
-      return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    };
+if (typeof _esc !== "function") {
+  window._esc = function(s) {
+    return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  };
+}
+function clearAllData() {
+  showConfirm("Esto eliminar\xE1 productos, ventas, pedidos, clientes y todo el historial. Esta acci\xF3n NO se puede deshacer.", "\u26A0\uFE0F \xBFBorrar TODOS los datos?").then((ok1) => {
+    if (!ok1) return;
+    showConfirm("\u{1F6A8} SEGUNDA CONFIRMACI\xD3N: \xBFRealmente deseas borrar absolutamente todo?", "Confirmaci\xF3n final").then((ok2) => {
+      if (!ok2) return;
+      (async () => {
+        try {
+          window.products = [];
+          window.clients = [];
+          window.salesHistory = [];
+          window.quotes = [];
+          window.incomes = [];
+          window.expenses = [];
+          window.receivables = [];
+          window.payables = [];
+          window.abonos = [];
+          window.pedidos = [];
+          window.notas = [];
+          window.pedidosFinalizados = [];
+          window.abonos = [];
+          equipos = [];
+          roiHistorial = [];
+          roiConfig = { porcentaje: 10 };
+          await Promise.all([
+            sbSave("products", []),
+            sbSave("clients", []),
+            sbSave("salesHistory", []),
+            sbSave("quotes", []),
+            sbSave("incomes", []),
+            sbSave("expenses", []),
+            sbSave("receivables", []),
+            sbSave("payables", []),
+            sbSave("abonos", []),
+            sbSave("pedidos", []),
+            sbSave("notas", []),
+            sbSave("equipos", []),
+            sbSave("roiHistorial", []),
+            sbSave("roiConfig", { porcentaje: 10 }),
+            sbSave("gastosRecurrentes", []),
+            sbSave("stockMovimientos", []),
+            sbSave("pedidosFinalizados", [])
+          ]);
+          [
+            "renderInventoryTable",
+            "renderClientsTable",
+            "renderSalesHistory",
+            "renderPedidosTable",
+            "renderQuotesTable",
+            "updateDashboard",
+            "renderBalance"
+          ].forEach((fn) => {
+            if (typeof window[fn] === "function") window[fn]();
+          });
+          manekiToastExport("\u2705 Todos los datos borrados correctamente", "ok");
+        } catch (err) {
+          console.error("clearAllData error:", err);
+          manekiToastExport("\u274C Error al borrar datos: " + (err.message || ""), "err");
+        }
+      })();
+    });
+  });
+}
+function manekiExportar(tipo) {
+  if (typeof XLSX === "undefined") {
+    manekiToastExport("\u23F3 Cargando exportador Excel...", "info");
+    window._mkLoadCDN("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js").then(function() {
+      manekiExportar(tipo);
+    });
+    return;
   }
-  function manekiToastExport(msg, tipo) {
-    let container = document.getElementById("mk-toast-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.id = "mk-toast-container";
-      container.className = "mk-toast-container";
-      document.body.appendChild(container);
+  let filas = [];
+  let nombreArchivo = "";
+  let nombreHoja = "";
+  const hoy = (() => {
+    const d = /* @__PURE__ */ new Date();
+    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  const fmt = (v) => {
+    if (!v) return "";
+    try {
+      const d = new Date(v);
+      return isNaN(d) ? String(v) : d.toLocaleDateString("es-MX");
+    } catch {
+      return String(v);
     }
-    const icons = { ok: "\u2713", warn: "!", err: "\u2715", info: "i" };
-    const titles = { ok: "Completado", warn: "Aviso", err: "Error", info: "Info" };
-    const t = tipo || "ok";
-    const icon = icons[t] || icons.ok;
-    const title = titles[t] || titles.ok;
-    const toast = document.createElement("div");
-    toast.className = `mk-toast ${t}`;
-    const _escT = typeof window._esc === "function" ? window._esc : ((s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
-    toast.innerHTML = `
+  };
+  const num = (v) => isNaN(parseFloat(v)) ? "0.00" : parseFloat(v).toFixed(2);
+  if (tipo === "ventas") {
+    nombreArchivo = `Ventas_${hoy}.xlsx`;
+    nombreHoja = "Ventas";
+    const datos = window.salesHistory || [];
+    if (!datos.length) {
+      manekiToastExport("No hay ventas para exportar", "warn");
+      return;
+    }
+    filas.push(["Folio", "Fecha", "Hora", "Cliente", "Concepto", "Productos", "Subtotal", "Descuento", "IVA", "Total", "M\xE9todo de Pago"]);
+    datos.forEach((v) => {
+      const prods = (v.products || []).map(
+        (p) => `${p.name || p.nombre || ""} x${p.qty || p.cantidad || 1} ($${num((p.price || p.precio || 0) * (p.qty || p.cantidad || 1))})`
+      ).join(" | ") || v.concept || "\u2014";
+      filas.push([
+        v.folio || v.id || "",
+        fmt(v.date),
+        v.time || "",
+        v.customer || "",
+        v.concept || "",
+        prods,
+        num(v.subtotal),
+        num(v.discount),
+        num(v.tax),
+        num(v.total),
+        v.method || ""
+      ]);
+    });
+  } else if (tipo === "pedidos") {
+    nombreArchivo = `Pedidos_${hoy}.xlsx`;
+    nombreHoja = "Pedidos";
+    const datosActivos = (window.pedidos || []).map((p) => ({ ...p, _tipo: "Activo" }));
+    const datosFinalizados = (window.pedidosFinalizados || []).map((p) => ({ ...p, _tipo: "Finalizado" }));
+    const datos = [...datosActivos, ...datosFinalizados].sort((a, b) => (b.fechaCreacion || b.fecha || "").localeCompare(a.fechaCreacion || a.fecha || ""));
+    if (!datos.length) {
+      manekiToastExport("No hay pedidos para exportar", "warn");
+      return;
+    }
+    filas.push(["Tipo", "Folio", "Cliente", "Tel\xE9fono", "Redes/Canal", "Fecha Pedido", "Fecha Entrega", "Fecha Finalizado", "Concepto", "Cantidad", "Costo Unit.", "Total", "Anticipo", "Saldo", "Estado", "Notas"]);
+    datos.forEach((p) => {
+      filas.push([
+        p._tipo || "Activo",
+        p.folio || p.id || "",
+        p.cliente || "",
+        p.telefono || "",
+        p.redes || "",
+        fmt(p.fechaCreacion || p.fecha),
+        fmt(p.entrega),
+        fmt(p.fechaFinalizado || ""),
+        p.concepto || "",
+        p.cantidad || 1,
+        num(p.costo),
+        num(p.total),
+        num(p.anticipo),
+        num(p.resta),
+        p.status || "",
+        p.notas || ""
+      ]);
+    });
+  } else if (tipo === "clientes") {
+    nombreArchivo = `Clientes_${hoy}.xlsx`;
+    nombreHoja = "Clientes";
+    const datos = window.clients || [];
+    if (!datos.length) {
+      manekiToastExport("No hay clientes para exportar", "warn");
+      return;
+    }
+    filas.push(["Nombre", "Tel\xE9fono", "Facebook/Redes", "Email", "Tipo", "Total Compras ($)", "\xDAltima Compra"]);
+    datos.forEach((c) => {
+      filas.push([c.name || "", c.phone || "", c.facebook || "", c.email || "", c.type || "regular", num(c.totalPurchases), fmt(c.lastPurchase)]);
+    });
+  } else if (tipo === "inventario") {
+    nombreArchivo = `Inventario_${hoy}.xlsx`;
+    nombreHoja = "Inventario";
+    const datos = window.products || [];
+    if (!datos.length) {
+      manekiToastExport("No hay productos para exportar", "warn");
+      return;
+    }
+    const getCat = (id) => {
+      const cats = window.categories || [];
+      const c = cats.find((c2) => c2.id === id);
+      return c ? c.name || id : id || "";
+    };
+    filas.push(["SKU", "Nombre", "Categor\xEDa", "Stock", "Precio Costo ($)", "Precio Venta ($)", "Margen %", "Variantes"]);
+    datos.forEach((p) => {
+      const costo = parseFloat(p.cost || 0), venta = parseFloat(p.price || 0);
+      const margen = costo > 0 ? ((venta - costo) / costo * 100).toFixed(1) + "%" : "\u2014";
+      filas.push([
+        p.sku || "",
+        p.name || "",
+        getCat(p.category),
+        p.stock || 0,
+        costo.toFixed(2),
+        venta.toFixed(2),
+        margen,
+        (p.variants || []).join(", ") || "\u2014"
+      ]);
+    });
+  } else {
+    return;
+  }
+  try {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(filas);
+    ws["!cols"] = filas[0].map((_, ci) => ({
+      wch: Math.min(Math.max(...filas.map((r) => String(r[ci] ?? "").length)) + 3, 45)
+    }));
+    XLSX.utils.book_append_sheet(wb, ws, nombreHoja);
+    XLSX.writeFile(wb, nombreArchivo);
+    manekiToastExport(`\u2705 ${filas.length - 1} registros exportados \u2192 ${nombreArchivo}`, "ok");
+  } catch (err) {
+    console.error("manekiExportar error:", err);
+    manekiToastExport("\u274C Error al generar archivo: " + (err.message || ""), "err");
+  }
+}
+let sparklineChart = null;
+function _fechaLocal(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function _totalVentasDia(dStr) {
+  const sh = window.salesHistory || salesHistory || [];
+  const foliosFinalizados = new Set(
+    sh.filter((s) => s.type === "pedido").map((s) => s.folio).filter(Boolean)
+  );
+  const idsContados = /* @__PURE__ */ new Set();
+  let total = 0;
+  sh.forEach((s) => {
+    if (s.method === "Cancelado") return;
+    const fecha = (s.date || "").split("T")[0];
+    if (fecha !== dStr) return;
+    if ((s.type === "anticipo" || s.type === "abono") && foliosFinalizados.has(s.folio)) return;
+    if (s.id) idsContados.add(String(s.id));
+    total += Number(s.total || 0);
+  });
+  [...window.pedidos || [], ...window.pedidosFinalizados || []].forEach((p) => {
+    if (foliosFinalizados.has(p.folio)) return;
+    (p.pagos || []).forEach((ab) => {
+      if (ab.id && idsContados.has(String(ab.id))) return;
+      const fecha = (ab.fecha || "").split("T")[0];
+      if (fecha !== dStr) return;
+      const monto = Number(ab.monto || 0);
+      if (!monto) return;
+      total += monto;
+      if (ab.id) idsContados.add(String(ab.id));
+    });
+  });
+  return total;
+}
+function renderSparkline() {
+  const canvas = document.getElementById("sparklineGanancia");
+  if (!canvas) return;
+  if (typeof Chart === "undefined") return;
+  const now = /* @__PURE__ */ new Date();
+  const datos = [], labels = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    const dStr = _fechaLocal(d);
+    labels.push(d.toLocaleDateString("es-MX", { weekday: "short" }));
+    datos.push(_totalVentasDia(dStr));
+  }
+  const tieneData = datos.some((d) => d !== 0);
+  const borderColor = tieneData ? "rgba(34,197,94,0.9)" : "rgba(156,163,175,0.5)";
+  const bgColor = tieneData ? "rgba(34,197,94,0.12)" : "rgba(156,163,175,0.05)";
+  if (sparklineChart) {
+    sparklineChart.data.labels = labels;
+    sparklineChart.data.datasets[0].data = datos;
+    sparklineChart.data.datasets[0].borderColor = borderColor;
+    sparklineChart.data.datasets[0].backgroundColor = bgColor;
+    sparklineChart.update("active");
+    return;
+  }
+  sparklineChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: datos,
+        borderColor,
+        borderWidth: 2,
+        fill: true,
+        backgroundColor: bgColor,
+        pointRadius: 3,
+        pointBackgroundColor: "rgba(34,197,94,1)",
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: (ctx) => "$" + Number(ctx.raw).toFixed(2), title: (lbs) => lbs[0] }
+      } },
+      scales: { x: { display: false }, y: { display: false } },
+      animation: { duration: 800, easing: "easeOutQuart" },
+      onResize: null
+    }
+  });
+}
+function renderComparativaSemanal() {
+  const hoy = /* @__PURE__ */ new Date();
+  const getWeekSales = (offsetDays) => {
+    let total = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - offsetDays - i);
+      total += _totalVentasDia(_fechaLocal(d));
+    }
+    return total;
+  };
+  const estaSemana = getWeekSales(0);
+  const semanaAnterior = getWeekSales(7);
+  const diff = estaSemana - semanaAnterior;
+  const pct = semanaAnterior > 0 ? (diff / semanaAnterior * 100).toFixed(1) : estaSemana > 0 ? 100 : 0;
+  const up = diff >= 0;
+  const contenedor = document.getElementById("semanalWidget");
+  if (!contenedor) return;
+  contenedor.className = "";
+  contenedor.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mt-4">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="font-bold text-gray-700 text-sm">\u{1F4CA} Esta semana vs anterior</h4>
+                <span class="text-xs font-semibold px-2 py-1 rounded-full ${up ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}">
+                    ${up ? "\u25B2" : "\u25BC"} ${Math.abs(pct)}%
+                </span>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                    <p class="text-xs text-gray-400 mb-1">Esta semana</p>
+                    <p class="font-bold text-gray-800">$${estaSemana.toFixed(2)}</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-3 text-center">
+                    <p class="text-xs text-gray-400 mb-1">Semana anterior</p>
+                    <p class="font-bold text-gray-500">$${semanaAnterior.toFixed(2)}</p>
+                </div>
+            </div>
+            <div class="mt-3 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div class="h-2 rounded-full transition-all duration-700" 
+                    style="width: ${Math.min(semanaAnterior > 0 ? estaSemana / semanaAnterior * 100 : estaSemana > 0 ? 100 : 0, 100)}%; background: ${up ? "#10B981" : "#EF4444"}"></div>
+            </div>
+        </div>`;
+}
+let _privacidadActiva = false;
+function togglePrivacidad() {
+  _privacidadActiva = !_privacidadActiva;
+  const btn = document.getElementById("privacyToggleBtn");
+  const icon = document.getElementById("privacyIcon");
+  const label = document.getElementById("privacyLabel");
+  const targets = document.querySelectorAll(
+    "#dailySales, #netProfit, #accountsReceivable, #dashMonthSales, #dashGoalPercent, .privacy-target"
+  );
+  targets.forEach((el) => {
+    if (_privacidadActiva) el.classList.add("privacy-hidden");
+    else el.classList.remove("privacy-hidden");
+  });
+  if (_privacidadActiva) {
+    btn.classList.add("active");
+    icon.className = "fas fa-eye-slash";
+    label.textContent = "Visible";
+    manekiToastExport("\u{1F512} Modo privacidad activado", "warn");
+  } else {
+    btn.classList.remove("active");
+    icon.className = "fas fa-eye";
+    label.textContent = "Privacidad";
+  }
+}
+function btnLoading(btn) {
+  if (!btn) return () => {
+  };
+  const original = btn.innerHTML;
+  const originalBg = btn.style.background;
+  btn.classList.add("btn-loading");
+  btn.innerHTML = '<span class="btn-label"></span>';
+  return function btnDone(success = true) {
+    btn.classList.remove("btn-loading");
+    btn.innerHTML = original;
+    if (success) {
+      btn.classList.add("btn-success-flash");
+      setTimeout(() => btn.classList.remove("btn-success-flash"), 700);
+    }
+  };
+}
+function manekiToastExport(msg, tipo) {
+  let container = document.getElementById("mk-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "mk-toast-container";
+    container.className = "mk-toast-container";
+    document.body.appendChild(container);
+  }
+  const icons = { ok: "\u2713", warn: "!", err: "\u2715", info: "i" };
+  const titles = { ok: "Completado", warn: "Aviso", err: "Error", info: "Info" };
+  const t = tipo || "ok";
+  const icon = icons[t] || icons.ok;
+  const title = titles[t] || titles.ok;
+  const toast = document.createElement("div");
+  toast.className = `mk-toast ${t}`;
+  const _escT = typeof window._esc === "function" ? window._esc : ((s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+  toast.innerHTML = `
         <div class="mk-toast-icon">${icon}</div>
         <div class="mk-toast-body">
             <div class="mk-toast-title">${title}</div>
             <div class="mk-toast-msg">${_escT(msg)}</div>
         </div>
         <div class="mk-toast-progress"></div>`;
-    const existingToasts = container.querySelectorAll(".mk-toast:not(.out)");
-    for (const existing of existingToasts) {
-      if (existing.querySelector(".mk-toast-msg")?.textContent === msg) {
-        if (existing._timer) clearTimeout(existing._timer);
-        existing._timer = setTimeout(() => dismissToast(existing), 3600);
-        existing.classList.remove("out");
-        return;
-      }
+  const existingToasts = container.querySelectorAll(".mk-toast:not(.out)");
+  for (const existing of existingToasts) {
+    if (existing.querySelector(".mk-toast-msg")?.textContent === msg) {
+      if (existing._timer) clearTimeout(existing._timer);
+      existing._timer = setTimeout(() => dismissToast(existing), 3600);
+      existing.classList.remove("out");
+      return;
     }
-    toast.addEventListener("click", () => dismissToast(toast));
-    container.appendChild(toast);
-    const timer = setTimeout(() => dismissToast(toast), 3600);
-    toast._timer = timer;
-    const toasts = container.querySelectorAll(".mk-toast:not(.out)");
-    if (toasts.length > 3) dismissToast(toasts[0]);
   }
-  function dismissToast(toast) {
-    if (!toast || toast.classList.contains("out")) return;
-    if (toast._timer) clearTimeout(toast._timer);
-    toast.classList.add("out");
-    setTimeout(() => toast.remove(), 300);
+  toast.addEventListener("click", () => dismissToast(toast));
+  container.appendChild(toast);
+  const timer = setTimeout(() => dismissToast(toast), 3600);
+  toast._timer = timer;
+  const toasts = container.querySelectorAll(".mk-toast:not(.out)");
+  if (toasts.length > 3) dismissToast(toasts[0]);
+}
+function dismissToast(toast) {
+  if (!toast || toast.classList.contains("out")) return;
+  if (toast._timer) clearTimeout(toast._timer);
+  toast.classList.add("out");
+  setTimeout(() => toast.remove(), 300);
+}
+function manekiToast(msg, tipo) {
+  manekiToastExport(msg, tipo);
+}
+function fuzzyMatch(str, query) {
+  if (!str || !query) return false;
+  str = str.toLowerCase();
+  query = query.toLowerCase();
+  if (str.includes(query)) return true;
+  let qi = 0;
+  for (let si = 0; si < str.length && qi < query.length; si++) {
+    if (str[si] === query[qi]) qi++;
   }
-  const _confirmQueue = [];
-  let _confirmBusy = false;
-  function _processConfirmQueue() {
-    if (_confirmBusy || _confirmQueue.length === 0) return;
-    _confirmBusy = true;
-    const { message, title, resolve } = _confirmQueue.shift();
-    document.getElementById("confirmModalTitle").textContent = title;
-    document.getElementById("confirmModalMessage").textContent = message;
-    window._confirmCurrentResolve = resolve;
-    openModal("confirmModal");
+  if (qi === query.length) return true;
+  const normalize = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const sn = normalize(str), qn = normalize(query);
+  if (sn.includes(qn)) return true;
+  if (query.length >= 4) {
+    let diff = 0;
+    const shorter = Math.min(str.length, query.length);
+    for (let i = 0; i < shorter; i++) {
+      if (str[i] !== query[i]) diff++;
+    }
+    diff += Math.abs(str.length - query.length);
+    if (diff <= 1) return true;
   }
-  function showConfirm(message, title = "\xBFEst\xE1s seguro?") {
-    return new Promise((resolve) => {
-      _confirmQueue.push({ message, title, resolve });
-      _processConfirmQueue();
+  return false;
+}
+let _searchDebounceTimer = null;
+function _debouncedSearch(value) {
+  clearTimeout(_searchDebounceTimer);
+  _searchDebounceTimer = setTimeout(() => busquedaGlobal(value), 160);
+}
+function busquedaGlobal(query) {
+  const panel = document.getElementById("globalSearchResults");
+  if (!panel) return;
+  if (!query || query.trim().length < 2) {
+    panel.classList.add("hidden");
+    panel.innerHTML = "";
+    return;
+  }
+  const q = query.toLowerCase();
+  let html = "";
+  const prods = (window.products || []).filter(
+    (p) => fuzzyMatch(p.name, q) || fuzzyMatch(p.sku, q) || fuzzyMatch(p.proveedor, q) || p.tags && p.tags.some((t) => fuzzyMatch(t, q))
+  );
+  if (prods.length > 0) {
+    html += `<div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wide border-b">\u{1F4E6} Productos</div>`;
+    prods.slice(0, 4).forEach((p) => {
+      const img = p.imageUrl ? `<img src="${p.imageUrl}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">` : `<span class="text-lg flex-shrink-0">${p.image || "\u{1F4E6}"}</span>`;
+      html += `<div class="px-4 py-2 hover:bg-amber-50 cursor-pointer flex items-center gap-3"
+          data-id="${p.id.replace(/"/g, "")}"
+          onmousedown="cerrarBusquedaGlobal(); showSection('inventory'); setTimeout(()=>{ if(typeof editProduct==='function') editProduct(this.dataset.id); },300);">
+        ${img}
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-gray-800 truncate">${p.name}</div>
+          <div class="text-xs text-gray-400">Stock: ${p.stock ?? "\u2014"} \xB7 SKU: ${p.sku || "\u2014"}</div>
+        </div>
+        <div class="text-amber-700 font-bold text-sm flex-shrink-0">$${Number(p.price || 0).toFixed(2)}</div>
+      </div>`;
     });
   }
-  function confirmModalResolve(result) {
-    closeModal("confirmModal");
-    _confirmBusy = false;
-    if (window._confirmCurrentResolve) {
-      window._confirmCurrentResolve(result);
-      window._confirmCurrentResolve = null;
-    }
-    setTimeout(_processConfirmQueue, 250);
+  const clis = (window.clients || []).filter(
+    (c) => fuzzyMatch(c.name, q) || c.phone && c.phone.includes(q) || c.telefono && c.telefono.includes(q)
+  );
+  if (clis.length > 0) {
+    html += `<div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wide border-b border-t mt-1">\u{1F464} Clientes</div>`;
+    clis.slice(0, 4).forEach((c) => {
+      const ventas2 = (window.salesHistory || []).filter((s) => (s.customer || "").toLowerCase() === c.name.toLowerCase()).length;
+      const pedidosCli = (window.pedidos || []).filter((p) => (p.cliente || "").toLowerCase() === c.name.toLowerCase()).length;
+      html += `<div class="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-3"
+          onmousedown="cerrarBusquedaGlobal(); showSection('clientes'); setTimeout(()=>{ const searchInput = document.getElementById('searchClient'); if(searchInput && '${c.name.replace(/'/g, "\\'")}') { searchInput.value = '${c.name.replace(/'/g, "\\'")}'; searchInput.dispatchEvent(new Event('input', { bubbles: true })); } }, 200);">
+        <span class="text-lg">\u{1F464}</span>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-gray-800">${c.name}</div>
+          <div class="text-xs text-gray-400">${c.phone || c.telefono || "Sin tel\xE9fono"} \xB7 ${ventas2} venta${ventas2 !== 1 ? "s" : ""} \xB7 ${pedidosCli} pedido${pedidosCli !== 1 ? "s" : ""}</div>
+        </div>
+        <div class="text-blue-400 text-xs flex-shrink-0">Ver \u2192</div>
+      </div>`;
+    });
   }
-  window.showConfirm = showConfirm;
-  window.confirmModalResolve = confirmModalResolve;
-  function closeAjustarStockModal() {
-    closeModal("ajustarStockModal");
-    window._ajustarStockId = null;
-    const modal = document.getElementById("ajustarStockModal");
-    if (modal) delete modal.dataset.productId;
+  const peds = (window.pedidos || []).filter(
+    (p) => fuzzyMatch(p.cliente, q) || fuzzyMatch(p.folio, q) || fuzzyMatch(p.concepto, q)
+  );
+  if (peds.length > 0) {
+    html += `<div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wide border-b border-t mt-1">\u{1F6CD}\uFE0F Pedidos</div>`;
+    peds.slice(0, 4).forEach((p) => {
+      const statusColors = { pendiente: "text-yellow-500", confirmado: "text-blue-500", produccion: "text-purple-500", finalizado: "text-green-500", cancelado: "text-red-400" };
+      const color = statusColors[p.status] || "text-gray-500";
+      html += `<div class="px-4 py-2 hover:bg-yellow-50 cursor-pointer flex items-center gap-3"
+          onmousedown="cerrarBusquedaGlobal(); showSection('pedidos'); setTimeout(()=>{ const el=document.getElementById('kanbanBuscar'); if(el){el.value='${(p.cliente || "").replace(/'/g, "\\'")}'; el.dispatchEvent(new Event('input')); }},200);">
+        <span class="text-lg">\u{1F6CD}\uFE0F</span>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-gray-800">${p.folio || "\u2014"} \u2014 ${p.cliente || "Sin nombre"}</div>
+          <div class="text-xs text-gray-400 truncate">${p.concepto || "Sin descripci\xF3n"} \xB7 Entrega: ${p.entrega || "\u2014"}</div>
+        </div>
+        <div class="flex flex-col items-end flex-shrink-0">
+          <span class="font-bold text-sm text-gray-700">$${Number(p.total || 0).toFixed(2)}</span>
+          <span class="text-xs ${color} capitalize">${p.status || "\u2014"}</span>
+        </div>
+      </div>`;
+    });
   }
-  function confirmarAjusteStock() {
-    const modal = document.getElementById("ajustarStockModal");
-    const rawId = modal && modal.dataset.productId || window._ajustarStockId;
-    if (!rawId) {
-      manekiToastExport("\u274C Error: no se encontr\xF3 el producto", "error");
-      return;
-    }
-    const allProducts = window.products || products || [];
-    const p = allProducts.find((x) => String(x.id) === String(rawId));
-    if (!p) {
-      manekiToastExport("\u274C Error: producto no encontrado", "error");
-      return;
-    }
-    const cantEl = document.getElementById("ajustarStockCantidad");
-    const num = parseInt(cantEl ? cantEl.value : "");
-    if (isNaN(num) || cantEl.value.trim() === "") {
-      manekiToastExport("\u26A0\uFE0F Ingresa una cantidad v\xE1lida (+para agregar / -para restar)", "warn");
-      if (cantEl) cantEl.focus();
-      return;
-    }
-    if (num === 0) {
-      manekiToastExport("\u26A0\uFE0F La cantidad no puede ser 0", "warn");
-      return;
-    }
-    const stockActual = p.variants && p.variants.length > 0 ? p.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0) : parseInt(p.stock) || 0;
-    const nuevoStock = Math.max(0, stockActual + num);
-    const motivo = document.getElementById("ajustarStockMotivo").value.trim() || "Ajuste manual";
-    p.stock = nuevoStock;
-    if (p.variants && p.variants.length > 0 && num !== 0) {
-      if (num > 0) {
-        p.variants[0].qty = (p.variants[0].qty || 0) + num;
-      } else {
-        let restante = Math.abs(num);
-        for (const v of p.variants) {
-          const quitar = Math.min(v.qty || 0, restante);
-          v.qty = (v.qty || 0) - quitar;
-          restante -= quitar;
-          if (restante <= 0) break;
-        }
+  const ventas = (window.salesHistory || []).filter(
+    (s) => fuzzyMatch(s.customer, q) || fuzzyMatch(s.folio, q) || fuzzyMatch(s.concept, q)
+  );
+  if (ventas.length > 0) {
+    html += `<div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wide border-b border-t mt-1">\u{1F4B0} Ventas</div>`;
+    ventas.slice(0, 3).forEach((v) => {
+      const escFolio = (v.folio || "").replace(/'/g, "\\'");
+      html += `<div class="px-4 py-2 hover:bg-green-50 cursor-pointer flex items-center gap-3" onmousedown="irAReportes(); setTimeout(function(){ var inp = document.getElementById('salesSearchInput'); if(inp){ inp.value='${escFolio}'; inp.dispatchEvent(new Event('input')); } }, 300);">
+        <span class="text-lg">\u{1F4B0}</span>
+        <div class="flex-1 min-w-0"><div class="font-medium text-gray-800">${v.customer || "Cliente General"}</div>
+        <div class="text-xs text-gray-400">${v.date || "\u2014"} \xB7 ${v.method || "\u2014"}</div></div>
+        <div class="font-bold text-sm text-green-700 flex-shrink-0">$${Number(v.total || 0).toFixed(2)}</div>
+      </div>`;
+    });
+  }
+  if (!html) {
+    html = `<div class="px-4 py-6 text-center text-gray-400 text-sm">Sin resultados para "<b>${query}</b>"</div>`;
+  }
+  panel.innerHTML = html;
+  panel.classList.remove("hidden");
+}
+function cerrarBusquedaGlobal() {
+  const panel = document.getElementById("globalSearchResults");
+  if (panel) {
+    panel.classList.add("hidden");
+    panel.innerHTML = "";
+  }
+}
+function irAProducto() {
+  cerrarBusquedaGlobal();
+  document.getElementById("globalSearchInput").value = "";
+  showSection("inventory");
+}
+function irACliente() {
+  cerrarBusquedaGlobal();
+  document.getElementById("globalSearchInput").value = "";
+  showSection("clientes");
+}
+function irAPedido() {
+  cerrarBusquedaGlobal();
+  document.getElementById("globalSearchInput").value = "";
+  showSection("pedidos");
+}
+function irAReportes() {
+  cerrarBusquedaGlobal();
+  document.getElementById("globalSearchInput").value = "";
+  showSection("reportes");
+}
+const _confirmQueue = [];
+let _confirmBusy = false;
+function _processConfirmQueue() {
+  if (_confirmBusy || _confirmQueue.length === 0) return;
+  _confirmBusy = true;
+  const { message, title, resolve } = _confirmQueue.shift();
+  document.getElementById("confirmModalTitle").textContent = title;
+  document.getElementById("confirmModalMessage").textContent = message;
+  window._confirmCurrentResolve = resolve;
+  openModal("confirmModal");
+}
+function showConfirm(message, title = "\xBFEst\xE1s seguro?") {
+  return new Promise((resolve) => {
+    _confirmQueue.push({ message, title, resolve });
+    _processConfirmQueue();
+  });
+}
+function confirmModalResolve(result) {
+  closeModal("confirmModal");
+  _confirmBusy = false;
+  if (window._confirmCurrentResolve) {
+    window._confirmCurrentResolve(result);
+    window._confirmCurrentResolve = null;
+  }
+  setTimeout(_processConfirmQueue, 250);
+}
+window.showConfirm = showConfirm;
+window.confirmModalResolve = confirmModalResolve;
+function closeAjustarStockModal() {
+  closeModal("ajustarStockModal");
+  window._ajustarStockId = null;
+  const modal = document.getElementById("ajustarStockModal");
+  if (modal) delete modal.dataset.productId;
+}
+function confirmarAjusteStock() {
+  const modal = document.getElementById("ajustarStockModal");
+  const rawId = modal && modal.dataset.productId || window._ajustarStockId;
+  if (!rawId) {
+    manekiToastExport("\u274C Error: no se encontr\xF3 el producto", "error");
+    return;
+  }
+  const allProducts = window.products || products || [];
+  const p = allProducts.find((x) => String(x.id) === String(rawId));
+  if (!p) {
+    manekiToastExport("\u274C Error: producto no encontrado", "error");
+    return;
+  }
+  const cantEl = document.getElementById("ajustarStockCantidad");
+  const num = parseInt(cantEl ? cantEl.value : "");
+  if (isNaN(num) || cantEl.value.trim() === "") {
+    manekiToastExport("\u26A0\uFE0F Ingresa una cantidad v\xE1lida (+para agregar / -para restar)", "warn");
+    if (cantEl) cantEl.focus();
+    return;
+  }
+  if (num === 0) {
+    manekiToastExport("\u26A0\uFE0F La cantidad no puede ser 0", "warn");
+    return;
+  }
+  const stockActual = p.variants && p.variants.length > 0 ? p.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0) : parseInt(p.stock) || 0;
+  const nuevoStock = Math.max(0, stockActual + num);
+  const motivo = document.getElementById("ajustarStockMotivo").value.trim() || "Ajuste manual";
+  p.stock = nuevoStock;
+  if (p.variants && p.variants.length > 0 && num !== 0) {
+    if (num > 0) {
+      p.variants[0].qty = (p.variants[0].qty || 0) + num;
+    } else {
+      let restante = Math.abs(num);
+      for (const v of p.variants) {
+        const quitar = Math.min(v.qty || 0, restante);
+        v.qty = (v.qty || 0) - quitar;
+        restante -= quitar;
+        if (restante <= 0) break;
       }
-      p.stock = p.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
     }
-    if (typeof registrarMovimiento === "function") {
+    p.stock = p.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+  }
+  if (typeof registrarMovimiento === "function") {
+    try {
+      registrarMovimiento({
+        productoId: p.id,
+        productoNombre: p.name,
+        tipo: num > 0 ? "entrada" : "salida",
+        cantidad: num,
+        motivo,
+        stockAntes: stockActual,
+        stockDespues: p.stock
+      });
+    } catch (e) {
       try {
-        registrarMovimiento({
-          productoId: p.id,
-          productoNombre: p.name,
-          tipo: num > 0 ? "entrada" : "salida",
-          cantidad: num,
-          motivo,
-          stockAntes: stockActual,
-          stockDespues: p.stock
-        });
-      } catch (e) {
-        try {
-          registrarMovimiento(p.id, p.name, num > 0 ? "entrada" : "salida", Math.abs(num), motivo);
-        } catch (e2) {
-        }
+        registrarMovimiento(p.id, p.name, num > 0 ? "entrada" : "salida", Math.abs(num), motivo);
+      } catch (e2) {
       }
     }
-    if (typeof saveProducts === "function") saveProducts();
-    if (typeof renderInventoryTable === "function") renderInventoryTable();
-    if (typeof updateDashboard === "function") updateDashboard();
-    closeAjustarStockModal();
-    manekiToastExport(`\u2705 Stock de "${p.name}": ${stockActual} \u2192 ${p.stock}`, "ok");
   }
-  window.closeAjustarStockModal = closeAjustarStockModal;
-  window.confirmarAjusteStock = confirmarAjusteStock;
-  document.addEventListener("keydown", function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "L") {
+  if (typeof saveProducts === "function") saveProducts();
+  if (typeof renderInventoryTable === "function") renderInventoryTable();
+  if (typeof updateDashboard === "function") updateDashboard();
+  closeAjustarStockModal();
+  manekiToastExport(`\u2705 Stock de "${p.name}": ${stockActual} \u2192 ${p.stock}`, "ok");
+}
+window.closeAjustarStockModal = closeAjustarStockModal;
+window.confirmarAjusteStock = confirmarAjusteStock;
+document.addEventListener("keydown", function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "L") {
+    e.preventDefault();
+    if (typeof _abrirErrorLog === "function") _abrirErrorLog();
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+    const _sectionKeys = {
+      "1": "bienvenida",
+      "2": "pedidos",
+      "3": "inventory",
+      "4": "balance",
+      "5": "reportes",
+      "6": "clientes",
+      "7": "envios",
+      "8": "equipos",
+      "9": "backup"
+    };
+    if (_sectionKeys[e.key]) {
       e.preventDefault();
-      if (typeof _abrirErrorLog === "function") _abrirErrorLog();
+      if (typeof showSection === "function") showSection(_sectionKeys[e.key]);
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
-      const _sectionKeys = {
-        "1": "bienvenida",
-        "2": "pedidos",
-        "3": "inventory",
-        "4": "balance",
-        "5": "reportes",
-        "6": "clientes",
-        "7": "envios",
-        "8": "equipos",
-        "9": "backup"
-      };
-      if (_sectionKeys[e.key]) {
-        e.preventDefault();
-        if (typeof showSection === "function") showSection(_sectionKeys[e.key]);
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+    e.preventDefault();
+    const overlay = document.getElementById("busquedaGlobalOverlay");
+    if (overlay) {
+      _abrirBusquedaOverlay();
+    } else {
+      const searchInput = document.getElementById("globalSearchInput");
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    }
+    return;
+  }
+  const tag = document.activeElement?.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.activeElement?.isContentEditable) return;
+  const anyModal = document.querySelector('.modal-overlay[style*="flex"], .modal-overlay.active, [id$="Modal"][style*="flex"]');
+  if (e.key === "Escape") {
+    const overlay = document.getElementById("busquedaGlobalOverlay");
+    if (overlay && overlay.style.display !== "none") {
+      e.preventDefault();
+      _cerrarBusquedaOverlay();
+      return;
+    }
+    const errorModal = document.getElementById("errorLogModal");
+    if (errorModal && errorModal.style.display !== "none") {
+      e.preventDefault();
+      errorModal.style.display = "none";
+      return;
+    }
+    const visibleModals = Array.from(document.querySelectorAll('[id$="Modal"]')).filter((m) => {
+      const s = window.getComputedStyle(m);
+      return s.display !== "none" && s.visibility !== "hidden";
+    });
+    if (visibleModals.length > 0) {
+      e.preventDefault();
+      const topModal = visibleModals[visibleModals.length - 1];
+      if (topModal.id === "confirmModal") {
+        if (typeof confirmModalResolve === "function") {
+          confirmModalResolve(false);
+        } else {
+          closeModal("confirmModal");
+        }
         return;
       }
+      closeModal(topModal);
     }
-    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+    return;
+  }
+  if (e.key === "/") {
+    const overlay = document.getElementById("busquedaGlobalOverlay");
+    if (overlay) {
       e.preventDefault();
-      const overlay = document.getElementById("busquedaGlobalOverlay");
-      if (overlay) {
-        _abrirBusquedaOverlay();
-      } else {
-        const searchInput = document.getElementById("globalSearchInput");
-        if (searchInput) {
-          searchInput.focus();
-          searchInput.select();
-        }
-      }
+      _abrirBusquedaOverlay();
       return;
     }
+  }
+  if (anyModal) return;
+  if (e.key === "n" || e.key === "N") {
+    e.preventDefault();
+    const seccionActiva = document.querySelector('.mk-section.active, [id^="section-"].active, section.active');
+    const secId = seccionActiva?.id || "";
+    if (secId.includes("inventario") || secId.includes("producto") || secId.includes("catalog")) {
+      if (typeof openProductModal === "function") openProductModal();
+    } else {
+      if (typeof openPedidoModal === "function") openPedidoModal();
+    }
+    return;
+  }
+  if (e.key === "r" || e.key === "R") {
+    e.preventDefault();
+    if (typeof updateDashboard === "function") updateDashboard();
+    return;
+  }
+});
+const _mkUndoStack = [];
+const _MK_UNDO_MAX = 10;
+let _undoToastTimer = null;
+function mkPushUndo(descripcion, fn) {
+  _mkUndoStack.push({ descripcion, fn });
+  if (_mkUndoStack.length > _MK_UNDO_MAX) _mkUndoStack.shift();
+}
+window.mkPushUndo = mkPushUndo;
+function _mkUndo() {
+  const action = _mkUndoStack.pop();
+  if (!action) {
+    manekiToastExport("Nada que deshacer", "warn");
+    return;
+  }
+  try {
+    action.fn();
+    manekiToastExport(`\u21A9\uFE0F Deshecho: ${action.descripcion}`, "ok");
+  } catch (e) {
+    manekiToastExport("Error al deshacer", "err");
+  }
+}
+function mkMostrarUndoHint(descripcion) {
+  if (_undoToastTimer) clearTimeout(_undoToastTimer);
+  let hint = document.getElementById("_mkUndoHint");
+  if (!hint) {
+    hint = document.createElement("div");
+    hint.id = "_mkUndoHint";
+    hint.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9997;background:#1F2937;color:#fff;padding:8px 16px;border-radius:10px;font-size:.78rem;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .3s;white-space:nowrap;";
+    document.body.appendChild(hint);
+  }
+  hint.innerHTML = `<span>\u21A9\uFE0F ${descripcion}</span><kbd onclick="_mkUndo()" style="background:#374151;border:1px solid #4B5563;border-radius:5px;padding:2px 7px;font-size:.72rem;cursor:pointer;font-family:inherit;">Ctrl+Z</kbd>`;
+  hint.style.opacity = "1";
+  hint.style.display = "flex";
+  _undoToastTimer = setTimeout(() => {
+    if (hint) {
+      hint.style.opacity = "0";
+      setTimeout(() => {
+        if (hint) hint.style.display = "none";
+      }, 300);
+    }
+  }, 5e3);
+}
+window.mkMostrarUndoHint = mkMostrarUndoHint;
+document.addEventListener("keydown", function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
     const tag = document.activeElement?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.activeElement?.isContentEditable) return;
-    const anyModal = document.querySelector('.modal-overlay[style*="flex"], .modal-overlay.active, [id$="Modal"][style*="flex"]');
-    if (e.key === "Escape") {
-      const overlay = document.getElementById("busquedaGlobalOverlay");
-      if (overlay && overlay.style.display !== "none") {
-        e.preventDefault();
-        _cerrarBusquedaOverlay();
-        return;
-      }
-      const errorModal = document.getElementById("errorLogModal");
-      if (errorModal && errorModal.style.display !== "none") {
-        e.preventDefault();
-        errorModal.style.display = "none";
-        return;
-      }
-      const visibleModals = Array.from(document.querySelectorAll('[id$="Modal"]')).filter((m) => {
-        const s = window.getComputedStyle(m);
-        return s.display !== "none" && s.visibility !== "hidden";
-      });
-      if (visibleModals.length > 0) {
-        e.preventDefault();
-        const topModal = visibleModals[visibleModals.length - 1];
-        if (topModal.id === "confirmModal") {
-          if (typeof confirmModalResolve === "function") {
-            confirmModalResolve(false);
-          } else {
-            closeModal("confirmModal");
-          }
-          return;
-        }
-        closeModal(topModal);
-      }
-      return;
-    }
-    if (e.key === "/") {
-      const overlay = document.getElementById("busquedaGlobalOverlay");
-      if (overlay) {
-        e.preventDefault();
-        _abrirBusquedaOverlay();
-        return;
-      }
-    }
-    if (anyModal) return;
-    if (e.key === "n" || e.key === "N") {
-      e.preventDefault();
-      const seccionActiva = document.querySelector('.mk-section.active, [id^="section-"].active, section.active');
-      const secId = seccionActiva?.id || "";
-      if (secId.includes("inventario") || secId.includes("producto") || secId.includes("catalog")) {
-        if (typeof openProductModal === "function") openProductModal();
-      } else {
-        if (typeof openPedidoModal === "function") openPedidoModal();
-      }
-      return;
-    }
-    if (e.key === "r" || e.key === "R") {
-      e.preventDefault();
-      if (typeof updateDashboard === "function") updateDashboard();
-      return;
-    }
-  });
-  const _mkUndoStack = [];
-  const _MK_UNDO_MAX = 10;
-  let _undoToastTimer = null;
-  function mkPushUndo(descripcion, fn) {
-    _mkUndoStack.push({ descripcion, fn });
-    if (_mkUndoStack.length > _MK_UNDO_MAX) _mkUndoStack.shift();
+    e.preventDefault();
+    _mkUndo();
   }
-  window.mkPushUndo = mkPushUndo;
-  function _mkUndo() {
-    const action = _mkUndoStack.pop();
-    if (!action) {
-      manekiToastExport("Nada que deshacer", "warn");
-      return;
-    }
-    try {
-      action.fn();
-      manekiToastExport(`\u21A9\uFE0F Deshecho: ${action.descripcion}`, "ok");
-    } catch (e) {
-      manekiToastExport("Error al deshacer", "err");
-    }
+});
+function _normSearch(texto) {
+  if (!texto) return "";
+  return String(texto).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+function _matchBusqueda(valor, q) {
+  if (!valor || !q) return false;
+  return _normSearch(valor).includes(q);
+}
+function _abrirBusquedaOverlay() {
+  const overlay = document.getElementById("busquedaGlobalOverlay");
+  if (!overlay) return;
+  overlay.style.display = "flex";
+  const input = document.getElementById("busquedaGlobalInput");
+  if (input) {
+    input.value = "";
+    input.focus();
   }
-  function mkMostrarUndoHint(descripcion) {
-    if (_undoToastTimer) clearTimeout(_undoToastTimer);
-    let hint = document.getElementById("_mkUndoHint");
-    if (!hint) {
-      hint = document.createElement("div");
-      hint.id = "_mkUndoHint";
-      hint.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9997;background:#1F2937;color:#fff;padding:8px 16px;border-radius:10px;font-size:.78rem;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .3s;white-space:nowrap;";
-      document.body.appendChild(hint);
-    }
-    hint.innerHTML = `<span>\u21A9\uFE0F ${descripcion}</span><kbd onclick="_mkUndo()" style="background:#374151;border:1px solid #4B5563;border-radius:5px;padding:2px 7px;font-size:.72rem;cursor:pointer;font-family:inherit;">Ctrl+Z</kbd>`;
-    hint.style.opacity = "1";
-    hint.style.display = "flex";
-    _undoToastTimer = setTimeout(() => {
-      if (hint) {
-        hint.style.opacity = "0";
-        setTimeout(() => {
-          if (hint) hint.style.display = "none";
-        }, 300);
-      }
-    }, 5e3);
+  document.getElementById("busquedaGlobalResultados").innerHTML = "";
+}
+function _cerrarBusquedaOverlay() {
+  const overlay = document.getElementById("busquedaGlobalOverlay");
+  if (overlay) overlay.style.display = "none";
+  const input = document.getElementById("busquedaGlobalInput");
+  if (input) input.value = "";
+  const resultados = document.getElementById("busquedaGlobalResultados");
+  if (resultados) resultados.innerHTML = "";
+}
+function _busquedaOverlayRender(q) {
+  const contenedor = document.getElementById("busquedaGlobalResultados");
+  if (!contenedor) return;
+  if (!q || q.trim().length < 2) {
+    contenedor.innerHTML = "";
+    return;
   }
-  window.mkMostrarUndoHint = mkMostrarUndoHint;
-  document.addEventListener("keydown", function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
-      const tag = document.activeElement?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || document.activeElement?.isContentEditable) return;
-      e.preventDefault();
-      _mkUndo();
-    }
-  });
-  function _normSearch(texto) {
-    if (!texto) return "";
-    return String(texto).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  }
-  function _matchBusqueda(valor, q) {
-    if (!valor || !q) return false;
-    return _normSearch(valor).includes(q);
-  }
-  function _abrirBusquedaOverlay() {
-    const overlay = document.getElementById("busquedaGlobalOverlay");
-    if (!overlay) return;
-    overlay.style.display = "flex";
-    const input = document.getElementById("busquedaGlobalInput");
-    if (input) {
-      input.value = "";
-      input.focus();
-    }
-    document.getElementById("busquedaGlobalResultados").innerHTML = "";
-  }
-  function _cerrarBusquedaOverlay() {
-    const overlay = document.getElementById("busquedaGlobalOverlay");
-    if (overlay) overlay.style.display = "none";
-    const input = document.getElementById("busquedaGlobalInput");
-    if (input) input.value = "";
-    const resultados = document.getElementById("busquedaGlobalResultados");
-    if (resultados) resultados.innerHTML = "";
-  }
-  function _busquedaOverlayRender(q) {
-    const contenedor = document.getElementById("busquedaGlobalResultados");
-    if (!contenedor) return;
-    if (!q || q.trim().length < 2) {
-      contenedor.innerHTML = "";
-      return;
-    }
-    const qn = _normSearch(q.trim());
-    let html = "";
-    let hayResultados = false;
-    const todosLosPedidos = [
-      ...window.pedidos || [],
-      ...window.pedidosFinalizados || []
-    ];
-    const pedidosFiltrados = todosLosPedidos.filter(
-      (p) => _matchBusqueda(p.folio, qn) || _matchBusqueda(p.cliente, qn) || _matchBusqueda(p.concepto, qn)
-    ).slice(0, 5);
-    if (pedidosFiltrados.length > 0) {
-      hayResultados = true;
-      const statusColors = { pendiente: "#f59e0b", confirmado: "#3b82f6", produccion: "#8b5cf6", finalizado: "#10b981", cancelado: "#ef4444" };
-      html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6">\u{1F4E6} Pedidos</div>`;
-      pedidosFiltrados.forEach((p, i) => {
-        const color = statusColors[p.status] || "#6b7280";
-        html += `<div class="busq-resultado" data-tipo="pedido" data-folio="${_esc(p.folio || "")}" data-cliente="${_esc(p.cliente || "")}" data-idx="${i}" tabindex="-1"
+  const qn = _normSearch(q.trim());
+  let html = "";
+  let hayResultados = false;
+  const todosLosPedidos = [
+    ...window.pedidos || [],
+    ...window.pedidosFinalizados || []
+  ];
+  const pedidosFiltrados = todosLosPedidos.filter(
+    (p) => _matchBusqueda(p.folio, qn) || _matchBusqueda(p.cliente, qn) || _matchBusqueda(p.concepto, qn)
+  ).slice(0, 5);
+  if (pedidosFiltrados.length > 0) {
+    hayResultados = true;
+    const statusColors = { pendiente: "#f59e0b", confirmado: "#3b82f6", produccion: "#8b5cf6", finalizado: "#10b981", cancelado: "#ef4444" };
+    html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6">\u{1F4E6} Pedidos</div>`;
+    pedidosFiltrados.forEach((p, i) => {
+      const color = statusColors[p.status] || "#6b7280";
+      html += `<div class="busq-resultado" data-tipo="pedido" data-folio="${_esc(p.folio || "")}" data-cliente="${_esc(p.cliente || "")}" data-idx="${i}" tabindex="-1"
                 style="padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #f9fafb">
                 <span style="font-size:18px">\u{1F6CD}\uFE0F</span>
                 <div style="flex:1; min-width:0">
@@ -363,17 +879,17 @@ var _ = (() => {
                     <div style="font-size:11px; color:${color}; text-transform:capitalize">${_esc(p.status || "\u2014")}</div>
                 </div>
             </div>`;
-      });
-    }
-    const productosFiltrados = (window.products || []).filter(
-      (p) => _matchBusqueda(p.name, qn) || _matchBusqueda(p.sku, qn) || _matchBusqueda(p.codigo, qn)
-    ).slice(0, 5);
-    if (productosFiltrados.length > 0) {
-      hayResultados = true;
-      html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6; border-top:1px solid #f3f4f6; margin-top:4px">\u{1F3F7}\uFE0F Productos</div>`;
-      productosFiltrados.forEach((p, i) => {
-        const stock = p.stock ?? "\u2014";
-        html += `<div class="busq-resultado" data-tipo="producto" data-id="${_esc(String(p.id || ""))}" data-idx="${i}" tabindex="-1"
+    });
+  }
+  const productosFiltrados = (window.products || []).filter(
+    (p) => _matchBusqueda(p.name, qn) || _matchBusqueda(p.sku, qn) || _matchBusqueda(p.codigo, qn)
+  ).slice(0, 5);
+  if (productosFiltrados.length > 0) {
+    hayResultados = true;
+    html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6; border-top:1px solid #f3f4f6; margin-top:4px">\u{1F3F7}\uFE0F Productos</div>`;
+    productosFiltrados.forEach((p, i) => {
+      const stock = p.stock ?? "\u2014";
+      html += `<div class="busq-resultado" data-tipo="producto" data-id="${_esc(String(p.id || ""))}" data-idx="${i}" tabindex="-1"
                 style="padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #f9fafb">
                 <span style="font-size:18px">${p.image || "\u{1F4E6}"}</span>
                 <div style="flex:1; min-width:0">
@@ -382,16 +898,16 @@ var _ = (() => {
                 </div>
                 <div style="font-weight:700; font-size:13px; color:#b45309; flex-shrink:0">$${Number(p.price || 0).toFixed(2)}</div>
             </div>`;
-      });
-    }
-    const clientesFiltrados = (window.clients || []).filter(
-      (c) => _matchBusqueda(c.name, qn) || _matchBusqueda(c.phone, qn) || _matchBusqueda(c.telefono, qn)
-    ).slice(0, 5);
-    if (clientesFiltrados.length > 0) {
-      hayResultados = true;
-      html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6; border-top:1px solid #f3f4f6; margin-top:4px">\u{1F464} Clientes</div>`;
-      clientesFiltrados.forEach((c, i) => {
-        html += `<div class="busq-resultado" data-tipo="cliente" data-nombre="${_esc(c.name || "")}" data-idx="${i}" tabindex="-1"
+    });
+  }
+  const clientesFiltrados = (window.clients || []).filter(
+    (c) => _matchBusqueda(c.name, qn) || _matchBusqueda(c.phone, qn) || _matchBusqueda(c.telefono, qn)
+  ).slice(0, 5);
+  if (clientesFiltrados.length > 0) {
+    hayResultados = true;
+    html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6; border-top:1px solid #f3f4f6; margin-top:4px">\u{1F464} Clientes</div>`;
+    clientesFiltrados.forEach((c, i) => {
+      html += `<div class="busq-resultado" data-tipo="cliente" data-nombre="${_esc(c.name || "")}" data-idx="${i}" tabindex="-1"
                 style="padding:10px 14px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #f9fafb">
                 <span style="font-size:18px">\u{1F464}</span>
                 <div style="flex:1; min-width:0">
@@ -400,90 +916,90 @@ var _ = (() => {
                 </div>
                 <div style="font-size:11px; color:#6b7280; flex-shrink:0">Ver \u2192</div>
             </div>`;
-      });
-    }
-    if (!hayResultados) {
-      html = `<div style="padding:32px 16px; text-align:center; color:#9ca3af; font-size:14px">Sin resultados para "<b>${_esc(q)}</b>"</div>`;
-    }
-    contenedor.innerHTML = html;
-    contenedor.querySelectorAll(".busq-resultado").forEach((el) => {
-      el.addEventListener("mousedown", function(ev) {
-        ev.preventDefault();
-        _seleccionarResultadoBusqueda(this);
-      });
-      el.addEventListener("mouseover", function() {
-        _resaltarResultado(this);
-      });
     });
   }
-  function _seleccionarResultadoBusqueda(el) {
-    const tipo = el.dataset.tipo;
-    _cerrarBusquedaOverlay();
-    if (tipo === "pedido") {
-      if (typeof showSection === "function") showSection("pedidos");
-      const folio = el.dataset.folio;
-      const cliente = el.dataset.cliente;
-      setTimeout(() => {
-        const buscarEl = document.getElementById("kanbanBuscar");
-        if (buscarEl && folio) {
-          buscarEl.value = folio;
-          buscarEl.dispatchEvent(new Event("input", { bubbles: true }));
-        } else if (buscarEl && cliente) {
-          buscarEl.value = cliente;
-          buscarEl.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      }, 200);
-    } else if (tipo === "producto") {
-      if (typeof showSection === "function") showSection("inventario");
-      const id = el.dataset.id;
-      setTimeout(() => {
-        if (id && typeof editProduct === "function") editProduct(id);
-      }, 300);
-    } else if (tipo === "cliente") {
-      if (typeof showSection === "function") showSection("clientes");
-      const nombre = el.dataset.nombre;
-      setTimeout(() => {
-        const searchInput = document.getElementById("searchClient");
-        if (searchInput && nombre) {
-          searchInput.value = nombre;
-          searchInput.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      }, 200);
-    }
+  if (!hayResultados) {
+    html = `<div style="padding:32px 16px; text-align:center; color:#9ca3af; font-size:14px">Sin resultados para "<b>${_esc(q)}</b>"</div>`;
   }
-  function _resaltarResultado(el) {
-    const contenedor = document.getElementById("busquedaGlobalResultados");
-    if (!contenedor) return;
-    contenedor.querySelectorAll(".busq-resultado").forEach((r) => {
-      r.style.background = "";
-      delete r.dataset.resaltado;
+  contenedor.innerHTML = html;
+  contenedor.querySelectorAll(".busq-resultado").forEach((el) => {
+    el.addEventListener("mousedown", function(ev) {
+      ev.preventDefault();
+      _seleccionarResultadoBusqueda(this);
     });
-    el.style.background = "#f0f9ff";
-    el.dataset.resaltado = "1";
-  }
-  function _navResultados(direccion) {
-    const contenedor = document.getElementById("busquedaGlobalResultados");
-    if (!contenedor) return;
-    const items = Array.from(contenedor.querySelectorAll(".busq-resultado"));
-    if (!items.length) return;
-    const actual = items.findIndex((i) => i.dataset.resaltado === "1");
-    items.forEach((i) => {
-      i.style.background = "";
-      delete i.dataset.resaltado;
+    el.addEventListener("mouseover", function() {
+      _resaltarResultado(this);
     });
-    let siguiente = actual + direccion;
-    if (siguiente < 0) siguiente = items.length - 1;
-    if (siguiente >= items.length) siguiente = 0;
-    items[siguiente].style.background = "#f0f9ff";
-    items[siguiente].dataset.resaltado = "1";
-    items[siguiente].scrollIntoView({ block: "nearest" });
+  });
+}
+function _seleccionarResultadoBusqueda(el) {
+  const tipo = el.dataset.tipo;
+  _cerrarBusquedaOverlay();
+  if (tipo === "pedido") {
+    if (typeof showSection === "function") showSection("pedidos");
+    const folio = el.dataset.folio;
+    const cliente = el.dataset.cliente;
+    setTimeout(() => {
+      const buscarEl = document.getElementById("kanbanBuscar");
+      if (buscarEl && folio) {
+        buscarEl.value = folio;
+        buscarEl.dispatchEvent(new Event("input", { bubbles: true }));
+      } else if (buscarEl && cliente) {
+        buscarEl.value = cliente;
+        buscarEl.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }, 200);
+  } else if (tipo === "producto") {
+    if (typeof showSection === "function") showSection("inventario");
+    const id = el.dataset.id;
+    setTimeout(() => {
+      if (id && typeof editProduct === "function") editProduct(id);
+    }, 300);
+  } else if (tipo === "cliente") {
+    if (typeof showSection === "function") showSection("clientes");
+    const nombre = el.dataset.nombre;
+    setTimeout(() => {
+      const searchInput = document.getElementById("searchClient");
+      if (searchInput && nombre) {
+        searchInput.value = nombre;
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }, 200);
   }
-  function initBusquedaGlobal() {
-    if (document.getElementById("busquedaGlobalOverlay")) return;
-    const overlay = document.createElement("div");
-    overlay.id = "busquedaGlobalOverlay";
-    overlay.style.cssText = "display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:flex-start; justify-content:center; padding-top:10vh";
-    overlay.innerHTML = `
+}
+function _resaltarResultado(el) {
+  const contenedor = document.getElementById("busquedaGlobalResultados");
+  if (!contenedor) return;
+  contenedor.querySelectorAll(".busq-resultado").forEach((r) => {
+    r.style.background = "";
+    delete r.dataset.resaltado;
+  });
+  el.style.background = "#f0f9ff";
+  el.dataset.resaltado = "1";
+}
+function _navResultados(direccion) {
+  const contenedor = document.getElementById("busquedaGlobalResultados");
+  if (!contenedor) return;
+  const items = Array.from(contenedor.querySelectorAll(".busq-resultado"));
+  if (!items.length) return;
+  const actual = items.findIndex((i) => i.dataset.resaltado === "1");
+  items.forEach((i) => {
+    i.style.background = "";
+    delete i.dataset.resaltado;
+  });
+  let siguiente = actual + direccion;
+  if (siguiente < 0) siguiente = items.length - 1;
+  if (siguiente >= items.length) siguiente = 0;
+  items[siguiente].style.background = "#f0f9ff";
+  items[siguiente].dataset.resaltado = "1";
+  items[siguiente].scrollIntoView({ block: "nearest" });
+}
+function initBusquedaGlobal() {
+  if (document.getElementById("busquedaGlobalOverlay")) return;
+  const overlay = document.createElement("div");
+  overlay.id = "busquedaGlobalOverlay";
+  overlay.style.cssText = "display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:flex-start; justify-content:center; padding-top:10vh";
+  overlay.innerHTML = `
         <div style="background:white; border-radius:12px; width:600px; max-width:90vw; max-height:70vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 50px rgba(0,0,0,0.3)">
             <div style="padding:16px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; gap:8px">
                 <span>\u{1F50D}</span>
@@ -493,75 +1009,75 @@ var _ = (() => {
             </div>
             <div id="busquedaGlobalResultados" style="overflow-y:auto; flex:1; padding:8px"></div>
         </div>`;
-    document.body.appendChild(overlay);
-    const inputWrapper = document.querySelector("#busquedaGlobalOverlay input")?.parentElement;
-    if (inputWrapper && !inputWrapper.querySelector("._busq-kbd")) {
-      inputWrapper.insertAdjacentHTML(
-        "beforeend",
-        '<kbd class="_busq-kbd" style="background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:11px;color:#6b7280;pointer-events:none">Ctrl+K</kbd>'
-      );
-    }
-    overlay.addEventListener("mousedown", function(e) {
-      if (e.target === overlay) _cerrarBusquedaOverlay();
-    });
-    let _bgTimer = null;
-    const input = document.getElementById("busquedaGlobalInput");
-    input.addEventListener("input", function() {
-      clearTimeout(_bgTimer);
-      _bgTimer = setTimeout(() => _busquedaOverlayRender(this.value), 250);
-    });
-    input.addEventListener("keydown", function(e) {
-      if (e.key === "Escape") {
-        _cerrarBusquedaOverlay();
-        return;
-      }
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        _navResultados(1);
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        _navResultados(-1);
-        return;
-      }
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const contenedor = document.getElementById("busquedaGlobalResultados");
-        const resaltado = contenedor && contenedor.querySelector('[data-resaltado="1"]');
-        if (resaltado) _seleccionarResultadoBusqueda(resaltado);
-        return;
-      }
-    });
+  document.body.appendChild(overlay);
+  const inputWrapper = document.querySelector("#busquedaGlobalOverlay input")?.parentElement;
+  if (inputWrapper && !inputWrapper.querySelector("._busq-kbd")) {
+    inputWrapper.insertAdjacentHTML(
+      "beforeend",
+      '<kbd class="_busq-kbd" style="background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:11px;color:#6b7280;pointer-events:none">Ctrl+K</kbd>'
+    );
   }
-  function initErrorLog() {
+  overlay.addEventListener("mousedown", function(e) {
+    if (e.target === overlay) _cerrarBusquedaOverlay();
+  });
+  let _bgTimer = null;
+  const input = document.getElementById("busquedaGlobalInput");
+  input.addEventListener("input", function() {
+    clearTimeout(_bgTimer);
+    _bgTimer = setTimeout(() => _busquedaOverlayRender(this.value), 250);
+  });
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      _cerrarBusquedaOverlay();
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      _navResultados(1);
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      _navResultados(-1);
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const contenedor = document.getElementById("busquedaGlobalResultados");
+      const resaltado = contenedor && contenedor.querySelector('[data-resaltado="1"]');
+      if (resaltado) _seleccionarResultadoBusqueda(resaltado);
+      return;
+    }
+  });
+}
+function initErrorLog() {
+  window._errorLog = window._errorLog || [];
+  const _prevOnerror = window.onerror;
+  window.onerror = function(msg, src, line, col, err) {
+    if (typeof _prevOnerror === "function") _prevOnerror(msg, src, line, col, err);
     window._errorLog = window._errorLog || [];
-    const _prevOnerror = window.onerror;
-    window.onerror = function(msg, src, line, col, err) {
-      if (typeof _prevOnerror === "function") _prevOnerror(msg, src, line, col, err);
-      window._errorLog = window._errorLog || [];
-      window._errorLog.unshift({ ts: (/* @__PURE__ */ new Date()).toISOString(), tipo: "error", msg, src, line, stack: err?.stack });
-      if (window._errorLog.length > 50) window._errorLog.pop();
-    };
-    const _prevUnhandled = window._unhandledRejectionHandler || null;
-    const _unhandledHandler = function(e) {
-      if (typeof _prevUnhandled === "function") _prevUnhandled(e);
-      window._errorLog = window._errorLog || [];
-      window._errorLog.unshift({
-        ts: (/* @__PURE__ */ new Date()).toISOString(),
-        tipo: "promise",
-        msg: String(e.reason),
-        stack: e.reason && e.reason.stack ? e.reason.stack : null
-      });
-      if (window._errorLog.length > 50) window._errorLog.pop();
-    };
-    window._unhandledRejectionHandler = _unhandledHandler;
-    window.addEventListener("unhandledrejection", _unhandledHandler);
-    if (document.getElementById("errorLogModal")) return;
-    const modal = document.createElement("div");
-    modal.id = "errorLogModal";
-    modal.style.cssText = "display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center";
-    modal.innerHTML = `
+    window._errorLog.unshift({ ts: (/* @__PURE__ */ new Date()).toISOString(), tipo: "error", msg, src, line, stack: err?.stack });
+    if (window._errorLog.length > 50) window._errorLog.pop();
+  };
+  const _prevUnhandled = window._unhandledRejectionHandler || null;
+  const _unhandledHandler = function(e) {
+    if (typeof _prevUnhandled === "function") _prevUnhandled(e);
+    window._errorLog = window._errorLog || [];
+    window._errorLog.unshift({
+      ts: (/* @__PURE__ */ new Date()).toISOString(),
+      tipo: "promise",
+      msg: String(e.reason),
+      stack: e.reason && e.reason.stack ? e.reason.stack : null
+    });
+    if (window._errorLog.length > 50) window._errorLog.pop();
+  };
+  window._unhandledRejectionHandler = _unhandledHandler;
+  window.addEventListener("unhandledrejection", _unhandledHandler);
+  if (document.getElementById("errorLogModal")) return;
+  const modal = document.createElement("div");
+  modal.id = "errorLogModal";
+  modal.style.cssText = "display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center";
+  modal.innerHTML = `
         <div style="background:#1e1e1e; border-radius:12px; width:800px; max-width:95vw; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 60px rgba(0,0,0,0.5); color:#d4d4d4; font-family:monospace">
             <div style="padding:14px 18px; border-bottom:1px solid #333; display:flex; align-items:center; gap:8px; background:#252526">
                 <span style="font-size:16px">\u{1F41B}</span>
@@ -578,41 +1094,41 @@ var _ = (() => {
             </div>
             <div id="errorLogLista" style="overflow-y:auto; flex:1; padding:12px"></div>
         </div>`;
-    document.body.appendChild(modal);
-    modal.querySelector("#errorLogCloseBtn").addEventListener("click", () => {
-      modal.style.display = "none";
-    });
-    modal.querySelector("#errorLogCopyBtn").addEventListener("click", () => {
-      navigator.clipboard.writeText(JSON.stringify(window._errorLog, null, 2)).then(() => manekiToastExport("\u{1F4CB} Log copiado al portapapeles", "ok")).catch(() => manekiToastExport("\u274C No se pudo copiar", "err"));
-    });
-    modal.querySelector("#errorLogClearBtn").addEventListener("click", () => {
-      window._errorLog = [];
-      _renderErrorLog();
-      manekiToastExport("\u{1F5D1}\uFE0F Log limpiado", "info");
-    });
-    modal.addEventListener("mousedown", function(e) {
-      if (e.target === modal) modal.style.display = "none";
-    });
+  document.body.appendChild(modal);
+  modal.querySelector("#errorLogCloseBtn").addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+  modal.querySelector("#errorLogCopyBtn").addEventListener("click", () => {
+    navigator.clipboard.writeText(JSON.stringify(window._errorLog, null, 2)).then(() => manekiToastExport("\u{1F4CB} Log copiado al portapapeles", "ok")).catch(() => manekiToastExport("\u274C No se pudo copiar", "err"));
+  });
+  modal.querySelector("#errorLogClearBtn").addEventListener("click", () => {
+    window._errorLog = [];
+    _renderErrorLog();
+    manekiToastExport("\u{1F5D1}\uFE0F Log limpiado", "info");
+  });
+  modal.addEventListener("mousedown", function(e) {
+    if (e.target === modal) modal.style.display = "none";
+  });
+}
+function _renderErrorLog() {
+  const lista = document.getElementById("errorLogLista");
+  const countEl = document.getElementById("errorLogCount");
+  if (!lista) return;
+  const log = window._errorLog || [];
+  if (countEl) {
+    countEl.textContent = log.length;
+    countEl.style.display = log.length ? "inline" : "none";
   }
-  function _renderErrorLog() {
-    const lista = document.getElementById("errorLogLista");
-    const countEl = document.getElementById("errorLogCount");
-    if (!lista) return;
-    const log = window._errorLog || [];
-    if (countEl) {
-      countEl.textContent = log.length;
-      countEl.style.display = log.length ? "inline" : "none";
-    }
-    if (!log.length) {
-      lista.innerHTML = '<div style="padding:40px; text-align:center; color:#6b7280; font-size:14px">\u2705 No hay errores registrados</div>';
-      return;
-    }
-    lista.innerHTML = log.map((entry, i) => {
-      const ts = entry.ts ? entry.ts.replace("T", " ").split(".")[0] : "\u2014";
-      const tipoBadge = entry.tipo === "error" ? '<span style="background:#ef4444; color:white; border-radius:4px; padding:1px 6px; font-size:10px">ERROR</span>' : '<span style="background:#f59e0b; color:white; border-radius:4px; padding:1px 6px; font-size:10px">PROMISE</span>';
-      const srcInfo = entry.src ? `${entry.src}:${entry.line || "?"}` : "";
-      const stackHtml = entry.stack ? `<pre style="margin:6px 0 0; padding:8px; background:#111; border-radius:4px; font-size:10px; color:#9ca3af; overflow-x:auto; white-space:pre-wrap; word-break:break-all">${_esc(entry.stack)}</pre>` : "";
-      return `<div style="margin-bottom:10px; padding:10px 12px; background:#252526; border-radius:8px; border-left:3px solid ${entry.tipo === "error" ? "#ef4444" : "#f59e0b"}">
+  if (!log.length) {
+    lista.innerHTML = '<div style="padding:40px; text-align:center; color:#6b7280; font-size:14px">\u2705 No hay errores registrados</div>';
+    return;
+  }
+  lista.innerHTML = log.map((entry, i) => {
+    const ts = entry.ts ? entry.ts.replace("T", " ").split(".")[0] : "\u2014";
+    const tipoBadge = entry.tipo === "error" ? '<span style="background:#ef4444; color:white; border-radius:4px; padding:1px 6px; font-size:10px">ERROR</span>' : '<span style="background:#f59e0b; color:white; border-radius:4px; padding:1px 6px; font-size:10px">PROMISE</span>';
+    const srcInfo = entry.src ? `${entry.src}:${entry.line || "?"}` : "";
+    const stackHtml = entry.stack ? `<pre style="margin:6px 0 0; padding:8px; background:#111; border-radius:4px; font-size:10px; color:#9ca3af; overflow-x:auto; white-space:pre-wrap; word-break:break-all">${_esc(entry.stack)}</pre>` : "";
+    return `<div style="margin-bottom:10px; padding:10px 12px; background:#252526; border-radius:8px; border-left:3px solid ${entry.tipo === "error" ? "#ef4444" : "#f59e0b"}">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap">
                 <span style="color:#6b7280; font-size:10px">${_esc(ts)}</span>
                 ${tipoBadge}
@@ -621,238 +1137,252 @@ var _ = (() => {
             <div style="color:#ce9178; font-size:12px; word-break:break-word">${_esc(String(entry.msg || ""))}</div>
             ${stackHtml}
         </div>`;
-    }).join("");
+  }).join("");
+}
+function _abrirErrorLog() {
+  const modal = document.getElementById("errorLogModal");
+  if (!modal) {
+    initErrorLog();
   }
-  function _abrirErrorLog() {
-    const modal = document.getElementById("errorLogModal");
-    if (!modal) {
-      initErrorLog();
-    }
-    const m = document.getElementById("errorLogModal");
-    if (!m) return;
-    m.style.display = "flex";
-    _renderErrorLog();
+  const m = document.getElementById("errorLogModal");
+  if (!m) return;
+  m.style.display = "flex";
+  _renderErrorLog();
+}
+(function _initMejoras() {
+  function _run() {
+    initBusquedaGlobal();
+    initErrorLog();
+    initResponsive();
   }
-  (function _initMejoras() {
-    function _run() {
-      initBusquedaGlobal();
-      initErrorLog();
-      initResponsive();
-    }
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", _run);
-    } else {
-      _run();
-    }
-  })();
-  function _actualizarBottomNavActivo(seccion) {
-    const mapSection = { dashboard: 0, pedidos: 1, inventory: 2, balance: 3 };
-    document.querySelectorAll("#mobileBottomNav button").forEach((btn, i) => {
-      btn.style.color = i === mapSection[seccion] ? "#C9933A" : "#6b7280";
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", _run);
+  } else {
+    _run();
+  }
+})();
+function confirmarResetTotal() {
+  showConfirm(
+    "\u26A0\uFE0F Esta acci\xF3n eliminar\xE1 TODOS los datos: productos, pedidos, clientes y ventas. No se puede deshacer.\n\n\xBFEst\xE1s completamente seguro?",
+    "\u{1F5D1}\uFE0F Borrar todos los datos"
+  ).then(function(ok) {
+    if (!ok) return;
+    showConfirm(
+      "\u{1F6A8} \xDALTIMA CONFIRMACI\xD3N: Se borrar\xE1n absolutamente todos los datos. \xBFConfirmas?",
+      "\u26D4 Confirmaci\xF3n final"
+    ).then(function(ok2) {
+      if (!ok2) return;
+      clearAllData();
     });
+  });
+}
+function _actualizarBottomNavActivo(seccion) {
+  const mapSection = { dashboard: 0, pedidos: 1, inventory: 2, balance: 3 };
+  document.querySelectorAll("#mobileBottomNav button").forEach((btn, i) => {
+    btn.style.color = i === mapSection[seccion] ? "#C9933A" : "#6b7280";
+  });
+}
+window._actualizarBottomNavActivo = _actualizarBottomNavActivo;
+window._dispositivoActual = "desktop";
+function detectarDispositivo() {
+  const w = window.innerWidth;
+  if (w < 768) return "mobile";
+  if (w < 1024) return "tablet";
+  return "desktop";
+}
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (!sidebar) return;
+  const isOpen = sidebar.classList.contains("sidebar-open");
+  if (isOpen) {
+    closeSidebar();
+  } else {
+    openSidebar();
   }
-  window._actualizarBottomNavActivo = _actualizarBottomNavActivo;
-  window._dispositivoActual = "desktop";
-  function detectarDispositivo() {
-    const w = window.innerWidth;
-    if (w < 768) return "mobile";
-    if (w < 1024) return "tablet";
-    return "desktop";
-  }
-  function toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    if (!sidebar) return;
-    const isOpen = sidebar.classList.contains("sidebar-open");
-    if (isOpen) {
-      closeSidebar();
-    } else {
-      openSidebar();
+}
+function openSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if (sidebar) sidebar.classList.add("sidebar-open");
+  if (overlay) overlay.classList.add("visible");
+  document.body.style.overflow = "hidden";
+}
+function closeSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  if (sidebar) sidebar.classList.remove("sidebar-open");
+  if (overlay) overlay.classList.remove("visible");
+  document.body.style.overflow = "";
+}
+window.toggleSidebar = toggleSidebar;
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
+function _aplicarModoDispositivo() {
+  const dispositivo = detectarDispositivo();
+  const anterior = window._dispositivoActual;
+  window._dispositivoActual = dispositivo;
+  document.body.classList.remove("device-desktop", "device-tablet", "device-mobile");
+  document.body.classList.add("device-" + dispositivo);
+  if (dispositivo === "mobile") {
+    const pref = localStorage.getItem("maneki_compactMode");
+    if (pref === null) {
+      document.body.classList.add("compact-mode");
+    } else if (pref === "1") {
+      document.body.classList.add("compact-mode");
     }
+  } else if (anterior === "mobile" && dispositivo !== "mobile") {
+    const pref = localStorage.getItem("maneki_compactMode");
+    if (!pref) document.body.classList.remove("compact-mode");
   }
-  function openSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    if (sidebar) sidebar.classList.add("sidebar-open");
-    if (overlay) overlay.classList.add("visible");
-    document.body.style.overflow = "hidden";
+  if (dispositivo === "desktop") {
+    closeSidebar();
   }
-  function closeSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    if (sidebar) sidebar.classList.remove("sidebar-open");
-    if (overlay) overlay.classList.remove("visible");
+  const mainEls = document.querySelectorAll(".ml-64, main, #mainContent, .main-content");
+  mainEls.forEach((el) => {
+    el.style.paddingTop = dispositivo !== "desktop" ? "56px" : "";
+  });
+  if (dispositivo === "desktop") {
     document.body.style.overflow = "";
   }
-  window.toggleSidebar = toggleSidebar;
-  window.openSidebar = openSidebar;
-  window.closeSidebar = closeSidebar;
-  function _aplicarModoDispositivo() {
-    const dispositivo = detectarDispositivo();
-    const anterior = window._dispositivoActual;
-    window._dispositivoActual = dispositivo;
-    document.body.classList.remove("device-desktop", "device-tablet", "device-mobile");
-    document.body.classList.add("device-" + dispositivo);
-    if (dispositivo === "mobile") {
-      const pref = localStorage.getItem("maneki_compactMode");
-      if (pref === null) {
-        document.body.classList.add("compact-mode");
-      } else if (pref === "1") {
-        document.body.classList.add("compact-mode");
+}
+function initResponsive() {
+  _aplicarModoDispositivo();
+  let _resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(_aplicarModoDispositivo, 150);
+  });
+  const _origShowSection = window.showSection;
+  if (typeof _origShowSection === "function") {
+    window.showSection = function(...args) {
+      if (window._dispositivoActual !== "desktop") closeSidebar();
+      const result = _origShowSection.apply(this, args);
+      if (args[0] && typeof _actualizarBottomNavActivo === "function") {
+        _actualizarBottomNavActivo(args[0]);
       }
-    } else if (anterior === "mobile" && dispositivo !== "mobile") {
-      const pref = localStorage.getItem("maneki_compactMode");
-      if (!pref) document.body.classList.remove("compact-mode");
-    }
-    if (dispositivo === "desktop") {
-      closeSidebar();
-    }
-    const mainEls = document.querySelectorAll(".ml-64, main, #mainContent, .main-content");
-    mainEls.forEach((el) => {
-      el.style.paddingTop = dispositivo !== "desktop" ? "56px" : "";
-    });
-    if (dispositivo === "desktop") {
-      document.body.style.overflow = "";
-    }
+      return result;
+    };
   }
-  function initResponsive() {
-    _aplicarModoDispositivo();
-    let _resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(_resizeTimer);
-      _resizeTimer = setTimeout(_aplicarModoDispositivo, 150);
-    });
-    const _origShowSection = window.showSection;
-    if (typeof _origShowSection === "function") {
-      window.showSection = function(...args) {
-        if (window._dispositivoActual !== "desktop") closeSidebar();
-        const result = _origShowSection.apply(this, args);
-        if (args[0] && typeof _actualizarBottomNavActivo === "function") {
-          _actualizarBottomNavActivo(args[0]);
-        }
-        return result;
-      };
+  let _touchStartX = 0;
+  document.addEventListener("touchstart", (e) => {
+    _touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener("touchend", (e) => {
+    const dx = e.changedTouches[0].clientX - _touchStartX;
+    if (_touchStartX < 30 && dx > 60) {
+      openSidebar();
+      return;
     }
-    let _touchStartX = 0;
-    document.addEventListener("touchstart", (e) => {
-      _touchStartX = e.touches[0].clientX;
-    }, { passive: true });
-    document.addEventListener("touchend", (e) => {
-      const dx = e.changedTouches[0].clientX - _touchStartX;
-      if (_touchStartX < 30 && dx > 60) {
-        openSidebar();
-        return;
-      }
-      if (dx < -60) {
-        const enKanban = e.target.closest('#vistaKanban, .kanban-board, [class*="kanban"]');
-        if (!enKanban) closeSidebar();
-      }
-    }, { passive: true });
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest("#mobileBottomNav button");
-      if (!btn) return;
-      document.querySelectorAll("#mobileBottomNav button").forEach((b) => {
-        b.style.color = "#6b7280";
-      });
-      btn.style.color = "#C9933A";
+    if (dx < -60) {
+      const enKanban = e.target.closest('#vistaKanban, .kanban-board, [class*="kanban"]');
+      if (!enKanban) closeSidebar();
+    }
+  }, { passive: true });
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#mobileBottomNav button");
+    if (!btn) return;
+    document.querySelectorAll("#mobileBottomNav button").forEach((b) => {
+      b.style.color = "#6b7280";
     });
+    btn.style.color = "#C9933A";
+  });
+}
+function manekiUndoToast(msg, undoFn, duracion) {
+  duracion = duracion || 6e3;
+  let container = document.getElementById("mk-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "mk-toast-container";
+    container.className = "mk-toast-container";
+    document.body.appendChild(container);
   }
-  function manekiUndoToast(msg, undoFn, duracion) {
-    duracion = duracion || 6e3;
-    let container = document.getElementById("mk-toast-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.id = "mk-toast-container";
-      container.className = "mk-toast-container";
-      document.body.appendChild(container);
-    }
-    const toast = document.createElement("div");
-    toast.className = "mk-toast warn";
-    toast.style.cursor = "default";
-    const _id = "undo_" + Date.now();
-    toast.innerHTML = `
+  const toast = document.createElement("div");
+  toast.className = "mk-toast warn";
+  toast.style.cursor = "default";
+  const _id = "undo_" + Date.now();
+  toast.innerHTML = `
         <div class="mk-toast-icon">\u21A9</div>
         <div class="mk-toast-body" style="flex:1">
             <div class="mk-toast-msg">${msg}</div>
         </div>
         <button id="${_id}" style="background:#C5A572;color:white;border:none;border-radius:8px;padding:6px 16px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;">Deshacer</button>
         <div class="mk-toast-progress" style="animation-duration:${duracion}ms"></div>`;
-    container.appendChild(toast);
-    let _undone = false;
-    toast.querySelector("#" + _id).addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (_undone) return;
-      _undone = true;
-      if (typeof undoFn === "function") undoFn();
-      dismissToast(toast);
-      manekiToastExport("\u2705 Acci\xF3n revertida", "ok");
-    });
-    const timer = setTimeout(() => {
-      if (!_undone) dismissToast(toast);
-    }, duracion);
-    toast._timer = timer;
-  }
-  window.manekiUndoToast = manekiUndoToast;
-  (function _loadingSkeleton() {
-    const style = document.createElement("style");
-    style.textContent = `
+  container.appendChild(toast);
+  let _undone = false;
+  toast.querySelector("#" + _id).addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (_undone) return;
+    _undone = true;
+    if (typeof undoFn === "function") undoFn();
+    dismissToast(toast);
+    manekiToastExport("\u2705 Acci\xF3n revertida", "ok");
+  });
+  const timer = setTimeout(() => {
+    if (!_undone) dismissToast(toast);
+  }, duracion);
+  toast._timer = timer;
+}
+window.manekiUndoToast = manekiUndoToast;
+(function _loadingSkeleton() {
+  const style = document.createElement("style");
+  style.textContent = `
 @keyframes mkShimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
 .mk-skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:800px 100%;animation:mkShimmer 1.5s infinite;border-radius:8px;min-height:20px}
 #mk-loading-overlay{position:fixed;inset:0;background:rgba(250,248,245,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}
 #mk-loading-overlay.fade-out{opacity:0;pointer-events:none}
 .mk-loading-spinner{width:44px;height:44px;border:3.5px solid #e5e7eb;border-top-color:#C5A572;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}`;
-    document.head.appendChild(style);
-    const overlay = document.createElement("div");
-    overlay.id = "mk-loading-overlay";
-    overlay.innerHTML = `
+  document.head.appendChild(style);
+  const overlay = document.createElement("div");
+  overlay.id = "mk-loading-overlay";
+  overlay.innerHTML = `
         <img src="logo.png" alt="" style="height:64px;object-fit:contain;opacity:.85" onerror="this.style.display='none'">
         <div class="mk-loading-spinner"></div>
         <p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:#9ca3af;font-weight:500" id="mk-loading-text">Cargando Maneki Store...</p>`;
-    if (document.body) document.body.appendChild(overlay);
-    else document.addEventListener("DOMContentLoaded", () => document.body.appendChild(overlay));
-    function _dismiss() {
-      const el = document.getElementById("mk-loading-overlay");
-      if (!el) return;
-      el.classList.add("fade-out");
-      setTimeout(() => el.remove(), 500);
-    }
-    const _check = setInterval(() => {
-      if (window._dbReady !== void 0 && (window.products || []).length >= 0 && typeof window.updateDashboard === "function") {
-        clearInterval(_check);
-        _dismiss();
-      }
-    }, 200);
-    setTimeout(() => {
+  if (document.body) document.body.appendChild(overlay);
+  else document.addEventListener("DOMContentLoaded", () => document.body.appendChild(overlay));
+  function _dismiss() {
+    const el = document.getElementById("mk-loading-overlay");
+    if (!el) return;
+    el.classList.add("fade-out");
+    setTimeout(() => el.remove(), 500);
+  }
+  const _check = setInterval(() => {
+    if (window._dbReady !== void 0 && (window.products || []).length >= 0 && typeof window.updateDashboard === "function") {
       clearInterval(_check);
       _dismiss();
-    }, 5e3);
-  })();
-  (function _offlineBanner() {
-    const style = document.createElement("style");
-    style.textContent = `
+    }
+  }, 200);
+  setTimeout(() => {
+    clearInterval(_check);
+    _dismiss();
+  }, 5e3);
+})();
+(function _offlineBanner() {
+  const style = document.createElement("style");
+  style.textContent = `
 #mk-offline-banner{position:fixed;top:0;left:0;right:0;z-index:10001;background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;text-align:center;padding:8px 16px;font-size:.82rem;font-weight:600;transform:translateY(-100%);transition:transform .3s ease;display:flex;align-items:center;justify-content:center;gap:8px}
 #mk-offline-banner.visible{transform:translateY(0)}
 #mk-offline-banner .pulse{width:8px;height:8px;background:#fca5a5;border-radius:50%;animation:offPulse 1.5s infinite}
 @keyframes offPulse{0%,100%{opacity:1}50%{opacity:.3}}`;
-    document.head.appendChild(style);
-    const banner = document.createElement("div");
-    banner.id = "mk-offline-banner";
-    banner.innerHTML = '<span class="pulse"></span> Sin conexi\xF3n a internet \u2014 los cambios se guardan localmente y se sincronizar\xE1n al reconectarse';
-    if (document.body) document.body.appendChild(banner);
-    else document.addEventListener("DOMContentLoaded", () => document.body.appendChild(banner));
-    function _update() {
-      const el = document.getElementById("mk-offline-banner");
-      if (!el) return;
-      if (!navigator.onLine) el.classList.add("visible");
-      else el.classList.remove("visible");
-    }
-    window.addEventListener("online", () => {
-      _update();
-      manekiToastExport("\u{1F310} Conexi\xF3n restaurada \u2014 sincronizando...", "ok");
-      if (typeof sincronizarPendientes === "function") setTimeout(sincronizarPendientes, 500);
-    });
-    window.addEventListener("offline", _update);
+  document.head.appendChild(style);
+  const banner = document.createElement("div");
+  banner.id = "mk-offline-banner";
+  banner.innerHTML = '<span class="pulse"></span> Sin conexi\xF3n a internet \u2014 los cambios se guardan localmente y se sincronizar\xE1n al reconectarse';
+  if (document.body) document.body.appendChild(banner);
+  else document.addEventListener("DOMContentLoaded", () => document.body.appendChild(banner));
+  function _update() {
+    const el = document.getElementById("mk-offline-banner");
+    if (!el) return;
+    if (!navigator.onLine) el.classList.add("visible");
+    else el.classList.remove("visible");
+  }
+  window.addEventListener("online", () => {
     _update();
-  })();
+    manekiToastExport("\u{1F310} Conexi\xF3n restaurada \u2014 sincronizando...", "ok");
+    if (typeof sincronizarPendientes === "function") setTimeout(sincronizarPendientes, 500);
+  });
+  window.addEventListener("offline", _update);
+  _update();
 })();
 //# sourceMappingURL=ui-extras.js.map
