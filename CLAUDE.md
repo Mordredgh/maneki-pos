@@ -1,7 +1,7 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 2 junio 2026 — Sesión 7 (N2 Swipe kanban + N3 QR scanner + N6 Año a año + N9 RFM + S2 RLS)
-> **Versión app:** 2.2.0 | **Service Worker:** v2.3.3 | **Branch:** fresh-start → master
+> **Última actualización:** 2 junio 2026 — Sesión 8 (Auditoría exhaustiva: 30 fixes bugs/perf/ux)
+> **Versión app:** 2.2.0 | **Service Worker:** v2.3.4 | **Branch:** fresh-start → master
 
 ---
 
@@ -268,6 +268,15 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 | D4 | **`saveToLocalStorage`** comentada como no-op intencional con explicación | `src/db.ts` |
 | U3/N4 | **Skeleton screens** inyectadas en `inventoryTable`, `pedidosTable`, `clientsTable` antes del Promise.all | `src/config.ts` |
 | N1 | **PWA install prompt** — `beforeinstallprompt` capturado; banner tras 3 visitas | `src/init.ts` |
+
+### Sesión 8 (2 junio 2026) — Auditoría exhaustiva: 30 mejoras
+
+| Área | Fixes | Detalle |
+|------|-------|---------|
+| Bugs | B1,B3,B6,B7,B9 | Folio toast offline; _esDomicilio lógica; Array.isArray incomes; precio libre validado; domicilio solo explícito |
+| Performance | P2,P6,P7 | stockMap pre-cache O(1); SW 2-fases install; chart.update() sin destroy+new |
+| UX Sprint3 | UX1,UX5,UX8 | Loading kanban drop; badge sidebar stock; hint swipe mobile |
+| Nice-to-have | UX6,UX10,UX16-19 | Botón "?" shortcuts; tabla año-a-año; aria+44px mobile; meta≥1 |
 
 ### Sesión 7 (2 junio 2026) — N2/N3/N6/N9/S2
 
