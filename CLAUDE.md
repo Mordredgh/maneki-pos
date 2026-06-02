@@ -1,6 +1,6 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 2 junio 2026 — Sesión 4 (Auditoría #1 + Auditoría #2 + Fixes)
+> **Última actualización:** 2 junio 2026 — Sesión 6 (Errores consola + Kanban paginación + nginx PWA fix)
 > **Versión app:** 2.2.0 | **Service Worker:** v2.3.2 | **Branch:** fresh-start → master
 
 ---
@@ -100,7 +100,7 @@ mkHandleError(err, context)     // ✅ handler centralizado
 
 // REPORTES — caché memoizada
 _getAllVentas()                  // ✅ en reportes.js — no bypasear
-// ⚠️  invalidar con _allVentasCache = null después de mutaciones en salesHistory
+// ⚠️  invalidar via window._invalidarCacheVentas() — NO asignar _allVentasCache = null directo (es variable privada)
 
 // REALTIME — guard contra canales duplicados
 window._mkRTSetupDone           // se checa antes de llamar _setupRealtime()
@@ -269,19 +269,57 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 | U3/N4 | **Skeleton screens** inyectadas en `inventoryTable`, `pedidosTable`, `clientsTable` antes del Promise.all | `src/config.ts` |
 | N1 | **PWA install prompt** — `beforeinstallprompt` capturado; banner tras 3 visitas | `src/init.ts` |
 
+### Sesión 6 (2 junio 2026) — Errores consola + Kanban + nginx PWA fix
+
+**Errores de consola corregidos (4/4):**
+
+| Error | Causa raíz | Fix aplicado | Archivo |
+|-------|-----------|-------------|---------|
+| `sw.js TypeError: chrome-extension://` | SW intentaba cachear URLs no-http | Guard `if (!url.startsWith("http")) return` al inicio del fetch listener | `sw.js` |
+| `manifest.json 401 Unauthorized` | nginx host-level aplica `auth_basic` a TODOS los paths | Nuevo `location ~ ^/(manifest\.json\|sw\.js\|logo\.png)$` con `auth_basic off` en `/etc/nginx/sites-available/pos.manekistore.com.mx` + `nginx -t && systemctl reload nginx` | nginx VPS |
+| CSP bloquea `api.open-meteo.com` | Widget de clima no estaba en `connect-src` | Agregado `https://api.open-meteo.com` al CSP meta tag | `index.html` |
+| `apple-mobile-web-app-capable` deprecated | Solo existía el meta tag de Apple | Agregado `<meta name="mobile-web-app-capable" content="yes">` (estándar W3C) | `index.html` |
+
+**Pendientes de lista aplicados:**
+
+| # | Fix | Archivos |
+|---|-----|----------|
+| U3 | **Kanban paginación** — máx 10 cards por columna; botón "↓ Ver X más" expande la columna. `_kanbanExpandidos` Set reset al cambiar filtro de urgencia. `window._kanbanVerMas(col)` expuesto globalmente | `src/pedidos-1.ts` |
+| U4 | **Swipe sidebar** — ya estaba implementado desde S3 (`touchstart < 30px + dx > 60 → openSidebar`) | — |
+| U2 | **Labels mobile nav** — ya estaban implementados | — |
+| N5 | **CSV export balance** — ya estaba implementado (`exportarBalanceMesCSV`) | — |
+| N8 | **Undo visual** — ya estaba implementado (`mkMostrarUndoHint` + Ctrl+Z + toast) | — |
+
 ---
 
-## 🚨 PENDIENTES — Próxima Sesión (Nice-to-have)
+## 🚨 PENDIENTES — Próxima Sesión
 
 | # | Área | Mejora |
 |---|------|--------|
-| N2 | Pedidos | Swipe en mobile para cambiar estado en kanban |
+| N2 | Pedidos | Swipe en mobile para cambiar estado en kanban (touch drag entre columnas) |
 | N3 | Inventario | Código de barras / QR scan desde cámara para buscar productos |
 | N6 | Reportes | Comparativa año a año (actualmente solo mes a mes) |
 | N9 | Clientes | Segmentación RFM automática (Recencia, Frecuencia, Monto) |
-| U3 | Pedidos | Kanban: limitar a 10 cards por columna con "Ver más" (50+ pedidos) |
-| U4 | UX | Swipe gesture para sidebar en mobile (desde borde izquierdo) |
-| S2 | Seguridad | Telegram Bot Token en plaintext en Supabase — no fix sin backend proxy; **verificar que RLS esté activo en tabla `store`** |
+| S2 | Seguridad | Telegram Bot Token en `storeConfig` como string plano — no hay fix sin backend proxy; **verificar que RLS esté activo en tabla `store`** |
+
+---
+
+## Infraestructura VPS — nginx
+
+El dominio `pos.manekistore.com.mx` está servido por un nginx **del host** (no del contenedor) que actúa como reverse proxy hacia el contenedor Coolify en `http://127.0.0.1:8081`.
+
+**Archivo de config:** `/etc/nginx/sites-available/pos.manekistore.com.mx`
+**Backup:** `/etc/nginx/sites-available/pos.manekistore.com.mx.bak`
+**htpasswd:** `/etc/nginx/.htpasswd` (usuario: `manekimaster`)
+**Panel Coolify:** `http://195.26.247.101:8000` → My first project → production → maneki-pos
+
+```bash
+# Para modificar el nginx del host (desde Coolify Terminal → localhost):
+nano /etc/nginx/sites-available/pos.manekistore.com.mx
+nginx -t && systemctl reload nginx
+```
+
+⚠️ **Archivos sin auth (PWA):** `manifest.json`, `sw.js`, `logo.png` tienen `auth_basic off` en un `location ~` antes del `location /`. Esto es necesario para la instalación PWA. Si Coolify redeploya y regenera el nginx del contenedor, el nginx del HOST no se toca — son configuraciones independientes.
 
 ---
 
@@ -293,8 +331,9 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 | GitHub | https://github.com/Mordredgh/maneki-pos.git |
 | Web (Coolify) | https://pos.manekistore.com.mx |
 | VPS | 195.26.247.101 |
-| Auth | nginx Basic Auth |
+| Auth | nginx Basic Auth (host-level, no en contenedor) |
 | Supabase | https://hoqcrljgmamaumtdrtzi.supabase.co |
+| Coolify UI | http://195.26.247.101:8000 |
 
 ---
 
