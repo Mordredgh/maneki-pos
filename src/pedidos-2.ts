@@ -64,8 +64,8 @@ function _descontarInventarioPedido(pedido) {
 
         // Descontar stock del producto terminado (PT)
         const antesPT = prod.stock || 0;
-        // FIX 1: record rollback BEFORE modifying stock
-        _rollback.push({ id: prod.id, stockBefore: antesPT });
+        // FIX 1: record rollback BEFORE modifying stock (including variant snapshots)
+        _rollback.push({ id: prod.id, stockBefore: antesPT, variantsBefore: Array.isArray(prod.variants) && prod.variants.length > 0 ? prod.variants.map(v => ({...v})) : null });
 
         if (Array.isArray(prod.variants) && prod.variants.length > 0) {
             // Producto CON variantes: descontar de la variante correspondiente
@@ -113,8 +113,8 @@ function _descontarInventarioPedido(pedido) {
                     ? Math.ceil(cantidad / _rph) * (parseFloat(comp.qty) || 1)
                     : (parseFloat(comp.qty) || 1) * cantidad;
                 const antesMP = mp.stock || 0;
-                // FIX 1: record rollback for MP before modifying
-                _rollback.push({ id: mp.id, stockBefore: antesMP });
+                // FIX 1: record rollback for MP before modifying (including variant snapshots)
+                _rollback.push({ id: mp.id, stockBefore: antesMP, variantsBefore: Array.isArray(mp.variants) && mp.variants.length > 0 ? mp.variants.map(v => ({...v})) : null });
 
                 // Si el pedido tiene variante seleccionada y la MP tiene variantes,
                 // descontar de la variante específica (ej: Talla:M → restar qty de esa variante)
@@ -150,13 +150,16 @@ function _descontarInventarioPedido(pedido) {
         }
     }
     } catch(e) {
-        // FIX 1: restore all stock modified before the error
+        // FIX 1: restore all stock (including variant qtys) modified before the error
         _rollback.forEach(r => {
             const p = (window.products || []).find(x => String(x.id) === String(r.id));
-            if (p) p.stock = r.stockBefore;
+            if (!p) return;
+            p.stock = r.stockBefore;
+            if (r.variantsBefore && Array.isArray(p.variants)) {
+                r.variantsBefore.forEach((snap, i) => { if (p.variants[i]) p.variants[i].qty = snap.qty; });
+            }
         });
         console.error('[Inventario] Error al descontar — stock restaurado:', e);
-        // FIX C4: notificar al usuario que el rollback se ejecutó
         manekiToastExport('Error al descontar inventario. Se revirtió el stock.', 'err');
         throw e;
     }
@@ -232,15 +235,22 @@ function _regresarInventarioPedido(pedido) {
         prod.stock = antes + cantidad;
 
         // FIX 6: also restore variant stock (mirrors _descontarInventarioPedido deduction logic)
-        if (item.variante && Array.isArray(prod.variants) && prod.variants.length > 0) {
-            const _colIdx = item.variante.indexOf(':');
-            const _vType  = _colIdx !== -1 ? item.variante.slice(0, _colIdx).trim() : item.variante;
-            const _vValue = _colIdx !== -1 ? item.variante.slice(_colIdx + 1).trim() : '';
-            const _ptVar  = prod.variants.find(v =>
-                (v.type || v.tipo || '') === _vType && (v.value || v.valor || '') === _vValue
-            );
-            if (_ptVar) { _ptVar.qty = (_ptVar.qty || 0) + cantidad; }
+        if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+            if (item.variante) {
+                const _colIdx = item.variante.indexOf(':');
+                const _vType  = _colIdx !== -1 ? item.variante.slice(0, _colIdx).trim() : item.variante;
+                const _vValue = _colIdx !== -1 ? item.variante.slice(_colIdx + 1).trim() : '';
+                const _ptVar  = prod.variants.find(v =>
+                    (v.type || v.tipo || '') === _vType && (v.value || v.valor || '') === _vValue
+                );
+                if (_ptVar) { _ptVar.qty = (_ptVar.qty || 0) + cantidad; }
+            } else {
+                // Sin variante registrada: devolver a la de mayor stock (espejo del descuento)
+                const _varMayor = prod.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0];
+                if (_varMayor) _varMayor.qty = (_varMayor.qty || 0) + cantidad;
+            }
             if (typeof syncStockFromVariants === 'function') syncStockFromVariants(prod);
+            else prod.stock = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
         }
 
         if (typeof registrarMovimiento === 'function') {
@@ -286,9 +296,24 @@ function _regresarInventarioCompleto(pedido) {
         if (!prod || prod.tipo === 'servicio') return;
         const cantidad = item.quantity || item.cantidad || 1;
 
-        // Regresar stock del producto terminado
+        // Regresar stock del producto terminado (con soporte de variantes)
         const antesPT = prod.stock || 0;
-        prod.stock = antesPT + cantidad;
+        if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+            if (item.variante) {
+                const _colIdx = item.variante.indexOf(':');
+                const _vType  = _colIdx !== -1 ? item.variante.slice(0, _colIdx).trim() : item.variante;
+                const _vValue = _colIdx !== -1 ? item.variante.slice(_colIdx + 1).trim() : '';
+                const _ptVar  = prod.variants.find(v => (v.type||v.tipo||'')===_vType && (v.value||v.valor||'')===_vValue);
+                if (_ptVar) _ptVar.qty = (_ptVar.qty || 0) + cantidad;
+            } else {
+                const _varMayor = prod.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0];
+                if (_varMayor) _varMayor.qty = (_varMayor.qty || 0) + cantidad;
+            }
+            if (typeof syncStockFromVariants === 'function') syncStockFromVariants(prod);
+            else prod.stock = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+        } else {
+            prod.stock = antesPT + cantidad;
+        }
         if (typeof registrarMovimiento === 'function') {
             registrarMovimiento({
                 productoId: prod.id, productoNombre: prod.name,
@@ -308,21 +333,24 @@ function _regresarInventarioCompleto(pedido) {
                 const cantMP = Math.ceil(cantidad / rph) * (parseFloat(comp.qty) || 1);
                 const antesMP = mp.stock || 0;
 
-                // Devolver a la variante específica si aplica
-                if (item.variante && Array.isArray(mp.variants) && mp.variants.length > 0) {
-                    const colonIdx = item.variante.indexOf(':');
-                    const varType  = colonIdx !== -1 ? item.variante.slice(0, colonIdx).trim() : item.variante;
-                    const varValue = colonIdx !== -1 ? item.variante.slice(colonIdx + 1).trim() : '';
-                    const mpVar = mp.variants.find(v =>
-                        (v.type || v.tipo || '') === varType && (v.value || v.valor || '') === varValue
-                    );
-                    if (mpVar) {
-                        mpVar.qty = (mpVar.qty || 0) + cantMP;
+                // Devolver a la variante específica si aplica; sin variante → mayor stock
+                if (Array.isArray(mp.variants) && mp.variants.length > 0) {
+                    if (item.variante) {
+                        const colonIdx = item.variante.indexOf(':');
+                        const varType  = colonIdx !== -1 ? item.variante.slice(0, colonIdx).trim() : item.variante;
+                        const varValue = colonIdx !== -1 ? item.variante.slice(colonIdx + 1).trim() : '';
+                        const mpVar = mp.variants.find(v =>
+                            (v.type || v.tipo || '') === varType && (v.value || v.valor || '') === varValue
+                        );
+                        if (mpVar) mpVar.qty = (mpVar.qty || 0) + cantMP;
+                    } else {
+                        const _varMayorMP = mp.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0];
+                        if (_varMayorMP) _varMayorMP.qty = (_varMayorMP.qty || 0) + cantMP;
                     }
                     if (typeof syncStockFromVariants === 'function') {
                         syncStockFromVariants(mp);
                     } else {
-                        mp.stock = mp.variants.reduce((s, v) => s + (v.qty || 0), 0);
+                        mp.stock = mp.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
                     }
                 } else {
                     mp.stock = antesMP + cantMP;
@@ -1288,6 +1316,7 @@ function renderHistorialPedidos() {
             const _botonesExtra = _esCancelado
                 ? `<button onclick="reactivarPedido('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700" title="Reactivar pedido cancelado">↩ Reactivar</button>`
                 : `<button onclick="imprimirTicketPedido('${p.id}')" class="text-xs text-gray-400 hover:text-gray-600" title="Imprimir comprobante">🖨️</button>
+                   <button onclick="exportarPedidoPDF('${p.id}')" class="text-xs text-purple-400 hover:text-purple-600" title="Descargar PDF">📄</button>
                    <button onclick="reactivarPedido('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700" title="Mover de nuevo al kanban">↩ Reactivar</button>
                    <button onclick="editarPedidoFinalizado('${p.id}')" class="text-xs text-amber-500 hover:text-amber-700">✏️ Editar</button>
                    <button onclick="eliminarPedidoFinalizado('${p.id}')" class="text-xs text-red-400 hover:text-red-600">🗑 Eliminar</button>`;

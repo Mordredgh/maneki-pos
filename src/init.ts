@@ -228,6 +228,153 @@
     });
 
     // ══════════════════════════════════════════════════════════════
+    // #14 BÚSQUEDA GLOBAL Ctrl+K
+    // ══════════════════════════════════════════════════════════════
+    (function _initGlobalSearch() {
+        const _ns = (s: string) => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+        const _esc2 = (s: string) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+        function _buildModal() {
+            if (document.getElementById('mk-gsearch-modal')) return;
+            const m = document.createElement('div');
+            m.id = 'mk-gsearch-modal';
+            m.style.cssText = 'display:none;position:fixed;inset:0;z-index:99995;background:rgba(0,0,0,0.55);align-items:flex-start;justify-content:center;padding-top:80px;';
+            m.innerHTML = `
+                <div style="background:#fff;border-radius:16px;width:100%;max-width:560px;margin:0 16px;box-shadow:0 24px 60px rgba(0,0,0,0.25);overflow:hidden;">
+                    <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #f3f4f6;">
+                        <span style="font-size:1rem;color:#9ca3af;">🔍</span>
+                        <input id="mk-gsearch-input" type="text" placeholder="Buscar pedido, cliente, producto..."
+                            style="flex:1;border:none;outline:none;font-size:.95rem;color:#1f2937;background:transparent;"
+                            autocomplete="off" spellcheck="false">
+                        <kbd style="font-size:.65rem;background:#f3f4f6;color:#6b7280;padding:2px 6px;border-radius:5px;flex-shrink:0;">Esc</kbd>
+                    </div>
+                    <div id="mk-gsearch-results" style="max-height:380px;overflow-y:auto;padding:6px 0;"></div>
+                    <div style="padding:8px 16px;border-top:1px solid #f3f4f6;display:flex;gap:12px;font-size:.68rem;color:#9ca3af;">
+                        <span>↑↓ Navegar</span><span>↵ Abrir</span><span>Esc Cerrar</span>
+                    </div>
+                </div>`;
+            document.body.appendChild(m);
+            m.addEventListener('click', (e) => { if (e.target === m) _closeSearch(); });
+        }
+
+        function _closeSearch() {
+            const m = document.getElementById('mk-gsearch-modal');
+            if (m) { m.style.display = 'none'; }
+        }
+
+        function _openSearch() {
+            _buildModal();
+            const m = document.getElementById('mk-gsearch-modal') as HTMLElement;
+            const inp = document.getElementById('mk-gsearch-input') as HTMLInputElement;
+            if (!m || !inp) return;
+            m.style.display = 'flex';
+            inp.value = '';
+            _renderResults('');
+            setTimeout(() => inp.focus(), 50);
+        }
+
+        function _renderResults(q: string) {
+            const box = document.getElementById('mk-gsearch-results');
+            if (!box) return;
+            const qn = _ns(q.trim());
+            if (!qn) {
+                box.innerHTML = '<p style="padding:20px;text-align:center;color:#9ca3af;font-size:.82rem;">Escribe para buscar pedidos, clientes o productos...</p>';
+                return;
+            }
+            const results: {icon:string; title:string; sub:string; action:()=>void}[] = [];
+
+            // Pedidos activos
+            (window.pedidos || []).forEach((p: any) => {
+                if (_ns(p.folio||'').includes(qn) || _ns(p.cliente||'').includes(qn) || _ns(p.concepto||'').includes(qn)) {
+                    results.push({ icon:'📋', title: (p.folio||'')+(p.cliente?' · '+p.cliente:''), sub: p.concepto||p.status||'', action: () => { if (typeof showSection==='function') showSection('pedidos'); setTimeout(()=>{ const el=document.getElementById('kanbanBuscar'); if(el){(el as HTMLInputElement).value=p.folio||p.cliente||''; el.dispatchEvent(new Event('input'));} },300); } });
+                }
+            });
+            // Pedidos finalizados
+            (window.pedidosFinalizados || []).forEach((p: any) => {
+                if (_ns(p.folio||'').includes(qn) || _ns(p.cliente||'').includes(qn)) {
+                    results.push({ icon:'✅', title: (p.folio||'')+(p.cliente?' · '+p.cliente:''), sub: 'Finalizado · '+(_ns(p.concepto||'')||''), action: () => { if (typeof showSection==='function') showSection('pedidos'); } });
+                }
+            });
+            // Productos
+            (window.products || []).forEach((p: any) => {
+                if (_ns(p.name||'').includes(qn)) {
+                    const stock = typeof getStockEfectivo==='function' ? getStockEfectivo(p) : (p.stock||0);
+                    results.push({ icon: p.tipo==='materia_prima'?'🧵':'📦', title: p.name||'', sub: 'Stock: '+stock+(p.tipo?' · '+p.tipo:''), action: () => { if (typeof showSection==='function') showSection('inventory'); } });
+                }
+            });
+            // Clientes
+            (window.clients || []).forEach((c: any) => {
+                if (_ns(c.name||'').includes(qn) || _ns(c.phone||c.telefono||'').includes(qn)) {
+                    results.push({ icon:'👤', title: c.name||'', sub: c.phone||c.telefono||'', action: () => { if (typeof showSection==='function') showSection('clientes'); } });
+                }
+            });
+
+            if (results.length === 0) {
+                box.innerHTML = `<p style="padding:20px;text-align:center;color:#9ca3af;font-size:.82rem;">Sin resultados para "<strong>${_esc2(q)}</strong>"</p>`;
+                return;
+            }
+
+            const top = results.slice(0, 8);
+            box.innerHTML = top.map((r, i) => `
+                <div class="mk-gs-item" data-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+                    <span style="font-size:1.1rem;flex-shrink:0;">${r.icon}</span>
+                    <div style="min-width:0;">
+                        <div style="font-size:.85rem;font-weight:600;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_esc2(r.title)}</div>
+                        ${r.sub ? `<div style="font-size:.72rem;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_esc2(r.sub)}</div>` : ''}
+                    </div>
+                </div>`).join('');
+
+            top.forEach((r, i) => {
+                const el = box.querySelector(`[data-idx="${i}"]`) as HTMLElement;
+                if (el) el.addEventListener('click', () => { _closeSearch(); r.action(); });
+            });
+        }
+
+        // Input handler
+        document.addEventListener('input', (e) => {
+            if ((e.target as HTMLElement)?.id === 'mk-gsearch-input') {
+                _renderResults((e.target as HTMLInputElement).value);
+            }
+        });
+
+        // Keyboard nav inside modal
+        document.addEventListener('keydown', (e) => {
+            const m = document.getElementById('mk-gsearch-modal') as HTMLElement;
+            if (!m || m.style.display === 'none') return;
+            if (e.key === 'Escape') { e.preventDefault(); _closeSearch(); return; }
+            const items = Array.from(document.querySelectorAll('.mk-gs-item')) as HTMLElement[];
+            if (!items.length) return;
+            const active = document.querySelector('.mk-gs-item[data-active]') as HTMLElement;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const idx = active ? parseInt(active.dataset.idx||'0') : -1;
+                const next = items[Math.min(idx+1, items.length-1)];
+                items.forEach(el => { delete el.dataset.active; el.style.background=''; });
+                next.dataset.active = '1'; next.style.background = '#f3f4f6'; next.scrollIntoView({block:'nearest'});
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const idx = active ? parseInt(active.dataset.idx||'0') : items.length;
+                const prev = items[Math.max(idx-1, 0)];
+                items.forEach(el => { delete el.dataset.active; el.style.background=''; });
+                prev.dataset.active = '1'; prev.style.background = '#f3f4f6'; prev.scrollIntoView({block:'nearest'});
+            } else if (e.key === 'Enter' && active) {
+                active.click();
+            }
+        });
+
+        // Ctrl+K global trigger
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const m = document.getElementById('mk-gsearch-modal') as HTMLElement;
+                if (m && m.style.display !== 'none') { _closeSearch(); } else { _openSearch(); }
+            }
+        });
+
+        window.mkOpenGlobalSearch = _openSearch;
+    })();
+
+    // ══════════════════════════════════════════════════════════════
     // #8 AVATARES — función para generar avatar con iniciales
     // ══════════════════════════════════════════════════════════════
     window._mkAvatar = function(nombre) {

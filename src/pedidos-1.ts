@@ -748,6 +748,24 @@ function setKanbanUrgencia(filtro, btn) {
 }
 window.setKanbanUrgencia = setKanbanUrgencia;
 
+let _kanbanFocusMode = false;
+function toggleKanbanFocus() {
+    _kanbanFocusMode = !_kanbanFocusMode;
+    const sidebar = document.getElementById('sidebar');
+    const main    = document.querySelector('main') as HTMLElement | null;
+    const searchBar = document.getElementById('global-search-bar') as HTMLElement | null;
+    const btn     = document.getElementById('btnKanbanFocus');
+    if (sidebar)   { sidebar.style.transform   = _kanbanFocusMode ? 'translateX(-100%)' : ''; }
+    if (main)      { main.style.marginLeft      = _kanbanFocusMode ? '0' : ''; }
+    if (searchBar) { searchBar.style.marginLeft = _kanbanFocusMode ? '0' : ''; }
+    if (btn) {
+        btn.title = _kanbanFocusMode ? 'Salir del modo focus' : 'Modo focus (ocultar sidebar)';
+        btn.style.background = _kanbanFocusMode ? '#C5A572' : '';
+        btn.style.color      = _kanbanFocusMode ? 'white'   : '';
+    }
+}
+window.toggleKanbanFocus = toggleKanbanFocus;
+
 function renderKanbanBoard() {
     const cols = ['confirmado','pago','produccion','envio','salida','retirar'];
     const buscar = (document.getElementById('kanbanBuscar') || {}).value || '';
@@ -903,7 +921,8 @@ function kanbanCardHTML(p) {
                 <div style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 -4px 24px rgba(0,0,0,0.13);min-width:140px;padding:4px;">
                     <button onclick="abrirFotoReferencia('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 rounded-lg text-gray-700">📷 Fotos ref.${(p.referenciasUrls||[]).length ? ' ('+((p.referenciasUrls||[]).length)+')' : p.referenciaUrl ? ' (1)' : ''}</button>
                     <button onclick="duplicarPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">⧉ Duplicar</button>
-                    <button onclick="generarTicketPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 rounded-lg text-gray-700">🧾 Ticket PDF</button>
+                    <button onclick="generarTicketPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 rounded-lg text-gray-700">🖨️ Imprimir ticket</button>
+                    <button onclick="exportarPedidoPDF('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">📄 Descargar PDF</button>
                     <button onclick="imprimirEtiquetaPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700">🏷️ Etiqueta</button>
                 </div>
             </div>
