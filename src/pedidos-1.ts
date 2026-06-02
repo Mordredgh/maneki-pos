@@ -945,9 +945,7 @@ function _inyectarBuscadorTabla() {
             <option value="semana">🟡 Esta semana</option>
             <option value="vencido">⚫ Vencido</option>
         </select>`;
-    const firstChild = tabla.querySelector('table, .overflow-x-auto') || tabla.firstElementChild;
-    if (firstChild) tabla.insertBefore(bar, firstChild);
-    else tabla.prepend(bar);
+    tabla.prepend(bar);
 }
 
 function renderTablaPedidos() {
