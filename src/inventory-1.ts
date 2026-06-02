@@ -683,6 +683,37 @@ function invInlineEditStock(id, td) {
 }
 window.invInlineEditStock = invInlineEditStock;
 
+// UX12: Edición inline de precio para PT — doble-click en celda de precio
+function invInlineEditPrice(id, td) {
+    const product = (window.products||[]).find((p: any) => String(p.id) === String(id));
+    if (!product) return;
+    const prev = parseFloat(product.price)||0;
+    const input = document.createElement('input');
+    input.type = 'number'; input.min = '0'; input.step = '0.01';
+    input.value = prev.toFixed(2);
+    input.style.cssText = 'width:80px;padding:2px 6px;border:1.5px solid #C5A572;border-radius:6px;font-size:.85rem;text-align:center;font-weight:700;';
+    const commit = () => {
+        const nv = parseFloat(input.value);
+        if (!isNaN(nv) && nv >= 0 && nv !== prev) {
+            if (!product.historialPrecios) product.historialPrecios = [];
+            product.historialPrecios.push({ precio: prev, fecha: typeof _fechaHoy==='function' ? _fechaHoy() : new Date().toISOString().split('T')[0] });
+            product.price = nv;
+            if (typeof saveProducts === 'function') saveProducts();
+            if (typeof manekiToastExport === 'function') manekiToastExport(`Precio actualizado: ${product.name} → $${nv.toFixed(2)}`, 'ok');
+        }
+        if (typeof renderInventoryTable === 'function') renderInventoryTable();
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter') input.blur();
+        if (e.key === 'Escape') { input.value = prev.toFixed(2); input.blur(); }
+    });
+    td.innerHTML = '';
+    td.appendChild(input);
+    input.focus(); input.select();
+}
+window.invInlineEditPrice = invInlineEditPrice;
+
 // ── Registrar merma (pérdida/daño de material) ────────────────────────────
 async function registrarMerma(id) {
     const p = (window.products||[]).find(x => String(x.id) === String(id));

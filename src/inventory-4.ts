@@ -359,9 +359,8 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(attachFilter, 2000);
     });
 
-    // Primer intento inmediato y reintento con delay
+    // P3: un solo intento inicial — MutationObserver + navigation.ts manejan las visitas siguientes
     setTimeout(patchInventoryButtons, 400);
-    setTimeout(patchInventoryButtons, 1500);
 
     // ── MutationObserver: detecta cuando la sección inventario se hace visible ──
     // Esto es independiente de showSection y funciona sin importar qué archivo

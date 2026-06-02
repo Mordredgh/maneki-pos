@@ -126,12 +126,20 @@ window._rfmVerSegmento = function(segKey: string) {
         .sort(([,a],[,b]) => b.monto - a.monto)
         .map(([nombre, v]) => {
             const _e = (s: string) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            // UX11: buscar teléfono del cliente para el botón WA
+            const cli = (window.clients||[]).find((c: any) => (c.name||'').toLowerCase().trim() === nombre.toLowerCase().trim());
+            const tel = cli ? (cli.phone||cli.telefono||'') : '';
+            const waHref = tel ? `https://wa.me/52${tel.replace(/\D/g,'')}` : '';
+            const waBtn = waHref
+                ? `<a href="${waHref}" target="_blank" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:8px;background:#dcfce7;color:#15803d;font-size:.72rem;font-weight:700;text-decoration:none;" title="Abrir WhatsApp">📱 WA</a>`
+                : `<span style="font-size:.7rem;color:#d1d5db;padding:3px 6px;">Sin tel.</span>`;
             return `<tr style="border-bottom:1px solid #f3f4f6">
                 <td style="padding:7px 10px;font-size:.8rem;font-weight:600;color:#374151">${_e(nombre)}</td>
                 <td style="padding:7px 10px;font-size:.8rem;color:#6b7280;text-align:center">${v.frecuencia}</td>
                 <td style="padding:7px 10px;font-size:.8rem;font-weight:700;color:#059669;text-align:right">$${v.monto.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
                 <td style="padding:7px 10px;font-size:.8rem;color:#6b7280;text-align:right">${v.recenciaDias}d</td>
                 <td style="padding:7px 10px;text-align:center"><span style="font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:10px;background:${seg.bg};color:${seg.color}">${v.r}·${v.f}·${v.m}</span></td>
+                <td style="padding:7px 10px;text-align:center">${waBtn}</td>
             </tr>`;
         }).join('');
 
@@ -148,6 +156,7 @@ window._rfmVerSegmento = function(segKey: string) {
                 <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:right">Total</th>
                 <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:right">Recencia</th>
                 <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:center">R·F·M</th>
+                <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:center">WA</th>
             </tr></thead>
             <tbody>${filas}</tbody>
         </table>
@@ -387,6 +396,12 @@ function _renderFiltrosActividad() {
 // ============== CLIENTS MODULE ==============
 
         function renderClientsTable() {
+            // P1: hash guard — saltar re-render si los datos no cambiaron
+            const _cli = window.clients||[];
+            const _cHash = _cli.length + '_' + _cli.reduce((s: number,c: any)=>s+Number(c.totalPurchases||0),0).toFixed(0);
+            const _cTbody = document.getElementById('clientsTable');
+            if (_cTbody && (_cTbody as any)._lastHash === _cHash) { if (typeof renderRFMPanel === 'function') renderRFMPanel(); return; }
+            if (_cTbody) (_cTbody as any)._lastHash = _cHash;
             // MEJORA 6: inicializar filtros si no existen
             _renderFiltrosActividad();
             // N9: actualizar panel RFM

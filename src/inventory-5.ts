@@ -135,23 +135,60 @@ window.bulkPrecioPreview = bulkPrecioPreview;
 function bulkPrecioAplicar() {
     const afectados = _bulkPrecioGetAfectados();
     if (!afectados.length) { manekiToastExport('Sin productos que actualizar', 'warn'); return; }
+    // UX2: asegurar que la vista previa esté actualizada antes de confirmar
+    bulkPrecioPreview();
     const pct = parseFloat(document.getElementById('bulkPrecioNum')?.value) || 0;
-    if (!confirm(`¿Aplicar ${pct > 0 ? '+' : ''}${pct}% a ${afectados.length} producto(s)?`)) return;
-    afectados.forEach(({ p, campoKey, precioNuevo }) => {
-        p[campoKey] = precioNuevo;
-        p.updatedAt = new Date().toISOString();
-    });
-    if (typeof guardarDatos === 'function') guardarDatos();
-    else if (typeof saveProducts === 'function') saveProducts();
-    renderInventoryTable();
-    document.getElementById('bulkPrecioModal').style.display = 'none';
-    manekiToastExport(`✅ Precios actualizados en ${afectados.length} producto(s)`, 'ok');
+    const campoLabel = (document.getElementById('bulkPrecioSoloMP')?.checked && !document.getElementById('bulkPrecioSoloPT')?.checked) ? 'costo' : 'precio';
+    const signo = pct > 0 ? '+' : '';
+    // Construir resumen de cambios para la confirmación
+    const previewHtml = afectados.slice(0, 5).map(({ p, precioActual, precioNuevo }) =>
+        `<div style="display:flex;justify-content:space-between;font-size:.8rem;padding:3px 0;border-bottom:1px solid #f3f4f6;">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#374151;max-width:180px">${_esc(p.name)}</span>
+            <span style="color:#9ca3af;margin:0 8px;">$${precioActual.toFixed(2)}</span>
+            <span style="font-weight:700;color:${precioNuevo>precioActual?'#16a34a':'#dc2626'};">→ $${precioNuevo.toFixed(2)}</span>
+        </div>`
+    ).join('') + (afectados.length > 5 ? `<p style="font-size:.72rem;color:#9ca3af;margin-top:4px;">…y ${afectados.length - 5} más</p>` : '');
+    if (typeof showConfirm === 'function') {
+        showConfirm(
+            `<div>
+                <p style="font-weight:700;margin-bottom:8px;">Aplicar <strong>${signo}${pct}%</strong> al ${campoLabel} de <strong>${afectados.length}</strong> producto(s):</p>
+                ${previewHtml}
+             </div>`,
+            `✅ Confirmar cambio masivo`
+        ).then((ok: boolean) => {
+            if (!ok) return;
+            afectados.forEach(({ p, campoKey, precioNuevo }) => {
+                p[campoKey] = precioNuevo;
+                p.updatedAt = new Date().toISOString();
+            });
+            if (typeof saveProducts === 'function') saveProducts();
+            renderInventoryTable();
+            document.getElementById('bulkPrecioModal').style.display = 'none';
+            manekiToastExport(`✅ Precios actualizados en ${afectados.length} producto(s)`, 'ok');
+        });
+    } else {
+        if (!confirm(`¿Aplicar ${signo}${pct}% a ${afectados.length} producto(s)? Ver preview arriba.`)) return;
+        afectados.forEach(({ p, campoKey, precioNuevo }) => {
+            p[campoKey] = precioNuevo;
+            p.updatedAt = new Date().toISOString();
+        });
+        if (typeof saveProducts === 'function') saveProducts();
+        renderInventoryTable();
+        document.getElementById('bulkPrecioModal').style.display = 'none';
+        manekiToastExport(`✅ Precios actualizados en ${afectados.length} producto(s)`, 'ok');
+    }
 }
 window.bulkPrecioAplicar = bulkPrecioAplicar;
 
 function renderInventoryTable() {
     const tbody = document.getElementById('inventoryTable');
     if (!tbody) return;
+    // P1: hash guard — saltar re-render completo si los datos no cambiaron
+    const _prods = window.products||[];
+    const _iHash = _prods.length + '_' + _prods.reduce((s: number,p: any)=>s+Number(p.stock||0),0).toFixed(0) + '_' + ((document.getElementById('inventorySearch') as HTMLInputElement|null)?.value||'');
+    const dualEl = document.getElementById('invDualContainer');
+    if (dualEl && (dualEl as any)._lastHash === _iHash) return;
+    if (dualEl) (dualEl as any)._lastHash = _iHash;
 
     // Buscar o crear contenedor dual (reemplaza la tabla original)
     let dualContainer = document.getElementById('invDualContainer');
@@ -459,7 +496,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
-            <td class="px-4 py-3 text-gray-800 font-semibold" style="font-size:.95rem;">$${Number(product.price||0).toFixed(2)}</td>
+            <td class="px-4 py-3 text-gray-800 font-semibold" ondblclick="invInlineEditPrice('${pid}', this)" style="font-size:.95rem;cursor:pointer;" title="Doble-click para editar precio">$${Number(product.price||0).toFixed(2)}</td>
             <td class="px-4 py-3" ondblclick="invInlineEditStock('${pid}', this)" style="cursor:pointer;" title="Doble-click para editar stock">${stockCell}</td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>

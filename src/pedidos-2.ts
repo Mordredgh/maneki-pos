@@ -2,7 +2,11 @@ async function _eliminarFotoStorageAlFinalizar(pedido) {
     const { paths } = _fotosArray(pedido);
     if (!paths.length) return;
     try { await db.storage.from(FOTO_BUCKET).remove(paths); }
-    catch(e) { console.warn('[Foto] No se pudo eliminar al finalizar:', e); }
+    catch(e) {
+        console.warn('[Foto] No se pudo eliminar al finalizar:', e);
+        if (typeof manekiToastExport === 'function')
+            manekiToastExport('⚠️ Las fotos del pedido no se eliminaron de Storage. Puedes borrarlas manualmente desde Supabase.', 'warn');
+    }
 }
 
 // ── Helpers de inventario para pedidos ──────────────────────────────────────

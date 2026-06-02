@@ -632,7 +632,65 @@ function initComparativaAnio() {
 }
 window.initComparativaAnio = initComparativaAnio;
 
+// UX13: Inyectar botones de preset de fecha en la sección de reportes
+function _inyectarPresetsFechaReportes() {
+    if (document.getElementById('reportePresetsBar')) return;
+    const desdeEl = document.getElementById('reporteFechaDesde');
+    if (!desdeEl) return;
+    const bar = document.createElement('div');
+    bar.id = 'reportePresetsBar';
+    bar.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-right:4px;';
+    const presets = [
+        { label: 'Mes actual',      key: 'mes' },
+        { label: 'Mes anterior',    key: 'mesAnterior' },
+        { label: 'Últimos 3 meses', key: '3meses' },
+        { label: 'Este año',        key: 'anio' },
+    ];
+    presets.forEach(({ label, key }) => {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.style.cssText = 'padding:4px 10px;font-size:.72rem;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#6b7280;cursor:pointer;white-space:nowrap;transition:background .15s;';
+        btn.onmouseover = () => { btn.style.background = '#fff7ed'; btn.style.borderColor = '#C5A572'; btn.style.color = '#C5A572'; };
+        btn.onmouseout  = () => { btn.style.background = '#f9fafb'; btn.style.borderColor = '#e5e7eb'; btn.style.color = '#6b7280'; };
+        btn.onclick = () => _setReportDatePreset(key);
+        bar.appendChild(btn);
+    });
+    desdeEl.parentElement?.insertBefore(bar, desdeEl);
+}
+window._inyectarPresetsFechaReportes = _inyectarPresetsFechaReportes;
+
+function _setReportDatePreset(key: string) {
+    const now = new Date();
+    let desde = '', hasta = '';
+    if (key === 'mes') {
+        desde = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+        hasta = typeof _fechaHoy === 'function' ? _fechaHoy() : now.toISOString().split('T')[0];
+    } else if (key === 'mesAnterior') {
+        const mp = new Date(now.getFullYear(), now.getMonth()-1, 1);
+        const mf = new Date(now.getFullYear(), now.getMonth(), 0);
+        desde = `${mp.getFullYear()}-${String(mp.getMonth()+1).padStart(2,'0')}-01`;
+        hasta = `${mf.getFullYear()}-${String(mf.getMonth()+1).padStart(2,'0')}-${String(mf.getDate()).padStart(2,'0')}`;
+    } else if (key === '3meses') {
+        const d3 = new Date(now.getFullYear(), now.getMonth()-2, 1);
+        desde = `${d3.getFullYear()}-${String(d3.getMonth()+1).padStart(2,'0')}-01`;
+        hasta = typeof _fechaHoy === 'function' ? _fechaHoy() : now.toISOString().split('T')[0];
+    } else if (key === 'anio') {
+        desde = `${now.getFullYear()}-01-01`;
+        hasta = typeof _fechaHoy === 'function' ? _fechaHoy() : now.toISOString().split('T')[0];
+    }
+    const d = document.getElementById('reporteFechaDesde') as HTMLInputElement|null;
+    const h = document.getElementById('reporteFechaHasta') as HTMLInputElement|null;
+    if (d) d.value = desde;
+    if (h) h.value = hasta;
+    if (typeof salesHistoryPage !== 'undefined') (window as any).salesHistoryPage = 1;
+    if (typeof renderSalesHistory === 'function') renderSalesHistory();
+}
+window._setReportDatePreset = _setReportDatePreset;
+
 function initReports() {
+    // P8: pre-calentar caché de _getAllVentas una sola vez — las funciones siguientes
+    // leen el mismo resultado cacheado sin recalcular el cacheKey 3 veces por separado
+    _getAllVentas();
     updateInventoryStats();
     renderTopProducts();
     renderSalesHistory();
@@ -643,6 +701,7 @@ function initReports() {
     initComparativaAnio();
     initTopProductosChart();
     initMargenCategoriaChart();
+    _inyectarPresetsFechaReportes();
 }
 
 function updateInventoryStats() {
@@ -1573,21 +1632,35 @@ document.addEventListener('submit', function(e) {
         let target = _editIdSnap
             ? (window.pedidos||[]).find(p=>String(p.id)===String(_editIdSnap))
             : (window.pedidos||[])[(window.pedidos||[]).length-1];
-        if (target) {
+        // B10: verificar que el pedido realmente fue guardado (tiene folio) antes de mutar stock
+        if (target && target.folio) {
             target.productosInventario = [...window.pedidoProductosSeleccionados];
             if (!_editIdSnap) {
-                window.pedidoProductosSeleccionados.forEach(item => {
-                    const prod = (window.products||[]).find(p=>String(p.id)===String(item.id));
-                    if (!prod) return;
-                    if (prod.isKit && prod.kitComponentes && prod.kitComponentes.length) {
-                        prod.kitComponentes.forEach(comp => {
-                            const cp = (window.products||[]).find(p=>String(p.id)===String(comp.id));
-                            if (cp) cp.stock = Math.max(0, cp.stock-(comp.quantity*item.quantity));
-                        });
-                    } else { prod.stock = Math.max(0, prod.stock-item.quantity); }
-                });
-                if (typeof saveProducts === 'function') saveProducts();
-                if (typeof renderInventoryTable === 'function') renderInventoryTable();
+                // Solo descontar kits si el pedido fue realmente creado (folio asignado)
+                const _stockSnapshot: Map<string, number> = new Map(
+                    (window.products||[]).map(p => [String(p.id), p.stock || 0])
+                );
+                try {
+                    window.pedidoProductosSeleccionados.forEach(item => {
+                        const prod = (window.products||[]).find(p=>String(p.id)===String(item.id));
+                        if (!prod) return;
+                        if (prod.isKit && prod.kitComponentes && prod.kitComponentes.length) {
+                            prod.kitComponentes.forEach(comp => {
+                                const cp = (window.products||[]).find(p=>String(p.id)===String(comp.id));
+                                if (cp) cp.stock = Math.max(0, cp.stock-(comp.quantity*item.quantity));
+                            });
+                        } else { prod.stock = Math.max(0, prod.stock-item.quantity); }
+                    });
+                    if (typeof saveProducts === 'function') saveProducts();
+                    if (typeof renderInventoryTable === 'function') renderInventoryTable();
+                } catch(e) {
+                    // Rollback stock si falla
+                    _stockSnapshot.forEach((stock, id) => {
+                        const p = (window.products||[]).find(x=>String(x.id)===id);
+                        if (p) p.stock = stock;
+                    });
+                    console.error('[reportes] Error al descontar kit stock, revertido:', e);
+                }
             }
             if (typeof savePedidos === 'function') savePedidos();
         }

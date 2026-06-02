@@ -818,7 +818,14 @@ function renderKanbanBoard() {
         const visibles = expandido ? items : items.slice(0, _KANBAN_PAGE);
         const restantes = items.length - _KANBAN_PAGE;
         el.innerHTML = items.length === 0
-            ? `<p class="text-center text-gray-400 text-xs py-6">${q || _kanbanUrgenciaFiltro !== 'todos' ? 'Sin resultados' : 'Sin pedidos'}</p>`
+            ? `<div style="text-align:center;padding:24px 10px;color:#d1d5db;">
+                   <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="margin:0 auto 8px;display:block;">
+                       <rect x="7" y="7" width="22" height="5" rx="2.5" fill="currentColor"/>
+                       <rect x="7" y="16" width="22" height="5" rx="2.5" fill="currentColor" opacity=".5"/>
+                       <rect x="7" y="25" width="14" height="5" rx="2.5" fill="currentColor" opacity=".25"/>
+                   </svg>
+                   <p style="font-size:.72rem;color:#9ca3af;">${q || _kanbanUrgenciaFiltro !== 'todos' ? 'Sin resultados' : 'Sin pedidos'}</p>
+               </div>`
             : visibles.map(p => kanbanCardHTML(p)).join('')
               + (!expandido && restantes > 0
                   ? `<button data-col="${col}" onclick="window._kanbanVerMas(this.dataset.col)"
@@ -1001,6 +1008,10 @@ function renderTablaPedidos() {
     _inyectarBuscadorTabla();
     const tbody = document.getElementById('pedidosTable');
     if (!tbody) return;
+    // P1: hash guard — saltar re-render si los datos no cambiaron
+    const _tHash = (window.pedidos||[]).length + '_' + (window.pedidos||[]).reduce((s,p)=>s+Number(p.total||0)+Number(p.resta||0),0).toFixed(0) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'');
+    if ((tbody as any)._lastHash === _tHash) return;
+    (tbody as any)._lastHash = _tHash;
     const q = ((document.getElementById('tablaPedidosBuscar') || document.getElementById('kanbanBuscar') || {}).value || '').toLowerCase().trim();
     // BUG-PED-03 FIX: comparación case-insensitive para status — Realtime puede traer
     // valores con distinto case (ej: 'Confirmado' vs 'confirmado') que causarían filtros vacíos.
@@ -1096,8 +1107,8 @@ function renderTablaPedidos() {
                 <p class="truncate">${_et(p.concepto)||'—'}</p>
                 ${_dir ? `<p class="truncate mt-1" style="color:#7c3aed;">📍 ${_et(_dir)}</p>` : ''}
             </td>
-            <td class="px-4 py-3 text-xs text-gray-500">${_et(p.fechaPedido)||'—'}</td>
-            <td class="px-4 py-3 text-xs text-gray-500">${_et(p.entrega)||'—'}</td>
+            <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.fechaPedido)||''}">${_et((p.fechaPedido||'').split('T')[0].split(' ')[0])||'—'}</span></td>
+            <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.entrega)||''}">${_et((p.entrega||'').split('T')[0].split(' ')[0])||'—'}</span></td>
             <td class="px-4 py-3 text-xs leading-snug">
                 <div class="text-gray-500">Total: <span class="font-bold text-gray-800">$${Number(p.total||0).toFixed(2)}</span></div>
                 <div class="text-gray-500">Anticipo: <span class="font-semibold text-green-700">$${Number(p.anticipo||0).toFixed(2)}</span></div>
@@ -1476,3 +1487,33 @@ async function eliminarFotoReferencia(id, fotoIdx) {
     });
 }
 window.eliminarFotoReferencia = eliminarFotoReferencia;
+
+// B8: migración one-time de pedidos con anticipo legacy (sin pagos[]) → crear entrada en pagos[]
+// Ejecutar después de que los pedidos carguen; no afecta pedidos que ya tienen pagos[].
+function _migrarAnticiposLegacy() {
+    let cambios = 0;
+    (window.pedidos || []).forEach(p => {
+        if (Array.isArray(p.pagos) && p.pagos.length > 0) return; // ya tiene pagos — no tocar
+        const anticipo = Number(p.anticipo || 0);
+        if (anticipo <= 0) return;
+        // Crear entrada de anticipo en pagos[] desde el valor legacy
+        p.pagos = [{
+            id: typeof mkId === 'function' ? mkId() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2)),
+            tipo: 'anticipo',
+            monto: anticipo,
+            fecha: p.fechaPedido || (typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0]),
+            hora: '00:00',
+            metodo: 'efectivo',
+            nota: 'Anticipo migrado automáticamente'
+        }];
+        cambios++;
+    });
+    if (cambios > 0) {
+        console.log(`[Pedidos] B8: ${cambios} anticipo(s) legacy migrados a pagos[]`);
+        if (typeof savePedidos === 'function') savePedidos();
+    }
+}
+window._migrarAnticiposLegacy = _migrarAnticiposLegacy;
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(_migrarAnticiposLegacy, 4000); // después de que carguen los pedidos
+});

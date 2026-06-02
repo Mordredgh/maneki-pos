@@ -595,6 +595,50 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
             `).join('') || '<div class="mk-empty"><div class="mk-empty-icon">🗂️</div><div class="mk-empty-title">Sin cuentas por pagar</div><div class="mk-empty-sub">No hay pagos pendientes a proveedores</div></div>';
         }
         
+        // UX9: poblar datalist con últimas 10 descripciones únicas de incomes+expenses
+        function _poblarConceptosSuggestions() {
+            const inputEl = document.getElementById('transactionConcept') as HTMLInputElement|null;
+            if (!inputEl) return;
+            inputEl.setAttribute('list', 'transactionConceptSuggestions');
+            let dl = document.getElementById('transactionConceptSuggestions');
+            if (!dl) {
+                dl = document.createElement('datalist');
+                dl.id = 'transactionConceptSuggestions';
+                inputEl.insertAdjacentElement('afterend', dl);
+            }
+            const _lsKey = 'mk_concepto_historial';
+            let hist: string[] = [];
+            try { hist = JSON.parse(localStorage.getItem(_lsKey) || '[]'); } catch(e) {}
+            // Completar con conceptos reales de incomes/expenses si el historial está vacío
+            if (hist.length < 5) {
+                const fromDB = [
+                    ...(window.incomes||[]).map((i: any) => i.concept||''),
+                    ...(window.expenses||[]).map((e: any) => e.concept||'')
+                ].filter(Boolean);
+                hist = [...new Set([...hist, ...fromDB])].slice(-20);
+            }
+            dl.innerHTML = hist.slice(-10).reverse()
+                .map((c: string) => `<option value="${c.replace(/"/g,'&quot;')}">`)
+                .join('');
+        }
+        // Guardar concepto en historial localStorage al submit
+        (function _hookConceptoHistorial() {
+            const form = document.getElementById('transactionForm');
+            if (!form || (form as any)._conceptoHookDone) return;
+            (form as any)._conceptoHookDone = true;
+            form.addEventListener('submit', function() {
+                const val = (document.getElementById('transactionConcept') as HTMLInputElement|null)?.value?.trim();
+                if (!val) return;
+                const _lsKey = 'mk_concepto_historial';
+                try {
+                    let hist: string[] = JSON.parse(localStorage.getItem(_lsKey) || '[]');
+                    hist = hist.filter((h: string) => h !== val);
+                    hist.push(val);
+                    localStorage.setItem(_lsKey, JSON.stringify(hist.slice(-20)));
+                } catch(e) {}
+            });
+        })();
+
         function openIncomeModal() {
             // BUG-BAL-04 FIX: reset primero para que no borre los valores asignados después
             document.getElementById('transactionForm').reset();
@@ -611,6 +655,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
             // MEJORA-3: mostrar etiqueta para ingresos (categoría de movimiento)
             _toggleEtiquetaField(true);
             _toggleCatField(false);
+            _poblarConceptosSuggestions();
             openModal(modal);
         }
         
@@ -618,6 +663,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
             // BUG-BAL-04 FIX: reset primero para que no borre los valores asignados después
             document.getElementById('transactionForm').reset();
             document.getElementById('transactionModalTitle').textContent = 'Nuevo Egreso';
+            _poblarConceptosSuggestions();
             document.getElementById('transactionType').value = 'expense';
             document.getElementById('clientFieldContainer').classList.add('hidden');
             document.getElementById('recurrenteContainer').classList.remove('hidden');

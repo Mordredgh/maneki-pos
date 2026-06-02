@@ -2015,6 +2015,19 @@ input:focus, select:focus, textarea:focus, button:focus {
                     Guardar Configuración
                 </button>
 
+                <!-- UX15: Botón para reiniciar el tutorial de onboarding -->
+                <div class="mt-6 p-4 rounded-xl" style="background:#eff6ff;border:1px solid #bfdbfe;">
+                    <p class="text-sm font-bold mb-1" style="color:#1e40af;">
+                        <i class="fas fa-question-circle mr-2"></i>Tutorial de bienvenida
+                    </p>
+                    <p class="text-xs mb-3" style="color:#3b82f6;">¿Quieres ver el tour de introducción otra vez?</p>
+                    <button onclick="if(confirm('¿Reiniciar el tutorial? La página se recargará.')){localStorage.removeItem('mk_onboarding_done');window.location.reload();}"
+                            class="px-4 py-2 rounded-xl text-white text-sm font-bold"
+                            style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+                        <i class="fas fa-play-circle mr-2"></i>Ver tutorial de nuevo
+                    </button>
+                </div>
+
                 <div class="mt-10 pt-8" style="border-top:2px dashed #fca5a5;">
                   <div class="flex items-center gap-3 mb-4 p-3 rounded-xl" style="background:#fff1f2;border:1px solid #fca5a5;">
                     <i class="fas fa-exclamation-triangle text-red-500 text-lg"></i>

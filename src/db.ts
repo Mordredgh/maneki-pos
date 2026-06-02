@@ -186,13 +186,25 @@ function _setupRealtime() {
     window._mkRTChannels.push(_chStore);
 
     // ── Canal 2: tablas relacionales (escrituras desde Lovable / otras apps) ──
-    // MEJ-13: UPDATE in-place desde payload — evita SELECT * completo por cada evento
+    // P4: un canal único con un solo debounce consolidado — evita 5 re-renders independientes
+    // cuando múltiples tablas cambian en la misma ventana de tiempo.
+    const _rtPending: Record<string, any> = {};
+    let _rtConsolidatedTimer: any = null;
+    function _flushRTPending() {
+        const entries = Object.entries(_rtPending);
+        Object.keys(_rtPending).forEach(k => delete _rtPending[k]);
+        Promise.all(entries.map(([tabla, payload]) =>
+            _applyRTRelacional(tabla, payload).catch(e => console.warn('[Realtime] _applyRTRelacional:', tabla, e))
+        ));
+    }
     Object.keys(_rtTablaAKey).forEach(tabla => {
         const _chRel = db.channel('maneki-rt-' + tabla)
             .on('postgres_changes', { event: '*', schema: 'public', table: tabla }, payload => {
-                const debKey = '__rel_' + tabla;
-                clearTimeout(_rtDeskDeb[debKey]);
-                _rtDeskDeb[debKey] = setTimeout(() => _applyRTRelacional(tabla, payload).catch(e => console.warn('[Realtime] _applyRTRelacional:', tabla, e)), 600);
+                // Guardar último payload por tabla; si llegan múltiples cambios en 600ms,
+                // se procesan todos juntos en un solo flush (una sola pasada de re-renders)
+                _rtPending[tabla] = payload;
+                clearTimeout(_rtConsolidatedTimer);
+                _rtConsolidatedTimer = setTimeout(_flushRTPending, 600);
             })
             .subscribe(status => {
                 if (status === 'SUBSCRIBED') console.log('[Realtime] Canal ' + tabla + ' activo ✓');
@@ -226,12 +238,25 @@ async function _applyRTRelacional(tabla, payload) {
 
     try {
         // Si no tenemos datos en el payload, hacer carga completa (primera vez)
+        // P9: si tenemos _lastSyncAt, solo descargar el delta (updated_at > lastSync)
         const arr = window[key];
         if (!Array.isArray(arr) || arr.length === 0) {
-            const { data } = await db.from(tabla).select('*').limit(2000);
+            const _lastSync = _lastSyncAt[tabla];
+            let query = db.from(tabla).select('*').limit(2000);
+            if (_lastSync) query = query.gt('updated_at', _lastSync);
+            const { data } = await query;
             if (!data) return;
             const fresh = data.map(r => _rtTransformarFila(tabla, r)).filter(Boolean);
-            _rtInPlace(arr || [], fresh);
+            if (_lastSync && Array.isArray(arr) && arr.length > 0) {
+                // Delta: merge en-place en lugar de reemplazar todo
+                fresh.forEach(item => {
+                    const i = arr.findIndex((x: any) => String(x.id) === String(item.id));
+                    if (i >= 0) arr.splice(i, 1, item); else arr.push(item);
+                });
+            } else {
+                _rtInPlace(arr || [], fresh);
+            }
+            _lastSyncAt[tabla] = new Date().toISOString();
         } else if (rowData) {
             // UPDATE in-place desde el payload — O(1) para un registro
             const transformed = _rtTransformarFila(tabla, rowData);
@@ -587,8 +612,11 @@ async function sbSave(key, data) {
 // ══════════════════════════════════════════════════════════════
 // Todas las entidades principales usan lectura relacional.
 // Si la tabla tiene menos de `min` registros, sbLoad cae al store como fallback.
+// P9: registro del último sync por tabla para delta queries en reconexión
+const _lastSyncAt: Record<string, string> = {};
+
 const _RELATIONAL_TABLES = {
-    products: { table: 'products', min: 1, map: row => ({
+    products: { table: 'products', min: 1, orderBy: 'updated_at', limit: 2000, map: row => ({
         ...row, stockMin: row.stock_min, imageUrl: row.image_url,
         mpComponentes: row.mp_componentes, historialPrecios: row.historial_precios,
         publicarTienda: row.publicar_tienda, proveedorUrl: row.proveedor_url,
@@ -598,11 +626,11 @@ const _RELATIONAL_TABLES = {
         kitComponentes: row.kit_componentes, isKit: row.is_kit
     })},
     salesHistory: { table: 'sales_history', min: 1, orderBy: 'date', limit: 1000, map: row => ({ ...row }) },
-    clients: { table: 'clients', min: 1, map: row => ({
+    clients: { table: 'clients', min: 1, orderBy: 'updated_at', limit: 2000, map: row => ({
         ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase
     })},
     categories: { table: 'categories', min: 1, map: row => ({ ...row }) },
-    pedidos: { table: 'orders', min: 1, map: row => ({
+    pedidos: { table: 'orders', min: 1, orderBy: 'updated_at', limit: 2000, map: row => ({
         id: row.id, folio: row.folio, cliente: row.cliente, telefono: row.telefono,
         redes: row.redes, fecha: row.fecha, entrega: row.entrega, concepto: row.concepto,
         cantidad: row.cantidad || 1, costo: row.costo || 0, anticipo: row.anticipo || 0,
