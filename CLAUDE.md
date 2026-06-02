@@ -269,6 +269,14 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 | U3/N4 | **Skeleton screens** inyectadas en `inventoryTable`, `pedidosTable`, `clientsTable` antes del Promise.all | `src/config.ts` |
 | N1 | **PWA install prompt** — `beforeinstallprompt` capturado; banner tras 3 visitas | `src/init.ts` |
 
+### Sesión 9 (2 junio 2026) — 18 pendientes aplicados
+
+| Categoría | Fixes |
+|-----------|-------|
+| Bugs (4) | B2 toast foto Storage, B8 migración anticipo legacy→pagos[], B10 guard kit stock con rollback |
+| Performance (6) | P1 hash guards tablas, P3 setTimeout redundante eliminado, P4 debounce realtime consolidado, P5 limit+orderBy en _RELATIONAL_TABLES, P8 pre-calentado _getAllVentas, P9 _lastSyncAt delta sync |
+| UX (8) | UX2 preview bulk edit con showConfirm, UX4 SVG columnas kanban vacías, UX7 fechas date-only en tabla mobile, UX9 datalist balance conceptos, UX11 botón WA en RFM, UX12 dblclick precio inline PT, UX13 presets fecha reportes, UX15 botón tutorial restart config |
+
 ### Sesión 8 (2 junio 2026) — Auditoría exhaustiva (3 agentes: bugs, performance, UX)
 
 **Metodología:** Se lanzaron 3 agentes en paralelo para auditar bugs, performance y UX/nice-to-have. De ~43 hallazgos se aplicaron 17 en esta sesión; el resto queda en PENDIENTES abajo.
@@ -344,40 +352,9 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
 ---
 
-## 🚨 PENDIENTES — Próxima Sesión
+## ✅ PENDIENTES — Resueltos en Sesión 9 (2 junio 2026)
 
-### 🔴 Bugs — Quedan sin aplicar
-
-| # | Área | Descripción | Dificultad |
-|---|------|-------------|-----------|
-| B2 | Storage | Fotos huérfanas en Supabase Storage: `_eliminarFotoStorageAlFinalizar()` falla silenciosamente; usuario no sabe que hay archivos no borrados. Agregar toast visible si falla. | Baja |
-| B3 | Pedidos | Doble-click en "Guardar Pedido" puede crear 2 pedidos simultáneos. `_folioGenerando` protege el folio pero no el form submit. Fix: `btn.disabled = true` en submit, restaurar en error. | Baja |
-| B8 | Pedidos | Dos fuentes de verdad para pagos: `p.anticipo` (legacy) + `p.pagos[]` (actual). Pueden desincronizarse. Requiere migración de datos y limpieza de código. | Alta |
-| B10 | Pedidos | `pedidoForm` submit muta `cp.stock` en `window.products[]` directamente al procesar kits. Si el usuario no guarda después, hay stock incorrecto en memoria hasta el siguiente sync. | Media |
-
-### 🟠 Performance — Quedan sin aplicar
-
-| # | Área | Descripción | Impacto |
-|---|------|-------------|---------|
-| P1 | Global | Re-render completo de `renderInventoryTable`, `renderPedidosTable`, `renderClientsTable` aunque cambie 1 registro. Requiere diff-patch con hash por fila. | Alto |
-| P3 | Inventario | `patchInventoryButtons()` se ejecuta con 3 `setTimeout` (400/800/1500ms). Reemplazar con `MutationObserver` que dispara cuando el modal es visible. | Medio |
-| P4 | Realtime | 5 canales Supabase realtime con debounces independientes (600-800ms cada uno). Consolidar en un único debounce con flags `{productsChanged, pedidosChanged, …}`. | Alto |
-| P5 | DB | Queries `sbLoad()` sin `.limit()` en `config.ts`. Con 2000+ registros descargan todo. Agregar `.limit(2000).order('updated_at',{ascending:false})` en cada tabla. | Alto |
-| P8 | Reportes | `_getAllVentas()` se llama 3 veces por `initReports()` (comparativaMeses, comparativaAnio, topProductos). La caché interna ayuda pero el cacheKey se recalcula 3 veces. Pasar el resultado como parámetro. | Bajo |
-| P9 | Realtime | `_applyRTRelacional()` descarga la tabla completa en cada cambio. Implementar `_lastSyncAt` y usar `.gt('updated_at', _lastSyncAt)` para solo descargar el delta. | Alto |
-
-### 🟡 UX — Quedan sin aplicar
-
-| # | Módulo | Descripción | Esfuerzo |
-|---|--------|-------------|---------|
-| UX2 | Inventario | Bulk edit sin vista previa antes de ejecutar. Mostrar tabla "Precio anterior → Precio nuevo" antes de confirmar cambio masivo. | Medio |
-| UX4 | Pedidos | Columnas kanban vacías sin estado decorativo. Agregar SVG minimalista + texto "Sin pedidos en este estado" en columnas vacías. | Pequeño |
-| UX7 | Pedidos | Fecha en tabla mobile trunca "2026-06-02 14:30" a "2026-06-...". Mostrar solo fecha en celda, hora en `title` tooltip o segunda línea gris. | Pequeño |
-| UX9 | Balance | Campo descripción en ingresos/gastos es texto libre sin historial. Agregar `<datalist>` con últimas 10 descripciones desde localStorage. | Pequeño |
-| UX11 | Clientes | Panel RFM sin acción directa. Agregar botón "📱 Contactar por WA" en el detalle de cada segmento para abrir WhatsApp masivamente. | Pequeño |
-| UX12 | Inventario | Editar producto requiere 4 clicks. Doble-click en celda de precio/stock = campo editable inline. | Grande |
-| UX13 | Reportes | Filtros de fecha requieren escribir YYYY-MM-DD. Agregar selector "Mes actual \| Mes anterior \| Últimos 3 meses \| Rango". | Medio |
-| UX15 | Config | Si el onboarding se rechazó no hay forma de reactivarlo. Agregar botón "Ver tutorial de nuevo" en Configuración → zona de ayuda. | Pequeño |
+Todos los 18 pendientes de la auditoría anterior fueron aplicados. Ver commit `a6d1547`.
 
 ### ℹ️ Nota de seguridad permanente
 
