@@ -16,7 +16,7 @@
     <title>Maneki Store - Sistema de Gestión</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="apple-touch-icon" href="/logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo.png">
 
     <!-- Preconnect a dominios CDN para acelerar carga diferida -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -815,7 +815,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-gray-800 text-lg">📋 Historial de Movimientos</h3>
                         <div class="flex gap-2 flex-wrap">
-                            <input type="text" id="movBuscar" placeholder="Buscar producto..." oninput="(function(){clearTimeout(window._movT);window._movT=setTimeout(renderMovimientos,160)})()"
+                            <input type="text" id="movBuscar" placeholder="Filtrar movimientos..." oninput="(function(){clearTimeout(window._movT);window._movT=setTimeout(renderMovimientos,160)})()"
                                 class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none">
                             <select id="movTipoFilter" onchange="renderMovimientos()" class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none bg-white">
                                 <option value="">Todos los tipos</option>
@@ -1730,37 +1730,34 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
 
-        <div id="listaProduccionPanel" class="hidden mt-6 bg-white rounded-2xl shadow-sm border p-6">
-            <div class="flex items-center justify-between mb-5">
-                <div>
-                    <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2"><span class="text-2xl">🔨</span> Lista de Producción del Día</h3>
-                    <p class="text-xs text-gray-400 mt-1" id="produccionFechaLabel">Pedidos activos ordenados por fecha de entrega</p>
+        <!-- Lista de Producción — drawer lateral fijo -->
+        <div id="listaProduccionPanel" style="display:none;position:fixed;inset:0;z-index:800;" onclick="if(event.target===this)toggleListaProduccion()">
+            <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);" aria-hidden="true"></div>
+            <div style="position:absolute;right:0;top:0;bottom:0;width:min(540px,100vw);background:#fff;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.18);">
+                <div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;background:#faf5ff;">
+                    <div>
+                        <h3 style="font-weight:800;font-size:1rem;color:#3B2659;display:flex;align-items:center;gap:8px;">🔨 Lista de Producción</h3>
+                        <p style="font-size:.72rem;color:#9ca3af;margin-top:2px;" id="produccionFechaLabel">Pedidos activos ordenados por fecha de entrega</p>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="imprimirListaProduccion()" style="padding:7px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fas fa-print"></i> Imprimir</button>
+                        <button onclick="toggleListaProduccion()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#6b7280;cursor:pointer;font-size:1rem;" aria-label="Cerrar">✕</button>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="imprimirListaProduccion()" class="px-4 py-2 rounded-xl border text-gray-700 text-sm font-semibold flex items-center gap-2">
-                        <i class="fas fa-print"></i> Imprimir
-                    </button>
-                    <button onclick="toggleListaProduccion()" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-500 text-sm hover:bg-gray-50">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;display:flex;gap:6px;flex-wrap:wrap;">
+                    <button onclick="filtrarProduccion('todos',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #9B7BC4;background:#EDE5F8;color:#6B4A8E;cursor:pointer;">Todos</button>
+                    <button onclick="filtrarProduccion('hoy',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔴 Hoy</button>
+                    <button onclick="filtrarProduccion('manana',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🟠 Mañana</button>
+                    <button onclick="filtrarProduccion('semana',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">📅 Semana</button>
+                    <button onclick="filtrarProduccion('produccion',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔧 Producción</button>
                 </div>
-            </div>
-
-            <div class="flex gap-2 mb-4 flex-wrap">
-                <button onclick="filtrarProduccion('todos',this)" class="prod-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 cursor-pointer" style="border-color:#9B7BC4;background:#EDE5F8;color:#6B4A8E;">Todos</button>
-                <button onclick="filtrarProduccion('hoy',this)" class="prod-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🔴 Entrega hoy</button>
-                <button onclick="filtrarProduccion('manana',this)" class="prod-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🟠 Mañana</button>
-                <button onclick="filtrarProduccion('semana',this)" class="prod-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">📅 Esta semana</button>
-                <button onclick="filtrarProduccion('produccion',this)" class="prod-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🔧 En producción</button>
-            </div>
-
-            <div id="listaProduccionContent" class="space-y-3 max-h-[70vh] overflow-y-auto print-area">
+                <div id="listaProduccionContent" style="flex:1;overflow-y:auto;padding:16px 20px;" class="print-area space-y-3"></div>
             </div>
         </div>
 
-        <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="mt-10 border-t border-gray-100 pt-6">
             <div id="historialHeader" class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-gray-800 text-lg">📋 Historial de Pedidos Finalizados</h3>
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">📋 Historial de Pedidos Finalizados</h3>
                 <div id="historialControls" class="flex gap-2 items-center">
                     <input type="text" id="histPedidoBuscar" placeholder="Buscar..." oninput="(function(){clearTimeout(window._hpT);window._hpT=setTimeout(renderHistorialPedidos,160)})()"
                         class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none w-40">
@@ -1785,15 +1782,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-gray-600">Personaliza los datos que aparecen en tickets y cotizaciones</p>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-6">
-            <h3 class="text-lg font-bold text-gray-700 mb-4">Vista previa del encabezado</h3>
-            <div id="storePreview" class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
-                <div id="previewEmoji" class="text-5xl mb-2 text-center w-full flex justify-center">🐱</div>
-                <h1 id="previewName" class="text-2xl font-bold text-gray-800">Maneki Store</h1>
-                <p id="previewSlogan" class="text-sm mt-1" style="color: #C5A572 !important;">Regalos Personalizados</p>
-                <div id="previewContact" class="mt-3 text-sm text-gray-500 space-y-1"></div>
-            </div>
-        </div>
+        <!-- Vista previa ahora es inline junto a los campos -->
 
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div class="space-y-6">
@@ -1903,9 +1892,19 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la tienda *</label>
-                    <input type="text" id="configName" value="Maneki Store" required
-                           class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
-                           oninput="updateStorePreview()">
+                    <div class="flex gap-3 items-center">
+                        <input type="text" id="configName" value="Maneki Store" required
+                               class="flex-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
+                               oninput="updateStorePreview()">
+                        <div id="storePreview" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 shrink-0" style="min-width:160px;max-width:220px;">
+                            <span id="previewEmoji" class="text-2xl leading-none">🐱</span>
+                            <div class="overflow-hidden">
+                                <p id="previewName" class="text-sm font-bold text-gray-800 truncate">Maneki Store</p>
+                                <p id="previewSlogan" class="text-xs truncate" style="color:#C5A572;">Regalos Personalizados</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="previewContact" class="hidden"></div>
                 </div>
 
                 <div>

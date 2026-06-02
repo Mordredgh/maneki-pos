@@ -1092,12 +1092,9 @@ let _produccionFiltro = 'todos';
 function toggleListaProduccion() {
     const panel = document.getElementById('listaProduccionPanel');
     if (!panel) return;
-    const hidden = panel.classList.contains('hidden');
-    panel.classList.toggle('hidden');
-    if (hidden) {
-        renderListaProduccion();
-        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    const isOpen = panel.style.display === 'flex';
+    panel.style.display = isOpen ? 'none' : 'flex';
+    if (!isOpen) renderListaProduccion();
 }
 
 function filtrarProduccion(filtro, btn) {

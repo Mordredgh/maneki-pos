@@ -722,7 +722,7 @@ window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
         window.openExpenseModal = openExpenseModal;
         window.openReceivableModal = openReceivableModal;
         window.openPayableModal = openPayableModal;
-        window.renderBalance = renderBalance;
+        window.renderBalance = typeof mkDebounce === 'function' ? mkDebounce(renderBalance, 200) : renderBalance;
         window.renderIncomeList = renderIncomeList;
         window.renderExpenseList = renderExpenseList;
         window.renderReceivablesList = renderReceivablesList;
