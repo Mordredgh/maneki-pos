@@ -827,6 +827,8 @@ function renderKanbanBoard() {
             ? `Sin pedidos que coincidan con "${q}"`
             : 'Sin pedidos con este filtro de urgencia';
     }
+    // N2: inicializar swipe touch en mobile (una sola vez por contenedor)
+    if (typeof (window as any)._initKanbanTouchSwipe === 'function') (window as any)._initKanbanTouchSwipe();
 }
 
 window._kanbanVerMas = function(col: string) {
@@ -861,6 +863,7 @@ function kanbanCardHTML(p) {
 
     if (_kanbanCompacto) {
         return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex items-center gap-2"
+            data-id="${p.id}" data-status="${p.status || 'confirmado'}"
             style="position:relative;" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
             draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
             ${_checkboxHtml}
@@ -903,7 +906,7 @@ function kanbanCardHTML(p) {
            </div>`
         : '';
     return `<div class="kanban-card mk-kanban-card-${p.status || 'confirmado'} bg-white rounded-xl p-3 shadow-sm border border-gray-100 select-none"
-        data-status="${p.status || 'confirmado'}"
+        data-id="${p.id}" data-status="${p.status || 'confirmado'}"
         style="position:relative;" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
         ${_checkboxHtml}

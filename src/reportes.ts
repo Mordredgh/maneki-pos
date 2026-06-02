@@ -141,6 +141,7 @@ function renderValorInventario() {
 }
 
 let comparativaMesesChart = null;
+let comparativaAnioChart = null;
 let topProductosChart = null;
 // categoryChart ya declarado en app-data.js — no redeclarar (causaría SyntaxError)
 let margenCategoriaChart = null;
@@ -534,6 +535,74 @@ function initMargenCategoriaChart() {
 }
 window.initMargenCategoriaChart = initMargenCategoriaChart;
 
+// ── N6: Comparativa año a año (12 meses actuales vs año anterior) ────────────
+function initComparativaAnio() {
+    const canvas = document.getElementById('comparativaAnioChart') as HTMLCanvasElement;
+    if (!canvas) return;
+    if (comparativaAnioChart) {
+        try { (comparativaAnioChart as any).destroy(); } catch(e) {}
+        comparativaAnioChart = null;
+    }
+    const now = new Date();
+    const anioActual = now.getFullYear();
+    const anioAnterior = anioActual - 1;
+    const todasVentas = _getAllVentas();
+    const meses: string[] = [], ventasActual: number[] = [], ventasAnterior: number[] = [];
+
+    for (let m = 0; m < 12; m++) {
+        const d = new Date(anioActual, m, 1);
+        meses.push(d.toLocaleDateString('es-MX', { month: 'short' }));
+        const mesA = `${anioActual}-${String(m+1).padStart(2,'0')}`;
+        const mesB = `${anioAnterior}-${String(m+1).padStart(2,'0')}`;
+        const filtrar = (ms: string) => todasVentas
+            .filter(function(s){ return s.date && s.date.startsWith(ms) && s.method !== 'Cancelado' && s.metodo !== 'cancelado'; })
+            .reduce(function(acc: number, v: any){ return acc + (Number(v.total)||0); }, 0);
+        ventasActual.push(filtrar(mesA));
+        ventasAnterior.push(filtrar(mesB));
+    }
+
+    const totalActual = ventasActual.reduce(function(a,b){ return a+b; }, 0);
+    const totalAnterior = ventasAnterior.reduce(function(a,b){ return a+b; }, 0);
+    const pct = totalAnterior > 0 ? ((totalActual - totalAnterior) / totalAnterior * 100) : null;
+    const resumen = document.getElementById('anioAnioResumen');
+    if (resumen) {
+        resumen.innerHTML = pct !== null
+            ? `<span style="font-weight:700;color:${pct >= 0 ? '#059669' : '#dc2626'}">${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(1)}% vs ${anioAnterior}</span>`
+            : `vs ${anioAnterior}`;
+    }
+
+    comparativaAnioChart = new (window as any).Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: meses,
+            datasets: [
+                {
+                    label: String(anioActual),
+                    data: ventasActual,
+                    borderColor: '#C5A572',
+                    backgroundColor: 'rgba(197,165,114,0.12)',
+                    fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5,
+                    borderWidth: 2
+                },
+                {
+                    label: String(anioAnterior),
+                    data: ventasAnterior,
+                    borderColor: '#94a3b8',
+                    backgroundColor: 'rgba(148,163,184,0.08)',
+                    fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5,
+                    borderDash: [5,4], borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+            scales: { y: { beginAtZero: true, ticks: { callback: function(v: any){ return '$' + Number(v).toLocaleString('es-MX', { maximumFractionDigits: 0 }); } } } }
+        }
+    });
+}
+window.initComparativaAnio = initComparativaAnio;
+
 function initReports() {
     updateInventoryStats();
     renderTopProducts();
@@ -542,6 +611,7 @@ function initReports() {
     updatePaymentMethods();
     renderValorInventario();
     initComparativaMeses();
+    initComparativaAnio();
     initTopProductosChart();
     initMargenCategoriaChart();
 }

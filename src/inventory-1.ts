@@ -1348,6 +1348,72 @@ function imprimirEtiquetasBatch(ids?: string[]) {
 }
 window.imprimirEtiquetasBatch = imprimirEtiquetasBatch;
 
+// ── N3: Escáner QR/Barcode desde cámara ──────────────────────────────────────
+let _qrStream: MediaStream|null = null;
+let _qrDetectorInst: any = null;
+let _qrScanInterval: ReturnType<typeof setInterval>|null = null;
+
+(window as any)._abrirQRScanner = async function() {
+    if (typeof (window as any).openModal === 'function') (window as any).openModal('qrScannerModal');
+    const video = document.getElementById('qrVideo') as HTMLVideoElement;
+    const status = document.getElementById('qrStatus');
+    const manualWrap = document.getElementById('qrManualWrap');
+    if (video) video.style.display = '';
+
+    const supported = typeof (window as any).BarcodeDetector !== 'undefined';
+    if (!supported) {
+        if (video) video.style.display = 'none';
+        if (status) status.textContent = 'Escáner no disponible en este navegador.';
+        if (manualWrap) manualWrap.style.display = '';
+        return;
+    }
+    try {
+        _qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        if (!video) return;
+        video.srcObject = _qrStream;
+        await video.play();
+        _qrDetectorInst = new (window as any).BarcodeDetector({
+            formats: ['qr_code','ean_13','ean_8','upc_a','upc_e','code_128','code_39','data_matrix']
+        });
+        if (status) status.textContent = 'Buscando código...';
+        _qrScanInterval = setInterval(async () => {
+            if (!video.videoWidth) return;
+            try {
+                const barcodes = await _qrDetectorInst.detect(video);
+                if (barcodes && barcodes.length > 0) {
+                    const val = String(barcodes[0].rawValue || '').trim();
+                    if (!val) return;
+                    (window as any)._cerrarQRScanner();
+                    const inp = document.getElementById('inventorySearch') as HTMLInputElement;
+                    if (inp) { inp.value = val; inp.dispatchEvent(new Event('input')); }
+                    if (typeof (window as any).manekiToastExport === 'function')
+                        (window as any).manekiToastExport(`📷 Código: ${val}`, 'ok');
+                }
+            } catch(_) {}
+        }, 350);
+    } catch(err) {
+        if (status) status.textContent = 'No se pudo acceder a la cámara.';
+        if (manualWrap) manualWrap.style.display = '';
+    }
+};
+
+(window as any)._cerrarQRScanner = function() {
+    if (typeof (window as any).closeModal === 'function') (window as any).closeModal('qrScannerModal');
+    if (_qrScanInterval) { clearInterval(_qrScanInterval); _qrScanInterval = null; }
+    if (_qrStream) { _qrStream.getTracks().forEach(t => t.stop()); _qrStream = null; }
+    const video = document.getElementById('qrVideo') as HTMLVideoElement;
+    if (video) { video.srcObject = null; }
+};
+
+(window as any)._qrManualBuscar = function() {
+    const inp = document.getElementById('qrManualInput') as HTMLInputElement;
+    if (!inp || !inp.value.trim()) return;
+    const val = inp.value.trim();
+    (window as any)._cerrarQRScanner();
+    const searchInp = document.getElementById('inventorySearch') as HTMLInputElement;
+    if (searchInp) { searchInp.value = val; searchInp.dispatchEvent(new Event('input')); }
+};
+
 // ── MODAL PRODUCTO TERMINADO — inyectado dinámicamente ───────────────────
 // ══════════════════════════════════════════════════════════════════════════
 

@@ -3,6 +3,159 @@ function _validEmail(e) { return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
 const _escAttr = window._esc;
 
+// ── N9: Segmentación RFM ─────────────────────────────────────────────────────
+const _RFM_SEGMENTS = [
+    { key: 'campeon',     label: 'Campeones',    emoji: '🏆', color: '#065f46', bg: '#d1fae5', desc: 'Compran frecuente y reciente' },
+    { key: 'leal',        label: 'Leales',       emoji: '⭐', color: '#1e40af', bg: '#dbeafe', desc: 'Clientes constantes de alto valor' },
+    { key: 'prometedor',  label: 'Prometedores', emoji: '🌱', color: '#4d7c0f', bg: '#ecfccb', desc: 'Recientes pero pocos pedidos' },
+    { key: 'en_riesgo',   label: 'En riesgo',    emoji: '⚠️', color: '#9a3412', bg: '#ffedd5', desc: 'Solían comprar, ahora ausentes' },
+    { key: 'hibernando',  label: 'Hibernando',   emoji: '❄️', color: '#1e3a5f', bg: '#e0f2fe', desc: 'Sin actividad reciente' },
+    { key: 'ocasional',   label: 'Ocasionales',  emoji: '🔵', color: '#374151', bg: '#f3f4f6', desc: 'Compras esporádicas' },
+];
+
+function _calcRFMScores(): Record<string, {r:number, f:number, m:number, segment:string, recenciaDias:number, frecuencia:number, monto:number}> | null {
+    const pf = (window as any).pedidosFinalizados || [];
+    if (!pf.length) return null;
+    const now = new Date();
+
+    // Construir mapa por cliente
+    const mapa: Record<string, {recenciaDias:number, frecuencia:number, monto:number}> = {};
+    pf.forEach((p: any) => {
+        const nombre = String(p.cliente || p.clientName || '').trim();
+        if (!nombre) return;
+        const fechaStr = p.fechaFinalizado || p.fechaPedido || p.fecha || '';
+        const fecha = fechaStr ? new Date(fechaStr + (fechaStr.length === 10 ? 'T12:00:00' : '')) : now;
+        const dias = Math.max(0, Math.floor((now.getTime() - fecha.getTime()) / 86400000));
+        const total = Number(p.total || 0);
+        if (!mapa[nombre]) {
+            mapa[nombre] = { recenciaDias: dias, frecuencia: 1, monto: total };
+        } else {
+            mapa[nombre].recenciaDias = Math.min(mapa[nombre].recenciaDias, dias);
+            mapa[nombre].frecuencia += 1;
+            mapa[nombre].monto += total;
+        }
+    });
+
+    const entries = Object.values(mapa);
+    if (!entries.length) return null;
+
+    // Scoring en quintiles (1-5). Recencia: menos días = mejor = score 5.
+    const quantileScore = (arr: number[], val: number, invertir = false): number => {
+        const sorted = [...arr].sort((a, b) => a - b);
+        const rank = sorted.filter(x => x <= val).length;
+        const raw = Math.ceil((rank / sorted.length) * 5) || 1;
+        return invertir ? (6 - raw) : raw;
+    };
+    const allR = entries.map(v => v.recenciaDias);
+    const allF = entries.map(v => v.frecuencia);
+    const allM = entries.map(v => v.monto);
+
+    const result: Record<string, any> = {};
+    Object.entries(mapa).forEach(([nombre, v]) => {
+        const r = quantileScore(allR, v.recenciaDias, true); // invertir: menor recencia = score más alto
+        const f = quantileScore(allF, v.frecuencia);
+        const m = quantileScore(allM, v.monto);
+
+        let segment = 'ocasional';
+        if (r >= 4 && f >= 4) segment = 'campeon';
+        else if ((f >= 3 && m >= 3) || (r >= 4 && m >= 4)) segment = 'leal';
+        else if (r >= 3 && f <= 2) segment = 'prometedor';
+        else if (r <= 2 && f >= 3) segment = 'en_riesgo';
+        else if (r === 1 && f <= 2) segment = 'hibernando';
+
+        result[nombre] = { r, f, m, segment, recenciaDias: v.recenciaDias, frecuencia: v.frecuencia, monto: v.monto };
+    });
+    return result;
+}
+window._calcRFMScores = _calcRFMScores;
+
+function renderRFMPanel() {
+    const wrapper = document.getElementById('rfmPanelWrapper');
+    if (!wrapper) return;
+
+    const rfm = _calcRFMScores();
+    if (!rfm) {
+        wrapper.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:20px;font-size:.85rem">Sin pedidos finalizados para calcular RFM</p>';
+        return;
+    }
+
+    const counts: Record<string, string[]> = {};
+    _RFM_SEGMENTS.forEach(s => { counts[s.key] = []; });
+    Object.entries(rfm).forEach(([nombre, v]) => {
+        if (counts[v.segment]) counts[v.segment].push(nombre);
+    });
+
+    const cards = _RFM_SEGMENTS.map(seg => {
+        const lista = counts[seg.key] || [];
+        const preview = lista.slice(0, 3).map(n => `<span style="font-size:.7rem;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1px 8px;color:#374151">${_escAttr ? _escAttr(n) : n}</span>`).join(' ');
+        const mas = lista.length > 3 ? `<span style="font-size:.7rem;color:#9ca3af">+${lista.length - 3} más</span>` : '';
+        return `<div style="background:${seg.bg};border-radius:14px;padding:14px;cursor:pointer;transition:box-shadow .15s"
+            onclick="window._rfmVerSegmento('${seg.key}')" title="${seg.desc}">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="font-size:1.3rem">${seg.emoji}</span>
+                <div>
+                    <div style="font-weight:700;font-size:.85rem;color:${seg.color}">${seg.label}</div>
+                    <div style="font-size:.7rem;color:#6b7280">${seg.desc}</div>
+                </div>
+                <span style="margin-left:auto;font-size:1.4rem;font-weight:800;color:${seg.color}">${lista.length}</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;min-height:20px">${preview}${mas}</div>
+        </div>`;
+    }).join('');
+
+    wrapper.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:4px 0">${cards}</div>`;
+}
+window.renderRFMPanel = renderRFMPanel;
+
+window._rfmVerSegmento = function(segKey: string) {
+    const rfm = _calcRFMScores();
+    if (!rfm) return;
+    const seg = _RFM_SEGMENTS.find(s => s.key === segKey);
+    if (!seg) return;
+    const entries = Object.entries(rfm).filter(([,v]) => v.segment === segKey);
+    const panel = document.getElementById('rfmDetallePanel');
+    if (!panel) return;
+
+    if (!entries.length) {
+        panel.innerHTML = `<p style="padding:12px;color:#9ca3af;font-size:.85rem">Sin clientes en este segmento</p>`;
+        panel.style.display = '';
+        return;
+    }
+
+    const filas = entries
+        .sort(([,a],[,b]) => b.monto - a.monto)
+        .map(([nombre, v]) => {
+            const _e = (s: string) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            return `<tr style="border-bottom:1px solid #f3f4f6">
+                <td style="padding:7px 10px;font-size:.8rem;font-weight:600;color:#374151">${_e(nombre)}</td>
+                <td style="padding:7px 10px;font-size:.8rem;color:#6b7280;text-align:center">${v.frecuencia}</td>
+                <td style="padding:7px 10px;font-size:.8rem;font-weight:700;color:#059669;text-align:right">$${v.monto.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+                <td style="padding:7px 10px;font-size:.8rem;color:#6b7280;text-align:right">${v.recenciaDias}d</td>
+                <td style="padding:7px 10px;text-align:center"><span style="font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:10px;background:${seg.bg};color:${seg.color}">${v.r}·${v.f}·${v.m}</span></td>
+            </tr>`;
+        }).join('');
+
+    panel.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px 6px;border-bottom:1px solid #f3f4f6">
+            <span style="font-weight:700;font-size:.9rem;color:${seg.color}">${seg.emoji} ${seg.label} — ${entries.length} cliente${entries.length!==1?'s':''}</span>
+            <button onclick="document.getElementById('rfmDetallePanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.1rem">✕</button>
+        </div>
+        <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="background:#fafafa">
+                <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:left">Cliente</th>
+                <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:center"># Pedidos</th>
+                <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:right">Total</th>
+                <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:right">Recencia</th>
+                <th style="padding:5px 10px;font-size:.7rem;color:#6b7280;text-align:center">R·F·M</th>
+            </tr></thead>
+            <tbody>${filas}</tbody>
+        </table>
+        </div>`;
+    panel.style.display = '';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
 // ── NTH-10: Ordenamiento de tabla de clientes ────────────────────────────────
 let _clientesSortCol = 'name';
 let _clientesSortDir = 'asc';
@@ -236,6 +389,8 @@ function _renderFiltrosActividad() {
         function renderClientsTable() {
             // MEJORA 6: inicializar filtros si no existen
             _renderFiltrosActividad();
+            // N9: actualizar panel RFM
+            if (typeof renderRFMPanel === 'function') renderRFMPanel();
 
             const tbody = document.getElementById('clientsTable');
             const listaClientes = _clientesFiltrados();

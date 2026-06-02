@@ -1498,6 +1498,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 2000);
 });
 
+// ── N2: Swipe touch para cambiar estado en kanban (mobile) ───────────────────
+const _KANBAN_TOUCH_COLS = ['confirmado','pago','produccion','envio','salida','retirar'];
+
+function _initKanbanTouchSwipe() {
+    const container = document.getElementById('vistaKanban');
+    if (!container || (container as any)._mkSwipeDone) return;
+    (container as any)._mkSwipeDone = true;
+
+    let _card: HTMLElement|null = null;
+    let _startX = 0, _startY = 0;
+    let _cardId = '', _cardStatus = '';
+
+    container.addEventListener('touchstart', function(e: TouchEvent) {
+        const card = (e.target as HTMLElement).closest('.kanban-card') as HTMLElement|null;
+        if (!card) return;
+        _card = card;
+        _startX = e.touches[0].clientX;
+        _startY = e.touches[0].clientY;
+        _cardId = card.dataset.id || '';
+        _cardStatus = card.dataset.status || '';
+    }, { passive: true });
+
+    container.addEventListener('touchmove', function(e: TouchEvent) {
+        if (!_card) return;
+        const dx = e.touches[0].clientX - _startX;
+        const dy = e.touches[0].clientY - _startY;
+        // Cancelar si el movimiento es principalmente vertical (scroll)
+        if (Math.abs(dy) > Math.abs(dx) * 1.3 + 8) { _card = null; return; }
+        _card.style.transform = `translateX(${dx}px)`;
+        _card.style.transition = 'none';
+        _card.style.opacity = String(Math.max(0.5, 1 - Math.abs(dx) / 220));
+    }, { passive: true });
+
+    container.addEventListener('touchend', function(e: TouchEvent) {
+        if (!_card) return;
+        const dx = e.changedTouches[0].clientX - _startX;
+        const dy = e.changedTouches[0].clientY - _startY;
+        _card.style.transform = '';
+        _card.style.transition = '';
+        _card.style.opacity = '';
+        _card = null;
+
+        // Umbral: 70px horizontal y más horizontal que vertical
+        if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.9) return;
+
+        const colIdx = _KANBAN_TOUCH_COLS.indexOf(_cardStatus);
+        if (colIdx === -1) return;
+
+        // Swipe derecha → avanza al siguiente estado; izquierda → retrocede
+        const targetIdx = dx > 0 ? colIdx + 1 : colIdx - 1;
+        if (targetIdx < 0 || targetIdx >= _KANBAN_TOUCH_COLS.length) return;
+        const targetStatus = _KANBAN_TOUCH_COLS[targetIdx];
+
+        _kanbanDragId = _cardId;
+        kanbanDrop({ preventDefault: () => {} } as any, targetStatus);
+    }, { passive: true });
+}
+(window as any)._initKanbanTouchSwipe = _initKanbanTouchSwipe;
+
 // ── Editar pedido finalizado ──
 let _editandoPedidoFinalizadoId = null;
 
