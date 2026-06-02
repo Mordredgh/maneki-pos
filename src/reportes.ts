@@ -10,10 +10,14 @@
 let _allVentasCache = null;
 let _allVentasCacheKey = '';
 
+// Exponer función global para que pedidos-2.ts pueda invalidar el caché sin acceder a la variable privada
+window._invalidarCacheVentas = function() { _allVentasCache = null; _allVentasCacheKey = ''; };
+
 function _getAllVentas() {
     const sh = window.salesHistory || [];
     const pf = window.pedidosFinalizados || [];
-    const cacheKey = `${sh.length}_${pf.length}`;
+    // Incluir suma de totales de pedidosFinalizados para detectar ediciones sin cambio de cantidad
+    const cacheKey = `${sh.length}_${pf.length}_${pf.reduce((s,p)=>s+Number(p.total||0),0).toFixed(0)}`;
     if (_allVentasCache && _allVentasCacheKey === cacheKey) return _allVentasCache;
 
     // 1. Folios ya en salesHistory como type:'pedido' → no duplicar desde pedidosFinalizados

@@ -44,7 +44,7 @@ function openClientHistory(clientId) {
     const totalVentas  = ventas.reduce((s, v) => s + (v.total || 0), 0);
     const totalPedidos = pedidosCliente.reduce((s, p) => s + (p.total || 0), 0);
     const totalAbonos  = abonosCliente.reduce((s, a) => s + (a.total || 0), 0);
-    const totalGastado = totalVentas + totalPedidos + totalAbonos;
+    const totalGastado = totalVentas + totalPedidos; // abonos ya están incluidos en totalPedidos via p.total
 
     // Última compra
     const todasFechas = [
@@ -586,17 +586,15 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 async function initApp() {
-    function splashProgress(step, label) {
-        try {
-            if (typeof ipcRenderer !== 'undefined' && ipcRenderer)
-                ipcRenderer.send('splash-progress', { step, total: 6, label });
-        } catch (e) {}
-    }
+    // Inyectar skeleton screens mientras carga la data inicial
+    ['inventoryTable','pedidosTable','clientsTable'].forEach(id => {
+        const tb = document.getElementById(id);
+        if (tb && typeof (window as any)._mkSkeletonRows === 'function')
+            tb.innerHTML = (window as any)._mkSkeletonRows(6, 5);
+    });
 
     try {
-        splashProgress(0, 'Conectando a Supabase...');
         categories = await sbLoad('categories', defaultCategories);
-        splashProgress(1, 'Cargando datos...');
 
         const [
             _products, _clients, _salesHistory, _quotes,
@@ -634,8 +632,6 @@ async function initApp() {
         storeConfig          = _storeConf;
         window.ingresosRecurrentes = _ingresosRec;
 
-        splashProgress(4, 'Cargando configuración...');
-
         const [_notas, _equipos, _roiHist, _roiConf, _envioAnillos] = await Promise.all([
             sbLoad('notas', []),
             sbLoad('equipos', []),
@@ -659,9 +655,6 @@ async function initApp() {
             ENVIO_BASE.lat = storeConfig.baseLat;
             ENVIO_BASE.lng = storeConfig.baseLng;
         }
-
-        splashProgress(6, '¡Listo!');
-        try { if (typeof ipcRenderer !== 'undefined' && ipcRenderer) ipcRenderer.send('splash-done'); } catch (e) {}
 
         const roiPctEl = document.getElementById('roiPorcentajeGlobal');
         if (roiPctEl) roiPctEl.value = roiConfig.porcentaje || 10;
@@ -690,7 +683,6 @@ async function initApp() {
                 if (_sbConectado === false) {
                     if (typeof mostrarBannerConexion === 'function')
                         mostrarBannerConexion(true, 'Conexión restaurada — sincronizando datos...');
-                    try { if (typeof require !== 'undefined') require('electron').ipcRenderer.send('notify-connection', { connected: true }); } catch (e) {}
                 }
                 _sbConectado = true;
             } catch (e) {
@@ -700,14 +692,13 @@ async function initApp() {
                 if (_sbConectado !== false) {
                     if (typeof mostrarBannerConexion === 'function')
                         mostrarBannerConexion(false, 'Sin conexión a la nube — trabajando en modo offline.');
-                    try { if (typeof require !== 'undefined') require('electron').ipcRenderer.send('notify-connection', { connected: false }); } catch (e) {}
                 }
                 _sbConectado = false;
             }
         }
         verificarConexionSupabase();
         if (window._sbCheckInterval) clearInterval(window._sbCheckInterval);
-        window._sbCheckInterval = setInterval(verificarConexionSupabase, 30000);
+        window._sbCheckInterval = setInterval(verificarConexionSupabase, 5 * 60 * 1000);
 
         const sbH1 = document.querySelector('#sidebar h1');
         const sbP  = document.querySelector('#sidebar p');
@@ -870,4 +861,4 @@ window.MK.toast = function(msg, type) {
 window.MK.navigate = function(section) {
     if (typeof showSection === 'function') showSection(section);
 };
-window.MK.version = '4.1';
+window.MK.version = '2.2.0';

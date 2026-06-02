@@ -181,7 +181,10 @@ function _descontarEmpaquesInventario(pedido) {
         if (!_esProductoEmpaque(mp)) continue;
         const qty = emp.quantity || 1;
         const antes = mp.stock || 0;
-        stockOriginal.push({ mp, antes });
+        const variantsBefore = Array.isArray(mp.variants) && mp.variants.length > 0
+            ? mp.variants.map(v => ({ ...v }))
+            : null;
+        stockOriginal.push({ mp, antes, variantsBefore });
         mp.stock = Math.max(0, antes - qty);
         if (typeof registrarMovimiento === 'function') {
             registrarMovimiento({ productoId: mp.id, productoNombre: mp.name,
@@ -195,7 +198,12 @@ function _descontarEmpaquesInventario(pedido) {
         try {
             saveProducts();
         } catch(e) {
-            stockOriginal.forEach(({ mp, antes }) => { mp.stock = antes; });
+            stockOriginal.forEach(({ mp, antes, variantsBefore }) => {
+                mp.stock = antes;
+                if (variantsBefore && Array.isArray(mp.variants)) {
+                    variantsBefore.forEach((snap, i) => { if (mp.variants[i]) mp.variants[i].qty = snap.qty; });
+                }
+            });
             throw e;
         }
     }
@@ -786,7 +794,7 @@ async function confirmarAbonoPedido() {
         if (window.salesHistory !== undefined) {
             if (typeof saveSalesHistory === 'function') saveSalesHistory();
         }
-        if (typeof _allVentasCache !== 'undefined') _allVentasCache = null; // invalidar caché de reportes
+        if (typeof window._invalidarCacheVentas === 'function') window._invalidarCacheVentas();
     } catch (_saveErr) {
         // Revertir mutaciones en memoria para mantener consistencia
         p.pagos = _pagosBefore;
@@ -1000,7 +1008,7 @@ function _aplicarCambioLote() {
                     products: pedidoFin.productosInventario || []
                 });
                 if (typeof saveSalesHistory === 'function') saveSalesHistory();
-                if (typeof _allVentasCache !== 'undefined') _allVentasCache = null;
+                if (typeof window._invalidarCacheVentas === 'function') window._invalidarCacheVentas();
             }
             // Actualizar totalPurchases del cliente
             if (pedidoFin.cliente && typeof window.clients !== 'undefined') {
@@ -1026,7 +1034,7 @@ function _aplicarCambioLote() {
     });
 
     if (cambiados > 0) {
-        guardarDatos ? guardarDatos() : savePedidos();
+        savePedidos();
         if (finalizados > 0) {
             savePedidosFinalizados();
             renderHistorialPedidos();

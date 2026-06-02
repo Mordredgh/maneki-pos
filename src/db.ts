@@ -732,7 +732,8 @@ async function sbLoad(key, def) {
 }
 
 // Compatibilidad - ya no usamos localStorage directo
-// saveToLocalStorage is intentionally a no-op — Supabase + IndexedDB are the persistence layers
+// saveToLocalStorage is intentionally a no-op — Supabase + IndexedDB are the persistence layers.
+// Existe por compatibilidad con código legacy que la llamaba directamente; no hace nada.
 function saveToLocalStorage(key, data) {}
 
 // BUG #15 FIX: getNextFolio con fallback offline
@@ -969,7 +970,7 @@ function saveClients() {
                 tags: c.tags||[]
             }));
             if (rows.length) await db.from('clients').upsert(rows, {onConflict:'id'}).catch(e=>console.warn('[clients]',e));
-        } catch(e){}
+        } catch(e){ console.warn('[saveClients] Error al guardar en Supabase:', e?.message); }
     })();
 }
 // ── saveSalesHistory — escribe en public.sales_history ──
@@ -1012,7 +1013,7 @@ function saveIncomes() {
             }));
             // Solo si hay filas con datos
             if (rows.length && db) await db.from('incomes').upsert(rows,{onConflict:'id'}).catch(e=>console.warn('[incomes]',e));
-        } catch(e){}
+        } catch(e){ console.warn('[saveIncomes] Error al guardar en Supabase:', e?.message); }
     })();
 }
 function saveExpenses() {
@@ -1026,7 +1027,7 @@ function saveExpenses() {
                 notas: e.notas||null, from_payable: e.fromPayable===true
             }));
             if (rows.length && db) await db.from('expenses').upsert(rows,{onConflict:'id'}).catch(e=>console.warn('[expenses]',e));
-        } catch(e){}
+        } catch(e){ console.warn('[saveExpenses] Error al guardar en Supabase:', e?.message); }
     })();
 }
 let gastosRecurrentes = [];

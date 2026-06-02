@@ -593,8 +593,9 @@ function filterPedidos(status, btn) {
 
 // ── Render principal ──
 function normalizarResta() {
-    // Guard: evitar recalcular si nada ha cambiado (misma cantidad de pedidos y pagos)
-    const _hash = (window.pedidos||[]).length + '_' + (window.pedidos||[]).reduce((s,p)=>s+(p.pagos||[]).length,0);
+    // Guard: incluye suma de montos para detectar ediciones en pagos existentes
+    const _hash = (window.pedidos||[]).length + '_' +
+        (window.pedidos||[]).reduce((s,p)=>s+(p.pagos||[]).reduce((ps,ab)=>ps+Number(ab.monto||0),0),0).toFixed(0);
     if (window._normalizarRestaHash === _hash) return;
     window._normalizarRestaHash = _hash;
     // FUENTE DE VERDAD: p.pagos[] contiene TODOS los pagos (anticipo inicial + abonos)

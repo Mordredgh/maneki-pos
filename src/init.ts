@@ -17,6 +17,21 @@
         });
     }
 
+    // ── PWA Install Prompt — capturar evento y mostrar banner después de 3 visitas ──
+    window.addEventListener('beforeinstallprompt', (e: any) => {
+        e.preventDefault();
+        (window as any)._installPrompt = e;
+        const visits = Number(localStorage.getItem('mk_visits') || '0') + 1;
+        localStorage.setItem('mk_visits', String(visits));
+        if (visits >= 3 && !localStorage.getItem('mk_install_dismissed')) {
+            setTimeout(() => {
+                const toastFn = typeof (window as any).manekiToastExport === 'function'
+                    ? (window as any).manekiToastExport : null;
+                if (toastFn) toastFn('📲 Instala Maneki como app para acceso rápido — <a onclick="(window._installPrompt&&window._installPrompt.prompt());localStorage.setItem(\'mk_install_dismissed\',\'1\')" style="cursor:pointer;text-decoration:underline;font-weight:600;">Instalar</a> · <a onclick="localStorage.setItem(\'mk_install_dismissed\',\'1\')" style="cursor:pointer;opacity:.7;">Ahora no</a>', 'ok');
+            }, 4000);
+        }
+    });
+
     // ── Remove no-transition after first paint ──
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {

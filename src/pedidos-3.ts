@@ -1062,7 +1062,7 @@ function _mostrarGaleriaPtEnPedido(prod) {
     if (urls.length === 0) { galDiv.innerHTML = ''; return; }
     galDiv.innerHTML = '<div style="font-size:.72rem;color:#92400e;font-weight:700;margin-bottom:6px;">🖼️ Fotos del producto ('+urls.length+')</div>'
         + '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">'
-        + urls.map(url => '<img src="'+url+'" onclick="window.open(\''+url+'\',\'_blank\')" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb;flex-shrink:0;cursor:pointer;" title="Ver foto completa">').join('')
+        + urls.map(url => { const _safeUrl = url.replace(/'/g, '%27').replace(/"/g, '%22'); return '<img src="'+_safeUrl+'" onclick="window.open(\''+_safeUrl+'\',\'_blank\')" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb;flex-shrink:0;cursor:pointer;" title="Ver foto completa">'; }).join('')
         + '</div>';
 }
 window._mostrarGaleriaPtEnPedido = _mostrarGaleriaPtEnPedido;
