@@ -55,7 +55,7 @@ function _getAllVentas() {
       products: (p.productosInventario || []).map(function(i) {
         return {
           id: i.id || "",
-          name: i.name || i.nombre || p.concepto || "—",
+          name: i.name || i.nombre || p.concepto || "\u2014",
           quantity: Number(i.quantity || i.cantidad || 1),
           price: Number(i.price || i.precio || 0),
           cost: Number(i.cost || i.costo || 0)
@@ -116,7 +116,7 @@ function exportarGraficaPNG(chart, nombre) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1e3);
   if (typeof manekiToastExport === "function") {
-    manekiToastExport("📥 Gráfica guardada: " + (nombre || "grafica") + ".png", "ok");
+    manekiToastExport("\u{1F4E5} Gr\xE1fica guardada: " + (nombre || "grafica") + ".png", "ok");
   }
 }
 window.exportarGraficaPNG = exportarGraficaPNG;
@@ -125,7 +125,7 @@ function _inyectarBtnExport(containerId, chartVarName, fileName) {
   if (!container) return;
   var existing = container.querySelector('.mk-export-png-btn[data-chart="' + chartVarName + '"]');
   if (existing) return;
-  var btnHtml = '<button class="mk-export-png-btn" data-chart="' + chartVarName + `" onclick="exportarGraficaPNG(window['` + chartVarName + "'], '" + fileName + `')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);" >📥</button>`;
+  var btnHtml = '<button class="mk-export-png-btn" data-chart="' + chartVarName + `" onclick="exportarGraficaPNG(window['` + chartVarName + "'], '" + fileName + `')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);" >\u{1F4E5}</button>`;
   var parent = container.parentElement;
   if (parent && getComputedStyle(parent).position === "static") {
     parent.style.position = "relative";
@@ -176,7 +176,7 @@ function initComparativaMeses() {
       datasets: [
         { label: "Ventas", data: ventas, backgroundColor: "#C5A572", borderRadius: 6 },
         { label: "Gastos", data: gastos, backgroundColor: "#FCA5A5", borderRadius: 6 },
-        { label: "Ventas año anterior", data: ventasAnioAnterior, backgroundColor: "rgba(197,165,114,0.45)", borderRadius: 6, hidden: true }
+        { label: "Ventas a\xF1o anterior", data: ventasAnioAnterior, backgroundColor: "rgba(197,165,114,0.45)", borderRadius: 6, hidden: true }
       ]
     },
     options: {
@@ -192,7 +192,7 @@ function initComparativaMeses() {
   if (chartWrapper && !document.getElementById("toggleAnioAnterior")) {
     chartWrapper.insertAdjacentHTML(
       "beforeend",
-      '<div style="text-align:center;margin-top:8px;"><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#6B7280;"><input type="checkbox" id="toggleAnioAnterior" onchange="(function(cb){if(comparativaMesesChart){comparativaMesesChart.data.datasets[2].hidden=!cb.checked;comparativaMesesChart.update();}})(this)" style="cursor:pointer;accent-color:#C5A572;"> 📅 vs. año anterior</label></div>'
+      '<div style="text-align:center;margin-top:8px;"><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#6B7280;"><input type="checkbox" id="toggleAnioAnterior" onchange="(function(cb){if(comparativaMesesChart){comparativaMesesChart.data.datasets[2].hidden=!cb.checked;comparativaMesesChart.update();}})(this)" style="cursor:pointer;accent-color:#C5A572;"> \u{1F4C5} vs. a\xF1o anterior</label></div>'
     );
   }
   _renderTicketPromedioStats(meses, ventas, todasVentas, now);
@@ -202,34 +202,11 @@ function initComparativaMeses() {
   if (!comparativaContainer.querySelector(".mk-export-png-btn")) {
     comparativaContainer.insertAdjacentHTML(
       "afterbegin",
-      `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(comparativaMesesChart, 'ventas-mensuales')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>`
+      `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(comparativaMesesChart, 'ventas-mensuales')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">\u{1F4E5}</button>`
     );
   }
-  const monthlyTotals = meses.map(function(lbl, i) {
-    return { label: lbl, total: ventas[i] };
-  });
-  const hasData = monthlyTotals.some(function(m) {
-    return m.total > 0;
-  });
   var summaryEl = document.getElementById("mejorPeorMes");
-  if (!summaryEl) {
-    summaryEl = document.createElement("p");
-    summaryEl.id = "mejorPeorMes";
-    summaryEl.className = "text-sm text-center mt-2";
-    canvas.parentElement.appendChild(summaryEl);
-  }
-  if (hasData) {
-    const best = monthlyTotals.reduce(function(a, b) {
-      return a.total >= b.total ? a : b;
-    });
-    const worst = monthlyTotals.reduce(function(a, b) {
-      return a.total <= b.total ? a : b;
-    });
-    summaryEl.innerHTML = '<span class="text-green-600 font-semibold">📈 Mejor: ' + best.label + " ($" + best.total.toLocaleString("es-MX") + ')</span>&nbsp;·&nbsp;<span class="text-red-500 font-semibold">📉 Peor: ' + worst.label + " ($" + worst.total.toLocaleString("es-MX") + ")</span>";
-    summaryEl.style.display = "";
-  } else {
-    summaryEl.style.display = "none";
-  }
+  if (summaryEl) summaryEl.style.display = "none";
 }
 function _renderTicketPromedioStats(meses, ventas, todasVentas, now) {
   var canvas = document.getElementById("comparativaMesesChart");
@@ -255,10 +232,10 @@ function _renderTicketPromedioStats(meses, ventas, todasVentas, now) {
   var statsId = "ticketPromedioStats";
   var existingStats = document.getElementById(statsId);
   if (existingStats) existingStats.remove();
-  var chartSection = canvas.closest("div.bg-white") || canvas.parentElement;
-  if (!chartSection) return;
-  var statsHtml = '<div id="' + statsId + '" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #F3F4F6;"><div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;"><p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Ticket promedio (mes)</p><p style="font-size:18px;font-weight:700;color:#1F2937;margin:0;">' + (pedidosMesActual > 0 ? "$" + ticketPromedio.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "—") + '</p></div><div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;"><p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Pedidos este mes</p><p style="font-size:18px;font-weight:700;color:#1F2937;margin:0;">' + pedidosMesActual + ' pedidos</p></div><div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;"><p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Mejor mes (6m)</p><p style="font-size:15px;font-weight:700;color:#059669;margin:0;">' + bestMes + " · $" + bestTotal.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + "</p></div></div>";
-  chartSection.insertAdjacentHTML("beforeend", statsHtml);
+  var wrapper = document.getElementById("ticketPromedioStatsWrapper") || canvas.closest("div.bg-white") || canvas.parentElement;
+  if (!wrapper) return;
+  var statsHtml = '<div id="' + statsId + '" class="bg-white rounded-xl border border-gray-100 p-4"><div style="display:flex;gap:12px;flex-wrap:wrap;"><div style="flex:1;min-width:110px;text-align:center;"><p style="font-size:11px;color:#9CA3AF;margin:0 0 2px;">Ticket promedio (mes)</p><p style="font-size:17px;font-weight:700;color:#1F2937;margin:0;">' + (pedidosMesActual > 0 ? "$" + ticketPromedio.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "\u2014") + '</p></div><div style="flex:1;min-width:110px;text-align:center;"><p style="font-size:11px;color:#9CA3AF;margin:0 0 2px;">Pedidos este mes</p><p style="font-size:17px;font-weight:700;color:#1F2937;margin:0;">' + pedidosMesActual + '</p></div><div style="flex:1;min-width:110px;text-align:center;"><p style="font-size:11px;color:#9CA3AF;margin:0 0 2px;">Mejor mes (6m)</p><p style="font-size:15px;font-weight:700;color:#059669;margin:0;">' + bestMes + " \xB7 $" + bestTotal.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + "</p></div></div></div>";
+  wrapper.innerHTML = statsHtml;
 }
 function initTopProductosChart() {
   const canvas = document.getElementById("topProductosChart");
@@ -275,7 +252,7 @@ function initTopProductosChart() {
     return s.type !== "abono" && s.type !== "anticipo";
   }).forEach(function(s) {
     (s.products || []).forEach(function(p) {
-      var nombre = p.name || p.nombre || "—";
+      var nombre = p.name || p.nombre || "\u2014";
       var qty = Number(p.quantity || p.cantidad || 1);
       var precio = Number(p.price || p.precio || 0);
       if (!prodMap[nombre]) prodMap[nombre] = { cantidad: 0, ingresos: 0 };
@@ -302,7 +279,7 @@ function initTopProductosChart() {
       _nodata.style.cssText = "text-align:center;color:#9ca3af;padding:24px;font-size:13px;";
       canvasParent.appendChild(_nodata);
     }
-    _nodata.textContent = "Sin ventas registradas aún";
+    _nodata.textContent = "Sin ventas registradas a\xFAn";
     return;
   }
   canvas.style.display = "";
@@ -313,7 +290,7 @@ function initTopProductosChart() {
     data: {
       labels: top10.map(function(e) {
         var n = e[0];
-        return n.length > 22 ? n.slice(0, 22) + "…" : n;
+        return n.length > 22 ? n.slice(0, 22) + "\u2026" : n;
       }),
       datasets: [{
         label: "Ingresos ($)",
@@ -350,7 +327,7 @@ function initTopProductosChart() {
   if (!topContainer.querySelector(".mk-export-png-btn")) {
     topContainer.insertAdjacentHTML(
       "afterbegin",
-      `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(topProductosChart, 'top-10-productos')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>`
+      `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(topProductosChart, 'top-10-productos')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">\u{1F4E5}</button>`
     );
   }
 }
@@ -362,7 +339,7 @@ function initMargenCategoriaChart() {
     var insertTarget = gridRef || reportesSection.querySelector(".grid") || reportesSection;
     insertTarget.insertAdjacentHTML(
       "beforeend",
-      '<div id="margenCategoriaWrap" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100" style="position:relative;"><h3 style="font-size:18px;font-weight:700;color:#1F2937;margin-bottom:16px;">📊 Margen por categoría</h3><div style="height:280px;position:relative;"><canvas id="margenCategoriaCanvas"></canvas></div></div>'
+      '<div id="margenCategoriaWrap" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100" style="position:relative;"><h3 style="font-size:18px;font-weight:700;color:#1F2937;margin-bottom:16px;">\u{1F4CA} Margen por categor\xEDa</h3><div style="height:280px;position:relative;"><canvas id="margenCategoriaCanvas"></canvas></div></div>'
     );
   }
   var canvas = document.getElementById("margenCategoriaCanvas");
@@ -396,7 +373,7 @@ function initMargenCategoriaChart() {
     var catMap = {};
     productos.forEach(function(p) {
       if (Number(p.price || 0) <= 0 || Number(p.cost || 0) <= 0) return;
-      var k = String(p.category || "Sin categoría");
+      var k = String(p.category || "Sin categor\xEDa");
       if (!catMap[k]) catMap[k] = [];
       catMap[k].push((Number(p.price) - Number(p.cost)) / Number(p.price) * 100);
     });
@@ -415,7 +392,7 @@ function initMargenCategoriaChart() {
     ctx.font = "14px Inter";
     ctx.fillStyle = "#9CA3AF";
     ctx.textAlign = "center";
-    ctx.fillText("Sin datos de categorías con costo y precio", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("Sin datos de categor\xEDas con costo y precio", canvas.width / 2, canvas.height / 2);
     return;
   }
   margenCategoriaChart = new Chart(ctx, {
@@ -457,7 +434,7 @@ function initMargenCategoriaChart() {
   if (wrap && !wrap.querySelector(".mk-export-png-btn")) {
     wrap.insertAdjacentHTML(
       "afterbegin",
-      `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(margenCategoriaChart, 'margen-por-categoria')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>`
+      `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(margenCategoriaChart, 'margen-por-categoria')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">\u{1F4E5}</button>`
     );
   }
 }
@@ -551,7 +528,7 @@ function renderTopProducts() {
     return s.type !== "abono" && s.type !== "anticipo";
   });
   if (_todasVentas.length === 0) {
-    el.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No hay ventas registradas aún</p>';
+    el.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No hay ventas registradas a\xFAn</p>';
     return;
   }
   const prodIdx = {};
@@ -603,11 +580,11 @@ function switchCategoryTab(mode) {
   if (mode === "inventario") {
     if (btnInv) btnInv.className = "px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-100 text-amber-800 border-2 border-amber-400";
     if (btnVen) btnVen.className = "px-4 py-1.5 rounded-full text-sm font-semibold bg-white text-gray-500 border-2 border-gray-200";
-    if (title) title.textContent = "Inventario por Categoría";
+    if (title) title.textContent = "Inventario por Categor\xEDa";
   } else {
     if (btnVen) btnVen.className = "px-4 py-1.5 rounded-full text-sm font-semibold bg-amber-100 text-amber-800 border-2 border-amber-400";
     if (btnInv) btnInv.className = "px-4 py-1.5 rounded-full text-sm font-semibold bg-white text-gray-500 border-2 border-gray-200";
-    if (title) title.textContent = "Ventas por Categoría";
+    if (title) title.textContent = "Ventas por Categor\xEDa";
   }
   initCategoryChart();
 }
@@ -635,7 +612,7 @@ function initCategoryChart() {
       (sale.products || []).forEach((item) => {
         const prod = (window.products || []).find((p) => String(p.id) === String(item.id) || p.name === item.name);
         const cat = (window.categories || []).find((c) => c.id === (prod ? prod.category : null));
-        const nom = cat ? cat.name : "Sin categoría";
+        const nom = cat ? cat.name : "Sin categor\xEDa";
         catMap[nom] = (catMap[nom] || 0) + item.price * item.quantity;
       });
     });
@@ -674,7 +651,7 @@ function initCategoryChart() {
     if (!catContainer.querySelector(".mk-export-png-btn")) {
       catContainer.insertAdjacentHTML(
         "afterbegin",
-        `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(categoryChart, 'categoria-` + categoryChartMode + `')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>`
+        `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(categoryChart, 'categoria-` + categoryChartMode + `')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">\u{1F4E5}</button>`
       );
     }
   }
@@ -695,9 +672,9 @@ function eliminarVentaHistorial(idOrIdx) {
   const _folio = _v ? _v.folio || `Venta #${idOrIdx}` : `Venta #${idOrIdx}`;
   const _total = _v ? ` por $${(_v.total || 0).toFixed(2)}` : "";
   const _cli = _v && _v.customer ? ` de ${_v.customer}` : "";
-  showConfirm(`¿Eliminar ${_folio}${_cli}${_total}?
+  showConfirm(`\xBFEliminar ${_folio}${_cli}${_total}?
 
-Esta acción no se puede deshacer y puede afectar los reportes.`, "🗑️ Eliminar venta del historial").then((ok) => {
+Esta acci\xF3n no se puede deshacer y puede afectar los reportes.`, "\u{1F5D1}\uFE0F Eliminar venta del historial").then((ok) => {
     if (!ok) return;
     let venta = (window.salesHistory || []).find((s) => s.id === idOrIdx);
     if (!venta && typeof idOrIdx === "number") venta = (window.salesHistory || [])[idOrIdx];
@@ -710,7 +687,7 @@ Esta acción no se puede deshacer y puede afectar los reportes.`, "🗑️ Elimi
     else if (typeof idOrIdx === "number") window.salesHistory.splice(idOrIdx, 1);
     if (typeof saveSalesHistory === "function") saveSalesHistory();
     renderSalesHistory();
-    manekiToastExport("🗑️ Venta eliminada del historial", "ok");
+    manekiToastExport("\u{1F5D1}\uFE0F Venta eliminada del historial", "ok");
   });
 }
 window.eliminarVentaHistorial = eliminarVentaHistorial;
@@ -736,9 +713,9 @@ function renderSalesHistory() {
   if (countEl) countEl.textContent = total > 0 ? `${total} venta${total !== 1 ? "s" : ""}` : "";
   if (total === 0) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="mk-empty" style="padding:40px 24px;">
-            <div class="mk-empty-icon">🧾</div>
-            <p class="mk-empty-title">Sin ventas en este período</p>
-            <p class="mk-empty-sub">Registra pedidos o ventas para verlas aquí.</p>
+            <div class="mk-empty-icon">\u{1F9FE}</div>
+            <p class="mk-empty-title">Sin ventas en este per\xEDodo</p>
+            <p class="mk-empty-sub">Registra pedidos o ventas para verlas aqu\xED.</p>
         </div></td></tr>`;
   } else {
     const typeColors = { abono: "text-yellow-600 bg-yellow-50", pedido: "text-purple-600 bg-purple-50", pos: "text-green-600 bg-green-50" };
@@ -754,8 +731,8 @@ function renderSalesHistory() {
                 <td class="px-6 py-3"><span class="text-sm ${mc}">${sale.method || "-"}</span></td>
                 <td class="px-6 py-3 text-gray-800 font-bold">$${Number(sale.total || 0).toFixed(2)}</td>
                 <td class="px-6 py-3 text-center flex gap-2 justify-center">
-                    <button onclick="abrirDetalleSaleById('${sale.id}')" style="background:#F5EDD8;border:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:16px;" title="Ver detalle">👁️</button>
-                    <button onclick="eliminarVentaHistorial('${sale.id}')" style="background:#FEE2E2;border:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:16px;" title="Eliminar">🗑️</button>
+                    <button onclick="abrirDetalleSaleById('${sale.id}')" style="background:#F5EDD8;border:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:16px;" title="Ver detalle">\u{1F441}\uFE0F</button>
+                    <button onclick="eliminarVentaHistorial('${sale.id}')" style="background:#FEE2E2;border:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:16px;" title="Eliminar">\u{1F5D1}\uFE0F</button>
                 </td>
             </tr>`;
     }).join("");
@@ -764,7 +741,7 @@ function renderSalesHistory() {
   const btnPrev = document.getElementById("btnSalesPrev");
   const btnNext = document.getElementById("btnSalesNext");
   const pagEl = document.getElementById("salesHistoryPagination");
-  if (pageInfo) pageInfo.textContent = totalPages > 1 ? `Página ${salesHistoryPage} de ${totalPages}` : "";
+  if (pageInfo) pageInfo.textContent = totalPages > 1 ? `P\xE1gina ${salesHistoryPage} de ${totalPages}` : "";
   if (btnPrev) btnPrev.disabled = salesHistoryPage <= 1;
   if (btnNext) btnNext.disabled = salesHistoryPage >= totalPages;
   if (pagEl) pagEl.style.display = totalPages > 1 ? "flex" : "none";
@@ -775,7 +752,7 @@ function renderSalesHistory() {
       _loadMoreBtn = document.createElement("div");
       _loadMoreBtn.id = "salesLoadMoreBtn";
       _loadMoreBtn.style.cssText = "text-align:center;margin-top:12px;";
-      _loadMoreBtn.innerHTML = `<button onclick="cargarMasVentas()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #C5A572;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más registros ↓</button>`;
+      _loadMoreBtn.innerHTML = `<button onclick="cargarMasVentas()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #C5A572;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar m\xE1s registros \u2193</button>`;
       const tableContainer = document.getElementById("salesHistoryTable")?.parentElement;
       if (tableContainer) tableContainer.appendChild(_loadMoreBtn);
     } else {
@@ -800,17 +777,17 @@ async function cargarMasVentas() {
       window.salesHistory = window.salesHistory;
       if (mas.length < 500) window._salesHistoryAllLoaded = true;
       renderSalesHistory();
-      manekiToastExport(`✅ ${mas.length} registros adicionales cargados`, "ok");
+      manekiToastExport(`\u2705 ${mas.length} registros adicionales cargados`, "ok");
     } else {
       window._salesHistoryAllLoaded = true;
       renderSalesHistory();
       manekiToastExport("Ya cargaste todos los registros", "ok");
     }
   } catch (e) {
-    manekiToastExport("Error al cargar más registros", "err");
+    manekiToastExport("Error al cargar m\xE1s registros", "err");
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "Cargar más registros ↓";
+      btn.textContent = "Cargar m\xE1s registros \u2193";
     }
   }
 }
@@ -855,7 +832,7 @@ function initChart() {
       }
     });
   });
-  const labels = last7Days.map((d) => ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][(/* @__PURE__ */ new Date(d + "T12:00:00")).getDay()]);
+  const labels = last7Days.map((d) => ["Dom", "Lun", "Mar", "Mi\xE9", "Jue", "Vie", "S\xE1b"][(/* @__PURE__ */ new Date(d + "T12:00:00")).getDay()]);
   const data = last7Days.map((d) => salesByDay[d]);
   const ctx = document.getElementById("salesChart")?.getContext("2d");
   if (!ctx) return;
@@ -881,7 +858,7 @@ function initChart() {
       if (!salesContainer.querySelector(".mk-export-png-btn")) {
         salesContainer.insertAdjacentHTML(
           "afterbegin",
-          `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(salesWeekChart, 'ventas-7-dias')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>`
+          `<button class="mk-export-png-btn" onclick="exportarGraficaPNG(salesWeekChart, 'ventas-7-dias')" title="Exportar como PNG" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">\u{1F4E5}</button>`
         );
       }
     }
@@ -893,7 +870,7 @@ function descargarReporteVentas() {
     manekiToastExport("No hay ventas para exportar.", "warn");
     return;
   }
-  const headers = ["Folio", "Fecha", "Hora", "Cliente", "Tipo", "Productos", "Total", "Método"];
+  const headers = ["Folio", "Fecha", "Hora", "Cliente", "Tipo", "Productos", "Total", "M\xE9todo"];
   const rows = _csvVentas.map((s) => [
     s.folio || s.id,
     s.date,
@@ -936,8 +913,8 @@ function _renderDetalleSale(sale, idx) {
   const el = (id) => document.getElementById(id);
   if (el("detalleSaleFolio")) el("detalleSaleFolio").textContent = sale.folio || "Venta #" + (idx + 1);
   if (el("detalleSaleTipo")) el("detalleSaleTipo").textContent = tipos[tipo] || "Venta";
-  if (el("detalleSaleFecha")) el("detalleSaleFecha").textContent = sale.date + (sale.time ? " · " + sale.time : "");
-  if (el("detalleSaleMetodo")) el("detalleSaleMetodo").textContent = sale.method || "—";
+  if (el("detalleSaleFecha")) el("detalleSaleFecha").textContent = sale.date + (sale.time ? " \xB7 " + sale.time : "");
+  if (el("detalleSaleMetodo")) el("detalleSaleMetodo").textContent = sale.method || "\u2014";
   if (el("detalleSaleCliente")) el("detalleSaleCliente").textContent = sale.customer || "Cliente General";
   const telBox = el("detalleSaleTelBox");
   const redesBox = el("detalleSaleRedesBox");
@@ -954,7 +931,7 @@ function _renderDetalleSale(sale, idx) {
     } else redesBox.classList.add("hidden");
   }
   const conceptoBox = el("detalleSaleConceptoBox");
-  const conceptoTxt = [sale.concept, sale.notas].filter(Boolean).join(" · ");
+  const conceptoTxt = [sale.concept, sale.notas].filter(Boolean).join(" \xB7 ");
   if (conceptoBox) {
     if (conceptoTxt) {
       conceptoBox.classList.remove("hidden");
@@ -967,7 +944,7 @@ function _renderDetalleSale(sale, idx) {
       const qty = Number(p.quantity || p.qty || 1);
       const prc = Number(p.price || p.subtotal || 0);
       return `<tr>
-                    <td class="px-4 py-2 text-gray-800 text-sm">${_esc(p.name || p.concept || "—")}</td>
+                    <td class="px-4 py-2 text-gray-800 text-sm">${_esc(p.name || p.concept || "\u2014")}</td>
                     <td class="px-4 py-2 text-center text-gray-600 text-sm">${qty}</td>
                     <td class="px-4 py-2 text-right text-gray-600 text-sm">$${prc.toFixed(2)}</td>
                     <td class="px-4 py-2 text-right text-gray-800 font-semibold text-sm">$${(prc * qty).toFixed(2)}</td>
@@ -1045,20 +1022,20 @@ function getAnalisisFechas() {
     const d = new Date(hoy);
     d.setDate(d.getDate() - 30);
     const _fd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    return { desde: _fd, hasta: hoyStr, label: "Últimos 30 días" };
+    return { desde: _fd, hasta: hoyStr, label: "\xDAltimos 30 d\xEDas" };
   }
   if (analisisPeriodoActual === "90") {
     const d = new Date(hoy);
     d.setDate(d.getDate() - 90);
     const _fd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    return { desde: _fd, hasta: hoyStr, label: "Últimos 90 días" };
+    return { desde: _fd, hasta: hoyStr, label: "\xDAltimos 90 d\xEDas" };
   }
   if (analisisPeriodoActual === "todo") return { desde: "2000-01-01", hasta: hoyStr, label: "Todo el historial" };
   if (analisisPeriodoActual === "custom") {
     return {
       desde: document.getElementById("analisisDesde")?.value || "2000-01-01",
       hasta: document.getElementById("analisisHasta")?.value || hoyStr,
-      label: `${document.getElementById("analisisDesde")?.value} → ${document.getElementById("analisisHasta")?.value}`
+      label: `${document.getElementById("analisisDesde")?.value} \u2192 ${document.getElementById("analisisHasta")?.value}`
     };
   }
   return { desde: "2000-01-01", hasta: hoyStr, label: "Todo el historial" };
@@ -1073,7 +1050,7 @@ function renderAnalisis() {
       const key = item.name || item.id || "Desconocido";
       if (!mapaProductos[key]) {
         const pi = (window.products || []).find((p) => String(p.id) === String(item.id) || p.name === item.name);
-        mapaProductos[key] = { nombre: key, unidades: 0, ingresos: 0, costoUnitario: pi ? Number(pi.cost || 0) : 0, emoji: pi ? pi.image || "📦" : "📦", vecesEnVentas: 0 };
+        mapaProductos[key] = { nombre: key, unidades: 0, ingresos: 0, costoUnitario: pi ? Number(pi.cost || 0) : 0, emoji: pi ? pi.image || "\u{1F4E6}" : "\u{1F4E6}", vecesEnVentas: 0 };
       }
       const c = Number(item.quantity || 1), pr = Number(item.price || item.subtotal || 0);
       mapaProductos[key].unidades += c;
@@ -1114,7 +1091,7 @@ function renderAnalisis() {
     const color = colores[i % colores.length];
     const mc = p.margen >= 40 ? "text-green-600" : p.margen >= 20 ? "text-yellow-600" : "text-red-500";
     const gc = p.ganancia >= 0 ? "text-green-600" : "text-red-500";
-    const med = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `<span class="text-gray-400 font-bold">${i + 1}</span>`;
+    const med = i === 0 ? "\u{1F947}" : i === 1 ? "\u{1F948}" : i === 2 ? "\u{1F949}" : `<span class="text-gray-400 font-bold">${i + 1}</span>`;
     return `<tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 text-center text-lg">${med}</td>
             <td class="px-6 py-4"><div class="flex items-center gap-3"><span class="text-2xl">${p.emoji}</span>
@@ -1171,7 +1148,7 @@ function renderAnalisisABC(lista, totalGanancia) {
   if (elID("abcBarraALabel")) elID("abcBarraALabel").textContent = `A: ${pct(A.length, sorted.length)}% de productos`;
   if (elID("abcBarraBLabel")) elID("abcBarraBLabel").textContent = `B: ${pct(B.length, sorted.length)}% de productos`;
   if (elID("abcBarraCLabel")) elID("abcBarraCLabel").textContent = `C: ${pct(C.length, sorted.length)}% de productos`;
-  const cfg = { A: { dot: "bg-green-500", rec: "🔒 Stock prioritario, no descontinuar" }, B: { dot: "bg-amber-500", rec: "📦 Reposición regular" }, C: { dot: "bg-gray-400", rec: "📉 Evaluar rentabilidad" } };
+  const cfg = { A: { dot: "bg-green-500", rec: "\u{1F512} Stock prioritario, no descontinuar" }, B: { dot: "bg-amber-500", rec: "\u{1F4E6} Reposici\xF3n regular" }, C: { dot: "bg-gray-400", rec: "\u{1F4C9} Evaluar rentabilidad" } };
   if (tbody) tbody.innerHTML = conClase.map((p) => {
     const c = cfg[p.clase], gc = p.ganancia >= 0 ? "text-green-700" : "text-red-500";
     return `<tr class="hover:bg-gray-50 ${p.clase === "A" ? "border-l-4 border-green-400" : p.clase === "B" ? "border-l-4 border-amber-400" : "border-l-4 border-gray-200"}">
@@ -1252,7 +1229,7 @@ function mostrarBannerConexion(connected, msg) {
   if (!banner) return;
   banner.style.background = connected ? "linear-gradient(135deg,#10B981,#059669)" : "linear-gradient(135deg,#F59E0B,#D97706)";
   banner.style.color = "white";
-  banner.textContent = (connected ? "🟢 " : "⚡ ") + (msg || (connected ? "Conexión restaurada" : "Sin conexión — modo offline"));
+  banner.textContent = (connected ? "\u{1F7E2} " : "\u26A1 ") + (msg || (connected ? "Conexi\xF3n restaurada" : "Sin conexi\xF3n \u2014 modo offline"));
   banner.style.display = "block";
   const badge = document.getElementById("supabaseOfflineBadge");
   if (badge) badge.classList.toggle("hidden", connected);
@@ -1285,14 +1262,30 @@ async function cambiarPIN() {
   const actual = document.getElementById("pinActual")?.value?.trim() || "";
   const nuevo = document.getElementById("pinNuevo")?.value?.trim() || "";
   if (!actual || !nuevo) {
-    manekiToastExport("⚠️ Completa ambos campos del PIN", "warn");
+    manekiToastExport("\u26A0\uFE0F Completa ambos campos del PIN", "warn");
     return;
   }
   if (nuevo.length < 4) {
-    manekiToastExport("⚠️ El nuevo PIN debe tener al menos 4 dígitos", "warn");
+    manekiToastExport("\u26A0\uFE0F El nuevo PIN debe tener al menos 4 d\xEDgitos", "warn");
     return;
   }
-  manekiToastExport("ℹ️ La protección con PIN se maneja desde el servidor (nginx Basic Auth)", "info");
+  if (typeof require === "undefined") {
+    manekiToastExport("\u274C Solo disponible en la app de escritorio", "err");
+    return;
+  }
+  try {
+    const { ipcRenderer } = require("electron");
+    const res = await ipcRenderer.invoke("change-pin", { pinActual: actual, pinNuevo: nuevo });
+    if (res.ok) {
+      manekiToastExport("\u2705 PIN actualizado correctamente", "ok");
+      if (document.getElementById("pinActual")) document.getElementById("pinActual").value = "";
+      if (document.getElementById("pinNuevo")) document.getElementById("pinNuevo").value = "";
+    } else {
+      manekiToastExport("\u274C " + (res.error || "Error al cambiar PIN"), "err");
+    }
+  } catch (e) {
+    manekiToastExport("\u274C Error: " + e.message, "err");
+  }
 }
 window.cambiarPIN = cambiarPIN;
 function mostrarResumenDia() {
@@ -1300,7 +1293,7 @@ function mostrarResumenDia() {
   const ventas = (window.salesHistory || []).filter((v) => v.date === hoy && v.method !== "Cancelado");
   const total = ventas.reduce((s, v) => s + (v.total || 0), 0);
   const pHoy = (window.pedidos || []).filter((p) => p.entrega === hoy && !["cancelado"].includes(p.status || ""));
-  manekiToastExport(`📊 Hoy: ${ventas.length} venta${ventas.length !== 1 ? "s" : ""} · $${total.toFixed(2)} · ${pHoy.length} entrega${pHoy.length !== 1 ? "s" : ""} programada${pHoy.length !== 1 ? "s" : ""}`, "ok");
+  manekiToastExport(`\u{1F4CA} Hoy: ${ventas.length} venta${ventas.length !== 1 ? "s" : ""} \xB7 $${total.toFixed(2)} \xB7 ${pHoy.length} entrega${pHoy.length !== 1 ? "s" : ""} programada${pHoy.length !== 1 ? "s" : ""}`, "ok");
 }
 window.mostrarResumenDia = mostrarResumenDia;
 document.addEventListener("DOMContentLoaded", function() {
@@ -1338,7 +1331,7 @@ function filtrarProductosPedido() {
   }
   grid.classList.remove("hidden");
   grid.innerHTML = lista.slice(0, 12).map((p) => {
-    const img = p.imageUrl ? `<img src="${p.imageUrl}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">` : `<div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-xl flex-shrink-0">${p.image || "📦"}</div>`;
+    const img = p.imageUrl ? `<img src="${p.imageUrl}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">` : `<div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-xl flex-shrink-0">${p.image || "\u{1F4E6}"}</div>`;
     return `<div onclick="seleccionarProductoPedido('${p.id}')"
             class="cursor-pointer border border-gray-200 rounded-xl p-2 hover:border-amber-400 hover:bg-amber-50 transition-all flex items-center gap-3">
             ${img}<div class="min-w-0">

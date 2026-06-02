@@ -253,27 +253,9 @@ function initComparativaMeses() {
         );
     }
 
-    // NTH: show best and worst month summary
-    const monthlyTotals = meses.map(function(lbl, i) { return { label: lbl, total: ventas[i] }; });
-    const hasData = monthlyTotals.some(function(m) { return m.total > 0; });
+    // Mejor/peor mes — ocultar del canvas (ya se muestra en ticketPromedioStats)
     var summaryEl = document.getElementById('mejorPeorMes');
-    if (!summaryEl) {
-        summaryEl = document.createElement('p');
-        summaryEl.id = 'mejorPeorMes';
-        summaryEl.className = 'text-sm text-center mt-2';
-        canvas.parentElement.appendChild(summaryEl);
-    }
-    if (hasData) {
-        const best  = monthlyTotals.reduce(function(a, b) { return a.total >= b.total ? a : b; });
-        const worst = monthlyTotals.reduce(function(a, b) { return a.total <= b.total ? a : b; });
-        summaryEl.innerHTML =
-            '<span class="text-green-600 font-semibold">📈 Mejor: ' + best.label + ' ($' + best.total.toLocaleString('es-MX') + ')</span>' +
-            '&nbsp;·&nbsp;' +
-            '<span class="text-red-500 font-semibold">📉 Peor: ' + worst.label + ' ($' + worst.total.toLocaleString('es-MX') + ')</span>';
-        summaryEl.style.display = '';
-    } else {
-        summaryEl.style.display = 'none';
-    }
+    if (summaryEl) summaryEl.style.display = 'none';
 }
 
 // ── MEJORA 5: Ticket promedio por mes ────────────────────────────────────────
@@ -307,25 +289,28 @@ function _renderTicketPromedioStats(meses, ventas, todasVentas, now) {
     var existingStats = document.getElementById(statsId);
     if (existingStats) existingStats.remove();
 
-    var chartSection = canvas.closest('div.bg-white') || canvas.parentElement;
-    if (!chartSection) return;
+    // Insertar en el wrapper dedicado (fuera del card del chart) para no alterar su altura
+    var wrapper = document.getElementById('ticketPromedioStatsWrapper') ||
+        canvas.closest('div.bg-white') || canvas.parentElement;
+    if (!wrapper) return;
 
-    var statsHtml = '<div id="' + statsId + '" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #F3F4F6;">' +
-        '<div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;">' +
-        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Ticket promedio (mes)</p>' +
-        '<p style="font-size:18px;font-weight:700;color:#1F2937;margin:0;">' + (pedidosMesActual > 0 ? '$' + ticketPromedio.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}) : '—') + '</p>' +
+    var statsHtml = '<div id="' + statsId + '" class="bg-white rounded-xl border border-gray-100 p-4">' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+        '<div style="flex:1;min-width:110px;text-align:center;">' +
+        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 2px;">Ticket promedio (mes)</p>' +
+        '<p style="font-size:17px;font-weight:700;color:#1F2937;margin:0;">' + (pedidosMesActual > 0 ? '$' + ticketPromedio.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}) : '—') + '</p>' +
         '</div>' +
-        '<div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;">' +
-        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Pedidos este mes</p>' +
-        '<p style="font-size:18px;font-weight:700;color:#1F2937;margin:0;">' + pedidosMesActual + ' pedidos</p>' +
+        '<div style="flex:1;min-width:110px;text-align:center;">' +
+        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 2px;">Pedidos este mes</p>' +
+        '<p style="font-size:17px;font-weight:700;color:#1F2937;margin:0;">' + pedidosMesActual + '</p>' +
         '</div>' +
-        '<div style="flex:1;min-width:120px;background:#F9FAFB;border-radius:12px;padding:12px;text-align:center;">' +
-        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 4px;">Mejor mes (6m)</p>' +
+        '<div style="flex:1;min-width:110px;text-align:center;">' +
+        '<p style="font-size:11px;color:#9CA3AF;margin:0 0 2px;">Mejor mes (6m)</p>' +
         '<p style="font-size:15px;font-weight:700;color:#059669;margin:0;">' + bestMes + ' · $' + bestTotal.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}) + '</p>' +
         '</div>' +
-        '</div>';
+        '</div></div>';
 
-    chartSection.insertAdjacentHTML('beforeend', statsHtml);
+    wrapper.innerHTML = statsHtml;
 }
 
 // ── MEJORA 2: Top 10 productos más vendidos (por ingresos, todo el historial) ─
