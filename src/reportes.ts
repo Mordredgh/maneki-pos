@@ -1393,10 +1393,13 @@ document.addEventListener('DOMContentLoaded', function() {
 function poblarSelectPedido() {
     const sel = document.getElementById('pedidoProductoSelect');
     if (!sel) return;
-    const lastId = (window.products||[]).length ? String((window.products||[])[(window.products||[]).length-1].id) : '';
-    const cacheKey = (window.products||[]).length + '_' + lastId;
-    if (sel._cacheKey === cacheKey) return;
-    sel._cacheKey = cacheKey;
+    const prods = window.products || [];
+    const lastId = prods.length ? String(prods[prods.length-1].id) : '';
+    // Hash incluye precios para invalidar al editar un producto
+    const priceSum = prods.reduce((s, p) => s + (parseFloat(p.price as any)||0), 0).toFixed(0);
+    const cacheKey = prods.length + '_' + lastId + '_' + priceSum;
+    if ((sel as any)._cacheKey === cacheKey) return;
+    (sel as any)._cacheKey = cacheKey;
     if (!(window.products||[]).length) { sel.innerHTML='<option value="">-- Sin productos en inventario --</option>'; return; }
     sel.innerHTML = '<option value="">-- Seleccionar producto (opcional) --</option>' +
         (window.products||[]).map(p => `<option value="${p.id}">${p.name} - $${Number(p.price).toFixed(2)}</option>`).join('');

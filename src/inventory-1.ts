@@ -906,9 +906,11 @@ function openAddProductModal() {
     window.modoEdicion = false; window.edicionProductoId = null;
     window.currentVariants = []; window.currentProductImage = null; window.currentProductImageFile = null;
     window._ptMpComponentes = [];
-    window._tagsActuales = [];
-    window._ptGaleriaUrls  = [];
-    window._ptGaleriaFiles = [];
+    window._ptVariants      = [];
+    window._ptTagsActuales  = [];
+    window._tagsActuales    = [];  // alias legacy
+    window._ptGaleriaUrls   = [];
+    window._ptGaleriaFiles  = [];
 
     const form = document.getElementById('ptForm');
     if (form) form.reset();
@@ -937,9 +939,11 @@ function closePtModal() {
     window.modoEdicion = false; window.edicionProductoId = null;
     window.currentVariants = []; window.currentProductImage = null; window.currentProductImageFile = null;
     window._ptMpComponentes = [];
-    window._tagsActuales = [];
-    window._ptGaleriaUrls = [];
-    window._ptGaleriaFiles = [];
+    window._ptVariants      = [];
+    window._ptTagsActuales  = [];
+    window._tagsActuales    = [];  // alias legacy
+    window._ptGaleriaUrls   = [];
+    window._ptGaleriaFiles  = [];
 }
 window.closePtModal = closePtModal;
 // Alias para compatibilidad

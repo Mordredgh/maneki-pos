@@ -862,7 +862,10 @@ function poblarSelectEmpaquesPedido() {
         (p.tags || []).some(t => t.toLowerCase() === 'empaques' || t.toLowerCase() === 'empaque')
     );
     sel.innerHTML = '<option value="">— Seleccionar empaque —</option>' +
-        empaques.map(p => `<option value="${p.id}">${p.name} (Stock: ${p.stock || 0})</option>`).join('');
+        empaques.map(p => {
+            const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (p.stock || 0);
+            return `<option value="${p.id}">${p.name} (Stock: ${stk})</option>`;
+        }).join('');
 }
 window.poblarSelectEmpaquesPedido = poblarSelectEmpaquesPedido;
 
