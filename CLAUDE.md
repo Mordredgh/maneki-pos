@@ -1,7 +1,7 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 2 junio 2026 — Sesión 6 (Errores consola + Kanban paginación + nginx PWA fix)
-> **Versión app:** 2.2.0 | **Service Worker:** v2.3.2 | **Branch:** fresh-start → master
+> **Última actualización:** 2 junio 2026 — Sesión 7 (N2 Swipe kanban + N3 QR scanner + N6 Año a año + N9 RFM + S2 RLS)
+> **Versión app:** 2.2.0 | **Service Worker:** v2.3.3 | **Branch:** fresh-start → master
 
 ---
 
@@ -269,6 +269,16 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 | U3/N4 | **Skeleton screens** inyectadas en `inventoryTable`, `pedidosTable`, `clientsTable` antes del Promise.all | `src/config.ts` |
 | N1 | **PWA install prompt** — `beforeinstallprompt` capturado; banner tras 3 visitas | `src/init.ts` |
 
+### Sesión 7 (2 junio 2026) — N2/N3/N6/N9/S2
+
+| # | Mejora | Archivos |
+|---|--------|---------|
+| N2 | **Swipe kanban mobile** — touch delegado en `#vistaKanban`; swipe derecha avanza estado, izquierda retrocede; cancela si vertical; añadido `data-id` a cards | `src/pedidos-1.ts`, `src/pedidos-2.ts` |
+| N3 | **QR/barcode scan inventario** — botón "Escanear" junto a buscador; usa `BarcodeDetector` API; fallback entrada manual; modal `qrScannerModal` | `src/inventory-1.ts`, `index.html` |
+| N6 | **Comparativa año a año** — gráfica de líneas 12 meses actual vs anterior; badge variación %; `initComparativaAnio()` en `initReports()` | `src/reportes.ts`, `index.html` |
+| N9 | **Segmentación RFM** — scoring quintiles R/F/M; 6 segmentos (Campeones/Leales/Prometedores/En riesgo/Hibernando/Ocasionales); click → tabla detalle | `src/clientes.ts`, `index.html` |
+| S2 | **RLS verificado** — `rowsecurity=true` confirmado en `store` y todas las tablas vía Supabase MCP | — |
+
 ### Sesión 6 (2 junio 2026) — Errores consola + Kanban + nginx PWA fix
 
 **Errores de consola corregidos (4/4):**
@@ -294,13 +304,11 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
 ## 🚨 PENDIENTES — Próxima Sesión
 
-| # | Área | Mejora |
-|---|------|--------|
-| N2 | Pedidos | Swipe en mobile para cambiar estado en kanban (touch drag entre columnas) |
-| N3 | Inventario | Código de barras / QR scan desde cámara para buscar productos |
-| N6 | Reportes | Comparativa año a año (actualmente solo mes a mes) |
-| N9 | Clientes | Segmentación RFM automática (Recencia, Frecuencia, Monto) |
-| S2 | Seguridad | Telegram Bot Token en `storeConfig` como string plano — no hay fix sin backend proxy; **verificar que RLS esté activo en tabla `store`** |
+*(Todas las mejoras de esta lista han sido implementadas — lista limpia para próxima sesión)*
+
+| # | Área | Nota |
+|---|------|------|
+| S2 | Seguridad | RLS **verificado activo** en tabla `store` y todas las tablas. Telegram Token en `storeConfig` sigue como string plano — requiere backend proxy para ofuscarlo más. |
 
 ---
 
