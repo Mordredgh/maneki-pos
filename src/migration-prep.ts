@@ -199,8 +199,7 @@ CREATE INDEX IF NOT EXISTS idx_products_category ON mk_products(category);
         console.log('%c📊 Maneki Migration Report', 'font-size:14px;font-weight:800;color:#C5A572');
         console.table(data);
         console.log(data._recommendation);
-        console.log('%c📝 SQL Schema:', 'font-weight:700');
-        console.log(this.getTargetSQL());
+        // SQL schema omitted from console in production — call this.getTargetSQL() manually if needed
         if (typeof manekiToastExport === 'function') {
             manekiToastExport(`📊 Datos: ${data._total.totalKB}KB en JSON blobs. ${data._recommendation}`, 'info');
         }

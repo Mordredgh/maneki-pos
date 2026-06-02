@@ -223,13 +223,27 @@ function saveStoreConfig() {
     manekiToastExport('Configuración guardada ✓', 'ok');
 }
 
+function _safeLogo(url) {
+    if (!url) return '';
+    try { const u = new URL(url); return (u.protocol === 'https:' || u.protocol === 'http:') ? url : ''; } catch { return ''; }
+}
 function updateSidebarLogo() {
     const c = document.getElementById('sidebarLogoContainer');
     if (!c) return;
-    if (storeConfig.logo) {
-        c.innerHTML = `<img src="${storeConfig.logo}" style="width:52px;height:52px;object-fit:contain;border-radius:12px;" alt="Logo">`;
+    const logoUrl = _safeLogo(storeConfig.logo);
+    if (logoUrl) {
+        c.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = logoUrl;
+        img.style.cssText = 'width:52px;height:52px;object-fit:contain;border-radius:12px;';
+        img.alt = 'Logo';
+        c.appendChild(img);
     } else {
-        c.innerHTML = `<span style="font-size:30px">${storeConfig.emoji || '🐱'}</span>`;
+        const span = document.createElement('span');
+        span.style.fontSize = '30px';
+        span.textContent = storeConfig.emoji || '🐱';
+        c.innerHTML = '';
+        c.appendChild(span);
     }
 }
 
@@ -240,9 +254,20 @@ function renderBienvenida() {
 
     const lc = document.getElementById('welcomeLogoContainer');
     if (lc) {
-        lc.innerHTML = storeConfig.logo
-            ? `<img src="${storeConfig.logo}" style="width:56px;height:56px;object-fit:contain;border-radius:12px;" alt="Logo">`
-            : `<span style="font-size:28px">${storeConfig.emoji || '🐱'}</span>`;
+        const logoUrl = _safeLogo(storeConfig.logo);
+        lc.innerHTML = '';
+        if (logoUrl) {
+            const img = document.createElement('img');
+            img.src = logoUrl;
+            img.style.cssText = 'width:56px;height:56px;object-fit:contain;border-radius:12px;';
+            img.alt = 'Logo';
+            lc.appendChild(img);
+        } else {
+            const span = document.createElement('span');
+            span.style.fontSize = '28px';
+            span.textContent = storeConfig.emoji || '🐱';
+            lc.appendChild(span);
+        }
     }
 
     const elSet = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };

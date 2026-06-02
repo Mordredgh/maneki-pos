@@ -320,7 +320,8 @@ document.getElementById("backupModal").addEventListener("click", function(e) {
       console.warn("[AutoBackup]", e);
     }
   }
-  setInterval(_doAutoBackup, INTERVAL_MS);
+  if (window._autoBackupInterval) clearInterval(window._autoBackupInterval);
+  window._autoBackupInterval = setInterval(_doAutoBackup, INTERVAL_MS);
   window.getUltimoAutoBackup = function() {
     const last = localStorage.getItem(LS_KEY);
     if (!last) return "Sin auto-backups a\xFAn";

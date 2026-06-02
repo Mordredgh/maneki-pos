@@ -715,6 +715,8 @@ function updatePedidosStats() {
   if (elCobrar) elCobrar.textContent = "$" + porCobrar.toFixed(2);
   if (elAnticipo) elAnticipo.textContent = "$" + anticipos.toFixed(2);
   if (elMes) elMes.textContent = esMes;
+  const elBadge = document.getElementById("pedidosCountBadge");
+  if (elBadge) elBadge.textContent = activos.length;
 }
 let _kanbanUrgenciaFiltro = "todos";
 function setKanbanUrgencia(filtro, btn) {
@@ -992,9 +994,11 @@ function renderTablaPedidos() {
             </td>
             <td class="px-4 py-3 text-xs text-gray-500">${_et(p.fechaPedido) || "\u2014"}</td>
             <td class="px-4 py-3 text-xs text-gray-500">${_et(p.entrega) || "\u2014"}</td>
-            <td class="px-4 py-3 text-sm font-bold text-gray-800">$${Number(p.total || 0).toFixed(2)}</td>
-            <td class="px-4 py-3 text-sm text-green-700">$${Number(p.anticipo || 0).toFixed(2)}</td>
-            <td class="px-4 py-3 text-sm font-bold ${_r > 0 ? "text-red-600" : "text-green-600"}">$${_r.toFixed(2)}<br>${_badge}</td>
+            <td class="px-4 py-3 text-xs leading-snug">
+                <div class="text-gray-500">Total: <span class="font-bold text-gray-800">$${Number(p.total || 0).toFixed(2)}</span></div>
+                <div class="text-gray-500">Anticipo: <span class="font-semibold text-green-700">$${Number(p.anticipo || 0).toFixed(2)}</span></div>
+                <div class="text-gray-500">Resta: <span class="font-bold ${_r > 0 ? "text-red-600" : "text-green-600"}">$${_r.toFixed(2)}</span> ${_badge}</div>
+            </td>
             <td class="px-4 py-3 text-xs">${statusLabel[(p.status || "").toLowerCase()] || p.status || "\u2014"}</td>
             <td class="px-4 py-3">
                 <div class="flex gap-1 flex-wrap">

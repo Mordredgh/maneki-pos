@@ -308,7 +308,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
       </div>
       <div class="flex flex-col items-start sm:items-end gap-2">
-        <p class="text-2xl font-bold text-gray-800" id="dashTime">&#8212;</p>
+        <p class="text-sm text-gray-400" id="dashTime">&#8212;</p>
         <div class="flex items-center gap-2 flex-wrap">
           <button onclick="togglePrivacidad()" id="privacyToggleBtn" class="mk-btn mk-btn-ghost" title="Ocultar montos">
             <i class="fas fa-eye" id="privacyIcon"></i>
@@ -1036,35 +1036,36 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(197,151,59,0.18) !important;">
-                                <i class="fas fa-users text-xl" style="color: #C5A572 !important;"></i>
-                            </div>
+                <!-- Stat-bar compacta — horizontal -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-wrap items-center gap-0 mb-6 overflow-hidden">
+                    <div class="flex items-center gap-3 px-5 py-3 flex-1 min-w-[160px]">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(197,151,59,0.18);">
+                            <i class="fas fa-users text-sm" style="color:#C5A572;"></i>
                         </div>
-                        <p class="text-gray-600 text-sm mb-1">Total Clientes</p>
-                        <h3 class="text-3xl font-bold text-gray-800" id="totalClients">0</h3>
+                        <div>
+                            <p class="text-xs text-gray-500 leading-tight">Total Clientes</p>
+                            <h3 class="text-xl font-bold text-gray-800 leading-tight" id="totalClients">0</h3>
+                        </div>
                     </div>
-
-                    <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: #FFF9F0;">
-                                <i class="fas fa-star text-xl" style="color: #C5A572 !important;"></i>
-                            </div>
+                    <div class="w-px self-stretch bg-gray-100 hidden sm:block"></div>
+                    <div class="flex items-center gap-3 px-5 py-3 flex-1 min-w-[160px]">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#FFF9F0;">
+                            <i class="fas fa-star text-sm" style="color:#C5A572;"></i>
                         </div>
-                        <p class="text-gray-600 text-sm mb-1">Clientes VIP</p>
-                        <h3 class="text-3xl font-bold text-gray-800" id="vipClients">0</h3>
+                        <div>
+                            <p class="text-xs text-gray-500 leading-tight">Clientes VIP</p>
+                            <h3 class="text-xl font-bold text-gray-800 leading-tight" id="vipClients">0</h3>
+                        </div>
                     </div>
-
-                    <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(197,151,59,0.18) !important;">
-                                <i class="fas fa-shopping-bag text-xl" style="color: #C5A572 !important;"></i>
-                            </div>
+                    <div class="w-px self-stretch bg-gray-100 hidden sm:block"></div>
+                    <div class="flex items-center gap-3 px-5 py-3 flex-1 min-w-[160px]">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(197,151,59,0.18);">
+                            <i class="fas fa-shopping-bag text-sm" style="color:#C5A572;"></i>
                         </div>
-                        <p class="text-gray-600 text-sm mb-1">Compras Totales</p>
-                        <h3 class="text-3xl font-bold text-gray-800" id="totalPurchases">$0</h3>
+                        <div>
+                            <p class="text-xs text-gray-500 leading-tight">Compras Totales</p>
+                            <h3 class="text-xl font-bold text-gray-800 leading-tight" id="totalPurchases">$0</h3>
+                        </div>
                     </div>
                 </div>
 
@@ -1448,40 +1449,63 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-3">
-                <i class="fas fa-percentage text-amber-500 text-xl"></i>
-                <div>
-                    <p class="font-semibold text-gray-700">% de ganancia destinado al ROI por pedido</p>
-                    <p class="text-xs text-gray-400">Este porcentaje se divide entre los equipos que usaste en cada pedido</p>
+        <!-- Tabs de navegación -->
+        <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
+            <button type="button" id="equipoTab-equipos" onclick="switchEquipoTab('equipos')"
+                class="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
+                style="background:#C5A572;color:white;">
+                <i class="fas fa-tools mr-1"></i> Equipos
+            </button>
+            <button type="button" id="equipoTab-roi" onclick="switchEquipoTab('roi')"
+                class="px-5 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500 hover:text-gray-700">
+                <i class="fas fa-chart-bar mr-1"></i> Avance ROI
+            </button>
+            <button type="button" id="equipoTab-historial" onclick="switchEquipoTab('historial')"
+                class="px-5 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500 hover:text-gray-700">
+                <i class="fas fa-history mr-1"></i> Historial
+            </button>
+        </div>
+
+        <!-- Tab: Equipos -->
+        <div id="equipoTabPanel-equipos">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-percentage text-amber-500 text-xl"></i>
+                    <div>
+                        <p class="font-semibold text-gray-700">% de ganancia destinado al ROI por pedido</p>
+                        <p class="text-xs text-gray-400">Este porcentaje se divide entre los equipos que usaste en cada pedido</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 ml-auto">
+                    <input type="number" id="roiPorcentajeGlobal" min="1" max="100" value="10" class="w-20 border-2 border-gray-200 rounded-xl px-3 py-2 text-center font-bold text-lg focus:border-amber-400 focus:outline-none" onchange="saveRoiConfig()">
+                    <span class="font-bold text-gray-600 text-lg">%</span>
+                    <button onclick="saveRoiConfig()" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#C5A572;">Guardar</button>
                 </div>
             </div>
-            <div class="flex items-center gap-2 ml-auto">
-                <input type="number" id="roiPorcentajeGlobal" min="1" max="100" value="10" class="w-20 border-2 border-gray-200 rounded-xl px-3 py-2 text-center font-bold text-lg focus:border-amber-400 focus:outline-none" onchange="saveRoiConfig()">
-                <span class="font-bold text-gray-600 text-lg">%</span>
-                <button onclick="saveRoiConfig()" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#C5A572;">Guardar</button>
+
+            <div id="equiposGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div class="col-span-full text-center py-16 text-gray-400">
+                    <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
+                    <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
+                    <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
+                    <button onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5A572;">+ Agregar equipo</button>
+                </div>
             </div>
         </div>
 
-        <div id="equiposGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            <div class="col-span-full text-center py-16 text-gray-400">
-                <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
-                <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
-                <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
-                <button onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5A572;">+ Agregar equipo</button>
+        <!-- Tab: Avance ROI -->
+        <div id="equipoTabPanel-roi" class="hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-700">📊 Avance ROI por Equipo</h3>
+                    <button onclick="renderGraficaROI()" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold">🔄 Actualizar</button>
+                </div>
+                <canvas id="roiBarChart" height="100"></canvas>
             </div>
         </div>
 
-        <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-700">📊 Avance ROI por Equipo</h3>
-                <button onclick="renderGraficaROI()" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold">🔄 Actualizar</button>
-            </div>
-            <canvas id="roiBarChart" height="100"></canvas>
-        </div>
-
-        <div class="mt-8">
-            <h3 class="text-xl font-bold text-gray-700 mb-4">📋 Historial de uso por pedido</h3>
+        <!-- Tab: Historial -->
+        <div id="equipoTabPanel-historial" class="hidden">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <table class="w-full text-sm">
                     <thead><tr class="border-b border-gray-100 bg-gray-50">
@@ -1506,43 +1530,66 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </section>
 
+<script>
+function switchEquipoTab(tab) {
+    ['equipos','roi','historial'].forEach(function(t) {
+        var btn = document.getElementById('equipoTab-' + t);
+        var panel = document.getElementById('equipoTabPanel-' + t);
+        if (!btn || !panel) return;
+        if (t === tab) {
+            btn.style.background = '#C5A572';
+            btn.style.color = 'white';
+            panel.classList.remove('hidden');
+        } else {
+            btn.style.background = '';
+            btn.style.color = '';
+            panel.classList.add('hidden');
+        }
+    });
+    if (tab === 'roi' && typeof renderGraficaROI === 'function') renderGraficaROI();
+}
+window.switchEquipoTab = switchEquipoTab;
+</script>
+
 <!-- EXTRACTABLE: pedidos-section (starts here, ~244 lines) -->
 <section id="pedidos-section" class="p-4 md:p-8 hidden">
     <div class="max-w-full mx-auto">
 
-        <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
-            <div class="mk-section-header" style="margin-bottom:8px;"><div class="mk-sh-icon">&#128236;</div><div class="mk-sh-text"><h2>Pedidos por Encargo</h2><p>Gestiona cada encargo de tus clientes</p></div></div>
-            <div class="flex items-center gap-3">
-
-                <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
-                    <button id="btnVistaKanban" onclick="setVistaPedidos('kanban')"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-                        style="background:#C5A572; color:white;">
-                        <i class="fas fa-columns mr-1"></i> Kanban
-                    </button>
-                    <button id="btnVistaTabla" onclick="setVistaPedidos('tabla')"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
-                        <i class="fas fa-table mr-1"></i> Tabla
-                    </button>
-                    <button id="btnVistaCalendario" onclick="setVistaPedidos('calendario')"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
-                        <i class="fas fa-calendar-alt mr-1"></i> Calendario
-                    </button>
-                </div>
-                <button onclick="toggleListaProduccion()" id="btnListaProduccion"
-                        class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                        style="background: linear-gradient(135deg,#9B7BC4,#C4A8E0)">
-                    <i class="fas fa-hammer"></i> Lista de Producción
+        <!-- Fila 1: título + badge de count -->
+        <div class="flex items-center gap-3 mb-3">
+            <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon">&#128236;</div><div class="mk-sh-text"><h2>Pedidos por Encargo</h2><p>Gestiona cada encargo de tus clientes</p></div></div>
+            <span id="pedidosCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(197,151,59,0.15);color:#C5A572;">0</span>
+        </div>
+        <!-- Fila 2: acciones / vista -->
+        <div class="flex flex-wrap items-center gap-2 mb-6">
+            <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
+                <button id="btnVistaKanban" onclick="setVistaPedidos('kanban')"
+                    class="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                    style="background:#C5A572; color:white;">
+                    <i class="fas fa-columns mr-1"></i> Kanban
                 </button>
-                <button onclick="manekiExportar('pedidos')"
-                        class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                        style="background: linear-gradient(135deg,#10B981,#059669)">
-                    <i class="fas fa-file-excel"></i> Exportar Excel
+                <button id="btnVistaTabla" onclick="setVistaPedidos('tabla')"
+                    class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
+                    <i class="fas fa-table mr-1"></i> Tabla
                 </button>
-                <button onclick="openPedidoModal()" class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
-                    <i class="fas fa-plus"></i> Nuevo Pedido
+                <button id="btnVistaCalendario" onclick="setVistaPedidos('calendario')"
+                    class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
+                    <i class="fas fa-calendar-alt mr-1"></i> Calendario
                 </button>
             </div>
+            <button onclick="toggleListaProduccion()" id="btnListaProduccion"
+                    class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
+                    style="background: linear-gradient(135deg,#9B7BC4,#C4A8E0)">
+                <i class="fas fa-hammer"></i> Lista de Producción
+            </button>
+            <button onclick="manekiExportar('pedidos')"
+                    class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
+                    style="background: linear-gradient(135deg,#10B981,#059669)">
+                <i class="fas fa-file-excel"></i> Exportar Excel
+            </button>
+            <button onclick="openPedidoModal()" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
+                <i class="fas fa-plus"></i> Nuevo Pedido
+            </button>
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -1696,9 +1743,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Concepto</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">F.Pedido</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">F.Entrega</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Total</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Anticipo</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Resta</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cobro</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Estado</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Acciones</th>
                         </tr></thead>
@@ -1780,65 +1825,65 @@ input:focus, select:focus, textarea:focus, button:focus {
     <label class="block text-sm font-semibold text-gray-700 mb-3">Tema de colores</label>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="themeSelector">
 
-        <div onclick="selectTheme('dorado')" data-theme="dorado"
-             class="theme-option cursor-pointer rounded-xl p-4 border-2 border-yellow-400 bg-yellow-50 transition-all">
+        <button type="button" onclick="selectTheme('dorado')" data-theme="dorado"
+             class="theme-option text-left rounded-xl p-4 border-2 border-yellow-400 bg-yellow-50 transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#C5A572;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#D8BFD8;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#FFF9F0;"></div>
             </div>
             <p class="text-xs font-semibold text-gray-700">✨ Dorado (default)</p>
-        </div>
+        </button>
 
-        <div onclick="selectTheme('rosas')" data-theme="rosas"
-             class="theme-option cursor-pointer rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
+        <button type="button" onclick="selectTheme('rosas')" data-theme="rosas"
+             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#E91E8C;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#FFB6C1;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#FFF0F5;"></div>
             </div>
             <p class="text-xs font-semibold text-gray-700">🌸 Rosa intenso</p>
-        </div>
+        </button>
 
-        <div onclick="selectTheme('morado')" data-theme="morado"
-             class="theme-option cursor-pointer rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
+        <button type="button" onclick="selectTheme('morado')" data-theme="morado"
+             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#7C3AED;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#C4B5FD;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#F5F3FF;"></div>
             </div>
             <p class="text-xs font-semibold text-gray-700">💜 Violeta</p>
-        </div>
+        </button>
 
-        <div onclick="selectTheme('verde')" data-theme="verde"
-             class="theme-option cursor-pointer rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
+        <button type="button" onclick="selectTheme('verde')" data-theme="verde"
+             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#059669;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#A7F3D0;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#ECFDF5;"></div>
             </div>
             <p class="text-xs font-semibold text-gray-700">🌿 Esmeralda</p>
-        </div>
+        </button>
 
-        <div onclick="selectTheme('azul')" data-theme="azul"
-             class="theme-option cursor-pointer rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
+        <button type="button" onclick="selectTheme('azul')" data-theme="azul"
+             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#2563EB;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#BFDBFE;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#EFF6FF;"></div>
             </div>
             <p class="text-xs font-semibold text-gray-700">🔵 Azul océano</p>
-        </div>
+        </button>
 
-        <div onclick="selectTheme('coral')" data-theme="coral"
-             class="theme-option cursor-pointer rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
+        <button type="button" onclick="selectTheme('coral')" data-theme="coral"
+             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#F97316;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#FED7AA;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#FFF7ED;"></div>
             </div>
             <p class="text-xs font-semibold text-gray-700">🪸 Coral</p>
-        </div>
+        </button>
 
     </div>
 </div>

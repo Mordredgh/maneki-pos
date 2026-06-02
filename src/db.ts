@@ -732,6 +732,7 @@ async function sbLoad(key, def) {
 }
 
 // Compatibilidad - ya no usamos localStorage directo
+// saveToLocalStorage is intentionally a no-op — Supabase + IndexedDB are the persistence layers
 function saveToLocalStorage(key, data) {}
 
 // BUG #15 FIX: getNextFolio con fallback offline

@@ -276,7 +276,8 @@ document.getElementById('backupModal').addEventListener('click', function(e) {
         }
     }
 
-    setInterval(_doAutoBackup, INTERVAL_MS);
+    if (window._autoBackupInterval) clearInterval(window._autoBackupInterval);
+    window._autoBackupInterval = setInterval(_doAutoBackup, INTERVAL_MS);
 
     // Mostrar timestamp en el modal de backup
     window.getUltimoAutoBackup = function() {

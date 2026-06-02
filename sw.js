@@ -1,4 +1,4 @@
-const CACHE_NAME = "maneki-v2.3.0";
+const CACHE_NAME = "maneki-v2.3.1";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -10,16 +10,31 @@ const STATIC_ASSETS = [
   "/js/icons.js",
   "/js/config-init.js",
   "/js/db.js",
-  "/js/app-data.js",
-  "/js/equipos.js",
   "/js/config.js",
-  "/js/dashboard.js",
-  "/js/ui-extras.js",
+  "/js/init.js",
+  "/js/design-system.js",
   "/js/navigation.js",
   "/js/lazy-loader.js",
-  "/js/design-system.js",
   "/js/templates.js",
-  "/js/init.js"
+  "/js/ui-extras.js",
+  "/js/dashboard.js",
+  "/js/app-data.js",
+  "/js/equipos.js",
+  "/js/pedidos-1.js",
+  "/js/pedidos-2.js",
+  "/js/pedidos-3.js",
+  "/js/inventory-1.js",
+  "/js/inventory-2.js",
+  "/js/inventory-3.js",
+  "/js/inventory-4.js",
+  "/js/inventory-5.js",
+  "/js/balance.js",
+  "/js/reportes.js",
+  "/js/clientes.js",
+  "/js/whatsapp.js",
+  "/js/backup.js",
+  "/js/envios.js",
+  "/js/categorias.js"
 ];
 
 self.addEventListener("install", (e) => {

@@ -30,16 +30,16 @@ window._mkMigrationPrep = {
       totalKB += kb;
     }
     report._total = { totalKB: Math.round(totalKB * 10) / 10 };
-    report._recommendation = totalKB > 500 ? "🔴 URGENTE: Más de 500KB en JSON blobs — migrar a tablas individuales" : totalKB > 100 ? "🟡 PRONTO: Datos creciendo — planear migración" : "🟢 OK por ahora, pero migrar antes de llegar a 500 registros por tabla";
+    report._recommendation = totalKB > 500 ? "\u{1F534} URGENTE: M\xE1s de 500KB en JSON blobs \u2014 migrar a tablas individuales" : totalKB > 100 ? "\u{1F7E1} PRONTO: Datos creciendo \u2014 planear migraci\xF3n" : "\u{1F7E2} OK por ahora, pero migrar antes de llegar a 500 registros por tabla";
     return report;
   },
   // SQL para crear las tablas objetivo (dry-run — solo muestra el SQL)
   getTargetSQL() {
     return `
--- ══════════════════════════════════════════════════
--- MANEKI STORE — Schema objetivo (tablas relacionales)
+-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+-- MANEKI STORE \u2014 Schema objetivo (tablas relacionales)
 -- Ejecutar en Supabase SQL Editor
--- ══════════════════════════════════════════════════
+-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 
 -- Productos / Inventario
 CREATE TABLE IF NOT EXISTS mk_products (
@@ -155,7 +155,7 @@ ALTER TABLE mk_sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mk_expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mk_incomes ENABLE ROW LEVEL SECURITY;
 
--- Política: anon key puede leer/escribir todo (app single-tenant)
+-- Pol\xEDtica: anon key puede leer/escribir todo (app single-tenant)
 CREATE POLICY "allow_all" ON mk_products FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "allow_all" ON mk_orders FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "allow_all" ON mk_clients FOR ALL USING (true) WITH CHECK (true);
@@ -163,7 +163,7 @@ CREATE POLICY "allow_all" ON mk_sales FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "allow_all" ON mk_expenses FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "allow_all" ON mk_incomes FOR ALL USING (true) WITH CHECK (true);
 
--- Índices para queries comunes
+-- \xCDndices para queries comunes
 CREATE INDEX IF NOT EXISTS idx_orders_folio ON mk_orders(folio);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON mk_orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_cliente ON mk_orders(cliente);
@@ -176,16 +176,14 @@ CREATE INDEX IF NOT EXISTS idx_products_category ON mk_products(category);
   // Mostrar reporte en consola
   async report() {
     const data = await this.estimateDataSize();
-    console.log("%c📊 Maneki Migration Report", "font-size:14px;font-weight:800;color:#C5A572");
+    console.log("%c\u{1F4CA} Maneki Migration Report", "font-size:14px;font-weight:800;color:#C5A572");
     console.table(data);
     console.log(data._recommendation);
-    console.log("%c📝 SQL Schema:", "font-weight:700");
-    console.log(this.getTargetSQL());
     if (typeof manekiToastExport === "function") {
-      manekiToastExport(`📊 Datos: ${data._total.totalKB}KB en JSON blobs. ${data._recommendation}`, "info");
+      manekiToastExport(`\u{1F4CA} Datos: ${data._total.totalKB}KB en JSON blobs. ${data._recommendation}`, "info");
     }
     return data;
   }
 };
-console.log("%c💡 Migration prep loaded — run _mkMigrationPrep.report() to see data analysis", "color:#9ca3af;font-size:10px");
+console.log("%c\u{1F4A1} Migration prep loaded \u2014 run _mkMigrationPrep.report() to see data analysis", "color:#9ca3af;font-size:10px");
 //# sourceMappingURL=migration-prep.js.map
