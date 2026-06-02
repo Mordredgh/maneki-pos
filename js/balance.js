@@ -210,6 +210,7 @@ function eliminarPedidoFinalizado(id) {
     savePedidosFinalizados();
     salesHistory = salesHistory.filter((s) => String(s.id) !== String(id));
     saveSalesHistory();
+    if (typeof _allVentasCache !== "undefined") _allVentasCache = null;
     renderHistorialPedidos();
     renderSalesHistory();
     manekiToastExport("\u{1F5D1}\uFE0F Pedido eliminado", "ok");

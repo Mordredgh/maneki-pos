@@ -147,7 +147,8 @@
       bar.insertBefore(bc, bar.firstChild);
     }
     const name = _sectionNames[section] || section;
-    bc.innerHTML = `<span style="opacity:.5">\u{1F431}</span><span class="bc-sep">\u203A</span><span class="bc-current">${name}</span>`;
+    const _safeName = typeof _esc === "function" ? _esc(name) : name.replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]);
+    bc.innerHTML = `<span style="opacity:.5">\u{1F431}</span><span class="bc-sep">\u203A</span><span class="bc-current">${_safeName}</span>`;
   };
   function _setupSidebarAccordion() {
     const sidebar = document.querySelector("#sidebar nav");

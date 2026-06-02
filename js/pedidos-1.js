@@ -271,7 +271,7 @@ function calcPedidoTotal() {
   if (typeof _calcularCostoProduccionPedido === "function") _calcularCostoProduccionPedido();
 }
 let _pedidoGuardando = false;
-document.getElementById("pedidoForm").addEventListener("submit", function(e) {
+document.getElementById("pedidoForm").addEventListener("submit", async function(e) {
   e.preventDefault();
   if (_pedidoGuardando) {
     manekiToastExport("Guardando, espera un momento...", "warn");
@@ -431,11 +431,12 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
         }
       }
       window.pedidos[idx] = { ...pActual, cliente, telefono, redes, whatsapp: telefono, facebook: redes, fechaPedido, entrega, concepto, cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad, pagos: pagosActualizados, productosInventario: (window.pedidoProductosSeleccionados || []).map((i) => ({ ...i })), empaques: (window.pedidoEmpaquesSeleccionados || []).map((e2) => ({ ...e2 })) };
-      savePedidos();
+      await savePedidos();
       if (window.MKS) MKS.notify();
       manekiToastExport("\u2705 Pedido actualizado.", "ok");
     }
   } else {
+    if (window._folioCounterReady) await window._folioCounterReady;
     const folio = generarFolioPedido();
     if (!folio) {
       manekiToastExport("\u26A0\uFE0F Error al generar folio. Intenta de nuevo.", "err");
@@ -475,7 +476,7 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
         id: mkId(),
         tipo: "anticipo",
         monto: anticipo,
-        fecha: (() => {
+        fecha: typeof _fechaHoy === "function" ? _fechaHoy() : (() => {
           const d = /* @__PURE__ */ new Date();
           return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
         })(),
@@ -491,7 +492,7 @@ document.getElementById("pedidoForm").addEventListener("submit", function(e) {
     window.pedidos.push(pedido);
     window.pedidoProductosSeleccionados = [];
     window.pedidoEmpaquesSeleccionados = [];
-    savePedidos();
+    await savePedidos();
     if (window.MKS) MKS.sale();
     manekiToastExport("\u2705 Pedido creado: " + pedido.folio, "ok");
   }

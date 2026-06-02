@@ -686,6 +686,7 @@ Esta acci\xF3n no se puede deshacer y puede afectar los reportes.`, "\u{1F5D1}\u
     if (idx !== -1) window.salesHistory.splice(idx, 1);
     else if (typeof idOrIdx === "number") window.salesHistory.splice(idOrIdx, 1);
     if (typeof saveSalesHistory === "function") saveSalesHistory();
+    _allVentasCache = null;
     renderSalesHistory();
     manekiToastExport("\u{1F5D1}\uFE0F Venta eliminada del historial", "ok");
   });

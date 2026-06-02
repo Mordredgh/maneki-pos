@@ -740,8 +740,12 @@ function saveToLocalStorage(key, data) {}
 // varias veces en rápida sucesión (ej: doble clic en botón de venta)
 let _localFolioCounters = {};
 let _folioLock = false;
-async function getNextFolio(tipo) {
-    if (_folioLock) { await new Promise(r => setTimeout(r, 100)); return getNextFolio(tipo); }
+async function getNextFolio(tipo, _retry = 0) {
+    if (_folioLock) {
+        if (_retry >= 20) throw new Error('[Maneki] getNextFolio: timeout esperando lock');
+        await new Promise(r => setTimeout(r, 100));
+        return getNextFolio(tipo, _retry + 1);
+    }
     _folioLock = true;
     try {
         const key = 'contador_' + tipo;

@@ -773,6 +773,7 @@ function eliminarVentaHistorial(idOrIdx) {
         if (idx !== -1) window.salesHistory.splice(idx, 1);
         else if (typeof idOrIdx==='number') window.salesHistory.splice(idOrIdx, 1);
         if (typeof saveSalesHistory === 'function') saveSalesHistory();
+        _allVentasCache = null;
         renderSalesHistory();
         manekiToastExport('🗑️ Venta eliminada del historial', 'ok');
     });

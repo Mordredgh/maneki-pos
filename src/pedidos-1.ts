@@ -324,7 +324,7 @@ function calcPedidoTotal() {
 
 // ── Submit formulario de pedido ──
 let _pedidoGuardando = false;
-document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+document.getElementById('pedidoForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     // FIX: mutex para evitar doble guardado por doble click
     if (_pedidoGuardando) { manekiToastExport('Guardando, espera un momento...', 'warn'); return; }
@@ -498,11 +498,12 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
 
             // Guardar alias móvil (whatsapp/facebook) para compatibilidad bidireccional
             window.pedidos[idx] = { ...pActual, cliente, telefono, redes, whatsapp: telefono, facebook: redes, fechaPedido, entrega, concepto, cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad, pagos: pagosActualizados, productosInventario: (window.pedidoProductosSeleccionados || []).map(i => ({...i})), empaques: (window.pedidoEmpaquesSeleccionados || []).map(e => ({...e})) };
-            savePedidos();
+            await savePedidos();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Pedido actualizado.', 'ok');
         }
     } else {
+        if (window._folioCounterReady) await window._folioCounterReady;
         const folio = generarFolioPedido();
         if (!folio) {
             manekiToastExport('⚠️ Error al generar folio. Intenta de nuevo.', 'err');
@@ -523,7 +524,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
                 id: mkId(),
                 tipo: 'anticipo',
                 monto: anticipo,
-                fecha: (()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })(),
+                fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })()),
                 hora: new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
                 metodo: 'efectivo', nota: 'Anticipo inicial'
             }] : [],
@@ -535,7 +536,7 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
         window.pedidos.push(pedido);
         window.pedidoProductosSeleccionados = [];
         window.pedidoEmpaquesSeleccionados = [];
-        savePedidos();
+        await savePedidos();
         if (window.MKS) MKS.sale();
         manekiToastExport('✅ Pedido creado: ' + pedido.folio, 'ok');
     }

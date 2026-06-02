@@ -172,11 +172,13 @@ function _descontarEmpaquesInventario(pedido) {
     const empaques = pedido.empaques || [];
     if (!empaques.length) return 0;
     let descontados = 0;
+    const stockOriginal = [];
     for (const emp of empaques) {
         const mp = (window.products || []).find(p => String(p.id) === String(emp.id));
         if (!_esProductoEmpaque(mp)) continue;
         const qty = emp.quantity || 1;
         const antes = mp.stock || 0;
+        stockOriginal.push({ mp, antes });
         mp.stock = Math.max(0, antes - qty);
         if (typeof registrarMovimiento === 'function') {
             registrarMovimiento({ productoId: mp.id, productoNombre: mp.name,
@@ -186,7 +188,14 @@ function _descontarEmpaquesInventario(pedido) {
         }
         descontados++;
     }
-    if (descontados > 0 && typeof saveProducts === 'function') saveProducts();
+    if (descontados > 0 && typeof saveProducts === 'function') {
+        try {
+            saveProducts();
+        } catch(e) {
+            stockOriginal.forEach(({ mp, antes }) => { mp.stock = antes; });
+            throw e;
+        }
+    }
     return descontados;
 }
 window._descontarEmpaquesInventario = _descontarEmpaquesInventario;
@@ -963,6 +972,7 @@ function _aplicarCambioLote() {
                     products: pedidoFin.productosInventario || []
                 });
                 if (typeof saveSalesHistory === 'function') saveSalesHistory();
+                if (typeof _allVentasCache !== 'undefined') _allVentasCache = null;
             }
             // Actualizar totalPurchases del cliente
             if (pedidoFin.cliente && typeof window.clients !== 'undefined') {

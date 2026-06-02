@@ -796,7 +796,7 @@ function mkMostrarUndoHint(descripcion) {
     hint.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9997;background:#1F2937;color:#fff;padding:8px 16px;border-radius:10px;font-size:.78rem;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .3s;white-space:nowrap;";
     document.body.appendChild(hint);
   }
-  hint.innerHTML = `<span>\u21A9\uFE0F ${descripcion}</span><kbd onclick="_mkUndo()" style="background:#374151;border:1px solid #4B5563;border-radius:5px;padding:2px 7px;font-size:.72rem;cursor:pointer;font-family:inherit;">Ctrl+Z</kbd>`;
+  hint.innerHTML = `<span>\u21A9\uFE0F ${typeof _esc === "function" ? _esc(descripcion) : descripcion}</span><kbd onclick="_mkUndo()" style="background:#374151;border:1px solid #4B5563;border-radius:5px;padding:2px 7px;font-size:.72rem;cursor:pointer;font-family:inherit;">Ctrl+Z</kbd>`;
   hint.style.opacity = "1";
   hint.style.display = "flex";
   _undoToastTimer = setTimeout(() => {

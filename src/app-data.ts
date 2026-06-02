@@ -149,6 +149,7 @@ function confirmarCancelPedido() {
         cancelacion: cancelacion
     });
     saveSalesHistory();
+    if (typeof _allVentasCache !== 'undefined') _allVentasCache = null;
 
     const tieneProductos = pedido.productosInventario && pedido.productosInventario.length > 0;
     function _ejecutarCancelacion(regresarStock) {
