@@ -33,7 +33,7 @@
 
     <link rel="stylesheet" href="maneki-premium.css">
   <!-- CDN Libraries -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="/css/tailwind.css">
   <!-- Chart.js: async para no bloquear render; lazy-loader lo prefetchea a 200ms -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" async crossorigin="anonymous"></script>
   <!-- Supabase: necesario al arranque para autenticación y datos -->
@@ -378,37 +378,33 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 
     <div class="mk-kpi-grid mb-5">
-      <div class="mk-card mk-kpi" style="background:linear-gradient(135deg,#fffbf5,#fff8ed);">
-        <div class="mk-kpi-blob" style="background:#C5A572;"></div>
-        <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#C5A572,#e8a844);box-shadow:0 4px 14px rgba(197,165,114,.4);">
-          <i class="fas fa-store" style="color:white;"></i>
+      <div class="mk-card mk-kpi">
+        <div class="mk-kpi-icon" style="background:rgba(197,165,114,0.15);">
+          <i class="fas fa-store" style="color:#C5A572;"></i>
         </div>
         <p class="mk-kpi-label">Ventas de hoy</p>
         <h3 class="mk-kpi-value privacy-target" id="dailySales" style="color:#92400e;"></h3>
         <p class="mk-kpi-sub"><span id="salesTrend" class="mk-kpi-badge" style="background:#fef3c7;color:#92400e;">hoy</span></p>
       </div>
-      <div class="mk-card mk-kpi" style="background:linear-gradient(135deg,#f0fdf9,#ecfdf5);">
-        <div class="mk-kpi-blob" style="background:#10b981;"></div>
-        <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 14px rgba(16,185,129,.4);">
-          <i class="fas fa-chart-line" style="color:white;"></i>
+      <div class="mk-card mk-kpi">
+        <div class="mk-kpi-icon" style="background:rgba(16,185,129,0.12);">
+          <i class="fas fa-chart-line" style="color:#10b981;"></i>
         </div>
         <p class="mk-kpi-label">Ganancia neta</p>
         <h3 class="mk-kpi-value privacy-target" id="netProfit" style="color:#065f46;"></h3>
         <div style="height:36px;position:relative;margin-top:8px;"><canvas id="sparklineGanancia" style="opacity:.8;"></canvas></div>
       </div>
-      <div class="mk-card mk-kpi clickable" onclick="showSection('pedidos')" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);">
-        <div class="mk-kpi-blob" style="background:#9B7BC4;"></div>
-        <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#9B7BC4,#C4A8E0);box-shadow:0 4px 14px rgba(155,123,196,.4);">
-          <i class="fas fa-clipboard-list" style="color:white;"></i>
+      <div class="mk-card mk-kpi clickable" onclick="showSection('pedidos')">
+        <div class="mk-kpi-icon" style="background:rgba(155,123,196,0.12);">
+          <i class="fas fa-clipboard-list" style="color:#9B7BC4;"></i>
         </div>
         <p class="mk-kpi-label">Pedidos activos</p>
         <h3 class="mk-kpi-value" id="dashActivePedidos" style="color:#3B2659;"></h3>
         <p class="mk-kpi-sub"><span class="mk-kpi-badge" style="background:#EDE5F8;color:#6B4A8E;">ver todos &#8594;</span></p>
       </div>
-      <div class="mk-card mk-kpi clickable" onclick="showSection('balance')" style="background:linear-gradient(135deg,#fff5f7,#ffe4ec);">
-        <div class="mk-kpi-blob" style="background:#FF6B9D;"></div>
-        <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#FF6B9D,#e11d74);box-shadow:0 4px 14px rgba(255,107,157,.4);">
-          <i class="fas fa-hand-holding-usd" style="color:white;"></i>
+      <div class="mk-card mk-kpi clickable" onclick="showSection('balance')">
+        <div class="mk-kpi-icon" style="background:rgba(255,107,157,0.12);">
+          <i class="fas fa-hand-holding-usd" style="color:#FF6B9D;"></i>
         </div>
         <p class="mk-kpi-label">Me deben</p>
         <h3 class="mk-kpi-value privacy-target" id="accountsReceivable" style="color:#9d174d;"></h3>
@@ -1530,26 +1526,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </section>
 
-<script>
-function switchEquipoTab(tab) {
-    ['equipos','roi','historial'].forEach(function(t) {
-        var btn = document.getElementById('equipoTab-' + t);
-        var panel = document.getElementById('equipoTabPanel-' + t);
-        if (!btn || !panel) return;
-        if (t === tab) {
-            btn.style.background = '#C5A572';
-            btn.style.color = 'white';
-            panel.classList.remove('hidden');
-        } else {
-            btn.style.background = '';
-            btn.style.color = '';
-            panel.classList.add('hidden');
-        }
-    });
-    if (tab === 'roi' && typeof renderGraficaROI === 'function') renderGraficaROI();
-}
-window.switchEquipoTab = switchEquipoTab;
-</script>
+<!-- switchEquipoTab defined in js/equipos.js -->
 
 <!-- EXTRACTABLE: pedidos-section (starts here, ~244 lines) -->
 <section id="pedidos-section" class="p-4 md:p-8 hidden">
@@ -1995,10 +1972,14 @@ window.switchEquipoTab = switchEquipoTab;
                     Guardar Configuración
                 </button>
 
-                <div class="mt-8 border-t border-red-100 pt-6">
-                  <h4 class="text-base font-bold text-red-600 mb-3 flex items-center gap-2">
-                    <i class="fas fa-exclamation-triangle"></i> Zona peligrosa
-                  </h4>
+                <div class="mt-10 pt-8" style="border-top:2px dashed #fca5a5;">
+                  <div class="flex items-center gap-3 mb-4 p-3 rounded-xl" style="background:#fff1f2;border:1px solid #fca5a5;">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-lg"></i>
+                    <div>
+                      <h4 class="text-sm font-bold text-red-700">Zona peligrosa</h4>
+                      <p class="text-xs text-red-400">Las acciones aquí son irreversibles. Procede con cuidado.</p>
+                    </div>
+                  </div>
 
                   <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
                     <p class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-lock mr-2 -dk" style="color:#C4A8E0;"></i>Cambiar PIN de acceso</p>

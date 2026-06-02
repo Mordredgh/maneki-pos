@@ -1,26 +1,2 @@
-(function() {
-  function _aplicarConfigSidebar(cfg) {
-    if (!cfg) return;
-    try {
-      if (cfg.logo) {
-        var c = document.getElementById("sidebarLogoContainer");
-        if (c) c.innerHTML = '<img src="' + cfg.logo + '" style="width:52px;height:52px;object-fit:contain;border-radius:12px;" alt="Logo">';
-      }
-      var h1 = document.querySelector("#sidebar .sidebar-store-name");
-      var p = document.querySelector("#sidebar .sidebar-store-slogan");
-      if (h1 && cfg.name) h1.textContent = cfg.name;
-      if (p && cfg.slogan) p.textContent = cfg.slogan;
-    } catch (e) {
-    }
-  }
-  try {
-    var raw = localStorage.getItem("maneki_storeConfig");
-    if (raw) _aplicarConfigSidebar(JSON.parse(raw));
-  } catch (e) {
-  }
-  try {
-    var cached = localStorage.getItem("mk_storeConfig");
-    if (cached) _aplicarConfigSidebar(JSON.parse(cached));
-  } catch (e) {}
-})();
+(function(){function n(e){if(e)try{if(e.logo){var t=document.getElementById("sidebarLogoContainer");t&&(t.innerHTML='<img src="'+e.logo+'" style="width:52px;height:52px;object-fit:contain;border-radius:12px;" alt="Logo">')}var a=document.querySelector("#sidebar .sidebar-store-name"),r=document.querySelector("#sidebar .sidebar-store-slogan");a&&e.name&&(a.textContent=e.name),r&&e.slogan&&(r.textContent=e.slogan)}catch{}}try{var o=localStorage.getItem("maneki_storeConfig");o&&n(JSON.parse(o))}catch{}function i(){try{var e=require("electron").ipcRenderer;e.invoke("sqlite-load",{key:"storeConfig"}).then(function(t){t&&t.ok&&t.value&&n(t.value)}).catch(function(){})}catch{document.readyState==="loading"&&document.addEventListener("DOMContentLoaded",function(){setTimeout(i,500)})}}i()})();
 //# sourceMappingURL=config-init.js.map

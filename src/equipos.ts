@@ -618,3 +618,23 @@ document.addEventListener('click', function(e) {
         if (dropdown) dropdown.classList.add('hidden');
     }
 });
+
+// ── Tabs de la sección Equipos/ROI ────────────────────────────────────────────
+function switchEquipoTab(tab) {
+    ['equipos', 'roi', 'historial'].forEach(function(t) {
+        const btn   = document.getElementById('equipoTab-' + t);
+        const panel = document.getElementById('equipoTabPanel-' + t);
+        if (!btn || !panel) return;
+        if (t === tab) {
+            btn.style.background = '#C5A572';
+            btn.style.color = 'white';
+            panel.classList.remove('hidden');
+        } else {
+            btn.style.background = '';
+            btn.style.color = '';
+            panel.classList.add('hidden');
+        }
+    });
+    if (tab === 'roi' && typeof renderGraficaROI === 'function') renderGraficaROI();
+}
+window.switchEquipoTab = switchEquipoTab;

@@ -1,182 +1,24 @@
-function renderCategoriesGrid() {
-  const grid = document.getElementById("categoriesGrid");
-  grid.innerHTML = categories.map((category) => {
-    const productCount = products.filter((p) => p.category === category.id).length;
-    const escColor = _esc(category.color || "#C5A572");
-    const escCatId = _esc(category.id);
-    return `
-                    <div class="category-card bg-white p-6 rounded-2xl shadow-sm border-2 transition-all hover:shadow-md" style="border-color: ${escColor}20; border-top: 4px solid ${escColor}">
+function renderCategoriesGrid(){const t=document.getElementById("categoriesGrid");t.innerHTML=categories.map(e=>{const o=products.filter(n=>n.category===e.id).length,a=_esc(e.color||"#C5A572"),r=_esc(e.id);return`
+                    <div class="category-card bg-white p-6 rounded-2xl shadow-sm border-2 transition-all hover:shadow-md" style="border-color: ${a}20; border-top: 4px solid ${a}">
                         <div class="flex items-start justify-between mb-4">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style="background: ${escColor}20">${_esc(category.emoji)}</div>
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style="background: ${a}20">${_esc(e.emoji)}</div>
                             <div class="flex gap-1">
-                                <button data-catid="${escCatId}" data-cataction="edit" class="cat-action-btn p-1.5 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-50 transition-colors" title="Editar categoría">
+                                <button data-catid="${r}" data-cataction="edit" class="cat-action-btn p-1.5 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-50 transition-colors" title="Editar categor\xEDa">
                                     <i class="fas fa-edit text-sm"></i>
                                 </button>
-                                <button data-catid="${escCatId}" data-cataction="delete" class="cat-action-btn p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Eliminar categoría">
+                                <button data-catid="${r}" data-cataction="delete" class="cat-action-btn p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Eliminar categor\xEDa">
                                     <i class="fas fa-trash text-sm"></i>
                                 </button>
                             </div>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-800 mb-1">${_esc(category.name)}</h3>
-                        <p class="text-sm font-medium" style="color: ${category.color || "#C5A572"}">${productCount} producto${productCount !== 1 ? "s" : ""}</p>
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">${_esc(e.name)}</h3>
+                        <p class="text-sm font-medium" style="color: ${e.color||"#C5A572"}">${o} producto${o!==1?"s":""}</p>
                     </div>
-                `;
-  }).join("");
-}
-document.addEventListener("click", function(e) {
-  const btn = e.target.closest(".cat-action-btn[data-catid]");
-  if (!btn) return;
-  const catId = btn.dataset.catid;
-  const action = btn.dataset.cataction;
-  if (action === "edit") editCategory(catId);
-  else if (action === "delete") deleteCategory(catId);
-});
-function selectCategoryColor(color) {
-  document.getElementById("categoryColor").value = color;
-  document.querySelectorAll(".color-btn").forEach((btn) => {
-    btn.style.borderColor = btn.dataset.color === color ? "#374151" : "transparent";
-    btn.style.transform = btn.dataset.color === color ? "scale(1.2)" : "scale(1)";
-  });
-}
-function closeAddCategoryModal() {
-  closeModal("addCategoryModal");
-  document.getElementById("addCategoryForm").reset();
-}
-document.getElementById("addCategoryForm").addEventListener("submit", function(e) {
-  e.preventDefault();
-  const name = document.getElementById("categoryName").value;
-  const emoji = document.getElementById("categoryEmoji").value;
-  let baseId = name.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_\u00e0-\u00ff]/g, "");
-  let id = baseId;
-  let suffix = 2;
-  while (categories.find((c) => c.id.toLowerCase() === id.toLowerCase())) {
-    id = baseId + "_" + suffix++;
-  }
-  const color = document.getElementById("categoryColor")?.value || "#C5A572";
-  const newCategory = {
-    id,
-    name,
-    emoji,
-    color
-  };
-  categories.push(newCategory);
-  saveCategories();
-  renderCategoriesGrid();
-  updateCategorySelects();
-  closeAddCategoryModal();
-  manekiToastExport("✅ Categoría creada exitosamente", "ok");
-});
-function deleteCategory(categoryId) {
-  const productsInCategory = products.filter((p) => p.category === categoryId).length;
-  if (productsInCategory > 0) {
-    manekiToastExport(`No puedes eliminar esta categoría: tiene ${productsInCategory} producto(s) asociado(s).`, "error");
-    return;
-  }
-  const cat = categories.find((c) => c.id === categoryId);
-  showConfirm(`La categoría "${cat ? cat.name : "esta categoría"}" será eliminada permanentemente.`, "⚠️ Eliminar categoría").then((ok) => {
-    if (!ok) return;
-    categories = categories.filter((c) => c.id !== categoryId);
-    saveCategories();
-    renderCategoriesGrid();
-    updateCategorySelects();
-  });
-}
-function editCategory(categoryId) {
-  const cat = categories.find((c) => c.id === categoryId);
-  if (!cat) return;
-  document.getElementById("editCategoryId").value = cat.id;
-  document.getElementById("editCategoryName").value = cat.name;
-  document.getElementById("editCategoryEmoji").value = cat.emoji || "📦";
-  document.getElementById("editSelectedEmojiDisplay").textContent = cat.emoji || "📦";
-  document.getElementById("editEmojiSearch").value = "";
-  document.getElementById("editCategoryColor").value = cat.color || "#C5A572";
-  openModal("editCategoryModal");
-  setTimeout(() => {
-    selectEditColor(cat.color || "#C5A572");
-    renderEditEmojiGrid();
-  }, 50);
-}
-function closeEditCategoryModal() {
-  closeModal("editCategoryModal");
-}
-function selectEditColor(color) {
-  document.getElementById("editCategoryColor").value = color;
-  document.querySelectorAll(".edit-color-btn").forEach((btn) => {
-    btn.style.borderColor = btn.dataset.color === color ? "#374151" : "transparent";
-    btn.style.transform = btn.dataset.color === color ? "scale(1.2)" : "scale(1)";
-  });
-}
-function renderEditEmojiGrid(filter = "") {
-  const grid = document.getElementById("editEmojiGrid");
-  if (!grid) return;
-  const q = filter.toLowerCase().trim();
-  const allE = emojiCategories.flatMap((cat) => cat.emojis);
-  if (q) {
-    const found = allE.filter((_, i) => true);
-    const keywords = { "regalo": ["🎁", "🎀", "🎊"], "ropa": ["👗", "👕", "👔"], "taza": ["☕", "🍵"], "llave": ["🔑", "🗝️"], "peluche": ["🧸", "🐻"], "joya": ["💍", "💎"] };
-    let res = [];
-    Object.entries(keywords).forEach(([k, v]) => {
-      if (k.includes(q) || q.includes(k)) res.push(...v);
-    });
-    if (res.length === 0) res = allE;
-    grid.innerHTML = `<div class="flex flex-wrap gap-1">${[...new Set(res)].map((e) => `<button type="button" onclick="selectEditEmoji('${e}')" class="edit-emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">${e}</button>`).join("")}</div>`;
-    return;
-  }
-  grid.innerHTML = emojiCategories.map((cat) => `
+                `}).join("")}document.addEventListener("click",function(t){const e=t.target.closest(".cat-action-btn[data-catid]");if(!e)return;const o=e.dataset.catid,a=e.dataset.cataction;a==="edit"?editCategory(o):a==="delete"&&deleteCategory(o)});function selectCategoryColor(t){document.getElementById("categoryColor").value=t,document.querySelectorAll(".color-btn").forEach(e=>{e.style.borderColor=e.dataset.color===t?"#374151":"transparent",e.style.transform=e.dataset.color===t?"scale(1.2)":"scale(1)"})}function closeAddCategoryModal(){closeModal("addCategoryModal"),document.getElementById("addCategoryForm").reset()}document.getElementById("addCategoryForm").addEventListener("submit",function(t){t.preventDefault();const e=document.getElementById("categoryName").value,o=document.getElementById("categoryEmoji").value;let a=e.toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_\u00e0-\u00ff]/g,""),r=a,n=2;for(;categories.find(c=>c.id.toLowerCase()===r.toLowerCase());)r=a+"_"+n++;const d=document.getElementById("categoryColor")?.value||"#C5A572",i={id:r,name:e,emoji:o,color:d};categories.push(i),saveCategories(),renderCategoriesGrid(),updateCategorySelects(),closeAddCategoryModal(),manekiToastExport("\u2705 Categor\xEDa creada exitosamente","ok")});function deleteCategory(t){const e=products.filter(a=>a.category===t).length;if(e>0){manekiToastExport(`No puedes eliminar esta categor\xEDa: tiene ${e} producto(s) asociado(s).`,"error");return}const o=categories.find(a=>a.id===t);showConfirm(`La categor\xEDa "${o?o.name:"esta categor\xEDa"}" ser\xE1 eliminada permanentemente.`,"\u26A0\uFE0F Eliminar categor\xEDa").then(a=>{a&&(categories=categories.filter(r=>r.id!==t),saveCategories(),renderCategoriesGrid(),updateCategorySelects())})}function editCategory(t){const e=categories.find(o=>o.id===t);e&&(document.getElementById("editCategoryId").value=e.id,document.getElementById("editCategoryName").value=e.name,document.getElementById("editCategoryEmoji").value=e.emoji||"\u{1F4E6}",document.getElementById("editSelectedEmojiDisplay").textContent=e.emoji||"\u{1F4E6}",document.getElementById("editEmojiSearch").value="",document.getElementById("editCategoryColor").value=e.color||"#C5A572",openModal("editCategoryModal"),setTimeout(()=>{selectEditColor(e.color||"#C5A572"),renderEditEmojiGrid()},50))}function closeEditCategoryModal(){closeModal("editCategoryModal")}function selectEditColor(t){document.getElementById("editCategoryColor").value=t,document.querySelectorAll(".edit-color-btn").forEach(e=>{e.style.borderColor=e.dataset.color===t?"#374151":"transparent",e.style.transform=e.dataset.color===t?"scale(1.2)":"scale(1)"})}function renderEditEmojiGrid(t=""){const e=document.getElementById("editEmojiGrid");if(!e)return;const o=t.toLowerCase().trim(),a=emojiCategories.flatMap(r=>r.emojis);if(o){const r=a.filter((i,c)=>!0),n={regalo:["\u{1F381}","\u{1F380}","\u{1F38A}"],ropa:["\u{1F457}","\u{1F455}","\u{1F454}"],taza:["\u2615","\u{1F375}"],llave:["\u{1F511}","\u{1F5DD}\uFE0F"],peluche:["\u{1F9F8}","\u{1F43B}"],joya:["\u{1F48D}","\u{1F48E}"]};let d=[];Object.entries(n).forEach(([i,c])=>{(i.includes(o)||o.includes(i))&&d.push(...c)}),d.length===0&&(d=a),e.innerHTML=`<div class="flex flex-wrap gap-1">${[...new Set(d)].map(i=>`<button type="button" onclick="selectEditEmoji('${i}')" class="edit-emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">${i}</button>`).join("")}</div>`;return}e.innerHTML=emojiCategories.map(r=>`
                 <div class="mb-2">
-                    <p class="text-xs font-semibold text-gray-400 mb-1">${cat.label}</p>
+                    <p class="text-xs font-semibold text-gray-400 mb-1">${r.label}</p>
                     <div class="flex flex-wrap gap-1">
-                        ${cat.emojis.map((e) => `<button type="button" onclick="selectEditEmoji('${e}')" class="edit-emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">${e}</button>`).join("")}
+                        ${r.emojis.map(n=>`<button type="button" onclick="selectEditEmoji('${n}')" class="edit-emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">${n}</button>`).join("")}
                     </div>
-                </div>`).join("");
-}
-function selectEditEmoji(emoji) {
-  document.getElementById("editCategoryEmoji").value = emoji;
-  document.getElementById("editSelectedEmojiDisplay").textContent = emoji;
-  document.querySelectorAll(".edit-emoji-btn").forEach((btn) => {
-    btn.style.background = btn.textContent.trim() === emoji ? "#FFF9F0" : "";
-    btn.style.border = btn.textContent.trim() === emoji ? "2px solid #C5A572" : "";
-  });
-}
-function filterEditEmojis(value) {
-  renderEditEmojiGrid(value);
-}
-function saveEditCategory() {
-  const id = document.getElementById("editCategoryId").value;
-  const name = document.getElementById("editCategoryName").value.trim();
-  const emoji = document.getElementById("editCategoryEmoji").value || "📦";
-  const color = document.getElementById("editCategoryColor").value || "#C5A572";
-  if (!name) {
-    manekiToastExport("⚠️ El nombre no puede estar vacío", "warn");
-    return;
-  }
-  const idx = categories.findIndex((c) => c.id === id);
-  if (idx === -1) return;
-  categories[idx].name = name;
-  categories[idx].emoji = emoji;
-  categories[idx].color = color;
-  products.forEach((p) => {
-    if (p.category === id && !p.imageUrl) p.image = emoji;
-  });
-  saveCategories();
-  saveProducts();
-  renderCategoriesGrid();
-  updateCategorySelects();
-  closeEditCategoryModal();
-  manekiToastExport("✅ Categoría actualizada", "ok");
-}
-function updateCategorySelects() {
-  const optionsHTML = categories.map(
-    (cat) => `<option value="${_esc(cat.id)}">${_esc(cat.emoji)} ${_esc(cat.name)}</option>`
-  ).join("");
-  ["productCategory", "ptCategory", "mpCategory"].forEach((id) => {
-    const select = document.getElementById(id);
-    if (!select) return;
-    const valorActual = select.value;
-    select.innerHTML = optionsHTML;
-    if (valorActual && select.querySelector(`option[value="${CSS.escape ? CSS.escape(valorActual) : valorActual}"]`)) {
-      select.value = valorActual;
-    }
-  });
-}
+                </div>`).join("")}function selectEditEmoji(t){document.getElementById("editCategoryEmoji").value=t,document.getElementById("editSelectedEmojiDisplay").textContent=t,document.querySelectorAll(".edit-emoji-btn").forEach(e=>{e.style.background=e.textContent.trim()===t?"#FFF9F0":"",e.style.border=e.textContent.trim()===t?"2px solid #C5A572":""})}function filterEditEmojis(t){renderEditEmojiGrid(t)}function saveEditCategory(){const t=document.getElementById("editCategoryId").value,e=document.getElementById("editCategoryName").value.trim(),o=document.getElementById("editCategoryEmoji").value||"\u{1F4E6}",a=document.getElementById("editCategoryColor").value||"#C5A572";if(!e){manekiToastExport("\u26A0\uFE0F El nombre no puede estar vac\xEDo","warn");return}const r=categories.findIndex(n=>n.id===t);r!==-1&&(categories[r].name=e,categories[r].emoji=o,categories[r].color=a,products.forEach(n=>{n.category===t&&!n.imageUrl&&(n.image=o)}),saveCategories(),saveProducts(),renderCategoriesGrid(),updateCategorySelects(),closeEditCategoryModal(),manekiToastExport("\u2705 Categor\xEDa actualizada","ok"))}function updateCategorySelects(){const t=categories.map(e=>`<option value="${_esc(e.id)}">${_esc(e.emoji)} ${_esc(e.name)}</option>`).join("");["productCategory","ptCategory","mpCategory"].forEach(e=>{const o=document.getElementById(e);if(!o)return;const a=o.value;o.innerHTML=t,a&&o.querySelector(`option[value="${CSS.escape?CSS.escape(a):a}"]`)&&(o.value=a)})}
 //# sourceMappingURL=categorias.js.map

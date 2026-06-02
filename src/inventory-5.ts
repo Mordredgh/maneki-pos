@@ -170,6 +170,35 @@ function renderInventoryTable() {
     // Poblar filtro de proveedores cada vez que se renderiza
     if (typeof poblarFiltroProveedores === 'function') poblarFiltroProveedores();
 
+    // ── Inyectar estilos para columnas ocultas (SKU/Proveedor) ──────────────
+    if (!document.getElementById('invExtraColStyles')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'invExtraColStyles';
+        styleEl.textContent = `
+            .inv-col-hidden-sku { display: none; }
+            .inv-col-hidden-prov { display: none; }
+            .inv-show-extra .inv-col-hidden-sku { display: table-cell; }
+            .inv-show-extra .inv-col-hidden-prov { display: table-cell; }
+        `;
+        document.head.appendChild(styleEl);
+    }
+
+    // ── Botón toggle SKU/Proveedor ──────────────────────────────────────────
+    let invToggleBtn = document.getElementById('invExtraColToggle');
+    if (!invToggleBtn) {
+        invToggleBtn = document.createElement('button');
+        invToggleBtn.id = 'invExtraColToggle';
+        invToggleBtn.style.cssText = 'padding:6px 14px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.8rem;font-weight:600;color:#6b7280;cursor:pointer;margin-bottom:10px;';
+        invToggleBtn.textContent = 'Mostrar SKU/Proveedor';
+        invToggleBtn.addEventListener('click', () => {
+            const dc = document.getElementById('invDualContainer');
+            if (!dc) return;
+            const showing = dc.classList.toggle('inv-show-extra');
+            invToggleBtn.textContent = showing ? 'Ocultar SKU/Proveedor' : 'Mostrar SKU/Proveedor';
+        });
+        dualContainer.parentNode.insertBefore(invToggleBtn, dualContainer);
+    }
+
     if (allProducts.length === 0) {
         dualContainer.innerHTML = `
         <div class="mk-empty" style="padding:48px 24px;text-align:center;">
@@ -267,10 +296,10 @@ function renderInventoryTable() {
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#f3e8ff;color:#7c3aed;border:1px solid #e9d5ff;">${_esc(t)}</span>`).join('')}</div>` : ''}
                 </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3" style="font-size:.85rem;color:#7c3aed;font-weight:600;">$${Number(product.cost||0).toFixed(2)}</td>
-            <td class="px-4 py-3 text-gray-500 text-sm">${_esc(product.proveedor||'—')}</td>
+            <td class="px-4 py-3 text-gray-500 text-sm inv-col-hidden-prov">${_esc(product.proveedor||'—')}</td>
             <td class="px-4 py-3 font-semibold" id="stock-cell-${pid}">
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
                     <span ondblclick="editarStockInline('${pid}')" title="Doble clic para editar"
@@ -319,7 +348,7 @@ function renderInventoryTable() {
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;">${_esc(t)}</span>`).join('')}</div>` : ''}
                 </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3" style="font-size:.95rem;font-weight:700;color:#6d28d9;">$${Number(product.cost||0).toFixed(2)}</td>
             <td class="px-4 py-3"><span style="font-size:11px;background:#ede9fe;color:#6d28d9;padding:3px 10px;border-radius:99px;font-weight:700;">Sin stock</span></td>
             <td class="px-2 py-3">
@@ -421,7 +450,7 @@ function renderInventoryTable() {
                     ${(() => { const _prod = calcularProducibles(product); if (_prod === null) return ''; const _pclr = _prod >= 5 ? '#16a34a' : _prod >= 1 ? '#d97706' : '#dc2626'; const _pbg = _prod >= 5 ? '#d1fae5' : _prod >= 1 ? '#fef3c7' : '#fee2e2'; const _txt = _prod === 0 ? 'Sin stock MP' : `Producibles: ${_prod}`; return `<div style="margin-top:3px;"><span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:99px;background:${_pbg};color:${_pclr};border:1px solid ${_pclr}33;">🏭 ${_txt}</span></div>`; })()}
                 </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
             <td class="px-4 py-3 text-gray-800 font-semibold" style="font-size:.95rem;">$${Number(product.price||0).toFixed(2)}</td>
@@ -526,7 +555,7 @@ function renderInventoryTable() {
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;">${_esc(t)}</span>`).join('')}</div>` : ''}
                 </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku||'—')}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm">${_esc(catName)}</td>
             <td class="px-4 py-3"><div style="display:flex;flex-wrap:wrap;gap:3px;">${tablaHTML}</div></td>
             <td class="px-4 py-3">${precioCell}</td>
@@ -569,12 +598,12 @@ function renderInventoryTable() {
             ? `<tr><td colspan="${headers.length}" style="padding:32px;text-align:center;color:#9ca3af;font-size:.85rem;">${emptyMsg}</td></tr>`
             : paginated.map((p, i) => renderFila(p, i)).join('');
 
-        const headersHTML = headers.map(h =>
-            h.sortKey
-                ? `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide sortable-th cursor-pointer select-none"
-                      onclick="sortInventory('${h.sortKey}')" style="white-space:nowrap;">${h.label} ↕</th>`
-                : `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide" style="white-space:nowrap;">${h.label}</th>`
-        ).join('');
+        const headersHTML = headers.map(h => {
+            const cls = h.colId === 'sku' ? ' inv-col-hidden-sku' : h.colId === 'proveedor' ? ' inv-col-hidden-prov' : '';
+            return h.sortKey
+                ? `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide sortable-th cursor-pointer select-none${cls}" onclick="sortInventory('${h.sortKey}')" style="white-space:nowrap;">${h.label} ↕</th>`
+                : `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide${cls}" style="white-space:nowrap;">${h.label}</th>`;
+        }).join('');
 
         // Paginación
         let pagHTML = '';
@@ -687,7 +716,7 @@ function renderInventoryTable() {
                 {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
                 {label:''},
                 {label:'Producto', sortKey:'name'},
-                {label:'SKU', sortKey:'sku'},
+                {label:'SKU', sortKey:'sku', colId:'sku'},
                 {label:'Categoría', sortKey:'category'},
                 {label:'Variantes'},
                 {label:'Precio', sortKey:'price'},
@@ -712,7 +741,7 @@ function renderInventoryTable() {
                 {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
-                {label:'SKU', sortKey:'sku'},
+                {label:'SKU', sortKey:'sku', colId:'sku'},
                 {label:'Categoría', sortKey:'category'},
                 {label:'Tabla de precios'},
                 {label:'Precio/pza', sortKey:'price'},
@@ -737,10 +766,10 @@ function renderInventoryTable() {
                 {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
-                {label:'SKU', sortKey:'sku'},
+                {label:'SKU', sortKey:'sku', colId:'sku'},
                 {label:'Categoría', sortKey:'category'},
                 {label:'Costo'},
-                {label:'Proveedor'},
+                {label:'Proveedor', colId:'proveedor'},
                 {label:'Stock', sortKey:'stock'},
                 {label:'Estado'},
                 {label:'Acciones'},
@@ -761,7 +790,7 @@ function renderInventoryTable() {
                 {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
-                {label:'SKU', sortKey:'sku'},
+                {label:'SKU', sortKey:'sku', colId:'sku'},
                 {label:'Costo/uso'},
                 {label:'Estado'},
                 {label:'Acciones'},

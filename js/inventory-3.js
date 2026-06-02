@@ -1,99 +1,14 @@
-function _resetMpVariantesUI() {
-  window._mpVariantes = [];
-  const chk = document.getElementById("mpUsaVariantes");
-  if (chk) chk.checked = false;
-  const panel = document.getElementById("mpVariantesPanel");
-  if (panel) panel.style.display = "none";
-  const slider = document.getElementById("mpVariantesSlider");
-  if (slider) slider.style.background = "#d1d5db";
-  const thumb = document.getElementById("mpVariantesThumb");
-  if (thumb) thumb.style.left = "3px";
-  const stockRow = document.getElementById("mpStockRow");
-  if (stockRow) {
-    stockRow.style.opacity = "1";
-  }
-  const stockEl = document.getElementById("mpStock");
-  if (stockEl) {
-    stockEl.readOnly = false;
-    stockEl.value = 0;
-  }
-  const listEl = document.getElementById("mpVariantesList");
-  if (listEl) listEl.innerHTML = '<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>';
-  const totalBox = document.getElementById("mpVariantesStockTotal");
-  if (totalBox) totalBox.style.display = "none";
-}
-function closeMateriaPrimaModal() {
-  if (typeof closeModal === "function") closeModal("mpModal");
-  const form = document.getElementById("mpForm");
-  if (form) form.reset();
-  window.modoEdicion = false;
-  window.edicionProductoId = null;
-  window.currentProductImage = null;
-  window.currentProductImageFile = null;
-  window._mpTagsActuales = [];
-  _resetMpVariantesUI();
-  renderMpTags();
-}
-window.closeMateriaPrimaModal = closeMateriaPrimaModal;
-function renderMpTags() {
-  const container = document.getElementById("mpTagsGrid");
-  if (!container) return;
-  container.innerHTML = TAGS_MATERIA_PRIMA.map((tag) => {
-    const active = (window._mpTagsActuales || []).includes(tag);
-    return `<button type="button" onclick="toggleMpTag('${tag}')"
-            id="mptag-${tag.replace(/[^a-zA-Z0-9]/g, "")}"
+function _resetMpVariantesUI(){window._mpVariantes=[];const t=document.getElementById("mpUsaVariantes");t&&(t.checked=!1);const e=document.getElementById("mpVariantesPanel");e&&(e.style.display="none");const o=document.getElementById("mpVariantesSlider");o&&(o.style.background="#d1d5db");const n=document.getElementById("mpVariantesThumb");n&&(n.style.left="3px");const a=document.getElementById("mpStockRow");a&&(a.style.opacity="1");const i=document.getElementById("mpStock");i&&(i.readOnly=!1,i.value=0);const r=document.getElementById("mpVariantesList");r&&(r.innerHTML='<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>');const d=document.getElementById("mpVariantesStockTotal");d&&(d.style.display="none")}function closeMateriaPrimaModal(){typeof closeModal=="function"&&closeModal("mpModal");const t=document.getElementById("mpForm");t&&t.reset(),window.modoEdicion=!1,window.edicionProductoId=null,window.currentProductImage=null,window.currentProductImageFile=null,window._mpTagsActuales=[],_resetMpVariantesUI(),renderMpTags()}window.closeMateriaPrimaModal=closeMateriaPrimaModal;function renderMpTags(){const t=document.getElementById("mpTagsGrid");if(!t)return;t.innerHTML=TAGS_MATERIA_PRIMA.map(o=>{const n=(window._mpTagsActuales||[]).includes(o);return`<button type="button" onclick="toggleMpTag('${o}')"
+            id="mptag-${o.replace(/[^a-zA-Z0-9]/g,"")}"
             style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
-                border:1.5px solid ${active ? "#C5A572" : "#e5e7eb"};
-                background:${active ? "#FFF9F0" : "#fff"};
-                color:${active ? "#92400e" : "#6b7280"};">
-            ${tag}
-        </button>`;
-  }).join("");
-  const customContainer = document.getElementById("mpTagsCustomSelected");
-  if (customContainer) {
-    const customTags = (window._mpTagsActuales || []).filter((t) => !TAGS_MATERIA_PRIMA.includes(t));
-    customContainer.innerHTML = customTags.map(
-      (t) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fef3c7;border:1px solid #fde68a;border-radius:99px;font-size:12px;font-weight:600;color:#92400e;">
-                ${_esc(t)}
-                <button type="button" onclick="removeMpTag('${_esc(t)}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 1px;line-height:1;">\u2715</button>
-            </span>`
-    ).join("");
-  }
-}
-window.renderMpTags = renderMpTags;
-function toggleMpTag(tag) {
-  window._mpTagsActuales = window._mpTagsActuales || [];
-  const idx = window._mpTagsActuales.indexOf(tag);
-  if (idx > -1) window._mpTagsActuales.splice(idx, 1);
-  else window._mpTagsActuales.push(tag);
-  renderMpTags();
-}
-window.toggleMpTag = toggleMpTag;
-function removeMpTag(tag) {
-  window._mpTagsActuales = (window._mpTagsActuales || []).filter((t) => t !== tag);
-  renderMpTags();
-}
-window.removeMpTag = removeMpTag;
-function agregarMpTagCustom() {
-  const input = document.getElementById("mpTagCustomInput");
-  if (!input) return;
-  const val = input.value.trim();
-  if (!val) return;
-  window._mpTagsActuales = window._mpTagsActuales || [];
-  if (!window._mpTagsActuales.includes(val)) {
-    window._mpTagsActuales.push(val);
-    renderMpTags();
-  }
-  input.value = "";
-  input.focus();
-}
-window.agregarMpTagCustom = agregarMpTagCustom;
-function injectMpModal() {
-  if (document.getElementById("mpModal")) return;
-  const modal = document.createElement("div");
-  modal.id = "mpModal";
-  modal.className = "modal";
-  modal.innerHTML = `
+                border:1.5px solid ${n?"#C5A572":"#e5e7eb"};
+                background:${n?"#FFF9F0":"#fff"};
+                color:${n?"#92400e":"#6b7280"};">
+            ${o}
+        </button>`}).join("");const e=document.getElementById("mpTagsCustomSelected");if(e){const o=(window._mpTagsActuales||[]).filter(n=>!TAGS_MATERIA_PRIMA.includes(n));e.innerHTML=o.map(n=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fef3c7;border:1px solid #fde68a;border-radius:99px;font-size:12px;font-weight:600;color:#92400e;">
+                ${_esc(n)}
+                <button type="button" onclick="removeMpTag('${_esc(n)}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;padding:0 1px;line-height:1;">\u2715</button>
+            </span>`).join("")}}window.renderMpTags=renderMpTags;function toggleMpTag(t){window._mpTagsActuales=window._mpTagsActuales||[];const e=window._mpTagsActuales.indexOf(t);e>-1?window._mpTagsActuales.splice(e,1):window._mpTagsActuales.push(t),renderMpTags()}window.toggleMpTag=toggleMpTag;function removeMpTag(t){window._mpTagsActuales=(window._mpTagsActuales||[]).filter(e=>e!==t),renderMpTags()}window.removeMpTag=removeMpTag;function agregarMpTagCustom(){const t=document.getElementById("mpTagCustomInput");if(!t)return;const e=t.value.trim();e&&(window._mpTagsActuales=window._mpTagsActuales||[],window._mpTagsActuales.includes(e)||(window._mpTagsActuales.push(e),renderMpTags()),t.value="",t.focus())}window.agregarMpTagCustom=agregarMpTagCustom;function injectMpModal(){if(document.getElementById("mpModal"))return;const t=document.createElement("div");t.id="mpModal",t.className="modal",t.innerHTML=`
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 animate-fade-in" style="margin-left:auto;margin-right:auto;max-height:92vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800">\u{1F3ED} Nueva Materia Prima</h3>
@@ -320,44 +235,7 @@ function injectMpModal() {
                 \u2705 Guardar Materia Prima
             </button>
         </form>
-    </div>`;
-  document.body.appendChild(modal);
-  setTimeout(() => {
-    const input = document.getElementById("mpProductImage");
-    if (input && !input._mkBound) {
-      input._mkBound = true;
-      input.addEventListener("change", function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        window.currentProductImageFile = file;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const img = document.getElementById("mpPreviewImg");
-          const pre = document.getElementById("mpImagePreview");
-          if (img) img.src = ev.target.result;
-          if (pre) pre.classList.remove("hidden");
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-    const mpForm = document.getElementById("mpForm");
-    if (mpForm && !mpForm._mkSubmitBound) {
-      mpForm._mkSubmitBound = true;
-      mpForm.addEventListener("submit", async function(e) {
-        e.preventDefault();
-        await guardarMateriaPrima();
-      });
-    }
-  }, 100);
-}
-window.injectMpModal = injectMpModal;
-const _SVC_EMOJIS = ["\u2699\uFE0F", "\u{1F527}", "\u{1F4A1}", "\u{1F5A8}\uFE0F", "\u2702\uFE0F", "\u{1F529}", "\u{1F4BB}", "\u{1F3A8}", "\u{1F525}", "\u26A1", "\u{1F9F2}", "\u{1F6E0}\uFE0F"];
-function injectSvcModal() {
-  if (document.getElementById("svcModal")) return;
-  const modal = document.createElement("div");
-  modal.id = "svcModal";
-  modal.className = "modal";
-  modal.innerHTML = `
+    </div>`,document.body.appendChild(t),setTimeout(()=>{const e=document.getElementById("mpProductImage");e&&!e._mkBound&&(e._mkBound=!0,e.addEventListener("change",function(n){const a=n.target.files[0];if(!a)return;window.currentProductImageFile=a;const i=new FileReader;i.onload=r=>{const d=document.getElementById("mpPreviewImg"),l=document.getElementById("mpImagePreview");d&&(d.src=r.target.result),l&&l.classList.remove("hidden")},i.readAsDataURL(a)}));const o=document.getElementById("mpForm");o&&!o._mkSubmitBound&&(o._mkSubmitBound=!0,o.addEventListener("submit",async function(n){n.preventDefault(),await guardarMateriaPrima()}))},100)}window.injectMpModal=injectMpModal;const _SVC_EMOJIS=["\u2699\uFE0F","\u{1F527}","\u{1F4A1}","\u{1F5A8}\uFE0F","\u2702\uFE0F","\u{1F529}","\u{1F4BB}","\u{1F3A8}","\u{1F525}","\u26A1","\u{1F9F2}","\u{1F6E0}\uFE0F"];function injectSvcModal(){if(document.getElementById("svcModal"))return;const t=document.createElement("div");t.id="svcModal",t.className="modal",t.innerHTML=`
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in" style="margin:auto;max-height:90vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-gray-800">\u2699\uFE0F <span id="svcModalTitle">Nuevo Servicio</span></h3>
@@ -375,7 +253,7 @@ function injectSvcModal() {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">\xCDcono</label>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-                    ${_SVC_EMOJIS.map((e) => `<button type="button" onclick="document.getElementById('svcEmoji').value='${e}';document.querySelectorAll('.svc-emoji-btn').forEach(b=>b.style.background='#f3f4f6');this.style.background='#ede9fe';" class="svc-emoji-btn" style="width:38px;height:38px;border-radius:10px;border:1px solid #e5e7eb;background:#f3f4f6;font-size:1.3rem;cursor:pointer;">${e}</button>`).join("")}
+                    ${_SVC_EMOJIS.map(e=>`<button type="button" onclick="document.getElementById('svcEmoji').value='${e}';document.querySelectorAll('.svc-emoji-btn').forEach(b=>b.style.background='#f3f4f6');this.style.background='#ede9fe';" class="svc-emoji-btn" style="width:38px;height:38px;border-radius:10px;border:1px solid #e5e7eb;background:#f3f4f6;font-size:1.3rem;cursor:pointer;">${e}</button>`).join("")}
                 </div>
                 <input type="hidden" id="svcEmoji" value="\u2699\uFE0F">
             </div>
@@ -406,252 +284,23 @@ function injectSvcModal() {
                 \u{1F4BE} Guardar Servicio
             </button>
         </form>
-    </div>`;
-  document.body.appendChild(modal);
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeServicioModal();
-  });
-}
-window.injectSvcModal = injectSvcModal;
-function openServicioModal(editId) {
-  injectSvcModal();
-  document.getElementById("svcEditId").value = editId || "";
-  document.getElementById("svcModalTitle").textContent = editId ? "Editar Servicio" : "Nuevo Servicio";
-  document.getElementById("svcNombre").value = "";
-  document.getElementById("svcEmoji").value = "\u2699\uFE0F";
-  document.getElementById("svcCosto").value = "";
-  document.getElementById("svcSku").value = "";
-  document.getElementById("svcNotas").value = "";
-  document.querySelectorAll(".svc-emoji-btn").forEach((b) => b.style.background = "#f3f4f6");
-  if (editId) {
-    const p = (window.products || []).find((x) => String(x.id) === String(editId));
-    if (p) {
-      document.getElementById("svcNombre").value = p.name || "";
-      document.getElementById("svcEmoji").value = p.image || "\u2699\uFE0F";
-      document.getElementById("svcCosto").value = p.cost || "";
-      document.getElementById("svcSku").value = p.sku || "";
-      document.getElementById("svcNotas").value = p.notas || "";
-      document.querySelectorAll(".svc-emoji-btn").forEach((b) => {
-        if (b.textContent === (p.image || "\u2699\uFE0F")) b.style.background = "#ede9fe";
-      });
-    }
-  }
-  openModal("svcModal");
-}
-window.openServicioModal = openServicioModal;
-async function guardarServicio() {
-  const nombre = document.getElementById("svcNombre").value.trim();
-  const costo = parseFloat(document.getElementById("svcCosto").value) || 0;
-  const emoji = document.getElementById("svcEmoji").value || "\u2699\uFE0F";
-  const notas = document.getElementById("svcNotas").value.trim();
-  const skuInput = document.getElementById("svcSku").value.trim();
-  const editId = document.getElementById("svcEditId").value;
-  if (!nombre) {
-    manekiToastExport("El nombre es requerido.", "warn");
-    return;
-  }
-  const _skuSuffix = mkId().split("-")[0].toUpperCase();
-  const sku = skuInput || `SVC-${_skuSuffix}`;
-  if (!window.products) window.products = [];
-  if (editId) {
-    const idx = window.products.findIndex((p) => String(p.id) === String(editId));
-    if (idx !== -1) {
-      window.products[idx] = { ...window.products[idx], name: nombre, cost: costo, image: emoji, notas, sku };
-    }
-  } else {
-    window.products.push({
-      id: _genId(),
-      name: nombre,
-      tipo: "servicio",
-      cost: costo,
-      price: 0,
-      stock: null,
-      stockMin: null,
-      category: "servicios",
-      image: emoji,
-      notas,
-      sku,
-      tags: []
-    });
-  }
-  saveProducts();
-  renderInventoryTable();
-  closeServicioModal();
-  if (window.MKS) MKS.notify();
-  manekiToastExport(`\u2705 Servicio "${nombre}" guardado.`, "ok");
-}
-window.guardarServicio = guardarServicio;
-function closeServicioModal() {
-  closeModal("svcModal");
-}
-window.closeServicioModal = closeServicioModal;
-function mpTogglePaquete() {
-  const chk = document.getElementById("mpUsaPaquete");
-  const simple = document.getElementById("mpCostoSimple");
-  const paq = document.getElementById("mpCostoPaquete");
-  const slider = document.getElementById("mpPaqueteSlider");
-  const thumb = document.getElementById("mpPaqueteThumb");
-  const costoInput = document.getElementById("mpCosto");
-  if (!chk || !simple || !paq) return;
-  if (chk.checked) {
-    simple.style.display = "none";
-    paq.style.display = "block";
-    if (slider) slider.style.background = "#7c3aed";
-    if (thumb) thumb.style.left = "20px";
-    if (costoInput) costoInput.removeAttribute("required");
-    mpCalcCostoUnidad();
-  } else {
-    simple.style.display = "block";
-    paq.style.display = "none";
-    if (slider) slider.style.background = "#d1d5db";
-    if (thumb) thumb.style.left = "3px";
-    if (costoInput) costoInput.setAttribute("required", "");
-  }
-}
-window.mpTogglePaquete = mpTogglePaquete;
-function mpCalcCostoUnidad() {
-  const cant = parseFloat(document.getElementById("mpPaqueteCantidad")?.value) || 0;
-  const precio = parseFloat(document.getElementById("mpPaquetePrecio")?.value) || 0;
-  const resultEl = document.getElementById("mpCostoUnidadResult");
-  const costoHidden = document.getElementById("mpCostoCalculado") || document.getElementById("mpCosto");
-  if (cant > 0 && precio > 0) {
-    const costoUnidad = precio / cant;
-    if (resultEl) resultEl.textContent = "$" + costoUnidad.toFixed(4).replace(/\.?0+$/, "");
-    if (costoHidden) costoHidden.value = costoUnidad.toFixed(4);
-    const box = document.getElementById("mpCostoUnidadBox");
-    if (box) box.style.background = "#ede9fe";
-  } else {
-    if (resultEl) resultEl.textContent = "$0.00";
-    if (costoHidden) costoHidden.value = "";
-  }
-}
-window.mpCalcCostoUnidad = mpCalcCostoUnidad;
-window._mpVariantes = window._mpVariantes ?? [];
-function mpToggleVariantes() {
-  const chk = document.getElementById("mpUsaVariantes");
-  const panel = document.getElementById("mpVariantesPanel");
-  const slider = document.getElementById("mpVariantesSlider");
-  const thumb = document.getElementById("mpVariantesThumb");
-  const stockRow = document.getElementById("mpStockRow");
-  if (!chk || !panel) return;
-  const on = chk.checked;
-  panel.style.display = on ? "block" : "none";
-  if (slider) slider.style.background = on ? "#6366f1" : "#d1d5db";
-  if (thumb) thumb.style.left = on ? "20px" : "3px";
-  if (stockRow) {
-    stockRow.style.opacity = on ? "0.4" : "1";
-    const inp = document.getElementById("mpStock");
-    if (inp) {
-      inp.readOnly = on;
-      if (on) {
-        inp.value = 0;
-      } else {
-        const varTotal = (window._mpVariantes || []).reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
-        if (varTotal > 0) inp.value = varTotal;
-      }
-    }
-  }
-  if (!on) {
-    window._mpVariantes = [];
-    renderVariantesMp();
-  }
-}
-window.mpToggleVariantes = mpToggleVariantes;
-function mpVarTipoRapido(tipo, valor) {
-  const tipoEl = document.getElementById("mpVarTipo");
-  const valorEl = document.getElementById("mpVarValor");
-  if (tipoEl) tipoEl.value = tipo;
-  if (valorEl) {
-    if (valor) {
-      valorEl.value = valor;
-      agregarVarianteMp();
-    } else {
-      valorEl.value = "";
-      valorEl.focus();
-    }
-  }
-}
-window.mpVarTipoRapido = mpVarTipoRapido;
-function agregarVarianteMp() {
-  const tipo = (document.getElementById("mpVarTipo")?.value || "").trim();
-  const valor = (document.getElementById("mpVarValor")?.value || "").trim();
-  if (!tipo || !valor) {
-    manekiToastExport("\u26A0\uFE0F Ingresa tipo y valor de la variante", "warn");
-    return;
-  }
-  window._mpVariantes = window._mpVariantes || [];
-  const existe = window._mpVariantes.find((v) => v.type === tipo && v.value === valor);
-  if (existe) {
-    manekiToastExport("\u26A0\uFE0F Ya existe esta variante", "warn");
-    return;
-  }
-  window._mpVariantes.push({ type: tipo, value: valor, qty: 0 });
-  const tipoEl = document.getElementById("mpVarTipo");
-  const valorEl = document.getElementById("mpVarValor");
-  if (tipoEl) tipoEl.value = "";
-  if (valorEl) {
-    valorEl.value = "";
-  }
-  document.getElementById("mpVarTipo")?.focus();
-  renderVariantesMp();
-}
-window.agregarVarianteMp = agregarVarianteMp;
-function eliminarVarianteMp(idx) {
-  (window._mpVariantes || []).splice(idx, 1);
-  renderVariantesMp();
-}
-window.eliminarVarianteMp = eliminarVarianteMp;
-function updateVarianteMpQty(idx, val) {
-  if (window._mpVariantes && window._mpVariantes[idx]) {
-    window._mpVariantes[idx].qty = Math.max(0, parseInt(val) || 0);
-    actualizarStockTotalMp();
-  }
-}
-window.updateVarianteMpQty = updateVarianteMpQty;
-function actualizarStockTotalMp() {
-  const total = (window._mpVariantes || []).reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
-  const box = document.getElementById("mpVariantesStockTotal");
-  if (box) {
-    if ((window._mpVariantes || []).length > 0) {
-      box.style.display = "block";
-      box.textContent = `\u{1F4E6} Stock total: ${total} unidades`;
-    } else {
-      box.style.display = "none";
-    }
-  }
-  const stockEl = document.getElementById("mpStock");
-  if (stockEl && document.getElementById("mpUsaVariantes")?.checked) {
-    stockEl.value = total;
-  }
-}
-function renderVariantesMp() {
-  const container = document.getElementById("mpVariantesList");
-  if (!container) return;
-  if (!window._mpVariantes || !window._mpVariantes.length) {
-    container.innerHTML = '<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>';
-    actualizarStockTotalMp();
-    return;
-  }
-  container.innerHTML = window._mpVariantes.map((v, i) => `
+    </div>`,document.body.appendChild(t),t.addEventListener("click",e=>{e.target===t&&closeServicioModal()})}window.injectSvcModal=injectSvcModal;function openServicioModal(t){if(injectSvcModal(),document.getElementById("svcEditId").value=t||"",document.getElementById("svcModalTitle").textContent=t?"Editar Servicio":"Nuevo Servicio",document.getElementById("svcNombre").value="",document.getElementById("svcEmoji").value="\u2699\uFE0F",document.getElementById("svcCosto").value="",document.getElementById("svcSku").value="",document.getElementById("svcNotas").value="",document.querySelectorAll(".svc-emoji-btn").forEach(e=>e.style.background="#f3f4f6"),t){const e=(window.products||[]).find(o=>String(o.id)===String(t));e&&(document.getElementById("svcNombre").value=e.name||"",document.getElementById("svcEmoji").value=e.image||"\u2699\uFE0F",document.getElementById("svcCosto").value=e.cost||"",document.getElementById("svcSku").value=e.sku||"",document.getElementById("svcNotas").value=e.notas||"",document.querySelectorAll(".svc-emoji-btn").forEach(o=>{o.textContent===(e.image||"\u2699\uFE0F")&&(o.style.background="#ede9fe")}))}openModal("svcModal")}window.openServicioModal=openServicioModal;async function guardarServicio(){const t=document.getElementById("svcNombre").value.trim(),e=parseFloat(document.getElementById("svcCosto").value)||0,o=document.getElementById("svcEmoji").value||"\u2699\uFE0F",n=document.getElementById("svcNotas").value.trim(),a=document.getElementById("svcSku").value.trim(),i=document.getElementById("svcEditId").value;if(!t){manekiToastExport("El nombre es requerido.","warn");return}const r=mkId().split("-")[0].toUpperCase(),d=a||`SVC-${r}`;if(window.products||(window.products=[]),i){const l=window.products.findIndex(s=>String(s.id)===String(i));l!==-1&&(window.products[l]={...window.products[l],name:t,cost:e,image:o,notas:n,sku:d})}else window.products.push({id:_genId(),name:t,tipo:"servicio",cost:e,price:0,stock:null,stockMin:null,category:"servicios",image:o,notas:n,sku:d,tags:[]});saveProducts(),renderInventoryTable(),closeServicioModal(),window.MKS&&MKS.notify(),manekiToastExport(`\u2705 Servicio "${t}" guardado.`,"ok")}window.guardarServicio=guardarServicio;function closeServicioModal(){closeModal("svcModal")}window.closeServicioModal=closeServicioModal;function mpTogglePaquete(){const t=document.getElementById("mpUsaPaquete"),e=document.getElementById("mpCostoSimple"),o=document.getElementById("mpCostoPaquete"),n=document.getElementById("mpPaqueteSlider"),a=document.getElementById("mpPaqueteThumb"),i=document.getElementById("mpCosto");!t||!e||!o||(t.checked?(e.style.display="none",o.style.display="block",n&&(n.style.background="#7c3aed"),a&&(a.style.left="20px"),i&&i.removeAttribute("required"),mpCalcCostoUnidad()):(e.style.display="block",o.style.display="none",n&&(n.style.background="#d1d5db"),a&&(a.style.left="3px"),i&&i.setAttribute("required","")))}window.mpTogglePaquete=mpTogglePaquete;function mpCalcCostoUnidad(){const t=parseFloat(document.getElementById("mpPaqueteCantidad")?.value)||0,e=parseFloat(document.getElementById("mpPaquetePrecio")?.value)||0,o=document.getElementById("mpCostoUnidadResult"),n=document.getElementById("mpCostoCalculado")||document.getElementById("mpCosto");if(t>0&&e>0){const a=e/t;o&&(o.textContent="$"+a.toFixed(4).replace(/\.?0+$/,"")),n&&(n.value=a.toFixed(4));const i=document.getElementById("mpCostoUnidadBox");i&&(i.style.background="#ede9fe")}else o&&(o.textContent="$0.00"),n&&(n.value="")}window.mpCalcCostoUnidad=mpCalcCostoUnidad,window._mpVariantes=window._mpVariantes??[];function mpToggleVariantes(){const t=document.getElementById("mpUsaVariantes"),e=document.getElementById("mpVariantesPanel"),o=document.getElementById("mpVariantesSlider"),n=document.getElementById("mpVariantesThumb"),a=document.getElementById("mpStockRow");if(!t||!e)return;const i=t.checked;if(e.style.display=i?"block":"none",o&&(o.style.background=i?"#6366f1":"#d1d5db"),n&&(n.style.left=i?"20px":"3px"),a){a.style.opacity=i?"0.4":"1";const r=document.getElementById("mpStock");if(r)if(r.readOnly=i,i)r.value=0;else{const d=(window._mpVariantes||[]).reduce((l,s)=>l+(parseInt(s.qty)||0),0);d>0&&(r.value=d)}}i||(window._mpVariantes=[],renderVariantesMp())}window.mpToggleVariantes=mpToggleVariantes;function mpVarTipoRapido(t,e){const o=document.getElementById("mpVarTipo"),n=document.getElementById("mpVarValor");o&&(o.value=t),n&&(e?(n.value=e,agregarVarianteMp()):(n.value="",n.focus()))}window.mpVarTipoRapido=mpVarTipoRapido;function agregarVarianteMp(){const t=(document.getElementById("mpVarTipo")?.value||"").trim(),e=(document.getElementById("mpVarValor")?.value||"").trim();if(!t||!e){manekiToastExport("\u26A0\uFE0F Ingresa tipo y valor de la variante","warn");return}if(window._mpVariantes=window._mpVariantes||[],window._mpVariantes.find(i=>i.type===t&&i.value===e)){manekiToastExport("\u26A0\uFE0F Ya existe esta variante","warn");return}window._mpVariantes.push({type:t,value:e,qty:0});const n=document.getElementById("mpVarTipo"),a=document.getElementById("mpVarValor");n&&(n.value=""),a&&(a.value=""),document.getElementById("mpVarTipo")?.focus(),renderVariantesMp()}window.agregarVarianteMp=agregarVarianteMp;function eliminarVarianteMp(t){(window._mpVariantes||[]).splice(t,1),renderVariantesMp()}window.eliminarVarianteMp=eliminarVarianteMp;function updateVarianteMpQty(t,e){window._mpVariantes&&window._mpVariantes[t]&&(window._mpVariantes[t].qty=Math.max(0,parseInt(e)||0),actualizarStockTotalMp())}window.updateVarianteMpQty=updateVarianteMpQty;function actualizarStockTotalMp(){const t=(window._mpVariantes||[]).reduce((n,a)=>n+(parseInt(a.qty)||0),0),e=document.getElementById("mpVariantesStockTotal");e&&((window._mpVariantes||[]).length>0?(e.style.display="block",e.textContent=`\u{1F4E6} Stock total: ${t} unidades`):e.style.display="none");const o=document.getElementById("mpStock");o&&document.getElementById("mpUsaVariantes")?.checked&&(o.value=t)}function renderVariantesMp(){const t=document.getElementById("mpVariantesList");if(t){if(!window._mpVariantes||!window._mpVariantes.length){t.innerHTML='<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>',actualizarStockTotalMp();return}t.innerHTML=window._mpVariantes.map((e,o)=>`
         <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;">
             <div style="flex:1;min-width:0;">
-                <span style="font-size:.85rem;color:#374151;">${_esc(v.type)}: ${_mkColorDot(v.type, _esc(v.value))}</span>
+                <span style="font-size:.85rem;color:#374151;">${_esc(e.type)}: ${_mkColorDot(e.type,_esc(e.value))}</span>
             </div>
             <label style="font-size:.75rem;color:#6b7280;font-weight:600;white-space:nowrap;">Stock:</label>
             <div style="display:flex;align-items:center;gap:2px;">
-                <button type="button" onclick="updateVarianteMpQty(${i},${(v.qty || 0) - 1});renderVariantesMp();"
+                <button type="button" onclick="updateVarianteMpQty(${o},${(e.qty||0)-1});renderVariantesMp();"
                     style="width:22px;height:22px;border:1px solid #e2e8f0;border-radius:6px;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">\u2212</button>
-                <input type="number" value="${v.qty || 0}" min="0"
-                    onchange="updateVarianteMpQty(${i},this.value)"
+                <input type="number" value="${e.qty||0}" min="0"
+                    onchange="updateVarianteMpQty(${o},this.value)"
                     style="width:52px;text-align:center;border:1.5px solid #6366f1;border-radius:8px;padding:2px 4px;font-weight:700;font-size:.85rem;">
-                <button type="button" onclick="updateVarianteMpQty(${i},${(v.qty || 0) + 1});renderVariantesMp();"
+                <button type="button" onclick="updateVarianteMpQty(${o},${(e.qty||0)+1});renderVariantesMp();"
                     style="width:22px;height:22px;border:1px solid #e2e8f0;border-radius:6px;background:#f9fafb;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">+</button>
             </div>
             <span style="font-size:.72rem;color:#9ca3af;">pzs</span>
-            <button type="button" onclick="eliminarVarianteMp(${i})"
+            <button type="button" onclick="eliminarVarianteMp(${o})"
                 style="width:24px;height:24px;background:#fee2e2;border:none;border-radius:6px;color:#ef4444;cursor:pointer;font-size:13px;font-weight:bold;display:flex;align-items:center;justify-content:center;">\u2715</button>
-        </div>`).join("");
-  actualizarStockTotalMp();
-}
-window.renderVariantesMp = renderVariantesMp;
+        </div>`).join(""),actualizarStockTotalMp()}}window.renderVariantesMp=renderVariantesMp;
 //# sourceMappingURL=inventory-3.js.map

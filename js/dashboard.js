@@ -1,1123 +1,172 @@
-function checkAlertasEntregas() {
-  const estadosActivos = ["confirmado", "pago", "produccion", "envio", "salida", "retirar"];
-  const _dias = (p) => typeof window.diasHastaEntrega === "function" ? window.diasHastaEntrega(p.entrega || p.fechaEntrega) : (() => {
-    const [y, m, d] = (p.entrega || p.fechaEntrega || "").split("-").map(Number);
-    const hoy = /* @__PURE__ */ new Date();
-    hoy.setHours(0, 0, 0, 0);
-    return Math.round((new Date(y, m - 1, d) - hoy) / 864e5);
-  })();
-  const pedidosAlerta = pedidos.filter((p) => {
-    if (!estadosActivos.includes(p.status)) return false;
-    const diff = _dias(p);
-    return diff !== null && diff >= 0 && diff <= 2;
-  }).map((p) => ({ ...p, diffDias: _dias(p) })).sort((a, b) => a.diffDias - b.diffDias);
-  const banner = document.getElementById("alertaEntregas");
-  const lista = document.getElementById("alertaEntregasLista");
-  if (!banner || !lista) return;
-  if (pedidosAlerta.length === 0) {
-    banner.classList.remove("visible");
-    return;
-  }
-  banner.classList.add("visible");
-  if (typeof window._mkNotifSound === "function") window._mkNotifSound();
-  document.getElementById("alertaSubtitulo").textContent = pedidosAlerta.length === 1 ? "1 pedido requiere tu atenci\xF3n" : `${pedidosAlerta.length} pedidos requieren tu atenci\xF3n`;
-  lista.innerHTML = pedidosAlerta.map((p) => {
-    let clase, etiqueta, icono;
-    if (p.diffDias === 0) {
-      clase = "hoy";
-      etiqueta = "\xA1Hoy!";
-      icono = "\u{1F534}";
-    } else if (p.diffDias === 1) {
-      clase = "manana";
-      etiqueta = "Ma\xF1ana";
-      icono = "\u{1F7E0}";
-    } else {
-      clase = "dos-dias";
-      etiqueta = "En 2 d\xEDas";
-      icono = "\u{1F7E1}";
-    }
-    const saldo = calcSaldoPendiente(p).toFixed(2);
-    return `
-                    <div class="alerta-pedido-card ${clase}">
-                        <span class="text-2xl">${icono}</span>
+function checkAlertasEntregas(){const e=["confirmado","pago","produccion","envio","salida","retirar"],i=s=>typeof window.diasHastaEntrega=="function"?window.diasHastaEntrega(s.entrega||s.fechaEntrega):(()=>{const[n,d,o]=(s.entrega||s.fechaEntrega||"").split("-").map(Number),l=new Date;return l.setHours(0,0,0,0),Math.round((new Date(n,d-1,o)-l)/864e5)})(),r=pedidos.filter(s=>{if(!e.includes(s.status))return!1;const n=i(s);return n!==null&&n>=0&&n<=2}).map(s=>({...s,diffDias:i(s)})).sort((s,n)=>s.diffDias-n.diffDias),f=document.getElementById("alertaEntregas"),c=document.getElementById("alertaEntregasLista");if(!(!f||!c)){if(r.length===0){f.classList.remove("visible");return}f.classList.add("visible"),typeof window._mkNotifSound=="function"&&window._mkNotifSound(),document.getElementById("alertaSubtitulo").textContent=r.length===1?"1 pedido requiere tu atenci\xF3n":`${r.length} pedidos requieren tu atenci\xF3n`,c.innerHTML=r.map(s=>{let n,d,o;s.diffDias===0?(n="hoy",d="\xA1Hoy!",o="\u{1F534}"):s.diffDias===1?(n="manana",d="Ma\xF1ana",o="\u{1F7E0}"):(n="dos-dias",d="En 2 d\xEDas",o="\u{1F7E1}");const l=calcSaldoPendiente(s).toFixed(2);return`
+                    <div class="alerta-pedido-card ${n}">
+                        <span class="text-2xl">${o}</span>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="font-bold text-gray-800 text-sm">${_esc(p.folio || "")}</span>
-                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${p.diffDias === 0 ? "bg-red-100 text-red-700" : p.diffDias === 1 ? "bg-orange-100 text-orange-700" : "bg-yellow-100 text-yellow-700"}">${etiqueta}</span>
+                                <span class="font-bold text-gray-800 text-sm">${_esc(s.folio||"")}</span>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${s.diffDias===0?"bg-red-100 text-red-700":s.diffDias===1?"bg-orange-100 text-orange-700":"bg-yellow-100 text-yellow-700"}">${d}</span>
                             </div>
-                            <p class="text-gray-700 text-sm font-medium truncate">${_esc(p.cliente)}</p>
-                            <p class="text-gray-500 text-xs truncate">${_esc(p.concepto || "")}</p>
+                            <p class="text-gray-700 text-sm font-medium truncate">${_esc(s.cliente)}</p>
+                            <p class="text-gray-500 text-xs truncate">${_esc(s.concepto||"")}</p>
                         </div>
                         <div class="text-right shrink-0">
-                            <p class="text-sm font-bold text-gray-800">$${Number(p.total || 0).toFixed(2)}</p>
-                            ${Number(saldo) > 0 ? `<p class="text-xs font-semibold" style="color:#ea580c;">\u{1F4B8} Pendiente: $${saldo}</p>` : '<p class="text-xs text-green-600 font-semibold">\u2705 Pagado</p>'}
-                            <p class="text-xs text-gray-400">${_esc(p.entrega)}</p>
+                            <p class="text-sm font-bold text-gray-800">$${Number(s.total||0).toFixed(2)}</p>
+                            ${Number(l)>0?`<p class="text-xs font-semibold" style="color:#ea580c;">\u{1F4B8} Pendiente: $${l}</p>`:'<p class="text-xs text-green-600 font-semibold">\u2705 Pagado</p>'}
+                            <p class="text-xs text-gray-400">${_esc(s.entrega)}</p>
                         </div>
-                    </div>`;
-  }).join("");
-}
-function cerrarAlertaEntregas() {
-  const banner = document.getElementById("alertaEntregas");
-  if (banner) banner.classList.remove("visible");
-}
-function animarNumero(el, desde, hasta, duracion, prefijo, sufijo) {
-  if (!el) return;
-  if (el._animFrame) cancelAnimationFrame(el._animFrame);
-  if (!duracion || desde === hasta) {
-    el.textContent = prefijo + Number(hasta).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + sufijo;
-    return;
-  }
-  const startTime = performance.now();
-  function step(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duracion, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const current = desde + (hasta - desde) * eased;
-    el.textContent = prefijo + Number(current).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + sufijo;
-    if (progress < 1) {
-      el._animFrame = requestAnimationFrame(step);
-    } else {
-      el._animFrame = null;
-      el.textContent = prefijo + Number(hasta).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + sufijo;
-    }
-  }
-  el._animFrame = requestAnimationFrame(step);
-}
-window.animarNumero = animarNumero;
-let _updateDashboardTimer = null;
-function updateDashboard() {
-  if (_updateDashboardTimer) clearTimeout(_updateDashboardTimer);
-  _updateDashboardTimer = setTimeout(() => {
-    _updateDashboardTimer = null;
-    _updateDashboardImpl();
-  }, 150);
-}
-window.updateDashboard = updateDashboard;
-window.diasHastaEntrega = function(fechaStr) {
-  if (!fechaStr) return null;
-  try {
-    const [y, m, d] = fechaStr.split("-").map(Number);
-    const hoy = /* @__PURE__ */ new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const entrega = new Date(y, m - 1, d);
-    return Math.round((entrega - hoy) / 864e5);
-  } catch (e) {
-    return null;
-  }
-};
-function _updateDashboardImpl() {
-  if (typeof normalizarResta === "function") normalizarResta();
-  const now = /* @__PURE__ */ new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const hour = now.getHours();
-  const greeting = hour < 12 ? "\xA1Buenos d\xEDas!" : hour < 19 ? "\xA1Buenas tardes!" : "\xA1Buenas noches!";
-  const greetingEmoji = hour < 12 ? "\u2600\uFE0F" : hour < 19 ? "\u{1F324}\uFE0F" : "\u{1F319}";
-  const el = document.getElementById("dashGreeting");
-  const ee = document.getElementById("dashGreetingEmoji");
-  const sn = document.getElementById("dashStoreName");
-  if (el) el.textContent = greeting;
-  if (ee) ee.textContent = greetingEmoji;
-  if (sn) sn.textContent = storeConfig ? storeConfig.name : "Maneki Store";
-  const dateEl = document.getElementById("dashDate");
-  const timeEl = document.getElementById("dashTime");
-  if (dateEl) dateEl.textContent = now.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
-  if (timeEl) timeEl.textContent = now.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-  if (window._dashClock) {
-    clearInterval(window._dashClock);
-    window._dashClock = null;
-  }
-  window._dashClock = setInterval(() => {
-    const t = document.getElementById("dashTime");
-    if (t) {
-      const n = /* @__PURE__ */ new Date();
-      t.textContent = n.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-      const h = n.getHours();
-      const g = document.getElementById("dashGreeting");
-      const ge = document.getElementById("dashGreetingEmoji");
-      if (g) g.textContent = h < 12 ? "\xA1Buenos d\xEDas!" : h < 19 ? "\xA1Buenas tardes!" : "\xA1Buenas noches!";
-      if (ge) ge.textContent = h < 12 ? "\u2600\uFE0F" : h < 19 ? "\u{1F324}\uFE0F" : "\u{1F319}";
-    }
-  }, 6e4);
-  const mesActualStr = today.substring(0, 7);
-  const fechaPrevMes = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const mesAnteriorStr = `${fechaPrevMes.getFullYear()}-${String(fechaPrevMes.getMonth() + 1).padStart(2, "0")}`;
-  let todaySales = 0, totalSales = 0, totalCosts = 0, monthlySales = 0, ventasMesActual = 0, ventasMesAnterior = 0;
-  for (const s of salesHistory || []) {
-    if (s.method === "Cancelado") continue;
-    if (s.type === "pedido" || s.type === "abono" || s.type === "anticipo") continue;
-    const t = s.total || 0;
-    const c = (s.products || []).reduce((a, p) => a + (p.costoAlVender ?? p.cost ?? 0) * (p.quantity || 1), 0);
-    if (s.date === today) todaySales += t;
-    if (s.date && s.date.startsWith(mesActualStr)) {
-      totalSales += t;
-      totalCosts += c;
-      monthlySales += t;
-      ventasMesActual += t;
-    }
-    if (s.date && s.date.startsWith(mesAnteriorStr)) ventasMesAnterior += t;
-  }
-  for (const p of window.pedidosFinalizados || []) {
-    if (!p.total) continue;
-    const fecha = (p.fechaFinalizado || p.fecha || "").split("T")[0];
-    if (!fecha) continue;
-    const monto = Number(p.total);
-    if (fecha === today) todaySales += monto;
-    if (fecha.startsWith(mesActualStr)) {
-      totalSales += monto;
-      monthlySales += monto;
-      ventasMesActual += monto;
-    }
-    if (fecha.startsWith(mesAnteriorStr)) ventasMesAnterior += monto;
-  }
-  const netProfit = totalSales - totalCosts;
-  const goalInput = document.getElementById("dashMonthGoal");
-  if (goalInput && !goalInput.dataset.mkLoaded && window.storeConfig?.metaMensual) {
-    goalInput.value = window.storeConfig.metaMensual;
-    goalInput.dataset.mkLoaded = "1";
-  }
-  const goal = parseFloat(goalInput?.value) || 5e3;
-  const goalPct = Math.min(Math.round(monthlySales / goal * 100), 100);
-  const goalBar = document.getElementById("dashGoalBar");
-  const goalPctEl = document.getElementById("dashGoalPercent");
-  const monthSalesEl = document.getElementById("dashMonthSales");
-  if (goalBar) goalBar.style.width = goalPct + "%";
-  if (goalPctEl) goalPctEl.textContent = goalPct + "% de tu meta mensual";
-  if (monthSalesEl) monthSalesEl.textContent = "$" + monthlySales.toFixed(2);
-  const _gse = typeof getStockEfectivo === "function" ? getStockEfectivo : ((p) => p.stock || 0);
-  const lowStockItems = products.filter((p) => {
-    const s = _gse(p);
-    return s > 0 && s <= (p.stockMin || 5);
-  });
-  const outOfStock = products.filter((p) => _gse(p) === 0);
-  const lowStockBadge = document.getElementById("lowStockBadge");
-  if (lowStockBadge) lowStockBadge.textContent = lowStockItems.length + outOfStock.length + " items";
-  const hace30 = /* @__PURE__ */ new Date();
-  hace30.setDate(hace30.getDate() - 30);
-  const hace30str = `${hace30.getFullYear()}-${String(hace30.getMonth() + 1).padStart(2, "0")}-${String(hace30.getDate()).padStart(2, "0")}`;
-  const ventasRecientes = salesHistory.filter((s) => s.date >= hace30str && s.method !== "Cancelado");
-  const ventasPorProductoId = {};
-  const ventasPorProductoNombre = {};
-  (ventasRecientes || []).forEach((s) => {
-    (s.products || s.items || []).forEach((p) => {
-      const k = String(p.id || "");
-      const kn = (p.name || "").toLowerCase();
-      if (k) ventasPorProductoId[k] = (ventasPorProductoId[k] || 0) + (p.quantity || 1);
-      if (kn) ventasPorProductoNombre[kn] = (ventasPorProductoNombre[kn] || 0) + (p.quantity || 1);
-    });
-  });
-  function diasRestantes(producto) {
-    const k = String(producto.id || "");
-    const kn = (producto.name || "").toLowerCase();
-    const totalVendido = ventasPorProductoId[k] || 0 || (ventasPorProductoNombre[kn] || 0);
-    const promDiario = totalVendido / 30;
-    if (!promDiario) return null;
-    const _gse2 = typeof getStockEfectivo === "function" ? getStockEfectivo : ((p) => p.stock || 0);
-    return Math.floor(_gse2(producto) / promDiario);
-  }
-  const lowStockList = document.getElementById("dashLowStockList");
-  if (lowStockList) {
-    const all = [...outOfStock.map((p) => ({ ...p, out: true })), ...lowStockItems];
-    if (all.length === 0) {
-      lowStockList.innerHTML = '<p class="text-gray-400 text-xs text-center py-4">Todo en orden \u{1F44D}</p>';
-    } else {
-      lowStockList.innerHTML = all.slice(0, 8).map((p) => {
-        const dias = p.out ? null : diasRestantes(p);
-        let predBadge = "";
-        if (p.out) {
-          predBadge = `<span class="pred-badge pred-critico">Agotado</span>`;
-        } else if (dias !== null) {
-          if (dias <= 2) predBadge = `<span class="pred-badge pred-critico">~${dias}d \u26A0\uFE0F</span>`;
-          else if (dias <= 5) predBadge = `<span class="pred-badge pred-urgente">~${dias}d</span>`;
-          else if (dias <= 14) predBadge = `<span class="pred-badge pred-pronto">~${dias}d</span>`;
-          else predBadge = `<span class="pred-badge pred-ok">~${dias}d</span>`;
-        } else {
-          predBadge = `<span class="pred-badge" style="background:#f3f4f6;color:#9ca3af;">${p.stock} uds</span>`;
-        }
-        return `
+                    </div>`}).join("")}}function cerrarAlertaEntregas(){const e=document.getElementById("alertaEntregas");e&&e.classList.remove("visible")}function animarNumero(e,i,r,f,c,s){if(!e)return;if(e._animFrame&&cancelAnimationFrame(e._animFrame),!f||i===r){e.textContent=c+Number(r).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})+s;return}const n=performance.now();function d(o){const l=o-n,g=Math.min(l/f,1),h=1-Math.pow(1-g,3),u=i+(r-i)*h;e.textContent=c+Number(u).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})+s,g<1?e._animFrame=requestAnimationFrame(d):(e._animFrame=null,e.textContent=c+Number(r).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})+s)}e._animFrame=requestAnimationFrame(d)}window.animarNumero=animarNumero;let _updateDashboardTimer=null;function updateDashboard(){_updateDashboardTimer&&clearTimeout(_updateDashboardTimer),_updateDashboardTimer=setTimeout(()=>{_updateDashboardTimer=null,_updateDashboardImpl()},150)}window.updateDashboard=updateDashboard,window.diasHastaEntrega=function(e){if(!e)return null;try{const[i,r,f]=e.split("-").map(Number),c=new Date;c.setHours(0,0,0,0);const s=new Date(i,r-1,f);return Math.round((s-c)/864e5)}catch{return null}};function _updateDashboardImpl(){typeof normalizarResta=="function"&&normalizarResta();const e=new Date,i=`${e.getFullYear()}-${String(e.getMonth()+1).padStart(2,"0")}-${String(e.getDate()).padStart(2,"0")}`,r=e.getHours(),f=r<12?"\xA1Buenos d\xEDas!":r<19?"\xA1Buenas tardes!":"\xA1Buenas noches!",c=r<12?"\u2600\uFE0F":r<19?"\u{1F324}\uFE0F":"\u{1F319}",s=document.getElementById("dashGreeting"),n=document.getElementById("dashGreetingEmoji"),d=document.getElementById("dashStoreName");s&&(s.textContent=f),n&&(n.textContent=c),d&&(d.textContent=storeConfig?storeConfig.name:"Maneki Store");const o=document.getElementById("dashDate"),l=document.getElementById("dashTime");o&&(o.textContent=e.toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"})),l&&(l.textContent=e.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})),window._dashClock&&(clearInterval(window._dashClock),window._dashClock=null),window._dashClock=setInterval(()=>{const t=document.getElementById("dashTime");if(t){const a=new Date;t.textContent=a.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});const m=a.getHours(),y=document.getElementById("dashGreeting"),x=document.getElementById("dashGreetingEmoji");y&&(y.textContent=m<12?"\xA1Buenos d\xEDas!":m<19?"\xA1Buenas tardes!":"\xA1Buenas noches!"),x&&(x.textContent=m<12?"\u2600\uFE0F":m<19?"\u{1F324}\uFE0F":"\u{1F319}")}},6e4);const g=i.substring(0,7),h=new Date(e.getFullYear(),e.getMonth()-1,1),u=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}`;let b=0,M=0,p=0,E=0,D=0,$=0;for(const t of salesHistory||[]){if(t.method==="Cancelado"||t.type==="pedido"||t.type==="abono"||t.type==="anticipo")continue;const a=t.total||0,m=(t.products||[]).reduce((y,x)=>y+(x.costoAlVender??x.cost??0)*(x.quantity||1),0);t.date===i&&(b+=a),t.date&&t.date.startsWith(g)&&(M+=a,p+=m,E+=a,D+=a),t.date&&t.date.startsWith(u)&&($+=a)}for(const t of window.pedidosFinalizados||[]){if(!t.total)continue;const a=(t.fechaFinalizado||t.fecha||"").split("T")[0];if(!a)continue;const m=Number(t.total);a===i&&(b+=m),a.startsWith(g)&&(M+=m,E+=m,D+=m),a.startsWith(u)&&($+=m)}const G=M-p,k=document.getElementById("dashMonthGoal");k&&!k.dataset.mkLoaded&&window.storeConfig?.metaMensual&&(k.value=window.storeConfig.metaMensual,k.dataset.mkLoaded="1");const ie=parseFloat(k?.value)||5e3,V=Math.min(Math.round(E/ie*100),100),W=document.getElementById("dashGoalBar"),O=document.getElementById("dashGoalPercent"),Y=document.getElementById("dashMonthSales");W&&(W.style.width=V+"%"),O&&(O.textContent=V+"% de tu meta mensual"),Y&&(Y.textContent="$"+E.toFixed(2));const U=typeof getStockEfectivo=="function"?getStockEfectivo:(t=>t.stock||0),J=products.filter(t=>{const a=U(t);return a>0&&a<=(t.stockMin||5)}),Z=products.filter(t=>U(t)===0),K=document.getElementById("lowStockBadge");K&&(K.textContent=J.length+Z.length+" items");const C=new Date;C.setDate(C.getDate()-30);const se=`${C.getFullYear()}-${String(C.getMonth()+1).padStart(2,"0")}-${String(C.getDate()).padStart(2,"0")}`,re=salesHistory.filter(t=>t.date>=se&&t.method!=="Cancelado"),T={},A={};(re||[]).forEach(t=>{(t.products||t.items||[]).forEach(a=>{const m=String(a.id||""),y=(a.name||"").toLowerCase();m&&(T[m]=(T[m]||0)+(a.quantity||1)),y&&(A[y]=(A[y]||0)+(a.quantity||1))})});function de(t){const a=String(t.id||""),m=(t.name||"").toLowerCase(),x=(T[a]||0||A[m]||0)/30;return x?Math.floor((typeof getStockEfectivo=="function"?getStockEfectivo:(q=>q.stock||0))(t)/x):null}const H=document.getElementById("dashLowStockList");if(H){const t=[...Z.map(a=>({...a,out:!0})),...J];t.length===0?H.innerHTML='<p class="text-gray-400 text-xs text-center py-4">Todo en orden \u{1F44D}</p>':H.innerHTML=t.slice(0,8).map(a=>{const m=a.out?null:de(a);let y="";return a.out?y='<span class="pred-badge pred-critico">Agotado</span>':m!==null?m<=2?y=`<span class="pred-badge pred-critico">~${m}d \u26A0\uFE0F</span>`:m<=5?y=`<span class="pred-badge pred-urgente">~${m}d</span>`:m<=14?y=`<span class="pred-badge pred-pronto">~${m}d</span>`:y=`<span class="pred-badge pred-ok">~${m}d</span>`:y=`<span class="pred-badge" style="background:#f3f4f6;color:#9ca3af;">${a.stock} uds</span>`,`
                 <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
                     <div class="flex items-center gap-2 flex-1 min-w-0">
-                        <span class="text-base flex-shrink-0">${p.image || "\u{1F4E6}"}</span>
-                        <span class="text-xs text-gray-700 truncate">${_esc(p.name)}</span>
+                        <span class="text-base flex-shrink-0">${a.image||"\u{1F4E6}"}</span>
+                        <span class="text-xs text-gray-700 truncate">${_esc(a.name)}</span>
                     </div>
                     <div class="flex items-center gap-1.5 ml-2 flex-shrink-0">
-                        ${!p.out ? `<span class="text-xs text-gray-400">${p.stock}u</span>` : ""}
-                        ${predBadge}
+                        ${a.out?"":`<span class="text-xs text-gray-400">${a.stock}u</span>`}
+                        ${y}
                     </div>
-                </div>`;
-      }).join("");
-    }
-  }
-  const _calcSaldo = calcSaldoPendiente;
-  const accountsReceivable = [
-    ...receivables.filter((r) => r.status === "pending").map((r) => r.amount || 0),
-    ...pedidos.filter((p) => !["finalizado", "cancelado", "entregado"].includes((p.status || "").toLowerCase())).map((p) => _calcSaldo(p)).filter((v) => v > 0)
-  ].reduce((s, v) => s + v, 0);
-  const activePedidos = pedidos.filter(
-    (p) => !["finalizado", "cancelado"].includes((p.status || "").toLowerCase())
-  ).length;
-  const upcoming = pedidos.filter((p) => {
-    const fecha = p.entrega || p.fechaEntrega;
-    if (!fecha) return false;
-    const dias = window.diasHastaEntrega(fecha);
-    return dias !== null && dias >= 0 && dias <= 7 && !["entregado", "cancelado"].includes((p.status || p.estado || "").toLowerCase());
-  }).sort((a, b) => {
-    return window.diasHastaEntrega(a.entrega || a.fechaEntrega) - window.diasHastaEntrega(b.entrega || b.fechaEntrega);
-  });
-  const upcomingEl = document.getElementById("dashUpcomingDeliveries");
-  if (upcomingEl) {
-    if (upcoming.length === 0) {
-      upcomingEl.innerHTML = '<p class="text-gray-400 text-xs text-center py-4">Sin entregas pr\xF3ximas \u{1F389}</p>';
-    } else {
-      upcomingEl.innerHTML = upcoming.map((p) => {
-        const daysLeft = window.diasHastaEntrega(p.entrega || p.fechaEntrega);
-        const urgency = daysLeft <= 1 ? "text-red-500" : daysLeft <= 3 ? "text-orange-500" : "text-green-600";
-        return `
+                </div>`}).join("")}const ce=calcSaldoPendiente,le=[...receivables.filter(t=>t.status==="pending").map(t=>t.amount||0),...pedidos.filter(t=>!["finalizado","cancelado","entregado"].includes((t.status||"").toLowerCase())).map(t=>ce(t)).filter(t=>t>0)].reduce((t,a)=>t+a,0),fe=pedidos.filter(t=>!["finalizado","cancelado"].includes((t.status||"").toLowerCase())).length,Q=pedidos.filter(t=>{const a=t.entrega||t.fechaEntrega;if(!a)return!1;const m=window.diasHastaEntrega(a);return m!==null&&m>=0&&m<=7&&!["entregado","cancelado"].includes((t.status||t.estado||"").toLowerCase())}).sort((t,a)=>window.diasHastaEntrega(t.entrega||t.fechaEntrega)-window.diasHastaEntrega(a.entrega||a.fechaEntrega)),j=document.getElementById("dashUpcomingDeliveries");j&&(Q.length===0?j.innerHTML='<p class="text-gray-400 text-xs text-center py-4">Sin entregas pr\xF3ximas \u{1F389}</p>':j.innerHTML=Q.map(t=>{const a=window.diasHastaEntrega(t.entrega||t.fechaEntrega),m=a<=1?"text-red-500":a<=3?"text-orange-500":"text-green-600";return`
                     <div class="flex justify-between items-center py-2 border-b border-gray-50 cursor-pointer hover:bg-gray-50 px-2 rounded-lg"
                          onclick="showSection('pedidos')">
                         <div>
-                            <p class="text-xs font-semibold text-gray-800">${_esc(p.cliente || "\u2014")}</p>
-                            <p class="text-xs text-gray-400">${_esc(p.concepto || "")} \xB7 ${_esc(p.folio || "")}</p>
+                            <p class="text-xs font-semibold text-gray-800">${_esc(t.cliente||"\u2014")}</p>
+                            <p class="text-xs text-gray-400">${_esc(t.concepto||"")} \xB7 ${_esc(t.folio||"")}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-xs font-bold ${urgency}">${daysLeft === 0 ? "\xA1Hoy!" : daysLeft === 1 ? "Ma\xF1ana" : "En " + daysLeft + " d\xEDas"}</p>
-                            <p class="text-xs text-gray-400">${_esc(p.entrega || p.fechaEntrega)}</p>
+                            <p class="text-xs font-bold ${m}">${a===0?"\xA1Hoy!":a===1?"Ma\xF1ana":"En "+a+" d\xEDas"}</p>
+                            <p class="text-xs text-gray-400">${_esc(t.entrega||t.fechaEntrega)}</p>
                         </div>
                     </div>
-                `;
-      }).join("");
-    }
-  }
-  const ds = document.getElementById("dailySales");
-  const np = document.getElementById("netProfit");
-  const ar = document.getElementById("accountsReceivable");
-  const ap = document.getElementById("dashActivePedidos");
-  if (ds) animarNumero(ds, 0, todaySales, 700, "$", "");
-  if (np) {
-    animarNumero(np, 0, netProfit, 700, "$", "");
-    np.style.color = netProfit < 0 ? "#dc2626" : "";
-    const npLabel = np.closest('.kpi-card, [class*="card"], .rounded-xl')?.querySelector(".kpi-label, .text-xs, .text-gray-500, small");
-    if (npLabel && /ganancia/i.test(npLabel.textContent)) {
-      npLabel.textContent = "Ganancia Neta";
-      let npSub = npLabel.nextElementSibling;
-      if (!npSub || npSub.id === "netProfit") {
-        npSub = document.createElement("span");
-        npSub.style.cssText = "font-size:.65rem;color:#9ca3af;display:block;margin-top:1px;";
-        npLabel.insertAdjacentElement("afterend", npSub);
-      }
-      const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-      npSub.textContent = meses[now.getMonth()] + " " + now.getFullYear();
-    }
-  }
-  if (ar) animarNumero(ar, 0, accountsReceivable, 700, "$", "");
-  if (ap) ap.textContent = activePedidos;
-  try {
-    renderSparkline();
-  } catch (e) {
-  }
-  try {
-    renderComparativaSemanal();
-  } catch (e) {
-  }
-  try {
-    renderCashFlowChart();
-  } catch (e) {
-  }
-  try {
-    checkGastosInusuales();
-  } catch (e) {
-  }
-  try {
-    renderWidgetClima();
-  } catch (e) {
-  }
-  const arCard = ar ? ar.closest("[onclick]") || ar.parentElement : null;
-  if (arCard && !arCard._meDeben_handler) {
-    arCard._meDeben_handler = true;
-    arCard.style.cursor = "pointer";
-    arCard.addEventListener("click", function() {
-      const pedidosArr = window.pedidos || pedidos || [];
-      const _calcS = calcSaldoPendiente;
-      const mapa = {};
-      pedidosArr.filter((p) => !["finalizado", "cancelado", "entregado"].includes((p.status || "").toLowerCase())).forEach((p) => {
-        const saldo = _calcS(p);
-        if (saldo <= 0) return;
-        const nombre = p.cliente || "Sin nombre";
-        mapa[nombre] = (mapa[nombre] || 0) + saldo;
-      });
-      const entradas = Object.entries(mapa).sort((a, b) => b[1] - a[1]);
-      if (entradas.length === 0) {
-        manekiToastExport("No hay saldos pendientes por cobrar", "ok");
-        return;
-      }
-      const total = entradas.reduce((s, [, v]) => s + v, 0);
-      const _isDark = document.body.classList.contains("dark");
-      const _rowTextColor = _isDark ? "#e5e7eb" : "#374151";
-      const _rowBorderColor = _isDark ? "#334155" : "#f3f4f6";
-      const filas = entradas.map(
-        ([nombre, monto]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid ${_rowBorderColor};">
-                    <span style="font-size:.85rem;color:${_rowTextColor};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(nombre)}</span>
-                    <span style="font-size:.85rem;font-weight:700;color:#dc2626;margin-left:12px;white-space:nowrap;">$${monto.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>`
-      ).join("");
-      let _mdc = document.getElementById("_meDeben_modal");
-      if (_mdc) {
-        _mdc.remove();
-        _mdc = null;
-      }
-      if (!_mdc) {
-        const isDark = document.body.classList.contains("dark");
-        const bgColor = isDark ? "#1e293b" : "#fff";
-        const textColor = isDark ? "#e5e7eb" : "#1f2937";
-        const borderColor = isDark ? "#334155" : "#e5e7eb";
-        _mdc = document.createElement("div");
-        _mdc.id = "_meDeben_modal";
-        _mdc.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);";
-        _mdc.innerHTML = `<div style="background:${bgColor};border-radius:16px;padding:24px;width:min(420px,90vw);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+                `}).join(""));const ee=document.getElementById("dailySales"),B=document.getElementById("netProfit"),_=document.getElementById("accountsReceivable"),te=document.getElementById("dashActivePedidos");if(ee&&animarNumero(ee,0,b,700,"$",""),B){animarNumero(B,0,G,700,"$",""),B.style.color=G<0?"#dc2626":"";const t=B.closest('.kpi-card, [class*="card"], .rounded-xl')?.querySelector(".kpi-label, .text-xs, .text-gray-500, small");if(t&&/ganancia/i.test(t.textContent)){t.textContent="Ganancia Neta";let a=t.nextElementSibling;(!a||a.id==="netProfit")&&(a=document.createElement("span"),a.style.cssText="font-size:.65rem;color:#9ca3af;display:block;margin-top:1px;",t.insertAdjacentElement("afterend",a));const m=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];a.textContent=m[e.getMonth()]+" "+e.getFullYear()}}_&&animarNumero(_,0,le,700,"$",""),te&&(te.textContent=fe);try{renderSparkline()}catch{}try{renderComparativaSemanal()}catch{}try{renderCashFlowChart()}catch{}try{checkGastosInusuales()}catch{}try{renderWidgetClima()}catch{}const L=_?_.closest("[onclick]")||_.parentElement:null;L&&!L._meDeben_handler&&(L._meDeben_handler=!0,L.style.cursor="pointer",L.addEventListener("click",function(){const t=window.pedidos||pedidos||[],a=calcSaldoPendiente,m={};t.filter(v=>!["finalizado","cancelado","entregado"].includes((v.status||"").toLowerCase())).forEach(v=>{const S=a(v);if(S<=0)return;const F=v.cliente||"Sin nombre";m[F]=(m[F]||0)+S});const y=Object.entries(m).sort((v,S)=>S[1]-v[1]);if(y.length===0){manekiToastExport("No hay saldos pendientes por cobrar","ok");return}const x=y.reduce((v,[,S])=>v+S,0),z=document.body.classList.contains("dark"),q=z?"#e5e7eb":"#374151",me=z?"#334155":"#f3f4f6",pe=y.map(([v,S])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid ${me};">
+                    <span style="font-size:.85rem;color:${q};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(v)}</span>
+                    <span style="font-size:.85rem;font-weight:700;color:#dc2626;margin-left:12px;white-space:nowrap;">$${S.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+                </div>`).join("");let w=document.getElementById("_meDeben_modal");if(w&&(w.remove(),w=null),!w){const v=document.body.classList.contains("dark"),S=v?"#1e293b":"#fff",F=v?"#e5e7eb":"#1f2937",ue=v?"#334155":"#e5e7eb";w=document.createElement("div"),w.id="_meDeben_modal",w.style.cssText="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);",w.innerHTML=`<div style="background:${S};border-radius:16px;padding:24px;width:min(420px,90vw);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                        <h3 style="font-size:1rem;font-weight:800;color:${textColor};margin:0;">\u{1F4CB} Me deben \u2014 desglose</h3>
+                        <h3 style="font-size:1rem;font-weight:800;color:${F};margin:0;">\u{1F4CB} Me deben \u2014 desglose</h3>
                         <button id="_meDeben_close" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af;line-height:1;">\xD7</button>
                     </div>
                     <div id="_meDeben_body" style="overflow-y:auto;flex:1;"></div>
-                    <div id="_meDeben_total" style="margin-top:14px;padding-top:10px;border-top:2px solid ${borderColor};display:flex;justify-content:space-between;align-items:center;">
+                    <div id="_meDeben_total" style="margin-top:14px;padding-top:10px;border-top:2px solid ${ue};display:flex;justify-content:space-between;align-items:center;">
                         <span style="font-size:.85rem;font-weight:600;color:#6b7280;">Total</span>
                         <span id="_meDeben_totalVal" style="font-size:1.1rem;font-weight:900;color:#dc2626;"></span>
                     </div>
-                </div>`;
-        document.body.appendChild(_mdc);
-        document.getElementById("_meDeben_close").addEventListener("click", () => {
-          _mdc.style.display = "none";
-        });
-        _mdc.addEventListener("click", (e) => {
-          if (e.target === _mdc) _mdc.style.display = "none";
-        });
-      }
-      document.getElementById("_meDeben_body").innerHTML = filas;
-      document.getElementById("_meDeben_totalVal").textContent = "$" + total.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      _mdc.style.display = "flex";
-    });
-  }
-  const estadosLabel = {
-    confirmado: "Confirmado",
-    pago: "Pago parcial",
-    produccion: "En producci\xF3n",
-    envio: "En env\xEDo",
-    salida: "Listo / Salida",
-    retirar: "Por retirar",
-    finalizado: "Finalizado",
-    cancelado: "Cancelado"
-  };
-  const estadosColor = {
-    confirmado: "#3b82f6",
-    pago: "#f59e0b",
-    produccion: "#8b5cf6",
-    envio: "#06b6d4",
-    salida: "#10b981",
-    retirar: "#f97316",
-    finalizado: "#6b7280",
-    cancelado: "#ef4444"
-  };
-  const conteoEstados = {};
-  pedidos.forEach((p) => {
-    const s = (p.status || "confirmado").toLowerCase();
-    conteoEstados[s] = (conteoEstados[s] || 0) + 1;
-  });
-  const pedidosEstadoEl = document.getElementById("dashPedidosEstado");
-  if (pedidosEstadoEl) {
-    const conDatos = Object.keys(estadosLabel).filter((s) => conteoEstados[s] > 0);
-    if (conDatos.length === 0) {
-      pedidosEstadoEl.innerHTML = '<p style="color:#9ca3af;font-size:.75rem;text-align:center;padding:16px 0;">Sin pedidos registrados</p>';
-    } else {
-      pedidosEstadoEl.innerHTML = conDatos.map((s) => `
+                </div>`,document.body.appendChild(w),document.getElementById("_meDeben_close").addEventListener("click",()=>{w.style.display="none"}),w.addEventListener("click",ge=>{ge.target===w&&(w.style.display="none")})}document.getElementById("_meDeben_body").innerHTML=pe,document.getElementById("_meDeben_totalVal").textContent="$"+x.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2}),w.style.display="flex"}));const ne={confirmado:"Confirmado",pago:"Pago parcial",produccion:"En producci\xF3n",envio:"En env\xEDo",salida:"Listo / Salida",retirar:"Por retirar",finalizado:"Finalizado",cancelado:"Cancelado"},oe={confirmado:"#3b82f6",pago:"#f59e0b",produccion:"#8b5cf6",envio:"#06b6d4",salida:"#10b981",retirar:"#f97316",finalizado:"#6b7280",cancelado:"#ef4444"},I={};pedidos.forEach(t=>{const a=(t.status||"confirmado").toLowerCase();I[a]=(I[a]||0)+1});const P=document.getElementById("dashPedidosEstado");if(P){const t=Object.keys(ne).filter(a=>I[a]>0);t.length===0?P.innerHTML='<p style="color:#9ca3af;font-size:.75rem;text-align:center;padding:16px 0;">Sin pedidos registrados</p>':P.innerHTML=t.map(a=>`
                 <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
-                    <span style="width:8px;height:8px;border-radius:50%;background:${estadosColor[s]};flex-shrink:0;"></span>
-                    <span style="font-size:.74rem;color:#374151;flex:1;">${estadosLabel[s]}</span>
-                    <span style="font-size:.82rem;font-weight:800;color:${estadosColor[s]};">${conteoEstados[s]}</span>
-                </div>`).join("");
-    }
-  }
-  const mesVsAnteriorEl = document.getElementById("dashMesVsAnterior");
-  if (mesVsAnteriorEl) {
-    const diffPct = ventasMesAnterior > 0 ? Math.round((ventasMesActual - ventasMesAnterior) / ventasMesAnterior * 100) : null;
-    const trend = diffPct === null ? "" : diffPct >= 0 ? `<span style="color:#16a34a;font-weight:800;font-size:.74rem;">&#9650; ${diffPct}%</span>` : `<span style="color:#dc2626;font-weight:800;font-size:.74rem;">&#9660; ${Math.abs(diffPct)}%</span>`;
-    const barPct = ventasMesAnterior > 0 ? Math.min(100, Math.round(ventasMesActual / ventasMesAnterior * 100)) : 0;
-    const mesActualNombre = now.toLocaleDateString("es-MX", { month: "long" });
-    const mesAnteriorNombre = fechaPrevMes.toLocaleDateString("es-MX", { month: "long" });
-    mesVsAnteriorEl.innerHTML = `
+                    <span style="width:8px;height:8px;border-radius:50%;background:${oe[a]};flex-shrink:0;"></span>
+                    <span style="font-size:.74rem;color:#374151;flex:1;">${ne[a]}</span>
+                    <span style="font-size:.82rem;font-weight:800;color:${oe[a]};">${I[a]}</span>
+                </div>`).join("")}const ae=document.getElementById("dashMesVsAnterior");if(ae){const t=$>0?Math.round((D-$)/$*100):null,a=t===null?"":t>=0?`<span style="color:#16a34a;font-weight:800;font-size:.74rem;">&#9650; ${t}%</span>`:`<span style="color:#dc2626;font-weight:800;font-size:.74rem;">&#9660; ${Math.abs(t)}%</span>`,m=$>0?Math.min(100,Math.round(D/$*100)):0,y=e.toLocaleDateString("es-MX",{month:"long"}),x=h.toLocaleDateString("es-MX",{month:"long"});ae.innerHTML=`
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
-                <span style="font-size:.72rem;color:#6b7280;text-transform:capitalize;">${mesActualNombre}</span>
+                <span style="font-size:.72rem;color:#6b7280;text-transform:capitalize;">${y}</span>
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="font-size:1rem;font-weight:900;color:#1e40af;">$${ventasMesActual.toLocaleString("es-MX", { maximumFractionDigits: 0 })}</span>
-                    ${trend}
+                    <span style="font-size:1rem;font-weight:900;color:#1e40af;">$${D.toLocaleString("es-MX",{maximumFractionDigits:0})}</span>
+                    ${a}
                 </div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                <span style="font-size:.72rem;color:#9ca3af;text-transform:capitalize;">${mesAnteriorNombre}</span>
-                <span style="font-size:.82rem;font-weight:600;color:#9ca3af;">$${ventasMesAnterior.toLocaleString("es-MX", { maximumFractionDigits: 0 })}</span>
+                <span style="font-size:.72rem;color:#9ca3af;text-transform:capitalize;">${x}</span>
+                <span style="font-size:.82rem;font-weight:600;color:#9ca3af;">$${$.toLocaleString("es-MX",{maximumFractionDigits:0})}</span>
             </div>
-            ${ventasMesAnterior > 0 ? `
+            ${$>0?`
             <div style="background:#dbeafe;border-radius:99px;height:6px;overflow:hidden;">
-                <div style="background:#3b82f6;height:100%;border-radius:99px;width:${barPct}%;transition:width .6s ease;"></div>
+                <div style="background:#3b82f6;height:100%;border-radius:99px;width:${m}%;transition:width .6s ease;"></div>
             </div>
-            <p style="font-size:.65rem;color:#93c5fd;margin-top:4px;text-align:right;">${barPct}% del mes anterior</p>
-            ` : '<p style="font-size:.7rem;color:#93c5fd;text-align:center;padding-top:8px;">Sin historial del mes anterior</p>'}`;
-  }
-  const materialConteo = {};
-  [...pedidosFinalizados || [], ...pedidos.filter((p) => (p.status || "").toLowerCase() === "finalizado")].forEach((p) => {
-    (p.productosInventario || []).forEach((item) => {
-      const nombre = item.nombre || item.name || "";
-      if (!nombre) return;
-      materialConteo[nombre] = (materialConteo[nombre] || 0) + (item.cantidad || item.quantity || 1);
-    });
-  });
-  const topMateriales = Object.entries(materialConteo).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  const materialTopEl = document.getElementById("dashMaterialTop");
-  if (materialTopEl) {
-    if (topMateriales.length === 0) {
-      materialTopEl.innerHTML = '<p style="color:#9ca3af;font-size:.75rem;text-align:center;padding:16px 0;">Sin datos de pedidos finalizados</p>';
-    } else {
-      const maxVal = topMateriales[0][1];
-      const colores = ["#8b5cf6", "#a78bfa", "#c4b5fd", "#ddd6fe", "#ede9fe"];
-      materialTopEl.innerHTML = topMateriales.map(([nombre, cnt], i) => {
-        const pct = Math.round(cnt / maxVal * 100);
-        return `
+            <p style="font-size:.65rem;color:#93c5fd;margin-top:4px;text-align:right;">${m}% del mes anterior</p>
+            `:'<p style="font-size:.7rem;color:#93c5fd;text-align:center;padding-top:8px;">Sin historial del mes anterior</p>'}`}const N={};[...pedidosFinalizados||[],...pedidos.filter(t=>(t.status||"").toLowerCase()==="finalizado")].forEach(t=>{(t.productosInventario||[]).forEach(a=>{const m=a.nombre||a.name||"";m&&(N[m]=(N[m]||0)+(a.cantidad||a.quantity||1))})});const R=Object.entries(N).sort((t,a)=>a[1]-t[1]).slice(0,5),X=document.getElementById("dashMaterialTop");if(X)if(R.length===0)X.innerHTML='<p style="color:#9ca3af;font-size:.75rem;text-align:center;padding:16px 0;">Sin datos de pedidos finalizados</p>';else{const t=R[0][1],a=["#8b5cf6","#a78bfa","#c4b5fd","#ddd6fe","#ede9fe"];X.innerHTML=R.map(([m,y],x)=>{const z=Math.round(y/t*100);return`
                 <div style="margin-bottom:8px;">
                     <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-                        <span style="font-size:.72rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:78%;">${nombre}</span>
-                        <span style="font-size:.72rem;font-weight:800;color:#7e22ce;">${cnt}x</span>
+                        <span style="font-size:.72rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:78%;">${m}</span>
+                        <span style="font-size:.72rem;font-weight:800;color:#7e22ce;">${y}x</span>
                     </div>
                     <div style="background:#f3e8ff;border-radius:99px;height:5px;overflow:hidden;">
-                        <div style="background:${colores[i]};height:100%;border-radius:99px;width:${pct}%;transition:width .6s ease;"></div>
+                        <div style="background:${a[x]};height:100%;border-radius:99px;width:${z}%;transition:width .6s ease;"></div>
                     </div>
-                </div>`;
-      }).join("");
-    }
-  }
-  _renderAtencionHoy();
-  _renderDiaMasRentable();
-  checkAlertasEntregas();
-  checkPedidosSinMovimiento();
-  actualizarSidebarBadges();
-  if (typeof actualizarBadgePOS === "function") actualizarBadgePOS();
-  renderSyncIndicator();
-  renderResumenDia();
-  renderAccesosRapidos();
-}
-function _renderDiaMasRentable() {
-  const el = document.getElementById("diaMasRentableWidget");
-  if (!el) return;
-  const dias = ["Domingo", "Lunes", "Martes", "Mi\xE9rcoles", "Jueves", "Viernes", "S\xE1bado"];
-  const totales = [0, 0, 0, 0, 0, 0, 0];
-  const fechasVistas = [/* @__PURE__ */ new Set(), /* @__PURE__ */ new Set(), /* @__PURE__ */ new Set(), /* @__PURE__ */ new Set(), /* @__PURE__ */ new Set(), /* @__PURE__ */ new Set(), /* @__PURE__ */ new Set()];
-  const fuentes = [
-    ...(window.salesHistory || []).filter((s) => s.date && s.method !== "Cancelado" && s.type !== "anticipo" && s.type !== "abono"),
-    ...(window.pedidosFinalizados || []).map((p) => ({ date: (p.fechaFinalizado || p.fecha || "").split("T")[0], total: p.total }))
-  ];
-  fuentes.forEach((s) => {
-    if (!s.date) return;
-    const d = /* @__PURE__ */ new Date(s.date + "T12:00:00");
-    if (isNaN(d)) return;
-    const dia = d.getDay();
-    totales[dia] += Number(s.total || 0);
-    fechasVistas[dia].add(s.date);
-  });
-  const promedios = totales.map((t, i) => fechasVistas[i].size > 0 ? t / fechasVistas[i].size : 0);
-  const maxVal = Math.max(...promedios, 1);
-  const maxDia = promedios.indexOf(maxVal);
-  el.innerHTML = `
+                </div>`}).join("")}_renderAtencionHoy(),_renderDiaMasRentable(),checkAlertasEntregas(),checkPedidosSinMovimiento(),actualizarSidebarBadges(),typeof actualizarBadgePOS=="function"&&actualizarBadgePOS(),renderSyncIndicator(),renderResumenDia(),renderAccesosRapidos()}function _renderDiaMasRentable(){const e=document.getElementById("diaMasRentableWidget");if(!e)return;const i=["Domingo","Lunes","Martes","Mi\xE9rcoles","Jueves","Viernes","S\xE1bado"],r=[0,0,0,0,0,0,0],f=[new Set,new Set,new Set,new Set,new Set,new Set,new Set];[...(window.salesHistory||[]).filter(o=>o.date&&o.method!=="Cancelado"&&o.type!=="anticipo"&&o.type!=="abono"),...(window.pedidosFinalizados||[]).map(o=>({date:(o.fechaFinalizado||o.fecha||"").split("T")[0],total:o.total}))].forEach(o=>{if(!o.date)return;const l=new Date(o.date+"T12:00:00");if(isNaN(l))return;const g=l.getDay();r[g]+=Number(o.total||0),f[g].add(o.date)});const s=r.map((o,l)=>f[l].size>0?o/f[l].size:0),n=Math.max(...s,1),d=s.indexOf(n);e.innerHTML=`
         <div style="display:flex;flex-direction:column;gap:6px;">
-        ${dias.map((nombre, i) => {
-    const pct = Math.round(promedios[i] / maxVal * 100);
-    const esMejor = i === maxDia;
-    return `<div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:.72rem;width:62px;color:${esMejor ? "#065f46" : "#6b7280"};font-weight:${esMejor ? "700" : "400"}">${nombre}</span>
+        ${i.map((o,l)=>{const g=Math.round(s[l]/n*100),h=l===d;return`<div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:.72rem;width:62px;color:${h?"#065f46":"#6b7280"};font-weight:${h?"700":"400"}">${o}</span>
                 <div style="flex:1;height:8px;background:#f3f4f6;border-radius:99px;overflow:hidden;">
-                    <div style="height:100%;border-radius:99px;width:${pct}%;background:${esMejor ? "#10b981" : "#a7f3d0"};transition:width .5s ease;"></div>
+                    <div style="height:100%;border-radius:99px;width:${g}%;background:${h?"#10b981":"#a7f3d0"};transition:width .5s ease;"></div>
                 </div>
-                <span style="font-size:.68rem;width:52px;text-align:right;color:${esMejor ? "#065f46" : "#9ca3af"};font-weight:${esMejor ? "700" : "400"}">$${promedios[i].toLocaleString("es-MX", { maximumFractionDigits: 0 })}</span>
-                ${esMejor ? '<span style="font-size:.65rem;">\u{1F3C6}</span>' : ""}
-            </div>`;
-  }).join("")}
-        </div>`;
-}
-function _renderAtencionHoy() {
-  const el = document.getElementById("atencionHoyList");
-  if (!el) return;
-  const hoy = window._fechaHoy ? window._fechaHoy() : (() => {
-    const d = /* @__PURE__ */ new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  })();
-  const items = [];
-  const porCobrar = (window.pedidos || []).filter(
-    (p) => p.status !== "cancelado" && calcSaldoPendiente(p) > 0
-  );
-  if (porCobrar.length > 0) {
-    items.push(`\u{1F4B3} ${porCobrar.length} pedido${porCobrar.length > 1 ? "s" : ""} con saldo pendiente`);
-  }
-  const sinAnticipo = (window.pedidos || []).filter(
-    (p) => p.status !== "cancelado" && !p.anticipo && !(p.pagos && p.pagos.length > 0)
-  );
-  if (sinAnticipo.length > 0) {
-    items.push(`\u26A0\uFE0F ${sinAnticipo.length} pedido${sinAnticipo.length > 1 ? "s" : ""} sin anticipo registrado`);
-  }
-  const vencidos = (window.pedidos || []).filter((p) => {
-    if (!p.entrega || p.status === "cancelado" || p.status === "finalizado") return false;
-    return /* @__PURE__ */ new Date(p.entrega + "T00:00:00") < /* @__PURE__ */ new Date(hoy + "T00:00:00");
-  });
-  if (vencidos.length > 0) {
-    items.push(`\u{1F6A8} ${vencidos.length} entrega${vencidos.length > 1 ? "s" : ""} vencida${vencidos.length > 1 ? "s" : ""}`);
-  }
-  if (items.length === 0) {
-    el.innerHTML = '<span class="text-green-600 text-sm">\u2705 Todo en orden por hoy</span>';
-  } else {
-    el.innerHTML = items.map((i) => `<div class="text-sm py-1 border-b border-gray-100">${typeof _esc === "function" ? _esc(i) : i}</div>`).join("");
-  }
-}
-window._renderAtencionHoy = _renderAtencionHoy;
-function actualizarSidebarBadges() {
-  const badgePedidos = document.getElementById("sidebarBadgePedidos");
-  if (badgePedidos) {
-    const activos = (pedidos || []).filter(
-      (p) => !["finalizado", "cancelado"].includes((p.status || "").toLowerCase())
-    ).length;
-    const prevVal = badgePedidos._lastVal;
-    if (activos > 0) {
-      badgePedidos.textContent = activos > 99 ? "99+" : activos;
-      badgePedidos.style.display = "inline-block";
-      if (prevVal !== activos) {
-        badgePedidos.classList.remove("badge-new");
-        void badgePedidos.offsetWidth;
-        badgePedidos.classList.add("badge-new");
-      }
-      const urgentes2 = (pedidos || []).filter((p) => {
-        const f = p.entrega || p.fechaEntrega;
-        if (!f || ["finalizado", "cancelado"].includes((p.status || "").toLowerCase())) return false;
-        const dias = typeof window.diasHastaEntrega === "function" ? window.diasHastaEntrega(f) : (() => {
-          const [y, m, d] = f.split("-").map(Number);
-          const h = /* @__PURE__ */ new Date();
-          h.setHours(0, 0, 0, 0);
-          return Math.round((new Date(y, m - 1, d) - h) / 864e5);
-        })();
-        return dias !== null && dias >= 0 && dias <= 2;
-      }).length;
-      badgePedidos.className = "sidebar-badge" + (urgentes2 > 0 ? "" : " badge-warn") + " badge-new";
-    } else {
-      badgePedidos.style.display = "none";
-    }
-    badgePedidos._lastVal = activos;
-    try {
-      if (ipcRenderer) {
-        ipcRenderer.send("update-tray-badge", { urgentes, total: activos });
-      }
-    } catch (e) {
-    }
-  }
-  const badgeInv = document.getElementById("sidebarBadgeInventory");
-  if (badgeInv) {
-    const bajos = (products || []).filter(
-      (p) => p.stock === 0 || p.stock > 0 && p.stock <= (p.stockMin || 5)
-    ).length;
-    const prevVal = badgeInv._lastVal;
-    if (bajos > 0) {
-      badgeInv.textContent = bajos > 99 ? "99+" : bajos;
-      badgeInv.style.display = "inline-block";
-      if (prevVal !== bajos) {
-        badgeInv.classList.remove("badge-new");
-        void badgeInv.offsetWidth;
-        badgeInv.classList.add("badge-new");
-      }
-      const agotados = (products || []).filter((p) => p.stock === 0).length;
-      badgeInv.className = "sidebar-badge" + (agotados > 0 ? "" : " badge-warn") + " badge-new";
-    } else {
-      badgeInv.style.display = "none";
-    }
-    badgeInv._lastVal = bajos;
-  }
-}
-window.actualizarSidebarBadges = actualizarSidebarBadges;
-function checkPedidosSinMovimiento() {
-  const DIAS = 3;
-  const hoy = /* @__PURE__ */ new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const estadosActivos = ["confirmado", "pago", "produccion", "envio", "salida", "retirar"];
-  const estadosLabel = {
-    confirmado: "Confirmado",
-    pago: "Pago parcial",
-    produccion: "En producci\xF3n",
-    envio: "En env\xEDo",
-    salida: "Salida",
-    retirar: "Por retirar"
-  };
-  const sinMov = (pedidos || []).filter((p) => {
-    if (!estadosActivos.includes(p.status)) return false;
-    const ref = new Date(p.fechaUltimoEstado || p.fechaCreacion);
-    ref.setHours(0, 0, 0, 0);
-    return Math.round((hoy - ref) / 864e5) >= DIAS;
-  }).map((p) => {
-    const ref = new Date(p.fechaUltimoEstado || p.fechaCreacion);
-    ref.setHours(0, 0, 0, 0);
-    return { ...p, diasSinMov: Math.round((hoy - ref) / 864e5) };
-  }).sort((a, b) => b.diasSinMov - a.diasSinMov);
-  const banner = document.getElementById("alertaSinMovimiento");
-  const lista = document.getElementById("alertaSinMovimientoLista");
-  if (!banner || !lista) return;
-  if (sinMov.length === 0) {
-    banner.classList.remove("visible");
-    return;
-  }
-  banner.classList.add("visible");
-  const sub = document.getElementById("alertaSinMovimientoSubtitulo");
-  if (sub) sub.textContent = sinMov.length === 1 ? `1 pedido sin avance hace m\xE1s de ${DIAS} d\xEDas` : `${sinMov.length} pedidos sin avance hace m\xE1s de ${DIAS} d\xEDas`;
-  lista.innerHTML = sinMov.map((p) => `
+                <span style="font-size:.68rem;width:52px;text-align:right;color:${h?"#065f46":"#9ca3af"};font-weight:${h?"700":"400"}">$${s[l].toLocaleString("es-MX",{maximumFractionDigits:0})}</span>
+                ${h?'<span style="font-size:.65rem;">\u{1F3C6}</span>':""}
+            </div>`}).join("")}
+        </div>`}function _renderAtencionHoy(){const e=document.getElementById("atencionHoyList");if(!e)return;const i=window._fechaHoy?window._fechaHoy():(()=>{const n=new Date;return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`})(),r=[],f=(window.pedidos||[]).filter(n=>n.status!=="cancelado"&&calcSaldoPendiente(n)>0);f.length>0&&r.push(`\u{1F4B3} ${f.length} pedido${f.length>1?"s":""} con saldo pendiente`);const c=(window.pedidos||[]).filter(n=>n.status!=="cancelado"&&!n.anticipo&&!(n.pagos&&n.pagos.length>0));c.length>0&&r.push(`\u26A0\uFE0F ${c.length} pedido${c.length>1?"s":""} sin anticipo registrado`);const s=(window.pedidos||[]).filter(n=>!n.entrega||n.status==="cancelado"||n.status==="finalizado"?!1:new Date(n.entrega+"T00:00:00")<new Date(i+"T00:00:00"));s.length>0&&r.push(`\u{1F6A8} ${s.length} entrega${s.length>1?"s":""} vencida${s.length>1?"s":""}`),r.length===0?e.innerHTML='<span class="text-green-600 text-sm">\u2705 Todo en orden por hoy</span>':e.innerHTML=r.map(n=>`<div class="text-sm py-1 border-b border-gray-100">${typeof _esc=="function"?_esc(n):n}</div>`).join("")}window._renderAtencionHoy=_renderAtencionHoy;function actualizarSidebarBadges(){const e=document.getElementById("sidebarBadgePedidos");if(e){const r=(pedidos||[]).filter(c=>!["finalizado","cancelado"].includes((c.status||"").toLowerCase())).length,f=e._lastVal;if(r>0){e.textContent=r>99?"99+":r,e.style.display="inline-block",f!==r&&(e.classList.remove("badge-new"),e.offsetWidth,e.classList.add("badge-new"));const c=(pedidos||[]).filter(s=>{const n=s.entrega||s.fechaEntrega;if(!n||["finalizado","cancelado"].includes((s.status||"").toLowerCase()))return!1;const d=typeof window.diasHastaEntrega=="function"?window.diasHastaEntrega(n):(()=>{const[o,l,g]=n.split("-").map(Number),h=new Date;return h.setHours(0,0,0,0),Math.round((new Date(o,l-1,g)-h)/864e5)})();return d!==null&&d>=0&&d<=2}).length;e.className="sidebar-badge"+(c>0?"":" badge-warn")+" badge-new"}else e.style.display="none";e._lastVal=r;try{ipcRenderer&&ipcRenderer.send("update-tray-badge",{urgentes,total:r})}catch{}}const i=document.getElementById("sidebarBadgeInventory");if(i){const r=(products||[]).filter(c=>c.stock===0||c.stock>0&&c.stock<=(c.stockMin||5)).length,f=i._lastVal;if(r>0){i.textContent=r>99?"99+":r,i.style.display="inline-block",f!==r&&(i.classList.remove("badge-new"),i.offsetWidth,i.classList.add("badge-new"));const c=(products||[]).filter(s=>s.stock===0).length;i.className="sidebar-badge"+(c>0?"":" badge-warn")+" badge-new"}else i.style.display="none";i._lastVal=r}}window.actualizarSidebarBadges=actualizarSidebarBadges;function checkPedidosSinMovimiento(){const i=new Date;i.setHours(0,0,0,0);const r=["confirmado","pago","produccion","envio","salida","retirar"],f={confirmado:"Confirmado",pago:"Pago parcial",produccion:"En producci\xF3n",envio:"En env\xEDo",salida:"Salida",retirar:"Por retirar"},c=(pedidos||[]).filter(o=>{if(!r.includes(o.status))return!1;const l=new Date(o.fechaUltimoEstado||o.fechaCreacion);return l.setHours(0,0,0,0),Math.round((i-l)/864e5)>=3}).map(o=>{const l=new Date(o.fechaUltimoEstado||o.fechaCreacion);return l.setHours(0,0,0,0),{...o,diasSinMov:Math.round((i-l)/864e5)}}).sort((o,l)=>l.diasSinMov-o.diasSinMov),s=document.getElementById("alertaSinMovimiento"),n=document.getElementById("alertaSinMovimientoLista");if(!s||!n)return;if(c.length===0){s.classList.remove("visible");return}s.classList.add("visible");const d=document.getElementById("alertaSinMovimientoSubtitulo");d&&(d.textContent=c.length===1?"1 pedido sin avance hace m\xE1s de 3 d\xEDas":`${c.length} pedidos sin avance hace m\xE1s de 3 d\xEDas`),n.innerHTML=c.map(o=>`
         <div class="alerta-pedido-card" style="border-color:#9ca3af;">
             <span class="text-2xl">\u23F8\uFE0F</span>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <span class="font-bold text-gray-800 text-sm">${_esc(p.folio || "")}</span>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${estadosLabel[p.status] || p.status}</span>
+                    <span class="font-bold text-gray-800 text-sm">${_esc(o.folio||"")}</span>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">${f[o.status]||o.status}</span>
                 </div>
-                <p class="text-gray-700 text-sm font-medium truncate">${_esc(p.cliente)}</p>
-                <p class="text-gray-500 text-xs truncate">${_esc(p.concepto || "")}</p>
+                <p class="text-gray-700 text-sm font-medium truncate">${_esc(o.cliente)}</p>
+                <p class="text-gray-500 text-xs truncate">${_esc(o.concepto||"")}</p>
             </div>
             <div class="text-right shrink-0">
-                <p class="text-sm font-bold text-gray-500">${p.diasSinMov}d sin cambios</p>
-                ${p.entrega ? `<p class="text-xs text-gray-400">Entrega: ${_esc(p.entrega)}</p>` : ""}
-                <button onclick="openPedidoStatusModal('${_esc(p.id)}')" style="font-size:.7rem;color:#6b7280;background:none;border:1px solid #d1d5db;border-radius:6px;padding:2px 8px;cursor:pointer;margin-top:4px;">Actualizar</button>
+                <p class="text-sm font-bold text-gray-500">${o.diasSinMov}d sin cambios</p>
+                ${o.entrega?`<p class="text-xs text-gray-400">Entrega: ${_esc(o.entrega)}</p>`:""}
+                <button onclick="openPedidoStatusModal('${_esc(o.id)}')" style="font-size:.7rem;color:#6b7280;background:none;border:1px solid #d1d5db;border-radius:6px;padding:2px 8px;cursor:pointer;margin-top:4px;">Actualizar</button>
             </div>
-        </div>`).join("");
-}
-window.checkPedidosSinMovimiento = checkPedidosSinMovimiento;
-function renderSyncIndicator() {
-  let estado = "ok";
-  if (!navigator.onLine) {
-    estado = "offline";
-  } else if (window._supabaseOnline === false) {
-    estado = "offline";
-  } else if (window._supabaseSyncing === true) {
-    estado = "syncing";
-  }
-  const iconMap = { ok: "\u{1F7E2}", syncing: "\u{1F7E1}", offline: "\u{1F534}" };
-  const labelMap = { ok: "Sincronizado", syncing: "Sincronizando...", offline: "Sin conexi\xF3n" };
-  const colorMap = { ok: "#16a34a", syncing: "#d97706", offline: "#dc2626" };
-  const icon = iconMap[estado];
-  const label = labelMap[estado];
-  const color = colorMap[estado];
-  const indicadorStyle = "display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.85);border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:default;user-select:none;";
-  let el = document.getElementById("syncIndicator");
-  if (!el) {
-    const header = document.getElementById("dashDate")?.closest('.flex, header, [class*="header"]') || document.getElementById("dashGreeting")?.closest('.flex, [class*="header"], [class*="card"]') || document.querySelector('#dashboard-section, #dashboardSection, [id*="dashboard"]');
-    if (!header) {
-      console.warn("[SyncIndicator] No se encontr\xF3 contenedor de header para el indicador de sync");
-      const fallback = document.querySelector("#sidebar footer, #sidebar .mt-auto, aside footer");
-      if (fallback && !document.getElementById("syncIndicator")) {
-        const indicadorHTML = `<div id="syncIndicator" style="${indicadorStyle}margin:8px;"></div>`;
-        fallback.insertAdjacentHTML("afterbegin", indicadorHTML);
-        el = document.getElementById("syncIndicator");
-      }
-      if (!el) return;
-    } else {
-      el = document.createElement("div");
-      el.id = "syncIndicator";
-      el.style.cssText = indicadorStyle;
-      header.insertAdjacentElement("afterbegin", el);
-    }
-  }
-  el.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;"></span><span style="color:${color};">${label}</span>`;
-  if (!window._syncIndicatorBound) {
-    window._syncIndicatorBound = true;
-    window.addEventListener("online", () => renderSyncIndicator());
-    window.addEventListener("offline", () => renderSyncIndicator());
-  }
-  _toggleSyncBanner(estado === "offline" || estado === "error");
-}
-window.renderSyncIndicator = renderSyncIndicator;
-function _toggleSyncBanner(offline) {
-  let banner = document.getElementById("syncOfflineBanner");
-  if (offline) {
-    if (!banner) {
-      banner = document.createElement("div");
-      banner.id = "syncOfflineBanner";
-      banner.style.cssText = "background:#ef4444;color:white;text-align:center;padding:4px 12px;font-size:12px;font-weight:600;position:sticky;top:0;z-index:100";
-      banner.textContent = "\u26A0\uFE0F Sin conexi\xF3n \u2014 los cambios se guardar\xE1n localmente";
-      const main = document.querySelector("main, .main-content, #mainContent");
-      if (main) main.insertAdjacentElement("afterbegin", banner);
-    }
-  } else {
-    if (banner) banner.remove();
-  }
-}
-window._toggleSyncBanner = _toggleSyncBanner;
-function renderResumenDia() {
-  const now = /* @__PURE__ */ new Date();
-  const hora = now.getHours();
-  const saludo = hora < 12 ? "Buenos d\xEDas" : hora < 19 ? "Buenas tardes" : "Buenas noches";
-  const fechaStr = now.toLocaleDateString("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
-  const fechaCap = fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1);
-  const hoy = typeof window._fechaHoy === "function" ? window._fechaHoy() : (() => {
-    const d = /* @__PURE__ */ new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  })();
-  const pedidosActivos = (window.pedidos || []).filter(
-    (p) => !["finalizado", "cancelado"].includes((p.status || "").toLowerCase())
-  );
-  const nActivos = pedidosActivos.length;
-  const nHoy = pedidosActivos.filter((p) => (p.entrega || p.fechaEntrega) === hoy).length;
-  const totalPorCobrar = pedidosActivos.reduce((acc, p) => acc + calcSaldoPendiente(p), 0);
-  const sinFecha = pedidosActivos.filter((p) => !p.entrega && !p.fechaEntrega).length;
-  const nombreTienda = window.storeConfig?.name || window.storeConfig?.storeName || window.storeName || "Maneki";
-  const html = `
+        </div>`).join("")}window.checkPedidosSinMovimiento=checkPedidosSinMovimiento;function renderSyncIndicator(){let e="ok";navigator.onLine?window._supabaseOnline===!1?e="offline":window._supabaseSyncing===!0&&(e="syncing"):e="offline";const i={ok:"\u{1F7E2}",syncing:"\u{1F7E1}",offline:"\u{1F534}"},r={ok:"Sincronizado",syncing:"Sincronizando...",offline:"Sin conexi\xF3n"},f={ok:"#16a34a",syncing:"#d97706",offline:"#dc2626"},c=i[e],s=r[e],n=f[e],d="display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.85);border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:default;user-select:none;";let o=document.getElementById("syncIndicator");if(!o){const l=document.getElementById("dashDate")?.closest('.flex, header, [class*="header"]')||document.getElementById("dashGreeting")?.closest('.flex, [class*="header"], [class*="card"]')||document.querySelector('#dashboard-section, #dashboardSection, [id*="dashboard"]');if(l)o=document.createElement("div"),o.id="syncIndicator",o.style.cssText=d,l.insertAdjacentElement("afterbegin",o);else{console.warn("[SyncIndicator] No se encontr\xF3 contenedor de header para el indicador de sync");const g=document.querySelector("#sidebar footer, #sidebar .mt-auto, aside footer");if(g&&!document.getElementById("syncIndicator")){const h=`<div id="syncIndicator" style="${d}margin:8px;"></div>`;g.insertAdjacentHTML("afterbegin",h),o=document.getElementById("syncIndicator")}if(!o)return}}o.innerHTML=`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${n};flex-shrink:0;"></span><span style="color:${n};">${s}</span>`,window._syncIndicatorBound||(window._syncIndicatorBound=!0,window.addEventListener("online",()=>renderSyncIndicator()),window.addEventListener("offline",()=>renderSyncIndicator())),_toggleSyncBanner(e==="offline"||e==="error")}window.renderSyncIndicator=renderSyncIndicator;function _toggleSyncBanner(e){let i=document.getElementById("syncOfflineBanner");if(e){if(!i){i=document.createElement("div"),i.id="syncOfflineBanner",i.style.cssText="background:#ef4444;color:white;text-align:center;padding:4px 12px;font-size:12px;font-weight:600;position:sticky;top:0;z-index:100",i.textContent="\u26A0\uFE0F Sin conexi\xF3n \u2014 los cambios se guardar\xE1n localmente";const r=document.querySelector("main, .main-content, #mainContent");r&&r.insertAdjacentElement("afterbegin",i)}}else i&&i.remove()}window._toggleSyncBanner=_toggleSyncBanner;function renderResumenDia(){const e=new Date,i=e.getHours(),r=i<12?"Buenos d\xEDas":i<19?"Buenas tardes":"Buenas noches",f=e.toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long",year:"numeric"}),c=f.charAt(0).toUpperCase()+f.slice(1),s=typeof window._fechaHoy=="function"?window._fechaHoy():(()=>{const p=new Date;return`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,"0")}-${String(p.getDate()).padStart(2,"0")}`})(),n=(window.pedidos||[]).filter(p=>!["finalizado","cancelado"].includes((p.status||"").toLowerCase())),d=n.length,o=n.filter(p=>(p.entrega||p.fechaEntrega)===s).length,l=n.reduce((p,E)=>p+calcSaldoPendiente(E),0),g=n.filter(p=>!p.entrega&&!p.fechaEntrega).length,h=window.storeConfig?.name||window.storeConfig?.storeName||window.storeName||"Maneki",u=`
         <div id="resumenDia" style="background:linear-gradient(135deg,#fff9f0 0%,#fffbf5 100%);border:1.5px solid #f5e6cc;border-radius:18px;padding:20px 22px;margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
                 <div>
-                    <h2 style="font-size:1.15rem;font-weight:800;color:#1f2937;margin:0;">${saludo}, ${nombreTienda} \u{1F431}</h2>
-                    <p style="font-size:.8rem;color:#9ca3af;margin:2px 0 0;">${fechaCap}</p>
+                    <h2 style="font-size:1.15rem;font-weight:800;color:#1f2937;margin:0;">${r}, ${h} \u{1F431}</h2>
+                    <p style="font-size:.8rem;color:#9ca3af;margin:2px 0 0;">${c}</p>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;">
                 <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
-                    <p style="font-size:1.4rem;font-weight:900;color:#C5A572;margin:0;">${nActivos}</p>
+                    <p style="font-size:1.4rem;font-weight:900;color:#C5A572;margin:0;">${d}</p>
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">pedidos activos</p>
                 </div>
                 <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
-                    <p style="font-size:1.4rem;font-weight:900;color:#f97316;margin:0;">${nHoy}</p>
+                    <p style="font-size:1.4rem;font-weight:900;color:#f97316;margin:0;">${o}</p>
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">para entregar hoy</p>
                 </div>
                 <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
-                    <p style="font-size:1.1rem;font-weight:900;color:#dc2626;margin:0;">$${totalPorCobrar.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p style="font-size:1.1rem;font-weight:900;color:#dc2626;margin:0;">$${l.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">por cobrar</p>
                 </div>
-                ${sinFecha > 0 ? `<div style="background:#fef9c3;border-radius:12px;padding:10px 12px;border:1px solid #fde68a;">
-                    <p style="font-size:1.4rem;font-weight:900;color:#b45309;margin:0;">${sinFecha}</p>
+                ${g>0?`<div style="background:#fef9c3;border-radius:12px;padding:10px 12px;border:1px solid #fde68a;">
+                    <p style="font-size:1.4rem;font-weight:900;color:#b45309;margin:0;">${g}</p>
                     <p style="font-size:.7rem;color:#92400e;margin:2px 0 0;">sin fecha de entrega</p>
-                </div>` : ""}
+                </div>`:""}
             </div>
-        </div>`;
-  const existing = document.getElementById("resumenDia");
-  if (existing) {
-    const temp = document.createElement("div");
-    temp.innerHTML = html;
-    const newContent = temp.firstElementChild;
-    if (newContent) existing.innerHTML = newContent.innerHTML;
-    return;
-  }
-  const dashRoot = document.querySelector('#dashboard-section > div, #dashboardSection > div, [id*="dashboard-section"] > div') || document.getElementById("dashGoalBar")?.closest('.p-6, .p-4, [class*="card"]')?.parentElement;
-  if (dashRoot) {
-    dashRoot.insertAdjacentHTML("afterbegin", html);
-  }
-}
-window.renderResumenDia = renderResumenDia;
-function renderAccesosRapidos() {
-  if (document.getElementById("accesosRapidos")) return;
-  const acciones = [
-    { emoji: "\u2795", label: "Nuevo Pedido", fn: () => {
-      if (typeof openPedidoModal === "function") openPedidoModal();
-      else manekiToastExport("M\xF3dulo no cargado", "warn");
-    } },
-    { emoji: "\u{1F4E6}", label: "Inventario", fn: () => {
-      if (typeof showSection === "function") showSection("inventario");
-    } },
-    { emoji: "\u{1F4B0}", label: "Registrar Cobro", fn: () => {
-      if (typeof openIncomeModal === "function") openIncomeModal();
-      else if (typeof showSection === "function") showSection("balance");
-    } },
-    { emoji: "\u{1F4CA}", label: "Reportes", fn: () => {
-      if (typeof showSection === "function") showSection("reportes");
-    } },
-    { emoji: "\u{1F464}", label: "Clientes", fn: () => {
-      if (typeof showSection === "function") showSection("clientes");
-    } }
-  ];
-  const container = document.createElement("div");
-  container.id = "accesosRapidos";
-  container.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;padding:12px 16px;margin-bottom:16px;";
-  acciones.forEach((a, i) => {
-    const btn = document.createElement("button");
-    btn.style.cssText = "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;min-height:64px;background:#fff;border:1.5px solid #f3f4f6;border-radius:14px;cursor:pointer;font-family:inherit;transition:border-color .15s,box-shadow .15s;";
-    btn.innerHTML = `<span style="font-size:1.5rem;line-height:1;">${a.emoji}</span><span style="font-size:.68rem;font-weight:700;color:#374151;text-align:center;line-height:1.2;">${a.label}</span>`;
-    btn.title = a.label;
-    btn.addEventListener("click", a.fn);
-    btn.addEventListener("mouseenter", () => {
-      btn.style.borderColor = "#C5A572";
-      btn.style.boxShadow = "0 2px 8px rgba(197,165,114,.18)";
-    });
-    btn.addEventListener("mouseleave", () => {
-      btn.style.borderColor = "#f3f4f6";
-      btn.style.boxShadow = "";
-    });
-    container.appendChild(btn);
-  });
-  const afterResumen = document.getElementById("resumenDia");
-  if (afterResumen) {
-    afterResumen.insertAdjacentElement("afterend", container);
-    return;
-  }
-  const dashRoot = document.querySelector('#dashboard-section > div, #dashboardSection > div, [id*="dashboard-section"] > div') || document.getElementById("dashGoalBar")?.closest('.p-6, .p-4, [class*="card"]')?.parentElement;
-  if (dashRoot) {
-    dashRoot.insertAdjacentElement("afterbegin", container);
-  }
-}
-window.renderAccesosRapidos = renderAccesosRapidos;
-let _cashFlowChart = null;
-function renderCashFlowChart() {
-  const canvas = document.getElementById("dashCashFlowChart");
-  if (!canvas) return;
-  if (typeof Chart === "undefined") return;
-  const hoy = /* @__PURE__ */ new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const semanas = 8;
-  const labels = [], ingresos = [], gastos = [];
-  for (let i = semanas - 1; i >= 0; i--) {
-    const finSemana = new Date(hoy);
-    finSemana.setDate(finSemana.getDate() - i * 7);
-    const iniSemana = new Date(finSemana);
-    iniSemana.setDate(iniSemana.getDate() - 6);
-    const _fLocal = (d) => d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
-    const ini = _fLocal(iniSemana), fin = _fLocal(finSemana);
-    let ingreso = 0;
-    (window.salesHistory || []).forEach((s) => {
-      if (!s.date || s.method === "Cancelado" || s.type === "abono" || s.type === "anticipo") return;
-      if (s.date >= ini && s.date <= fin) ingreso += Number(s.total || 0);
-    });
-    (window.pedidosFinalizados || []).forEach((p) => {
-      const f = (p.fechaFinalizado || p.fecha || "").split("T")[0];
-      if (f >= ini && f <= fin) ingreso += Number(p.total || 0);
-    });
-    let gasto = 0;
-    (window.expenses || []).forEach((e) => {
-      if (e.date && e.date >= ini && e.date <= fin) gasto += Number(e.amount || 0);
-    });
-    const label = iniSemana.getDate() + "/" + (iniSemana.getMonth() + 1) + " - " + finSemana.getDate() + "/" + (finSemana.getMonth() + 1);
-    labels.push(label);
-    ingresos.push(Math.round(ingreso));
-    gastos.push(Math.round(gasto));
-  }
-  if (_cashFlowChart) {
-    _cashFlowChart.destroy();
-    _cashFlowChart = null;
-  }
-  _cashFlowChart = new Chart(canvas, {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        {
-          label: "Ingresos",
-          data: ingresos,
-          backgroundColor: "rgba(22, 163, 74, 0.7)",
-          borderRadius: 6,
-          borderSkipped: false
-        },
-        {
-          label: "Gastos",
-          data: gastos,
-          backgroundColor: "rgba(220, 38, 38, 0.55)",
-          borderRadius: 6,
-          borderSkipped: false
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { intersect: false, mode: "index" },
-      plugins: {
-        legend: { display: true, position: "top", labels: { boxWidth: 12, padding: 12, font: { size: 11 } } },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => ctx.dataset.label + ": $" + ctx.parsed.y.toLocaleString("es-MX")
-          }
-        }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } },
-        y: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.04)" }, ticks: { font: { size: 10 }, callback: (v) => "$" + v.toLocaleString("es-MX") } }
-      }
-    }
-  });
-}
-window.renderCashFlowChart = renderCashFlowChart;
-function generarResumenSemanalWA() {
-  const hoy = /* @__PURE__ */ new Date();
-  const hace7 = new Date(hoy);
-  hace7.setDate(hace7.getDate() - 7);
-  const _f = (d) => d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
-  const ini = _f(hace7), fin = _f(hoy);
-  let ventasTotal = 0, ventasCount = 0;
-  (window.salesHistory || []).forEach((s) => {
-    if (!s.date || s.method === "Cancelado" || s.type === "abono" || s.type === "anticipo") return;
-    if (s.date >= ini && s.date <= fin) {
-      ventasTotal += Number(s.total || 0);
-      ventasCount++;
-    }
-  });
-  (window.pedidosFinalizados || []).forEach((p) => {
-    const f = (p.fechaFinalizado || p.fecha || "").split("T")[0];
-    if (f >= ini && f <= fin) {
-      ventasTotal += Number(p.total || 0);
-      ventasCount++;
-    }
-  });
-  let gastosTotal = 0;
-  (window.expenses || []).forEach((e) => {
-    if (e.date && e.date >= ini && e.date <= fin) gastosTotal += Number(e.amount || 0);
-  });
-  const pedidosNuevos = (window.pedidos || []).filter((p) => {
-    const f = (p.fechaPedido || p.fechaCreacion || p.fecha || "").split("T")[0];
-    return f >= ini && f <= fin;
-  }).length;
-  const neto = ventasTotal - gastosTotal;
-  const ticket = ventasCount > 0 ? ventasTotal / ventasCount : 0;
-  const texto = `\u{1F4CA} *Resumen Semanal \u2014 Maneki Store*
-\u{1F4C5} ${ini} al ${fin}
+        </div>`,b=document.getElementById("resumenDia");if(b){const p=document.createElement("div");p.innerHTML=u;const E=p.firstElementChild;E&&(b.innerHTML=E.innerHTML);return}const M=document.querySelector('#dashboard-section > div, #dashboardSection > div, [id*="dashboard-section"] > div')||document.getElementById("dashGoalBar")?.closest('.p-6, .p-4, [class*="card"]')?.parentElement;M&&M.insertAdjacentHTML("afterbegin",u)}window.renderResumenDia=renderResumenDia;function renderAccesosRapidos(){if(document.getElementById("accesosRapidos"))return;const e=[{emoji:"\u2795",label:"Nuevo Pedido",fn:()=>{typeof openPedidoModal=="function"?openPedidoModal():manekiToastExport("M\xF3dulo no cargado","warn")}},{emoji:"\u{1F4E6}",label:"Inventario",fn:()=>{typeof showSection=="function"&&showSection("inventario")}},{emoji:"\u{1F4B0}",label:"Registrar Cobro",fn:()=>{typeof openIncomeModal=="function"?openIncomeModal():typeof showSection=="function"&&showSection("balance")}},{emoji:"\u{1F4CA}",label:"Reportes",fn:()=>{typeof showSection=="function"&&showSection("reportes")}},{emoji:"\u{1F464}",label:"Clientes",fn:()=>{typeof showSection=="function"&&showSection("clientes")}}],i=document.createElement("div");i.id="accesosRapidos",i.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;padding:12px 16px;margin-bottom:16px;",e.forEach((c,s)=>{const n=document.createElement("button");n.style.cssText="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;min-height:64px;background:#fff;border:1.5px solid #f3f4f6;border-radius:14px;cursor:pointer;font-family:inherit;transition:border-color .15s,box-shadow .15s;",n.innerHTML=`<span style="font-size:1.5rem;line-height:1;">${c.emoji}</span><span style="font-size:.68rem;font-weight:700;color:#374151;text-align:center;line-height:1.2;">${c.label}</span>`,n.title=c.label,n.addEventListener("click",c.fn),n.addEventListener("mouseenter",()=>{n.style.borderColor="#C5A572",n.style.boxShadow="0 2px 8px rgba(197,165,114,.18)"}),n.addEventListener("mouseleave",()=>{n.style.borderColor="#f3f4f6",n.style.boxShadow=""}),i.appendChild(n)});const r=document.getElementById("resumenDia");if(r){r.insertAdjacentElement("afterend",i);return}const f=document.querySelector('#dashboard-section > div, #dashboardSection > div, [id*="dashboard-section"] > div')||document.getElementById("dashGoalBar")?.closest('.p-6, .p-4, [class*="card"]')?.parentElement;f&&f.insertAdjacentElement("afterbegin",i)}window.renderAccesosRapidos=renderAccesosRapidos;let _cashFlowChart=null;function renderCashFlowChart(){const e=document.getElementById("dashCashFlowChart");if(!e||typeof Chart>"u")return;const i=new Date;i.setHours(0,0,0,0);const r=8,f=[],c=[],s=[];for(let n=r-1;n>=0;n--){const d=new Date(i);d.setDate(d.getDate()-n*7);const o=new Date(d);o.setDate(o.getDate()-6);const l=p=>p.getFullYear()+"-"+("0"+(p.getMonth()+1)).slice(-2)+"-"+("0"+p.getDate()).slice(-2),g=l(o),h=l(d);let u=0;(window.salesHistory||[]).forEach(p=>{!p.date||p.method==="Cancelado"||p.type==="abono"||p.type==="anticipo"||p.date>=g&&p.date<=h&&(u+=Number(p.total||0))}),(window.pedidosFinalizados||[]).forEach(p=>{const E=(p.fechaFinalizado||p.fecha||"").split("T")[0];E>=g&&E<=h&&(u+=Number(p.total||0))});let b=0;(window.expenses||[]).forEach(p=>{p.date&&p.date>=g&&p.date<=h&&(b+=Number(p.amount||0))});const M=o.getDate()+"/"+(o.getMonth()+1)+" - "+d.getDate()+"/"+(d.getMonth()+1);f.push(M),c.push(Math.round(u)),s.push(Math.round(b))}_cashFlowChart&&(_cashFlowChart.destroy(),_cashFlowChart=null),_cashFlowChart=new Chart(e,{type:"bar",data:{labels:f,datasets:[{label:"Ingresos",data:c,backgroundColor:"rgba(22, 163, 74, 0.7)",borderRadius:6,borderSkipped:!1},{label:"Gastos",data:s,backgroundColor:"rgba(220, 38, 38, 0.55)",borderRadius:6,borderSkipped:!1}]},options:{responsive:!0,maintainAspectRatio:!1,interaction:{intersect:!1,mode:"index"},plugins:{legend:{display:!0,position:"top",labels:{boxWidth:12,padding:12,font:{size:11}}},tooltip:{callbacks:{label:n=>n.dataset.label+": $"+n.parsed.y.toLocaleString("es-MX")}}},scales:{x:{grid:{display:!1},ticks:{font:{size:9},maxRotation:45}},y:{beginAtZero:!0,grid:{color:"rgba(0,0,0,0.04)"},ticks:{font:{size:10},callback:n=>"$"+n.toLocaleString("es-MX")}}}}})}window.renderCashFlowChart=renderCashFlowChart;function generarResumenSemanalWA(){const e=new Date,i=new Date(e);i.setDate(i.getDate()-7);const r=u=>u.getFullYear()+"-"+("0"+(u.getMonth()+1)).slice(-2)+"-"+("0"+u.getDate()).slice(-2),f=r(i),c=r(e);let s=0,n=0;(window.salesHistory||[]).forEach(u=>{!u.date||u.method==="Cancelado"||u.type==="abono"||u.type==="anticipo"||u.date>=f&&u.date<=c&&(s+=Number(u.total||0),n++)}),(window.pedidosFinalizados||[]).forEach(u=>{const b=(u.fechaFinalizado||u.fecha||"").split("T")[0];b>=f&&b<=c&&(s+=Number(u.total||0),n++)});let d=0;(window.expenses||[]).forEach(u=>{u.date&&u.date>=f&&u.date<=c&&(d+=Number(u.amount||0))});const o=(window.pedidos||[]).filter(u=>{const b=(u.fechaPedido||u.fechaCreacion||u.fecha||"").split("T")[0];return b>=f&&b<=c}).length,l=s-d,g=n>0?s/n:0,h=`\u{1F4CA} *Resumen Semanal \u2014 Maneki Store*
+\u{1F4C5} ${f} al ${c}
 
-\u{1F4B0} Ventas: $${ventasTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })} (${ventasCount} ventas)
-\u{1F4B8} Gastos: $${gastosTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-\u{1F4C8} Neto: $${neto.toLocaleString("es-MX", { minimumFractionDigits: 2 })} ${neto >= 0 ? "\u2705" : "\u26A0\uFE0F"}
-\u{1F3AB} Ticket promedio: $${ticket.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-\u{1F4CB} Pedidos nuevos: ${pedidosNuevos}
+\u{1F4B0} Ventas: $${s.toLocaleString("es-MX",{minimumFractionDigits:2})} (${n} ventas)
+\u{1F4B8} Gastos: $${d.toLocaleString("es-MX",{minimumFractionDigits:2})}
+\u{1F4C8} Neto: $${l.toLocaleString("es-MX",{minimumFractionDigits:2})} ${l>=0?"\u2705":"\u26A0\uFE0F"}
+\u{1F3AB} Ticket promedio: $${g.toLocaleString("es-MX",{minimumFractionDigits:0,maximumFractionDigits:0})}
+\u{1F4CB} Pedidos nuevos: ${o}
 
-_Generado desde Maneki POS_`;
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(texto).then(() => {
-      manekiToastExport("\u{1F4CB} Resumen copiado \u2014 p\xE9galo en WhatsApp", "ok");
-    });
-  } else {
-    prompt("Copia este texto para WhatsApp:", texto);
-  }
-  return texto;
-}
-window.generarResumenSemanalWA = generarResumenSemanalWA;
-function checkGastosInusuales() {
-  const expenses = window.expenses || [];
-  if (expenses.length < 10) return;
-  const hoy = /* @__PURE__ */ new Date();
-  const mesActual = hoy.getFullYear() + "-" + ("0" + (hoy.getMonth() + 1)).slice(-2);
-  const porCategoria = {};
-  expenses.forEach((e) => {
-    if (!e.date) return;
-    const mes = e.date.substring(0, 7);
-    const cat = e.etiqueta || e.category || "Otros";
-    if (!porCategoria[cat]) porCategoria[cat] = [];
-    if (mes !== mesActual) porCategoria[cat].push(Number(e.amount || 0));
-  });
-  const gastosMesActual = {};
-  expenses.forEach((e) => {
-    if (!e.date || !e.date.startsWith(mesActual)) return;
-    const cat = e.etiqueta || e.category || "Otros";
-    gastosMesActual[cat] = (gastosMesActual[cat] || 0) + Number(e.amount || 0);
-  });
-  const alertas = [];
-  for (const [cat, historial] of Object.entries(porCategoria)) {
-    if (historial.length < 2) continue;
-    const promedio = historial.reduce((s, v) => s + v, 0) / historial.length;
-    const actual = gastosMesActual[cat] || 0;
-    if (actual > promedio * 2 && actual > 100) {
-      alertas.push({ cat, actual, promedio });
-    }
-  }
-  if (alertas.length === 0) return;
-  let banner = document.getElementById("alertaGastosInusuales");
-  if (!banner) {
-    const dashRoot = document.querySelector("#dashboard-section .grid, #dashboardSection .grid") || document.getElementById("semanalWidget")?.parentElement;
-    if (!dashRoot) return;
-    banner = document.createElement("div");
-    banner.id = "alertaGastosInusuales";
-    dashRoot.insertAdjacentElement("beforeend", banner);
-  }
-  banner.innerHTML = `
+_Generado desde Maneki POS_`;return navigator.clipboard?navigator.clipboard.writeText(h).then(()=>{manekiToastExport("\u{1F4CB} Resumen copiado \u2014 p\xE9galo en WhatsApp","ok")}):prompt("Copia este texto para WhatsApp:",h),h}window.generarResumenSemanalWA=generarResumenSemanalWA;function checkGastosInusuales(){const e=window.expenses||[];if(e.length<10)return;const i=new Date,r=i.getFullYear()+"-"+("0"+(i.getMonth()+1)).slice(-2),f={};e.forEach(d=>{if(!d.date)return;const o=d.date.substring(0,7),l=d.etiqueta||d.category||"Otros";f[l]||(f[l]=[]),o!==r&&f[l].push(Number(d.amount||0))});const c={};e.forEach(d=>{if(!d.date||!d.date.startsWith(r))return;const o=d.etiqueta||d.category||"Otros";c[o]=(c[o]||0)+Number(d.amount||0)});const s=[];for(const[d,o]of Object.entries(f)){if(o.length<2)continue;const l=o.reduce((h,u)=>h+u,0)/o.length,g=c[d]||0;g>l*2&&g>100&&s.push({cat:d,actual:g,promedio:l})}if(s.length===0)return;let n=document.getElementById("alertaGastosInusuales");if(!n){const d=document.querySelector("#dashboard-section .grid, #dashboardSection .grid")||document.getElementById("semanalWidget")?.parentElement;if(!d)return;n=document.createElement("div"),n.id="alertaGastosInusuales",d.insertAdjacentElement("beforeend",n)}n.innerHTML=`
         <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:14px;padding:14px 16px;margin-top:12px;">
             <p style="font-size:.78rem;font-weight:800;color:#991B1B;margin:0 0 8px;">\u26A0\uFE0F Gastos inusuales este mes</p>
-            ${alertas.map((a) => `
+            ${s.map(d=>`
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #FEE2E2;">
-                    <span style="font-size:.75rem;color:#7F1D1D;">${a.cat}</span>
-                    <span style="font-size:.75rem;font-weight:700;color:#DC2626;">$${a.actual.toFixed(0)} <span style="font-weight:400;color:#9CA3AF;">(prom: $${a.promedio.toFixed(0)})</span></span>
+                    <span style="font-size:.75rem;color:#7F1D1D;">${d.cat}</span>
+                    <span style="font-size:.75rem;font-weight:700;color:#DC2626;">$${d.actual.toFixed(0)} <span style="font-weight:400;color:#9CA3AF;">(prom: $${d.promedio.toFixed(0)})</span></span>
                 </div>
             `).join("")}
-        </div>`;
-}
-window.checkGastosInusuales = checkGastosInusuales;
-let _climaCache = null;
-async function renderWidgetClima() {
-  let card = document.getElementById("widgetClima");
-  if (!card) {
-    const target = document.getElementById("semanalWidget")?.parentElement || document.querySelector("#dashboard-section .space-y-4, #dashboardSection .space-y-4");
-    if (!target) return;
-    card = document.createElement("div");
-    card.id = "widgetClima";
-    target.insertAdjacentElement("beforeend", card);
-  }
-  if (_climaCache && Date.now() - _climaCache.ts < 30 * 60 * 1e3) {
-    _renderClimaHTML(card, _climaCache.data);
-    return;
-  }
-  card.innerHTML = `<div style="background:#F0F9FF;border:1px solid #BAE6FD;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:8px;">
+        </div>`}window.checkGastosInusuales=checkGastosInusuales;let _climaCache=null;async function renderWidgetClima(){let e=document.getElementById("widgetClima");if(!e){const i=document.getElementById("semanalWidget")?.parentElement||document.querySelector("#dashboard-section .space-y-4, #dashboardSection .space-y-4");if(!i)return;e=document.createElement("div"),e.id="widgetClima",i.insertAdjacentElement("beforeend",e)}if(_climaCache&&Date.now()-_climaCache.ts<1800*1e3){_renderClimaHTML(e,_climaCache.data);return}e.innerHTML=`<div style="background:#F0F9FF;border:1px solid #BAE6FD;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:1.2rem;">\u{1F321}\uFE0F</span>
         <span style="font-size:.75rem;color:#0369A1;">Cargando clima...</span>
-    </div>`;
-  try {
-    const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=25.6866&longitude=-100.3161&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMonterrey&forecast_days=1");
-    if (!res.ok) throw new Error("API error");
-    const data = await res.json();
-    _climaCache = { data, ts: Date.now() };
-    _renderClimaHTML(card, data);
-  } catch (e) {
-    card.innerHTML = "";
-  }
-}
-function _climaIcono(code) {
-  if (code === 0) return "\u2600\uFE0F";
-  if (code <= 2) return "\u{1F324}\uFE0F";
-  if (code <= 3) return "\u2601\uFE0F";
-  if (code <= 48) return "\u{1F32B}\uFE0F";
-  if (code <= 57) return "\u{1F327}\uFE0F";
-  if (code <= 67) return "\u{1F327}\uFE0F";
-  if (code <= 77) return "\u2744\uFE0F";
-  if (code <= 82) return "\u{1F326}\uFE0F";
-  if (code <= 99) return "\u26C8\uFE0F";
-  return "\u{1F321}\uFE0F";
-}
-function _climaDesc(code) {
-  if (code === 0) return "Despejado";
-  if (code <= 2) return "Parcialmente nublado";
-  if (code <= 3) return "Nublado";
-  if (code <= 48) return "Neblina";
-  if (code <= 57) return "Llovizna";
-  if (code <= 67) return "Lluvia";
-  if (code <= 77) return "Nieve";
-  if (code <= 82) return "Chubascos";
-  if (code <= 99) return "Tormenta";
-  return "Variable";
-}
-function _renderClimaHTML(card, data) {
-  const cur = data.current;
-  const daily = data.daily;
-  const temp = Math.round(cur.temperature_2m);
-  const max = Math.round(daily.temperature_2m_max[0]);
-  const min = Math.round(daily.temperature_2m_min[0]);
-  const icon = _climaIcono(cur.weathercode);
-  const desc = _climaDesc(cur.weathercode);
-  const humedad = cur.relativehumidity_2m;
-  const viento = Math.round(cur.windspeed_10m);
-  card.innerHTML = `
+    </div>`;try{const i=await fetch("https://api.open-meteo.com/v1/forecast?latitude=25.6866&longitude=-100.3161&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMonterrey&forecast_days=1");if(!i.ok)throw new Error("API error");const r=await i.json();_climaCache={data:r,ts:Date.now()},_renderClimaHTML(e,r)}catch{e.innerHTML=""}}function _climaIcono(e){return e===0?"\u2600\uFE0F":e<=2?"\u{1F324}\uFE0F":e<=3?"\u2601\uFE0F":e<=48?"\u{1F32B}\uFE0F":e<=57||e<=67?"\u{1F327}\uFE0F":e<=77?"\u2744\uFE0F":e<=82?"\u{1F326}\uFE0F":e<=99?"\u26C8\uFE0F":"\u{1F321}\uFE0F"}function _climaDesc(e){return e===0?"Despejado":e<=2?"Parcialmente nublado":e<=3?"Nublado":e<=48?"Neblina":e<=57?"Llovizna":e<=67?"Lluvia":e<=77?"Nieve":e<=82?"Chubascos":e<=99?"Tormenta":"Variable"}function _renderClimaHTML(e,i){const r=i.current,f=i.daily,c=Math.round(r.temperature_2m),s=Math.round(f.temperature_2m_max[0]),n=Math.round(f.temperature_2m_min[0]),d=_climaIcono(r.weathercode),o=_climaDesc(r.weathercode),l=r.relativehumidity_2m,g=Math.round(r.windspeed_10m);e.innerHTML=`
         <div style="background:linear-gradient(135deg,#EFF6FF,#F0F9FF);border:1px solid #BFDBFE;border-radius:14px;padding:12px 14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:2rem;line-height:1;">${icon}</span>
+                    <span style="font-size:2rem;line-height:1;">${d}</span>
                     <div>
-                        <p style="font-size:1.4rem;font-weight:800;color:#1E40AF;margin:0;line-height:1;">${temp}\xB0C</p>
-                        <p style="font-size:.7rem;color:#3B82F6;margin:1px 0 0;">${desc} \xB7 Monterrey</p>
+                        <p style="font-size:1.4rem;font-weight:800;color:#1E40AF;margin:0;line-height:1;">${c}\xB0C</p>
+                        <p style="font-size:.7rem;color:#3B82F6;margin:1px 0 0;">${o} \xB7 Monterrey</p>
                     </div>
                 </div>
                 <div style="text-align:right;">
-                    <p style="font-size:.72rem;color:#6B7280;margin:0;">\u2191${max}\xB0 \u2193${min}\xB0</p>
-                    <p style="font-size:.7rem;color:#6B7280;margin:2px 0 0;">\u{1F4A7}${humedad}% \u{1F4A8}${viento}km/h</p>
+                    <p style="font-size:.72rem;color:#6B7280;margin:0;">\u2191${s}\xB0 \u2193${n}\xB0</p>
+                    <p style="font-size:.7rem;color:#6B7280;margin:2px 0 0;">\u{1F4A7}${l}% \u{1F4A8}${g}km/h</p>
                 </div>
             </div>
-        </div>`;
-}
-window.renderWidgetClima = renderWidgetClima;
+        </div>`}window.renderWidgetClima=renderWidgetClima;
 //# sourceMappingURL=dashboard.js.map

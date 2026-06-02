@@ -2,6 +2,7 @@ const CACHE_NAME = "maneki-v2.3.1";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
+  "/css/tailwind.css",
   "/css/styles.css",
   "/css/ui-redesign.css",
   "/css/responsive.css",

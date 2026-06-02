@@ -1,41 +1,4 @@
-window._mkMigrationPrep = {
-  // Estimar tamaño de datos actuales
-  async estimateDataSize() {
-    const keys = [
-      "products",
-      "pedidos",
-      "pedidosFinalizados",
-      "salesHistory",
-      "clients",
-      "expenses",
-      "incomes",
-      "categories",
-      "quotes",
-      "receivables",
-      "payables",
-      "equipos",
-      "stockMovimientos"
-    ];
-    const report = {};
-    let totalKB = 0;
-    for (const key of keys) {
-      const data = window[key] || [];
-      const json = JSON.stringify(data);
-      const kb = Math.round(json.length / 1024 * 10) / 10;
-      report[key] = {
-        records: Array.isArray(data) ? data.length : 1,
-        sizeKB: kb,
-        avgRecordBytes: Array.isArray(data) && data.length > 0 ? Math.round(json.length / data.length) : 0
-      };
-      totalKB += kb;
-    }
-    report._total = { totalKB: Math.round(totalKB * 10) / 10 };
-    report._recommendation = totalKB > 500 ? "\u{1F534} URGENTE: M\xE1s de 500KB en JSON blobs \u2014 migrar a tablas individuales" : totalKB > 100 ? "\u{1F7E1} PRONTO: Datos creciendo \u2014 planear migraci\xF3n" : "\u{1F7E2} OK por ahora, pero migrar antes de llegar a 500 registros por tabla";
-    return report;
-  },
-  // SQL para crear las tablas objetivo (dry-run — solo muestra el SQL)
-  getTargetSQL() {
-    return `
+window._mkMigrationPrep={async estimateDataSize(){const e=["products","pedidos","pedidosFinalizados","salesHistory","clients","expenses","incomes","categories","quotes","receivables","payables","equipos","stockMovimientos"],T={};let o=0;for(const t of e){const E=window[t]||[],a=JSON.stringify(E),r=Math.round(a.length/1024*10)/10;T[t]={records:Array.isArray(E)?E.length:1,sizeKB:r,avgRecordBytes:Array.isArray(E)&&E.length>0?Math.round(a.length/E.length):0},o+=r}return T._total={totalKB:Math.round(o*10)/10},T._recommendation=o>500?"\u{1F534} URGENTE: M\xE1s de 500KB en JSON blobs \u2014 migrar a tablas individuales":o>100?"\u{1F7E1} PRONTO: Datos creciendo \u2014 planear migraci\xF3n":"\u{1F7E2} OK por ahora, pero migrar antes de llegar a 500 registros por tabla",T},getTargetSQL(){return`
 -- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 -- MANEKI STORE \u2014 Schema objetivo (tablas relacionales)
 -- Ejecutar en Supabase SQL Editor
@@ -171,19 +134,5 @@ CREATE INDEX IF NOT EXISTS idx_orders_fecha ON mk_orders(fecha_entrega);
 CREATE INDEX IF NOT EXISTS idx_sales_date ON mk_sales(date);
 CREATE INDEX IF NOT EXISTS idx_products_tipo ON mk_products(tipo);
 CREATE INDEX IF NOT EXISTS idx_products_category ON mk_products(category);
-`;
-  },
-  // Mostrar reporte en consola
-  async report() {
-    const data = await this.estimateDataSize();
-    console.log("%c\u{1F4CA} Maneki Migration Report", "font-size:14px;font-weight:800;color:#C5A572");
-    console.table(data);
-    console.log(data._recommendation);
-    if (typeof manekiToastExport === "function") {
-      manekiToastExport(`\u{1F4CA} Datos: ${data._total.totalKB}KB en JSON blobs. ${data._recommendation}`, "info");
-    }
-    return data;
-  }
-};
-console.log("%c\u{1F4A1} Migration prep loaded \u2014 run _mkMigrationPrep.report() to see data analysis", "color:#9ca3af;font-size:10px");
+`},async report(){const e=await this.estimateDataSize();return console.log("%c\u{1F4CA} Maneki Migration Report","font-size:14px;font-weight:800;color:#C5A572"),console.table(e),console.log(e._recommendation),typeof manekiToastExport=="function"&&manekiToastExport(`\u{1F4CA} Datos: ${e._total.totalKB}KB en JSON blobs. ${e._recommendation}`,"info"),e}},console.log("%c\u{1F4A1} Migration prep loaded \u2014 run _mkMigrationPrep.report() to see data analysis","color:#9ca3af;font-size:10px");
 //# sourceMappingURL=migration-prep.js.map

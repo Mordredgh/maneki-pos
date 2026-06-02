@@ -31,11 +31,11 @@ function abrirBulkPrecioModal() {
     <div style="background:#fff;border-radius:20px;width:min(540px,95vw);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
         <div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#fef3c7,#fff7ed);display:flex;justify-content:space-between;align-items:center;">
             <div>
-                <h2 style="font-size:1.1rem;font-weight:800;color:#92400e;margin:0;">📊 Actualizar precios masivamente</h2>
-                <p style="font-size:.75rem;color:#b45309;margin:4px 0 0;">Aplica un porcentaje de cambio a múltiples productos</p>
+                <h2 style="font-size:1.1rem;font-weight:800;color:#92400e;margin:0;">\u{1F4CA} Actualizar precios masivamente</h2>
+                <p style="font-size:.75rem;color:#b45309;margin:4px 0 0;">Aplica un porcentaje de cambio a m\xFAltiples productos</p>
             </div>
             <button onclick="document.getElementById('bulkPrecioModal').style.display='none'"
-                style="width:32px;height:32px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:16px;">✕</button>
+                style="width:32px;height:32px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:16px;">\u2715</button>
         </div>
         <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1;">
             <div>
@@ -49,7 +49,7 @@ function abrirBulkPrecioModal() {
                         style="width:72px;padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.9rem;font-weight:700;text-align:center;">
                     <span style="font-size:.9rem;font-weight:700;color:#374151;">%</span>
                 </div>
-                <p style="font-size:.7rem;color:#9ca3af;margin-top:3px;">Negativo = descuento · Positivo = aumento</p>
+                <p style="font-size:.7rem;color:#9ca3af;margin-top:3px;">Negativo = descuento \xB7 Positivo = aumento</p>
             </div>
             <div style="display:flex;gap:20px;flex-wrap:wrap;">
                 <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;">
@@ -62,10 +62,10 @@ function abrirBulkPrecioModal() {
                 </label>
             </div>
             <div>
-                <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Categoría (opcional)</label>
+                <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Categor\xEDa (opcional)</label>
                 <select id="bulkPrecioCat" onchange="bulkPrecioPreview()"
                     style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.85rem;outline:none;">
-                    <option value="">Todas las categorías</option>
+                    <option value="">Todas las categor\xEDas</option>
                     ${catOptions}
                 </select>
             </div>
@@ -77,9 +77,9 @@ function abrirBulkPrecioModal() {
             <button onclick="document.getElementById('bulkPrecioModal').style.display='none'"
                 style="padding:8px 18px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.85rem;cursor:pointer;">Cancelar</button>
             <button onclick="bulkPrecioPreview()"
-                style="padding:8px 18px;border:none;border-radius:10px;background:#e0f2fe;color:#0369a1;font-size:.85rem;font-weight:700;cursor:pointer;">👁 Vista previa</button>
+                style="padding:8px 18px;border:none;border-radius:10px;background:#e0f2fe;color:#0369a1;font-size:.85rem;font-weight:700;cursor:pointer;">\u{1F441} Vista previa</button>
             <button onclick="bulkPrecioAplicar()"
-                style="padding:8px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;">✅ Aplicar</button>
+                style="padding:8px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;">\u2705 Aplicar</button>
         </div>
     </div>`;
   modal.style.display = "flex";
@@ -119,9 +119,9 @@ function bulkPrecioPreview() {
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #f3f4f6;font-size:.78rem;">
             <span style="font-weight:600;color:#374151;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${_esc(p.name)}">${_esc(p.name)}</span>
             <span style="color:#6b7280;white-space:nowrap;margin:0 8px;">${lbl}: $${precioActual.toFixed(2)}</span>
-            <span style="font-weight:700;color:${clr};white-space:nowrap;">→ $${precioNuevo.toFixed(2)}</span>
+            <span style="font-weight:700;color:${clr};white-space:nowrap;">\u2192 $${precioNuevo.toFixed(2)}</span>
         </div>`;
-  }).join("") + (afectados.length > 50 ? `<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px;">...y ${afectados.length - 50} más</p>` : "");
+  }).join("") + (afectados.length > 50 ? `<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px;">...y ${afectados.length - 50} m\xE1s</p>` : "");
 }
 window.bulkPrecioPreview = bulkPrecioPreview;
 function bulkPrecioAplicar() {
@@ -131,7 +131,7 @@ function bulkPrecioAplicar() {
     return;
   }
   const pct = parseFloat(document.getElementById("bulkPrecioNum")?.value) || 0;
-  if (!confirm(`¿Aplicar ${pct > 0 ? "+" : ""}${pct}% a ${afectados.length} producto(s)?`)) return;
+  if (!confirm(`\xBFAplicar ${pct > 0 ? "+" : ""}${pct}% a ${afectados.length} producto(s)?`)) return;
   afectados.forEach(({ p, campoKey, precioNuevo }) => {
     p[campoKey] = precioNuevo;
     p.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
@@ -140,7 +140,7 @@ function bulkPrecioAplicar() {
   else if (typeof saveProducts === "function") saveProducts();
   renderInventoryTable();
   document.getElementById("bulkPrecioModal").style.display = "none";
-  manekiToastExport(`✅ Precios actualizados en ${afectados.length} producto(s)`, "ok");
+  manekiToastExport(`\u2705 Precios actualizados en ${afectados.length} producto(s)`, "ok");
 }
 window.bulkPrecioAplicar = bulkPrecioAplicar;
 function renderInventoryTable() {
@@ -157,20 +157,45 @@ function renderInventoryTable() {
   }
   const allProducts = window.products || [];
   if (typeof poblarFiltroProveedores === "function") poblarFiltroProveedores();
+  if (!document.getElementById("invExtraColStyles")) {
+    const styleEl = document.createElement("style");
+    styleEl.id = "invExtraColStyles";
+    styleEl.textContent = `
+            .inv-col-hidden-sku { display: none; }
+            .inv-col-hidden-prov { display: none; }
+            .inv-show-extra .inv-col-hidden-sku { display: table-cell; }
+            .inv-show-extra .inv-col-hidden-prov { display: table-cell; }
+        `;
+    document.head.appendChild(styleEl);
+  }
+  let invToggleBtn = document.getElementById("invExtraColToggle");
+  if (!invToggleBtn) {
+    invToggleBtn = document.createElement("button");
+    invToggleBtn.id = "invExtraColToggle";
+    invToggleBtn.style.cssText = "padding:6px 14px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.8rem;font-weight:600;color:#6b7280;cursor:pointer;margin-bottom:10px;";
+    invToggleBtn.textContent = "Mostrar SKU/Proveedor";
+    invToggleBtn.addEventListener("click", () => {
+      const dc = document.getElementById("invDualContainer");
+      if (!dc) return;
+      const showing = dc.classList.toggle("inv-show-extra");
+      invToggleBtn.textContent = showing ? "Ocultar SKU/Proveedor" : "Mostrar SKU/Proveedor";
+    });
+    dualContainer.parentNode.insertBefore(invToggleBtn, dualContainer);
+  }
   if (allProducts.length === 0) {
     dualContainer.innerHTML = `
         <div class="mk-empty" style="padding:48px 24px;text-align:center;">
-            <div class="mk-empty-icon">📦</div>
-            <p class="mk-empty-title">Sin productos aún</p>
-            <p class="mk-empty-sub">Tu inventario está vacío. Agrega tu primer producto para empezar.</p>
+            <div class="mk-empty-icon">\u{1F4E6}</div>
+            <p class="mk-empty-title">Sin productos a\xFAn</p>
+            <p class="mk-empty-sub">Tu inventario est\xE1 vac\xEDo. Agrega tu primer producto para empezar.</p>
             <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
                 <button onclick="openAddProductModal()" class="btn-primary px-5 py-2.5 rounded-xl text-sm">
-                    📦 Agregar Producto Terminado
+                    \u{1F4E6} Agregar Producto Terminado
                 </button>
                 <button onclick="injectMpModal();openAddMateriaPrimaModal()"
                     class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold"
                     style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
-                    🏭 Agregar Materia Prima
+                    \u{1F3ED} Agregar Materia Prima
                 </button>
             </div>
         </div>`;
@@ -226,7 +251,7 @@ function renderInventoryTable() {
   function renderFilaMP(product, ri) {
     const pid = String(product.id);
     const stockEf = getStockEfectivo(product);
-    const imgHTML = product.imageUrl ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">` : `<span style="font-size:1.6rem;">${product.image || "🏭"}</span>`;
+    const imgHTML = product.imageUrl ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">` : `<span style="font-size:1.6rem;">${product.image || "\u{1F3ED}"}</span>`;
     let badge;
     if (stockEf === 0) badge = '<span class="badge-danger">Agotado</span>';
     else if (stockEf <= (product.stockMin || 5)) badge = '<span class="badge-warning">Bajo Stock</span>';
@@ -244,16 +269,16 @@ function renderInventoryTable() {
             <td class="px-4 py-3">
                 <div>
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
-                    ${product.historialCostos && product.historialCostos.length ? `<span title="Este producto ha tenido ${product.historialCostos.length} modificaciones de precio o stock" style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialCostos.length} cambio${product.historialCostos.length > 1 ? "s" : ""}</span>` : ""}
-                    ${product.compraPaquete ? `<div style="font-size:10px;color:#7c3aed;margin-top:2px;">📦 Paquete: ${product.compraPaquete.cantidad} uds · $${Number(product.compraPaquete.precio).toFixed(2)}</div>` : ""}
+                    ${product.historialCostos && product.historialCostos.length ? `<span title="Este producto ha tenido ${product.historialCostos.length} modificaciones de precio o stock" style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">\u{1F4C8} ${product.historialCostos.length} cambio${product.historialCostos.length > 1 ? "s" : ""}</span>` : ""}
+                    ${product.compraPaquete ? `<div style="font-size:10px;color:#7c3aed;margin-top:2px;">\u{1F4E6} Paquete: ${product.compraPaquete.cantidad} uds \xB7 $${Number(product.compraPaquete.precio).toFixed(2)}</div>` : ""}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ""}
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map((t) => `<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#f3e8ff;color:#7c3aed;border:1px solid #e9d5ff;">${_esc(t)}</span>`).join("")}</div>` : ""}
                 </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku || "—")}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku || "\u2014")}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3" style="font-size:.85rem;color:#7c3aed;font-weight:600;">$${Number(product.cost || 0).toFixed(2)}</td>
-            <td class="px-4 py-3 text-gray-500 text-sm">${_esc(product.proveedor || "—")}</td>
+            <td class="px-4 py-3 text-gray-500 text-sm inv-col-hidden-prov">${_esc(product.proveedor || "\u2014")}</td>
             <td class="px-4 py-3 font-semibold" id="stock-cell-${pid}">
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
                     <span ondblclick="editarStockInline('${pid}')" title="Doble clic para editar"
@@ -266,25 +291,25 @@ function renderInventoryTable() {
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     <button onclick="editProduct('${pid}')" title="Editar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u270F\uFE0F</button>
                     <button onclick="ajustarStock('${pid}')" title="Ajustar stock"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📦</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F4E6}</button>
                     <button onclick="duplicarProducto('${pid}')" title="Duplicar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
-                    <button onclick="registrarMerma('${pid}')" title="Registrar merma/pérdida"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.25);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📉</button>
-                    ${product.proveedorUrl ? `<button onclick="window.open('${_esc(product.proveedorUrl)}','_blank')" title="Abrir proveedor" style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🔗</button>` : ""}
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F4CB}</button>
+                    <button onclick="registrarMerma('${pid}')" title="Registrar merma/p\xE9rdida"
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.25);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F4C9}</button>
+                    ${product.proveedorUrl ? `<button onclick="window.open('${_esc(product.proveedorUrl)}','_blank')" title="Abrir proveedor" style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F517}</button>` : ""}
                     <button onclick="cambiarTipoProducto('${pid}')" title="Convertir a Producto Terminado"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→📦</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">\u2192\u{1F4E6}</button>
                     <button onclick="deleteProduct('${pid}')" title="Eliminar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F5D1}\uFE0F</button>
                 </div>
             </td>
         </tr>`;
   }
   function renderFilaServicio(product, ri) {
     const pid = String(product.id);
-    const imgHTML = `<span style="font-size:1.6rem;">${product.image || "⚙️"}</span>`;
+    const imgHTML = `<span style="font-size:1.6rem;">${product.image || "\u2699\uFE0F"}</span>`;
     return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri * 0.03}s" class="hover:bg-indigo-50">
             <td class="px-2 py-3" style="width:32px;">
@@ -300,22 +325,22 @@ function renderInventoryTable() {
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map((t) => `<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;">${_esc(t)}</span>`).join("")}</div>` : ""}
                 </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku || "—")}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku || "\u2014")}</td>
             <td class="px-4 py-3" style="font-size:.95rem;font-weight:700;color:#6d28d9;">$${Number(product.cost || 0).toFixed(2)}</td>
             <td class="px-4 py-3"><span style="font-size:11px;background:#ede9fe;color:#6d28d9;padding:3px 10px;border-radius:99px;font-weight:700;">Sin stock</span></td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;">
                     <button onclick="openServicioModal('${pid}')" title="Editar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u270F\uFE0F</button>
                     <button onclick="deleteProduct('${pid}')" title="Eliminar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F5D1}\uFE0F</button>
                 </div>
             </td>
         </tr>`;
   }
   function renderFilaPT(product, ri) {
     const pid = String(product.id);
-    const imgHTML = product.imageUrl ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">` : `<span style="font-size:1.6rem;">${product.image || "📦"}</span>`;
+    const imgHTML = product.imageUrl ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">` : `<span style="font-size:1.6rem;">${product.image || "\u{1F4E6}"}</span>`;
     const cat = (window.categories || []).find((c2) => c2.id === product.category);
     const catName = cat ? cat.name : product.category || "";
     const disp = calcularDisponibilidadDesdeMP(product);
@@ -324,7 +349,7 @@ function renderInventoryTable() {
       const piezas = disp.piezas;
       const clr = piezas === 0 ? "#ef4444" : piezas <= 3 ? "#f59e0b" : "#10b981";
       const bgClr = piezas === 0 ? "#fee2e2" : piezas <= 3 ? "#fef3c7" : "#d1fae5";
-      const tooltip = disp.detalle.map((d) => `${d.nombre}: ${d.stock}÷${d.qty}=${d.posibles}pzs`).join(" | ");
+      const tooltip = disp.detalle.map((d) => `${d.nombre}: ${d.stock}\xF7${d.qty}=${d.posibles}pzs`).join(" | ");
       stockCell = `
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
                     <span title="${_esc(tooltip)}"
@@ -357,7 +382,7 @@ function renderInventoryTable() {
                     <div style="height:4px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:2px;">
                         <div style="height:100%;width:${Math.min(100, pct).toFixed(0)}%;background:${clr};border-radius:99px;"></div>
                     </div></div>`;
-    })() : '<span class="text-gray-300 text-xs">—</span>';
+    })() : '<span class="text-gray-300 text-xs">\u2014</span>';
     return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri * 0.03}s" class="hover:bg-amber-50">
             <td class="px-2 py-3" style="width:32px;">
@@ -369,12 +394,12 @@ function renderInventoryTable() {
             <td class="px-4 py-3">
                 <div>
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
-                    ${product._tieneComponentesHuerfanos ? `<span style="font-size:10px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;" title="Tiene componentes de inventario eliminados. Edita el producto para corregir.">⚠️ MP faltante</span>` : ""}
-                    ${product.tipo === "pack" ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;margin-left:4px;font-weight:700;border:1px solid #fde68a;">🎁 Pack</span>` : ""}
-                    ${product.tipo === "pack" && product.packComponentes && product.packComponentes.length ? `<div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">${product.packComponentes.map((c2) => `${c2.qty > 1 ? c2.qty + "× " : ""}${_esc(c2.nombre)}`).join(" + ")}</div>` : ""}
-                    ${product.historialPrecios && product.historialPrecios.length ? `<span title="Este producto ha tenido ${product.historialPrecios.length} modificaciones de precio o stock" style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialPrecios.length} cambio${product.historialPrecios.length > 1 ? "s" : ""}</span>` : ""}
+                    ${product._tieneComponentesHuerfanos ? `<span style="font-size:10px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;" title="Tiene componentes de inventario eliminados. Edita el producto para corregir.">\u26A0\uFE0F MP faltante</span>` : ""}
+                    ${product.tipo === "pack" ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:99px;margin-left:4px;font-weight:700;border:1px solid #fde68a;">\u{1F381} Pack</span>` : ""}
+                    ${product.tipo === "pack" && product.packComponentes && product.packComponentes.length ? `<div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">${product.packComponentes.map((c2) => `${c2.qty > 1 ? c2.qty + "\xD7 " : ""}${_esc(c2.nombre)}`).join(" + ")}</div>` : ""}
+                    ${product.historialPrecios && product.historialPrecios.length ? `<span title="Este producto ha tenido ${product.historialPrecios.length} modificaciones de precio o stock" style="font-size:10px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">\u{1F4C8} ${product.historialPrecios.length} cambio${product.historialPrecios.length > 1 ? "s" : ""}</span>` : ""}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ""}
-                    ${product.proveedorNombre ? `<div style="margin-top:2px;font-size:.72rem;color:#065f46;display:flex;align-items:center;gap:3px;" title="${_esc(product.proveedorNotas || "")}">🏭 Proveedor: <b>${_esc(product.proveedorNombre)}</b>${product.proveedorNotas ? " ℹ️" : ""}</div>` : ""}
+                    ${product.proveedorNombre ? `<div style="margin-top:2px;font-size:.72rem;color:#065f46;display:flex;align-items:center;gap:3px;" title="${_esc(product.proveedorNotas || "")}">\u{1F3ED} Proveedor: <b>${_esc(product.proveedorNombre)}</b>${product.proveedorNotas ? " \u2139\uFE0F" : ""}</div>` : ""}
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map((t) => `<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">${_esc(t)}</span>`).join("")}</div>` : ""}
                     ${(() => {
       const _prod = calcularProducibles(product);
@@ -382,11 +407,11 @@ function renderInventoryTable() {
       const _pclr = _prod >= 5 ? "#16a34a" : _prod >= 1 ? "#d97706" : "#dc2626";
       const _pbg = _prod >= 5 ? "#d1fae5" : _prod >= 1 ? "#fef3c7" : "#fee2e2";
       const _txt = _prod === 0 ? "Sin stock MP" : `Producibles: ${_prod}`;
-      return `<div style="margin-top:3px;"><span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:99px;background:${_pbg};color:${_pclr};border:1px solid ${_pclr}33;">🏭 ${_txt}</span></div>`;
+      return `<div style="margin-top:3px;"><span style="font-size:9px;font-weight:700;padding:1px 7px;border-radius:99px;background:${_pbg};color:${_pclr};border:1px solid ${_pclr}33;">\u{1F3ED} ${_txt}</span></div>`;
     })()}
                 </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku || "—")}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku || "\u2014")}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
             <td class="px-4 py-3 text-gray-800 font-semibold" style="font-size:.95rem;">$${Number(product.price || 0).toFixed(2)}</td>
@@ -396,38 +421,38 @@ function renderInventoryTable() {
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     ${product.tipo === "pack" ? `<button onclick="openPackModal('${pid}')" title="Editar Pack"
-                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>` : `<button onclick="editProduct('${pid}')" title="Editar"
-                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>`}
+                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u270F\uFE0F</button>` : `<button onclick="editProduct('${pid}')" title="Editar"
+                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u270F\uFE0F</button>`}
                     <button onclick="duplicarProducto('${pid}')" title="Duplicar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F4CB}</button>
                     ${product.tipo !== "pack" ? `<button onclick="cambiarTipoProducto('${pid}')" title="Convertir a Materia Prima"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ""}
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">\u2192\u{1F9EA}</button>` : ""}
                     ${product.movimientos && product.movimientos.length ? `<button onclick="verMovimientosProducto('${pid}')" title="Ver movimientos de stock (${product.movimientos.length})"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>` : ""}
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F4CB}</button>` : ""}
                     <button onclick="deleteProduct('${pid}')" title="Eliminar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F5D1}\uFE0F</button>
                 </div>
             </td>
         </tr>`;
   }
   function renderFilaVariable(product, ri) {
     const pid = String(product.id);
-    const imgHTML = product.imageUrl ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">` : `<span style="font-size:1.6rem;">${product.image || "🎯"}</span>`;
+    const imgHTML = product.imageUrl ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">` : `<span style="font-size:1.6rem;">${product.image || "\u{1F3AF}"}</span>`;
     const tabla = (product.tablaPreciosVariable || []).slice().sort((a, b) => a.cantidadMin - b.cantidadMin);
     const tablaHTML = tabla.length ? tabla.map((r) => `<span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 7px;border-radius:99px;white-space:nowrap;">${r.cantidadMin} pzas = $${Number(r.precio).toFixed(2)}</span>`).join(" ") : '<span style="font-size:10px;color:#9ca3af;">Sin rangos</span>';
     const nMps = (product.mpComponentes || []).length;
     const catObj = (window.categories || []).find((c) => String(c.id) === String(product.category));
-    const catName = catObj ? `${catObj.emoji || ""} ${catObj.name}` : "—";
+    const catName = catObj ? `${catObj.emoji || ""} ${catObj.name}` : "\u2014";
     const _pvTabla = tabla;
     const _pvPrecioMin = _pvTabla.length ? _pvTabla[0].precio / (_pvTabla[0].cantidadMin || 1) : 0;
-    const precioCell = _pvPrecioMin > 0 ? `<div><span class="font-semibold text-gray-800" style="font-size:.95rem;">$${_pvPrecioMin.toFixed(2)}</span><div style="font-size:10px;color:#9ca3af;">por pieza</div></div>` : '<span style="color:#9ca3af;font-size:.8rem;">—</span>';
+    const precioCell = _pvPrecioMin > 0 ? `<div><span class="font-semibold text-gray-800" style="font-size:.95rem;">$${_pvPrecioMin.toFixed(2)}</span><div style="font-size:10px;color:#9ca3af;">por pieza</div></div>` : '<span style="color:#9ca3af;font-size:.8rem;">\u2014</span>';
     const disp = calcularDisponibilidadDesdeMP(product);
     let stockCell, badgeCell;
     if (disp !== null) {
       const piezas = disp.piezas;
       const clr = piezas === 0 ? "#ef4444" : piezas <= 3 ? "#f59e0b" : "#10b981";
       const bgClr = piezas === 0 ? "#fee2e2" : piezas <= 3 ? "#fef3c7" : "#d1fae5";
-      const tooltip = disp.detalle.map((d) => `${d.nombre}: ${d.stock}÷${d.qty}=${d.posibles}pzs`).join(" | ");
+      const tooltip = disp.detalle.map((d) => `${d.nombre}: ${d.stock}\xF7${d.qty}=${d.posibles}pzs`).join(" | ");
       stockCell = `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
                 <span title="${_esc(tooltip)}" style="padding:3px 12px;border-radius:8px;background:${bgClr};color:${clr};font-weight:700;font-size:.95rem;border:1px solid ${clr}33;cursor:help;">${piezas}</span>
                 <span style="font-size:10px;color:#6b7280;">desde MP</span>
@@ -446,7 +471,7 @@ function renderInventoryTable() {
                 <div style="font-weight:600;font-size:13px;color:${_pvMargenColor};">${_pvMargen}%</div>
                 <div style="height:4px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:2px;">
                     <div style="height:100%;width:${Math.min(100, _pvMargen)}%;background:${_pvMargenColor};border-radius:99px;"></div>
-                </div></div>` : '<span class="text-gray-300 text-xs">—</span>';
+                </div></div>` : '<span class="text-gray-300 text-xs">\u2014</span>';
     return `
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri * 0.03}s" class="hover:bg-sky-50">
             <td class="px-2 py-3" style="width:32px;">
@@ -459,12 +484,12 @@ function renderInventoryTable() {
                 <div>
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
                     <span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 8px;border-radius:99px;margin-left:4px;font-weight:700;border:1px solid #bae6fd;">Variable</span>
-                    ${product.rendimientoPorHoja ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;">🗒️ ${product.rendimientoPorHoja} uds/hoja · ${nMps} MP${nMps !== 1 ? "s" : ""}</div>` : nMps > 0 ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;">${nMps} MP${nMps !== 1 ? "s" : ""}</div>` : ""}
+                    ${product.rendimientoPorHoja ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;">\u{1F5D2}\uFE0F ${product.rendimientoPorHoja} uds/hoja \xB7 ${nMps} MP${nMps !== 1 ? "s" : ""}</div>` : nMps > 0 ? `<div style="font-size:10px;color:#6b7280;margin-top:2px;">${nMps} MP${nMps !== 1 ? "s" : ""}</div>` : ""}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ""}
                     ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map((t) => `<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;">${_esc(t)}</span>`).join("")}</div>` : ""}
                 </div>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${_esc(product.sku || "—")}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku || "\u2014")}</td>
             <td class="px-4 py-3 text-gray-600 text-sm">${_esc(catName)}</td>
             <td class="px-4 py-3"><div style="display:flex;flex-wrap:wrap;gap:3px;">${tablaHTML}</div></td>
             <td class="px-4 py-3">${precioCell}</td>
@@ -474,11 +499,11 @@ function renderInventoryTable() {
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     <button onclick="editProduct('${pid}')" title="Editar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u270F\uFE0F</button>
                     <button onclick="duplicarProducto('${pid}')" title="Duplicar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F4CB}</button>
                     <button onclick="deleteProduct('${pid}')" title="Eliminar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">\u{1F5D1}\uFE0F</button>
                 </div>
             </td>
         </tr>`;
@@ -497,19 +522,19 @@ function renderInventoryTable() {
     const startIdx = (page - 1) * pageSize;
     const paginated = sorted.slice(startIdx, startIdx + pageSize);
     const rowsHTML = paginated.length === 0 ? `<tr><td colspan="${headers.length}" style="padding:32px;text-align:center;color:#9ca3af;font-size:.85rem;">${emptyMsg}</td></tr>` : paginated.map((p, i) => renderFila(p, i)).join("");
-    const headersHTML = headers.map(
-      (h) => h.sortKey ? `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide sortable-th cursor-pointer select-none"
-                      onclick="sortInventory('${h.sortKey}')" style="white-space:nowrap;">${h.label} ↕</th>` : `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide" style="white-space:nowrap;">${h.label}</th>`
-    ).join("");
+    const headersHTML = headers.map((h) => {
+      const cls = h.colId === "sku" ? " inv-col-hidden-sku" : h.colId === "proveedor" ? " inv-col-hidden-prov" : "";
+      return h.sortKey ? `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide sortable-th cursor-pointer select-none${cls}" onclick="sortInventory('${h.sortKey}')" style="white-space:nowrap;">${h.label} \u2195</th>` : `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide${cls}" style="white-space:nowrap;">${h.label}</th>`;
+    }).join("");
     let pagHTML = "";
     if (totalPgs > 1 || total > pageSize) {
       const end = Math.min(startIdx + pageSize, total);
       pagHTML = `
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
                         gap:8px;padding:10px 16px;border-top:1px solid #f3f4f6;">
-                <span style="font-size:12px;color:#6b7280;">Mostrando <b>${startIdx + 1}–${end}</b> de <b>${total}</b></span>
+                <span style="font-size:12px;color:#6b7280;">Mostrando <b>${startIdx + 1}\u2013${end}</b> de <b>${total}</b></span>
                 <div style="display:flex;gap:4px;">
-                    <button onclick="invSectionPage('${id}',${page - 1})" ${page <= 1 ? "disabled" : ""} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page <= 1 ? "default" : "pointer"};opacity:${page <= 1 ? 0.4 : 1};font-size:13px;">‹</button>
+                    <button onclick="invSectionPage('${id}',${page - 1})" ${page <= 1 ? "disabled" : ""} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page <= 1 ? "default" : "pointer"};opacity:${page <= 1 ? 0.4 : 1};font-size:13px;">\u2039</button>
                     ${Array.from({ length: Math.min(5, totalPgs) }, (_, i) => {
         let p2 = page <= 3 ? i + 1 : page + i - 2;
         if (p2 < 1) p2 = null;
@@ -517,13 +542,13 @@ function renderInventoryTable() {
         if (p2 === null) return "";
         return `<button onclick="invSectionPage('${id}',${p2})" style="min-width:30px;padding:4px 8px;border:1px solid ${p2 === page ? "#C5973B" : "#e5e7eb"};border-radius:7px;background:${p2 === page ? "#C5973B" : "#fff"};color:${p2 === page ? "#fff" : "#374151"};font-weight:${p2 === page ? 700 : 400};font-size:13px;cursor:${p2 === page ? "default" : "pointer"};" ${p2 === page ? "disabled" : ""}>${p2}</button>`;
       }).join("")}
-                    <button onclick="invSectionPage('${id}',${page + 1})" ${page >= totalPgs ? "disabled" : ""} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page >= totalPgs ? "default" : "pointer"};opacity:${page >= totalPgs ? 0.4 : 1};font-size:13px;">›</button>
+                    <button onclick="invSectionPage('${id}',${page + 1})" ${page >= totalPgs ? "disabled" : ""} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page >= totalPgs ? "default" : "pointer"};opacity:${page >= totalPgs ? 0.4 : 1};font-size:13px;">\u203A</button>
                 </div>
             </div>`;
     }
     return `
         <div style="margin-bottom:32px;border-radius:16px;overflow:hidden;border:1.5px solid ${titleColor}33;box-shadow:0 2px 12px ${titleColor}11;">
-            <!-- Header de sección -->
+            <!-- Header de secci\xF3n -->
             <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:${titleBg};border-bottom:1.5px solid ${titleColor}33;">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <span style="font-size:1.1rem;font-weight:800;color:${titleColor};">${title}</span>
@@ -591,21 +616,21 @@ function renderInventoryTable() {
     </div>`;
   dualContainer.innerHTML = buildSection({
     id: "pt",
-    title: "📦 Productos Terminados",
+    title: "\u{1F4E6} Productos Terminados",
     titleColor: "#C5973B",
     titleBg: "linear-gradient(135deg,#fffbeb,#fef9f0)",
     btnLabel: "+ Producto",
     btnOnclick: "openAddProductModal()",
     btnColor: "linear-gradient(135deg,#C5A572,#E8B84B)",
-    extraBtnHTML: `<button onclick="injectPackModal();openPackModal()" style="padding:7px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">🎁 Crear Pack</button><button onclick="abrirBulkPrecioModal()" style="padding:7px 16px;background:linear-gradient(135deg,#0369a1,#38bdf8);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">📊 Actualizar precios</button>`,
+    extraBtnHTML: `<button onclick="injectPackModal();openPackModal()" style="padding:7px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">\u{1F381} Crear Pack</button><button onclick="abrirBulkPrecioModal()" style="padding:7px 16px;background:linear-gradient(135deg,#0369a1,#38bdf8);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">\u{1F4CA} Actualizar precios</button>`,
     products: pts,
     renderFila: renderFilaPT,
     headers: [
       { label: '<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null },
       { label: "" },
       { label: "Producto", sortKey: "name" },
-      { label: "SKU", sortKey: "sku" },
-      { label: "Categoría", sortKey: "category" },
+      { label: "SKU", sortKey: "sku", colId: "sku" },
+      { label: "Categor\xEDa", sortKey: "category" },
       { label: "Variantes" },
       { label: "Precio", sortKey: "price" },
       { label: "Disponible" },
@@ -613,10 +638,10 @@ function renderInventoryTable() {
       { label: "Margen", sortKey: "margin" },
       { label: "Acciones" }
     ],
-    emptyMsg: "Sin productos terminados. Agrega uno con el botón +"
+    emptyMsg: "Sin productos terminados. Agrega uno con el bot\xF3n +"
   }) + buildSection({
     id: "pv",
-    title: "🎯 Productos Variables (Stickers, Tarjetas...)",
+    title: "\u{1F3AF} Productos Variables (Stickers, Tarjetas...)",
     titleColor: "#0369a1",
     titleBg: "linear-gradient(135deg,#f0f9ff,#e0f2fe)",
     btnLabel: "+ Producto Variable",
@@ -628,8 +653,8 @@ function renderInventoryTable() {
       { label: '<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null },
       { label: "" },
       { label: "Nombre", sortKey: "name" },
-      { label: "SKU", sortKey: "sku" },
-      { label: "Categoría", sortKey: "category" },
+      { label: "SKU", sortKey: "sku", colId: "sku" },
+      { label: "Categor\xEDa", sortKey: "category" },
       { label: "Tabla de precios" },
       { label: "Precio/pza", sortKey: "price" },
       { label: "Disponible" },
@@ -640,7 +665,7 @@ function renderInventoryTable() {
     emptyMsg: "Sin productos variables. Agrega stickers, tarjetas u otros con precio por cantidad."
   }) + buildSection({
     id: "mp",
-    title: "🏭 Materias Primas",
+    title: "\u{1F3ED} Materias Primas",
     titleColor: "#7c3aed",
     titleBg: "linear-gradient(135deg,#faf5ff,#f5f3ff)",
     btnLabel: "+ Materia Prima",
@@ -652,18 +677,18 @@ function renderInventoryTable() {
       { label: '<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null },
       { label: "" },
       { label: "Nombre", sortKey: "name" },
-      { label: "SKU", sortKey: "sku" },
-      { label: "Categoría", sortKey: "category" },
+      { label: "SKU", sortKey: "sku", colId: "sku" },
+      { label: "Categor\xEDa", sortKey: "category" },
       { label: "Costo" },
-      { label: "Proveedor" },
+      { label: "Proveedor", colId: "proveedor" },
       { label: "Stock", sortKey: "stock" },
       { label: "Estado" },
       { label: "Acciones" }
     ],
-    emptyMsg: "Sin materias primas. Agrega una con el botón +"
+    emptyMsg: "Sin materias primas. Agrega una con el bot\xF3n +"
   }) + buildSection({
     id: "svc",
-    title: "⚙️ Servicios y Consumibles",
+    title: "\u2699\uFE0F Servicios y Consumibles",
     titleColor: "#6d28d9",
     titleBg: "linear-gradient(135deg,#f5f3ff,#ede9fe)",
     btnLabel: "+ Nuevo Servicio",
@@ -675,12 +700,12 @@ function renderInventoryTable() {
       { label: '<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null },
       { label: "" },
       { label: "Nombre", sortKey: "name" },
-      { label: "SKU", sortKey: "sku" },
+      { label: "SKU", sortKey: "sku", colId: "sku" },
       { label: "Costo/uso" },
       { label: "Estado" },
       { label: "Acciones" }
     ],
-    emptyMsg: "Sin servicios. Agrega el uso del láser, vinil por pieza, etc."
+    emptyMsg: "Sin servicios. Agrega el uso del l\xE1ser, vinil por pieza, etc."
   });
 }
 function invSectionPage(sectionId, page) {
@@ -715,7 +740,7 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
     return;
   }
   const endIdx = Math.min(startIdx + pageSize, totalItems);
-  const showing = `Mostrando <b>${startIdx + 1}–${endIdx}</b> de <b>${totalItems}</b> productos`;
+  const showing = `Mostrando <b>${startIdx + 1}\u2013${endIdx}</b> de <b>${totalItems}</b> productos`;
   function pageButtons() {
     const btns = [];
     const range = (from, to) => {
@@ -731,7 +756,7 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
       btns.push(totalPages);
     }
     return btns.map((p) => {
-      if (p === "...") return `<span style="padding:0 4px;color:#9ca3af;">…</span>`;
+      if (p === "...") return `<span style="padding:0 4px;color:#9ca3af;">\u2026</span>`;
       const active = p === page;
       return `<button onclick="invGoToPage(${p})"
                 style="min-width:34px;height:34px;border-radius:8px;border:1px solid ${active ? "#C5973B" : "#e5e7eb"};
@@ -744,36 +769,36 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
   container.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
                     gap:10px;padding:14px 4px;border-top:1px solid #f3f4f6;margin-top:4px;">
-            <!-- Info + selector de tamaño -->
+            <!-- Info + selector de tama\xF1o -->
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                 <span style="font-size:13px;color:#6b7280;">${showing}</span>
                 <select onchange="invChangePageSize(this.value)"
                     style="font-size:12px;border:1px solid #e5e7eb;border-radius:8px;padding:4px 8px;
                            background:white;color:#374151;cursor:pointer;outline:none;">
                     ${[10, 25, 50, 100].map(
-    (s) => `<option value="${s}" ${s === pageSize ? "selected" : ""}>${s} por página</option>`
+    (s) => `<option value="${s}" ${s === pageSize ? "selected" : ""}>${s} por p\xE1gina</option>`
   ).join("")}
                 </select>
             </div>
-            <!-- Controles de página -->
+            <!-- Controles de p\xE1gina -->
             <div style="display:flex;align-items:center;gap:4px;">
                 <button onclick="invGoToPage(1)" ${page === 1 ? "disabled" : ""}
                     style="height:34px;padding:0 10px;border-radius:8px;border:1px solid #e5e7eb;
                            background:white;cursor:${page === 1 ? "default" : "pointer"};opacity:${page === 1 ? 0.4 : 1};font-size:13px;"
-                    title="Primera página">⟨⟨</button>
+                    title="Primera p\xE1gina">\u27E8\u27E8</button>
                 <button onclick="invGoToPage(${page - 1})" ${page === 1 ? "disabled" : ""}
                     style="height:34px;padding:0 10px;border-radius:8px;border:1px solid #e5e7eb;
                            background:white;cursor:${page === 1 ? "default" : "pointer"};opacity:${page === 1 ? 0.4 : 1};font-size:13px;"
-                    title="Página anterior">‹</button>
+                    title="P\xE1gina anterior">\u2039</button>
                 ${pageButtons()}
                 <button onclick="invGoToPage(${page + 1})" ${page === totalPages ? "disabled" : ""}
                     style="height:34px;padding:0 10px;border-radius:8px;border:1px solid #e5e7eb;
                            background:white;cursor:${page === totalPages ? "default" : "pointer"};opacity:${page === totalPages ? 0.4 : 1};font-size:13px;"
-                    title="Página siguiente">›</button>
+                    title="P\xE1gina siguiente">\u203A</button>
                 <button onclick="invGoToPage(${totalPages})" ${page === totalPages ? "disabled" : ""}
                     style="height:34px;padding:0 10px;border-radius:8px;border:1px solid #e5e7eb;
                            background:white;cursor:${page === totalPages ? "default" : "pointer"};opacity:${page === totalPages ? 0.4 : 1};font-size:13px;"
-                    title="Última página">⟩⟩</button>
+                    title="\xDAltima p\xE1gina">\u27E9\u27E9</button>
             </div>
         </div>`;
 }
@@ -818,7 +843,7 @@ function renderMovimientos() {
   movsHoy.forEach((m) => {
     resumenTipos[m.tipo] = (resumenTipos[m.tipo] || 0) + 1;
   });
-  const tipoIconos = { entrada: "🟢", salida: "🔴", ajuste: "🟡", creacion: "🔵", venta: "🟠", merma: "🟤" };
+  const tipoIconos = { entrada: "\u{1F7E2}", salida: "\u{1F534}", ajuste: "\u{1F7E1}", creacion: "\u{1F535}", venta: "\u{1F7E0}", merma: "\u{1F7E4}" };
   const tipoLabels = { entrada: "Entradas", salida: "Salidas", ajuste: "Ajustes", creacion: "Creaciones", venta: "Ventas", merma: "Mermas" };
   let resumenEl = document.getElementById("movResumenHoy");
   if (!resumenEl) {
@@ -827,7 +852,7 @@ function renderMovimientos() {
     container.parentNode.insertBefore(resumenEl, container);
   }
   const resumenParts = Object.keys(resumenTipos).map(
-    (t) => `${tipoIconos[t] || "⚪"} ${tipoLabels[t] || t}: <strong>${resumenTipos[t]}</strong>`
+    (t) => `${tipoIconos[t] || "\u26AA"} ${tipoLabels[t] || t}: <strong>${resumenTipos[t]}</strong>`
   );
   resumenEl.innerHTML = resumenParts.length ? `<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:8px 14px;font-size:.75rem;color:#374151;margin-bottom:8px;">
             <span style="font-weight:700;color:#6b7280;margin-right:8px;">Hoy:</span>${resumenParts.join("&nbsp;&nbsp;")}
@@ -836,11 +861,11 @@ function renderMovimientos() {
   if (!exportBtn) {
     exportBtn = document.createElement("button");
     exportBtn.id = "movExportCSVBtn";
-    exportBtn.textContent = "📥 Exportar historial CSV";
+    exportBtn.textContent = "\u{1F4E5} Exportar historial CSV";
     exportBtn.style.cssText = "background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:.78rem;font-weight:700;cursor:pointer;margin-bottom:10px;";
     exportBtn.onclick = function() {
       const allMovs = window.stockMovements || [];
-      const headers = ["Fecha", "Producto", "Tipo", "Cantidad", "Motivo", "Stock antes", "Stock después"];
+      const headers = ["Fecha", "Producto", "Tipo", "Cantidad", "Motivo", "Stock antes", "Stock despu\xE9s"];
       let csv = headers.join(",") + "\n";
       allMovs.forEach((m) => {
         const row = [
@@ -868,26 +893,26 @@ function renderMovimientos() {
     container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Sin movimientos registrados</p>';
     return;
   }
-  const icons = { entrada: "🟢", salida: "🔴", ajuste: "🟡", creacion: "🔵", venta: "🟠", merma: "🟤" };
+  const icons = { entrada: "\u{1F7E2}", salida: "\u{1F534}", ajuste: "\u{1F7E1}", creacion: "\u{1F535}", venta: "\u{1F7E0}", merma: "\u{1F7E4}" };
   container.innerHTML = movs.slice(0, 200).map((m) => {
     const f = new Date(m.fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" });
     const s = m.cantidad >= 0 ? `+${m.cantidad}` : `${m.cantidad}`;
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;">
-            <span style="font-size:16px;">${icons[m.tipo] || "⚪"}</span>
+            <span style="font-size:16px;">${icons[m.tipo] || "\u26AA"}</span>
             <div style="flex:1;min-width:0;">
                 <div style="font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(m.productoNombre)}</div>
-                <div style="color:#6b7280;font-size:11px;">${f} · ${m.tipo} · ${_esc(m.motivo || "Sin motivo")}</div>
+                <div style="color:#6b7280;font-size:11px;">${f} \xB7 ${m.tipo} \xB7 ${_esc(m.motivo || "Sin motivo")}</div>
             </div>
             <div style="text-align:right;white-space:nowrap;">
                 <div style="font-weight:700;color:${m.cantidad >= 0 ? "#10b981" : "#ef4444"};">${s} uds</div>
-                <div style="font-size:11px;color:#9ca3af;">${m.stockAntes} → ${m.stockDespues}</div>
+                <div style="font-size:11px;color:#9ca3af;">${m.stockAntes} \u2192 ${m.stockDespues}</div>
             </div>
         </div>`;
   }).join("");
 }
 window.renderMovimientos = renderMovimientos;
 function limpiarMovimientosInventario() {
-  if (!confirm("¿Borrar todo el historial de movimientos?")) return;
+  if (!confirm("\xBFBorrar todo el historial de movimientos?")) return;
   window.stockMovements = [];
   saveStockMovements();
   renderMovimientos();
@@ -907,19 +932,19 @@ function renderStockMovements(containerId) {
     container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">Sin movimientos registrados</p>';
     return;
   }
-  const icons = { entrada: "🟢", salida: "🔴", ajuste: "🟡", creacion: "🔵", venta: "🟠", merma: "🟤" };
+  const icons = { entrada: "\u{1F7E2}", salida: "\u{1F534}", ajuste: "\u{1F7E1}", creacion: "\u{1F535}", venta: "\u{1F7E0}", merma: "\u{1F7E4}" };
   container.innerHTML = window.stockMovements.slice(0, 100).map((m) => {
     const f = new Date(m.fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" });
     const s = m.cantidad >= 0 ? `+${m.cantidad}` : `${m.cantidad}`;
     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;">
-            <span style="font-size:16px;">${icons[m.tipo] || "⚪"}</span>
+            <span style="font-size:16px;">${icons[m.tipo] || "\u26AA"}</span>
             <div style="flex:1;min-width:0;">
                 <div style="font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(m.productoNombre)}</div>
-                <div style="color:#6b7280;font-size:11px;">${f} · ${m.tipo} · ${_esc(m.motivo || "Sin motivo")}</div>
+                <div style="color:#6b7280;font-size:11px;">${f} \xB7 ${m.tipo} \xB7 ${_esc(m.motivo || "Sin motivo")}</div>
             </div>
             <div style="text-align:right;white-space:nowrap;">
                 <div style="font-weight:700;color:${m.cantidad >= 0 ? "#10b981" : "#ef4444"};">${s} uds</div>
-                <div style="font-size:11px;color:#9ca3af;">${m.stockAntes} → ${m.stockDespues}</div>
+                <div style="font-size:11px;color:#9ca3af;">${m.stockAntes} \u2192 ${m.stockDespues}</div>
             </div>
         </div>`;
   }).join("");
@@ -941,7 +966,7 @@ function duplicarProducto(id) {
   window.products.unshift(copia);
   saveProducts();
   renderInventoryTable();
-  manekiToastExport(`📋 "${copia.name}" creado — edítalo para ajustar stock y SKU`, "ok");
+  manekiToastExport(`\u{1F4CB} "${copia.name}" creado \u2014 ed\xEDtalo para ajustar stock y SKU`, "ok");
 }
 window.duplicarProducto = duplicarProducto;
 function abrirReporteRentabilidad() {
@@ -951,10 +976,10 @@ function abrirReporteRentabilidad() {
     return { ...p, _margen: margen };
   }).sort((a, b) => (b._margen ?? -Infinity) - (a._margen ?? -Infinity));
   const filas = conMargen.map((p, i) => {
-    const margen = p._margen !== null ? p._margen.toFixed(1) + "%" : "—";
-    const ganancia = p.price > 0 && p.cost > 0 ? "$" + (p.price - p.cost).toFixed(2) : "—";
+    const margen = p._margen !== null ? p._margen.toFixed(1) + "%" : "\u2014";
+    const ganancia = p.price > 0 && p.cost > 0 ? "$" + (p.price - p.cost).toFixed(2) : "\u2014";
     const color = p._margen === null ? "#9ca3af" : p._margen >= 50 ? "#16a34a" : p._margen >= 30 ? "#d97706" : "#dc2626";
-    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+    const medal = i === 0 ? "\u{1F947}" : i === 1 ? "\u{1F948}" : i === 2 ? "\u{1F949}" : `${i + 1}.`;
     return `<tr style="border-bottom:1px solid #f3f4f6;">
             <td style="padding:8px 12px;font-weight:600;color:#374151;">${medal}</td>
             <td style="padding:8px 12px;font-size:13px;font-weight:600;color:#1f2937;">${_esc(p.name)}</td>
@@ -980,20 +1005,20 @@ function abrirReporteRentabilidad() {
         <div style="background:white;border-radius:20px;width:min(820px,95vw);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
             <div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#fef3c7,#fff7ed);">
                 <div>
-                    <h2 style="font-size:1.2rem;font-weight:700;color:#92400e;margin:0;">📊 Reporte de Rentabilidad</h2>
+                    <h2 style="font-size:1.2rem;font-weight:700;color:#92400e;margin:0;">\u{1F4CA} Reporte de Rentabilidad</h2>
                     <p style="font-size:12px;color:#b45309;margin:4px 0 0;">Ranking de productos por margen de ganancia</p>
                 </div>
                 <button onclick="document.getElementById('_mkRentabilidadModal').style.display='none'"
-                    style="width:32px;height:32px;border-radius:50%;border:1px solid #e5e7eb;background:white;cursor:pointer;font-size:16px;">✕</button>
+                    style="width:32px;height:32px;border-radius:50%;border:1px solid #e5e7eb;background:white;cursor:pointer;font-size:16px;">\u2715</button>
             </div>
             <div style="display:flex;gap:16px;padding:16px 24px;background:#fffbeb;border-bottom:1px solid #fef3c7;">
                 <div style="flex:1;background:white;border-radius:12px;padding:12px 16px;border:1px solid #fde68a;">
                     <div style="font-size:11px;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Margen promedio</div>
-                    <div style="font-size:1.6rem;font-weight:800;color:#d97706;">${conMargen.some((p) => p._margen !== null) ? promedio.toFixed(1) + "%" : "—"}</div>
+                    <div style="font-size:1.6rem;font-weight:800;color:#d97706;">${conMargen.some((p) => p._margen !== null) ? promedio.toFixed(1) + "%" : "\u2014"}</div>
                 </div>
                 <div style="flex:1;background:white;border-radius:12px;padding:12px 16px;border:1px solid #fde68a;">
-                    <div style="font-size:11px;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Más rentable</div>
-                    <div style="font-size:.95rem;font-weight:700;color:#16a34a;margin-top:4px;">${topProducto ? _esc(topProducto.name) : "—"}</div>
+                    <div style="font-size:11px;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">M\xE1s rentable</div>
+                    <div style="font-size:.95rem;font-weight:700;color:#16a34a;margin-top:4px;">${topProducto ? _esc(topProducto.name) : "\u2014"}</div>
                 </div>
                 <div style="flex:1;background:white;border-radius:12px;padding:12px 16px;border:1px solid #fde68a;">
                     <div style="font-size:11px;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Total productos</div>
@@ -1051,10 +1076,10 @@ function invUpdateBulkBar() {
   bar.style.display = "flex";
   bar.innerHTML = `
     <span style="font-weight:700;font-size:.9rem;">${ids.length} seleccionado${ids.length > 1 ? "s" : ""}</span>
-    <button onclick="invBulkExportar()" style="padding:6px 14px;border-radius:10px;border:none;background:#7c3aed;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">📥 Exportar</button>
-    <button onclick="invBulkCambiarCategoria()" style="padding:6px 14px;border-radius:10px;border:none;background:#0369a1;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">📁 Categoría</button>
-    <button onclick="invBulkEliminar()" style="padding:6px 14px;border-radius:10px;border:none;background:#dc2626;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">🗑 Eliminar</button>
-    <button onclick="invBulkDesseleccionar()" style="padding:6px 14px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:white;font-size:.8rem;cursor:pointer;">✕ Cancelar</button>
+    <button onclick="invBulkExportar()" style="padding:6px 14px;border-radius:10px;border:none;background:#7c3aed;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">\u{1F4E5} Exportar</button>
+    <button onclick="invBulkCambiarCategoria()" style="padding:6px 14px;border-radius:10px;border:none;background:#0369a1;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">\u{1F4C1} Categor\xEDa</button>
+    <button onclick="invBulkEliminar()" style="padding:6px 14px;border-radius:10px;border:none;background:#dc2626;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">\u{1F5D1} Eliminar</button>
+    <button onclick="invBulkDesseleccionar()" style="padding:6px 14px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:white;font-size:.8rem;cursor:pointer;">\u2715 Cancelar</button>
   `;
 }
 window.invUpdateBulkBar = invUpdateBulkBar;
@@ -1071,9 +1096,9 @@ async function invBulkEliminar() {
   );
   if (_pedAfectados.length > 0) {
     const _folios = _pedAfectados.map((p) => p.folio || p.id).slice(0, 5).join(", ");
-    if (!confirm(`⚠️ ${_pedAfectados.length} pedido(s) activo(s) usan estos productos (${_folios}). ¿Eliminar de todas formas?`)) return;
+    if (!confirm(`\u26A0\uFE0F ${_pedAfectados.length} pedido(s) activo(s) usan estos productos (${_folios}). \xBFEliminar de todas formas?`)) return;
   }
-  if (!confirm(`¿Eliminar ${ids.length} producto(s)? Esta acción no se puede deshacer.`)) return;
+  if (!confirm(`\xBFEliminar ${ids.length} producto(s)? Esta acci\xF3n no se puede deshacer.`)) return;
   const idsAEliminar = [...ids];
   window.products = (window.products || []).filter((p) => !idsAEliminar.includes(String(p.id)));
   saveProducts();
@@ -1086,7 +1111,7 @@ async function invBulkEliminar() {
       console.warn("[BulkEliminar] Error al eliminar de Supabase relacional:", e);
     }
   }
-  manekiToastExport(`🗑 ${idsAEliminar.length} producto(s) eliminados`, "ok");
+  manekiToastExport(`\u{1F5D1} ${idsAEliminar.length} producto(s) eliminados`, "ok");
 }
 window.invBulkEliminar = invBulkEliminar;
 function invBulkExportar() {
@@ -1112,19 +1137,19 @@ function invBulkExportar() {
   a.download = "inventario_seleccion.csv";
   a.click();
   URL.revokeObjectURL(url);
-  manekiToastExport(`📥 ${selected.length} productos exportados`, "ok");
+  manekiToastExport(`\u{1F4E5} ${selected.length} productos exportados`, "ok");
 }
 window.invBulkExportar = invBulkExportar;
 function invBulkCambiarCategoria() {
   const ids = invGetSelectedIds();
   if (!ids.length) return;
-  const catId = prompt(`Selecciona categoría (ingresa el ID o nombre):
+  const catId = prompt(`Selecciona categor\xEDa (ingresa el ID o nombre):
 
 ${(window.categories || []).map((c) => `${c.id}: ${c.emoji || ""} ${c.name}`).join("\n")}`);
   if (!catId) return;
   const cat = (window.categories || []).find((c) => String(c.id) === catId.trim() || c.name.toLowerCase().includes(catId.toLowerCase()));
   if (!cat) {
-    manekiToastExport("Categoría no encontrada", "warn");
+    manekiToastExport("Categor\xEDa no encontrada", "warn");
     return;
   }
   (window.products || []).forEach((p) => {
@@ -1132,7 +1157,7 @@ ${(window.categories || []).map((c) => `${c.id}: ${c.emoji || ""} ${c.name}`).jo
   });
   saveProducts();
   renderInventoryTable();
-  manekiToastExport(`📁 Categoría actualizada en ${ids.length} producto(s)`, "ok");
+  manekiToastExport(`\u{1F4C1} Categor\xEDa actualizada en ${ids.length} producto(s)`, "ok");
 }
 window.invBulkCambiarCategoria = invBulkCambiarCategoria;
 //# sourceMappingURL=inventory-5.js.map

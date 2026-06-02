@@ -1,888 +1,140 @@
-function _fechaLocal() {
-  if (typeof _fechaHoy === "function") return _fechaHoy();
-  const now = /* @__PURE__ */ new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-}
-const calcSaldoPendiente = (p) => {
-  const sumPagos = (p.pagos || []).reduce((s, ab) => s + Number(ab.monto || 0), 0);
-  const totalPagado = sumPagos > 0 ? sumPagos : Number(p.anticipo || 0);
-  return Math.max(0, Number(p.total || 0) - totalPagado);
-};
-window.calcSaldoPendiente = calcSaldoPendiente;
-function _norm(s) {
-  return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
-const _escBal = window._esc;
-const _ETIQUETAS = [
-  { valor: "produccion", label: "Producci\xF3n", color: "#7c3aed", bg: "#ede9fe" },
-  { valor: "marketing", label: "Marketing", color: "#db2777", bg: "#fce7f3" },
-  { valor: "envios", label: "Env\xEDos", color: "#0284c7", bg: "#e0f2fe" },
-  { valor: "servicios", label: "Servicios", color: "#0f766e", bg: "#ccfbf1" },
-  { valor: "materiales", label: "Materiales", color: "#b45309", bg: "#fef3c7" },
-  { valor: "ventas", label: "Ventas", color: "#16a34a", bg: "#dcfce7" },
-  { valor: "nomina", label: "N\xF3mina", color: "#dc2626", bg: "#fee2e2" },
-  { valor: "otro", label: "Otro", color: "#6b7280", bg: "#f3f4f6" }
-];
-window._ETIQUETAS = _ETIQUETAS;
-let _balanceMesOffset = 0;
-function cambiarMesBalance(dir) {
-  _balanceMesOffset += dir;
-  renderBalanceMensual();
-}
-function renderBalanceMensual() {
-  const now = /* @__PURE__ */ new Date();
-  now.setMonth(now.getMonth() + _balanceMesOffset);
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const mesStr = `${year}-${String(month + 1).padStart(2, "0")}`;
-  const label = now.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
-  const labelEl = document.getElementById("balanceMesLabel");
-  if (labelEl) labelEl.textContent = label.charAt(0).toUpperCase() + label.slice(1);
-  const ventasMes = (window.salesHistory || []).filter(
-    (s) => s.date && s.date.startsWith(mesStr) && s.method !== "Cancelado" && s.type !== "pedido" && // pedidos se cuentan por separado abajo
-    s.type !== "abono" && // BUG-S07 FIX: abonos ya están en ingresos o en pedido.total
-    s.type !== "anticipo"
-    // BUG-S07 FIX: anticipos sintéticos no son ventas directas
-  );
-  const totalVentas = ventasMes.reduce((s, v) => s + (Number(v.total) || 0), 0);
-  const pedidosFinMes = (window.pedidosFinalizados || []).filter((p) => (p.fechaFinalizado || p.fecha || "").startsWith(mesStr));
-  const totalPedidos = pedidosFinMes.reduce((s, p) => s + (Number(p.total) || 0), 0);
-  const numPedidos = pedidosFinMes.length;
-  const gastosMes = (window.expenses || []).filter((e) => e.date && e.date.startsWith(mesStr) && !e.fromPayable);
-  const totalGastos = gastosMes.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-  const neto = totalVentas + totalPedidos - totalGastos;
-  const el = (id) => document.getElementById(id);
-  if (el("balMesVentas")) el("balMesVentas").textContent = "$" + totalVentas.toFixed(2);
-  if (el("balMesVentasN")) el("balMesVentasN").textContent = ventasMes.length + " ventas";
-  if (el("balMesPedidos")) el("balMesPedidos").textContent = "$" + totalPedidos.toFixed(2);
-  if (el("balMesPedidosN")) el("balMesPedidosN").textContent = numPedidos + " pedidos";
-  if (el("balMesGastos")) el("balMesGastos").textContent = "$" + totalGastos.toFixed(2);
-  if (el("balMesGastosN")) el("balMesGastosN").textContent = gastosMes.length + " gastos";
-  if (el("balMesNeto")) el("balMesNeto").textContent = "$" + neto.toFixed(2);
-  const _bgHero = el("balMesNetoBg");
-  if (_bgHero) {
-    _bgHero.style.background = neto >= 0 ? "#f0fdf4" : "#fef2f2";
-    _bgHero.style.borderColor = neto >= 0 ? "#bbf7d0" : "#fecaca";
-  }
-  const _netoColor = neto >= 0 ? "#166534" : "#dc2626";
-  const _labelColor = neto >= 0 ? "#15803d" : "#dc2626";
-  const _subColor = neto >= 0 ? "#16a34a" : "#ef4444";
-  if (el("balMesNetoLabel")) {
-    el("balMesNetoLabel").textContent = "Neto del mes";
-    el("balMesNetoLabel").style.color = _labelColor;
-  }
-  if (el("balMesNeto")) el("balMesNeto").style.color = _netoColor;
-  if (el("balMesNetoSub")) {
-    el("balMesNetoSub").textContent = neto >= 0 ? "Mes positivo" : "Mes negativo";
-    el("balMesNetoSub").style.color = _subColor;
-  }
-  _renderGraficaCategorias(gastosMes, mesStr);
-  _renderExportarBalanceBtn(mesStr);
-  _renderUtilidadNeta(totalVentas + totalPedidos, totalGastos);
-  renderProyeccionCashflow();
-}
-const _GASTO_CATEGORIAS = ["Materiales", "Env\xEDo", "Publicidad", "Renta", "Servicios", "Personal", "Otros"];
-function _renderGraficaCategorias(gastosMes, mesStr) {
-  let container = document.getElementById("balCatGastosContainer");
-  if (!container) {
-    const anchor = document.getElementById("balMesNetoBg");
-    if (!anchor) return;
-    container = document.createElement("div");
-    container.id = "balCatGastosContainer";
-    container.className = "bg-white rounded-xl p-4 border border-gray-100 mb-4";
-    anchor.parentElement.insertBefore(container, anchor.nextSibling);
-  }
-  if (!gastosMes.length) {
-    container.innerHTML = "";
-    return;
-  }
-  const mapa = {};
-  gastosMes.forEach((e) => {
-    const cat = e.categoria || "Otros";
-    mapa[cat] = (mapa[cat] || 0) + Number(e.amount || 0);
-  });
-  const total = Object.values(mapa).reduce((s, v) => s + v, 0);
-  const sorted = Object.entries(mapa).sort((a, b) => b[1] - a[1]);
-  const colores = ["#C5A572", "#6366f1", "#ec4899", "#f59e0b", "#10b981", "#3b82f6", "#ef4444", "#8b5cf6", "#14b8a6"];
-  const barras = sorted.map(([cat, monto], i) => {
-    const pct = total > 0 ? (monto / total * 100).toFixed(1) : 0;
-    const color = colores[i % colores.length];
-    return `<div class="mb-2">
+function _fechaLocal(){if(typeof _fechaHoy=="function")return _fechaHoy();const e=new Date;return`${e.getFullYear()}-${String(e.getMonth()+1).padStart(2,"0")}-${String(e.getDate()).padStart(2,"0")}`}const calcSaldoPendiente=e=>{const o=(e.pagos||[]).reduce((t,s)=>t+Number(s.monto||0),0),a=o>0?o:Number(e.anticipo||0);return Math.max(0,Number(e.total||0)-a)};window.calcSaldoPendiente=calcSaldoPendiente;function _norm(e){return String(e||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}const _escBal=window._esc,_ETIQUETAS=[{valor:"produccion",label:"Producci\xF3n",color:"#7c3aed",bg:"#ede9fe"},{valor:"marketing",label:"Marketing",color:"#db2777",bg:"#fce7f3"},{valor:"envios",label:"Env\xEDos",color:"#0284c7",bg:"#e0f2fe"},{valor:"servicios",label:"Servicios",color:"#0f766e",bg:"#ccfbf1"},{valor:"materiales",label:"Materiales",color:"#b45309",bg:"#fef3c7"},{valor:"ventas",label:"Ventas",color:"#16a34a",bg:"#dcfce7"},{valor:"nomina",label:"N\xF3mina",color:"#dc2626",bg:"#fee2e2"},{valor:"otro",label:"Otro",color:"#6b7280",bg:"#f3f4f6"}];window._ETIQUETAS=_ETIQUETAS;let _balanceMesOffset=0;function cambiarMesBalance(e){_balanceMesOffset+=e,renderBalanceMensual()}function renderBalanceMensual(){const e=new Date;e.setMonth(e.getMonth()+_balanceMesOffset);const o=e.getFullYear(),a=e.getMonth(),t=`${o}-${String(a+1).padStart(2,"0")}`,s=e.toLocaleDateString("es-MX",{month:"long",year:"numeric"}),r=document.getElementById("balanceMesLabel");r&&(r.textContent=s.charAt(0).toUpperCase()+s.slice(1));const d=(window.salesHistory||[]).filter(g=>g.date&&g.date.startsWith(t)&&g.method!=="Cancelado"&&g.type!=="pedido"&&g.type!=="abono"&&g.type!=="anticipo"),i=d.reduce((g,x)=>g+(Number(x.total)||0),0),c=(window.pedidosFinalizados||[]).filter(g=>(g.fechaFinalizado||g.fecha||"").startsWith(t)),n=c.reduce((g,x)=>g+(Number(x.total)||0),0),l=c.length,p=(window.expenses||[]).filter(g=>g.date&&g.date.startsWith(t)&&!g.fromPayable),f=p.reduce((g,x)=>g+(Number(x.amount)||0),0),m=i+n-f,u=g=>document.getElementById(g);u("balMesVentas")&&(u("balMesVentas").textContent="$"+i.toFixed(2)),u("balMesVentasN")&&(u("balMesVentasN").textContent=d.length+" ventas"),u("balMesPedidos")&&(u("balMesPedidos").textContent="$"+n.toFixed(2)),u("balMesPedidosN")&&(u("balMesPedidosN").textContent=l+" pedidos"),u("balMesGastos")&&(u("balMesGastos").textContent="$"+f.toFixed(2)),u("balMesGastosN")&&(u("balMesGastosN").textContent=p.length+" gastos"),u("balMesNeto")&&(u("balMesNeto").textContent="$"+m.toFixed(2));const b=u("balMesNetoBg");b&&(b.style.background=m>=0?"#f0fdf4":"#fef2f2",b.style.borderColor=m>=0?"#bbf7d0":"#fecaca");const y=m>=0?"#166534":"#dc2626",v=m>=0?"#15803d":"#dc2626",h=m>=0?"#16a34a":"#ef4444";u("balMesNetoLabel")&&(u("balMesNetoLabel").textContent="Neto del mes",u("balMesNetoLabel").style.color=v),u("balMesNeto")&&(u("balMesNeto").style.color=y),u("balMesNetoSub")&&(u("balMesNetoSub").textContent=m>=0?"Mes positivo":"Mes negativo",u("balMesNetoSub").style.color=h),_renderGraficaCategorias(p,t),_renderExportarBalanceBtn(t),_renderUtilidadNeta(i+n,f),renderProyeccionCashflow()}const _GASTO_CATEGORIAS=["Materiales","Env\xEDo","Publicidad","Renta","Servicios","Personal","Otros"];function _renderGraficaCategorias(e,o){let a=document.getElementById("balCatGastosContainer");if(!a){const c=document.getElementById("balMesNetoBg");if(!c)return;a=document.createElement("div"),a.id="balCatGastosContainer",a.className="bg-white rounded-xl p-4 border border-gray-100 mb-4",c.parentElement.insertBefore(a,c.nextSibling)}if(!e.length){a.innerHTML="";return}const t={};e.forEach(c=>{const n=c.categoria||"Otros";t[n]=(t[n]||0)+Number(c.amount||0)});const s=Object.values(t).reduce((c,n)=>c+n,0),r=Object.entries(t).sort((c,n)=>n[1]-c[1]),d=["#C5A572","#6366f1","#ec4899","#f59e0b","#10b981","#3b82f6","#ef4444","#8b5cf6","#14b8a6"],i=r.map(([c,n],l)=>{const p=s>0?(n/s*100).toFixed(1):0,f=d[l%d.length];return`<div class="mb-2">
             <div class="flex justify-between text-xs mb-0.5">
-                <span class="font-medium text-gray-700">${_escBal(cat)}</span>
-                <span class="text-gray-500">$${monto.toFixed(2)} <span style="color:${color}">(${pct}%)</span></span>
+                <span class="font-medium text-gray-700">${_escBal(c)}</span>
+                <span class="text-gray-500">$${n.toFixed(2)} <span style="color:${f}">(${p}%)</span></span>
             </div>
             <div class="h-2 rounded-full bg-gray-100">
-                <div class="h-2 rounded-full transition-all" style="width:${pct}%;background:${color}"></div>
+                <div class="h-2 rounded-full transition-all" style="width:${p}%;background:${f}"></div>
             </div>
-        </div>`;
-  }).join("");
-  container.innerHTML = `
+        </div>`}).join("");a.innerHTML=`
         <div class="flex items-center justify-between mb-3">
             <h4 class="text-sm font-bold text-gray-700">\u{1F4CA} Gastos por categor\xEDa</h4>
-            <span class="text-xs text-gray-400">${gastosMes.length} egresos</span>
+            <span class="text-xs text-gray-400">${e.length} egresos</span>
         </div>
-        ${barras}`;
-}
-window._GASTO_CATEGORIAS = _GASTO_CATEGORIAS;
-function _renderExportarBalanceBtn(mesStr) {
-  let btn = document.getElementById("btnExportarBalance");
-  if (!btn) {
-    const labelEl = document.getElementById("balanceMesLabel");
-    if (!labelEl) return;
-    btn = document.createElement("button");
-    btn.id = "btnExportarBalance";
-    btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors";
-    btn.innerHTML = "\u{1F4E5} Exportar mes";
-    labelEl.parentElement.appendChild(btn);
-  }
-  btn.onclick = () => exportarBalanceMesCSV(mesStr);
-}
-function exportarBalanceMesCSV(mesStr) {
-  const filas = [["Fecha", "Tipo", "Concepto", "Monto", "Etiqueta", "Recurrente"]];
-  const ingMes = (window.incomes || []).filter((i) => (i.date || "").startsWith(mesStr));
-  const expMes = (window.expenses || []).filter((e) => (e.date || "").startsWith(mesStr) && !e.fromPayable);
-  const todos = [
-    ...ingMes.map((i) => ({ fecha: i.date || "", tipo: "ingreso", concepto: i.concept || "", monto: Number(i.amount || 0), etiqueta: i.etiqueta || "", recurrente: i.recurrente ? "s\xED" : "no" })),
-    ...expMes.map((e) => ({ fecha: e.date || "", tipo: "gasto", concepto: e.concept || "", monto: Number(e.amount || 0), etiqueta: e.etiqueta || "", recurrente: e.recurrente || e.recurrenteAuto ? "s\xED" : "no" }))
-  ].sort((a2, b) => a2.fecha.localeCompare(b.fecha));
-  todos.forEach((r) => filas.push([r.fecha, r.tipo, r.concepto, r.monto.toFixed(2), r.etiqueta, r.recurrente]));
-  const csv = filas.map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\r\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `balance_${mesStr}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  manekiToastExport(`\u2705 CSV balance_${mesStr}.csv descargado`, "ok");
-}
-window.exportarBalanceMesCSV = exportarBalanceMesCSV;
-function toggleMovimientos() {
-  const panel = document.getElementById("movimientosPanel");
-  panel.classList.toggle("hidden");
-  if (!panel.classList.contains("hidden")) renderMovimientos();
-}
-function renderMovimientos() {
-  const q = _norm(document.getElementById("movBuscar")?.value || "");
-  const lista = document.getElementById("movimientosLista");
-  const filtrados = [...window.stockMovimientos || []].reverse().filter(
-    (m) => !q || _norm(m.productoNombre).includes(q) || _norm(m.motivo).includes(q)
-  );
-  if (filtrados.length === 0) {
-    lista.innerHTML = '<p class="text-gray-400 text-center py-8 text-sm">Sin movimientos registrados</p>';
-    return;
-  }
-  const colores = { salida: "bg-red-50 text-red-600", entrada: "bg-green-50 text-green-600", ajuste: "bg-blue-50 text-blue-600" };
-  const iconos = { salida: "\u2193", entrada: "\u2191", ajuste: "\u21C4" };
-  lista.innerHTML = filtrados.map((m) => `
+        ${i}`}window._GASTO_CATEGORIAS=_GASTO_CATEGORIAS;function _renderExportarBalanceBtn(e){let o=document.getElementById("btnExportarBalance");if(!o){const a=document.getElementById("balanceMesLabel");if(!a)return;o=document.createElement("button"),o.id="btnExportarBalance",o.className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors",o.innerHTML="\u{1F4E5} Exportar mes",a.parentElement.appendChild(o)}o.onclick=()=>exportarBalanceMesCSV(e)}function exportarBalanceMesCSV(e){const o=[["Fecha","Tipo","Concepto","Monto","Etiqueta","Recurrente"]],a=(window.incomes||[]).filter(n=>(n.date||"").startsWith(e)),t=(window.expenses||[]).filter(n=>(n.date||"").startsWith(e)&&!n.fromPayable);[...a.map(n=>({fecha:n.date||"",tipo:"ingreso",concepto:n.concept||"",monto:Number(n.amount||0),etiqueta:n.etiqueta||"",recurrente:n.recurrente?"s\xED":"no"})),...t.map(n=>({fecha:n.date||"",tipo:"gasto",concepto:n.concept||"",monto:Number(n.amount||0),etiqueta:n.etiqueta||"",recurrente:n.recurrente||n.recurrenteAuto?"s\xED":"no"}))].sort((n,l)=>n.fecha.localeCompare(l.fecha)).forEach(n=>o.push([n.fecha,n.tipo,n.concepto,n.monto.toFixed(2),n.etiqueta,n.recurrente]));const r=o.map(n=>n.map(l=>`"${String(l).replace(/"/g,'""')}"`).join(",")).join(`\r
+`),d=new Blob(["\uFEFF"+r],{type:"text/csv;charset=utf-8;"}),i=URL.createObjectURL(d),c=document.createElement("a");c.href=i,c.download=`balance_${e}.csv`,c.click(),URL.revokeObjectURL(i),manekiToastExport(`\u2705 CSV balance_${e}.csv descargado`,"ok")}window.exportarBalanceMesCSV=exportarBalanceMesCSV;function toggleMovimientos(){const e=document.getElementById("movimientosPanel");e.classList.toggle("hidden"),e.classList.contains("hidden")||renderMovimientos()}function renderMovimientos(){const e=_norm(document.getElementById("movBuscar")?.value||""),o=document.getElementById("movimientosLista"),a=[...window.stockMovimientos||[]].reverse().filter(r=>!e||_norm(r.productoNombre).includes(e)||_norm(r.motivo).includes(e));if(a.length===0){o.innerHTML='<p class="text-gray-400 text-center py-8 text-sm">Sin movimientos registrados</p>';return}const t={salida:"bg-red-50 text-red-600",entrada:"bg-green-50 text-green-600",ajuste:"bg-blue-50 text-blue-600"},s={salida:"\u2193",entrada:"\u2191",ajuste:"\u21C4"};o.innerHTML=a.map(r=>`
         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
             <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${colores[m.tipo] || "bg-gray-100 text-gray-600"}">${iconos[m.tipo] || "?"}</span>
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${t[r.tipo]||"bg-gray-100 text-gray-600"}">${s[r.tipo]||"?"}</span>
                 <div>
-                    <p class="font-semibold text-gray-800 text-sm">${_escBal(m.productoNombre)}</p>
-                    <p class="text-xs text-gray-400">${_escBal(m.motivo)}</p>
+                    <p class="font-semibold text-gray-800 text-sm">${_escBal(r.productoNombre)}</p>
+                    <p class="text-xs text-gray-400">${_escBal(r.motivo)}</p>
                 </div>
             </div>
             <div class="text-right">
-                <p class="font-bold text-sm ${m.tipo === "salida" ? "text-red-600" : "text-green-600"}">${m.tipo === "salida" ? "-" : "+"}${m.cantidad}</p>
-                <p class="text-xs text-gray-400">${_escBal(m.fecha)} ${_escBal(m.hora)}</p>
+                <p class="font-bold text-sm ${r.tipo==="salida"?"text-red-600":"text-green-600"}">${r.tipo==="salida"?"-":"+"}${r.cantidad}</p>
+                <p class="text-xs text-gray-400">${_escBal(r.fecha)} ${_escBal(r.hora)}</p>
             </div>
         </div>
-    `).join("");
-}
-function limpiarMovimientos() {
-  showConfirm("Se borrar\xE1 todo el historial de movimientos de stock. Esta acci\xF3n no se puede deshacer.", "\u26A0\uFE0F Limpiar historial").then((ok) => {
-    if (!ok) return;
-    window.stockMovimientos = [];
-    window.stockMovements = [];
-    saveStockMovimientos();
-    renderMovimientos();
-    manekiToastExport("\u{1F5D1}\uFE0F Historial limpiado", "ok");
-  });
-}
-function eliminarPedidoFinalizado(id) {
-  const pedido = pedidosFinalizados.find((p) => String(p.id) === String(id));
-  if (!pedido) return;
-  showConfirm(`El pedido ${pedido.folio || id} ser\xE1 eliminado del historial de ventas.`, "\u26A0\uFE0F Eliminar pedido").then((ok) => {
-    if (!ok) return;
-    pedidosFinalizados = pedidosFinalizados.filter((p) => String(p.id) !== String(id));
-    savePedidosFinalizados();
-    salesHistory = salesHistory.filter((s) => String(s.id) !== String(id));
-    saveSalesHistory();
-    if (typeof _allVentasCache !== "undefined") _allVentasCache = null;
-    renderHistorialPedidos();
-    renderSalesHistory();
-    manekiToastExport("\u{1F5D1}\uFE0F Pedido eliminado", "ok");
-  });
-}
-function procesarGastosRecurrentes() {
-  if (!Array.isArray(gastosRecurrentes) || gastosRecurrentes.length === 0) return;
-  const hoy = /* @__PURE__ */ new Date();
-  const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
-  let huboNuevos = false;
-  gastosRecurrentes.forEach((gr) => {
-    const yaExiste = expenses.some(
-      (e) => e.recurrenteAuto === true && e.concept === gr.concept && e.date && e.date.startsWith(mesActual)
-    );
-    if (!yaExiste) {
-      const ano = hoy.getFullYear();
-      const mes = hoy.getMonth();
-      const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-      const diaValido = Math.min(gr.dia || 1, ultimoDia);
-      const fecha = `${mesActual}-${String(diaValido).padStart(2, "0")}`;
-      expenses.push({
-        id: mkId(),
-        // BUG-011 FIX: evitar ID número flotante
-        concept: gr.concept,
-        concepto: gr.concept,
-        amount: gr.amount,
-        monto: gr.amount,
-        date: fecha,
-        fecha,
-        recurrenteAuto: true
-      });
-      huboNuevos = true;
-    }
-  });
-  if (huboNuevos) {
-    saveExpenses();
-  }
-}
-function toggleRecurrentesPanel() {
-  const panel = document.getElementById("recurrentesPanel");
-  panel.classList.toggle("hidden");
-  if (!panel.classList.contains("hidden")) renderRecurrentesPanel();
-}
-function renderRecurrentesPanel() {
-  const lista = document.getElementById("recurrentesLista");
-  if (!lista) return;
-  if (!gastosRecurrentes || gastosRecurrentes.length === 0) {
-    lista.innerHTML = '<p class="text-xs text-amber-600">Sin gastos recurrentes. Marca "recurrente" al agregar un gasto.</p>';
-    return;
-  }
-  lista.innerHTML = gastosRecurrentes.map((gr, i) => {
-    const diaStr = gr.dia ? `<span class="text-xs text-gray-400 ml-1">(d\xEDa ${gr.dia})</span>` : "";
-    return `<div class="flex justify-between items-center py-1">
-            <span class="text-xs text-amber-800 font-semibold">${_escBal(gr.concept)} \u2014 $${Number(gr.amount).toFixed(2)}/mes ${diaStr}</span>
-            <button onclick="eliminarRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">\u2715</button>
-        </div>`;
-  }).join("");
-}
-function eliminarRecurrente(idx) {
-  showConfirm("Este gasto recurrente ya no se registrar\xE1 autom\xE1ticamente.", "\xBFEliminar gasto recurrente?").then((ok) => {
-    if (!ok) return;
-    gastosRecurrentes.splice(idx, 1);
-    saveGastosRecurrentes();
-    renderRecurrentesPanel();
-    manekiToastExport("\u{1F5D1}\uFE0F Gasto recurrente eliminado", "ok");
-  });
-}
-function toggleIngresosRecurrentesPanel() {
-  let panel = document.getElementById("ingresosRecurrentesPanel");
-  if (!panel) {
-    const gastosPanel = document.getElementById("recurrentesPanel");
-    if (!gastosPanel) return;
-    panel = document.createElement("div");
-    panel.id = "ingresosRecurrentesPanel";
-    panel.className = "hidden mt-2 p-3 bg-green-50 border border-green-200 rounded-xl";
-    panel.innerHTML = '<ul id="ingresosRecurrentesLista"></ul>';
-    gastosPanel.parentElement.insertBefore(panel, gastosPanel.nextSibling);
-  }
-  panel.classList.toggle("hidden");
-  if (!panel.classList.contains("hidden")) renderIngresosRecurrentesPanel();
-}
-function renderIngresosRecurrentesPanel() {
-  const lista = document.getElementById("ingresosRecurrentesLista");
-  if (!lista) return;
-  const arr = window.ingresosRecurrentes || [];
-  if (arr.length === 0) {
-    lista.innerHTML = '<p class="text-xs text-green-700">Sin ingresos recurrentes configurados.</p>';
-    return;
-  }
-  lista.innerHTML = arr.map((ir, i) => {
-    const diaStr = ir.dia ? `<span class="text-xs text-gray-400 ml-1">(d\xEDa ${ir.dia})</span>` : "";
-    return `<div class="flex justify-between items-center py-1">
-            <span class="text-xs text-green-800 font-semibold">${_escBal(ir.concept)} \u2014 $${Number(ir.amount).toFixed(2)}/mes ${diaStr}</span>
-            <button onclick="eliminarIngresoRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">\u{1F5D1}\uFE0F Eliminar</button>
-        </div>`;
-  }).join("");
-}
-function eliminarIngresoRecurrente(idx) {
-  window.ingresosRecurrentes.splice(idx, 1);
-  saveIngresosRecurrentes();
-  renderIngresosRecurrentesPanel();
-  manekiToastExport("\u2705 Ingreso recurrente eliminado", "ok");
-}
-window.toggleIngresosRecurrentesPanel = toggleIngresosRecurrentesPanel;
-window.renderIngresosRecurrentesPanel = renderIngresosRecurrentesPanel;
-window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
-function renderBalance() {
-  procesarGastosRecurrentes();
-  procesarIngresosRecurrentes();
-  const listaIncomes = window.incomes || [];
-  const totalIncomeManual = listaIncomes.filter((i) => !i.fromPOS && !i.folioOrigen).reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-  const foliosEnIncomes = new Set(listaIncomes.map((i) => i.folio || i.folioOrigen).filter(Boolean));
-  const totalPedidosFin = (window.pedidosFinalizados || []).filter((p) => !foliosEnIncomes.has(p.folio)).reduce((sum, p) => sum + Number(p.total || 0), 0);
-  const totalPOS = (window.salesHistory || []).filter((s) => s.type !== "pedido" && s.type !== "abono" && s.type !== "anticipo" && s.method !== "Cancelado").reduce((sum, s) => sum + Number(s.total || 0), 0);
-  const totalIncome = totalIncomeManual + totalPedidosFin + totalPOS;
-  const totalExpenses = (window.expenses || []).filter((e) => !e.fromPayable).reduce((sum, e) => sum + (Number(e.amount || e.monto) || 0), 0);
-  const totalReceivables = receivables.filter((r) => r.status === "pending").reduce((sum, r) => sum + (Number(r.amount) || 0), 0) + (window.pedidos || []).filter((p) => !["finalizado", "cancelado", "entregado"].includes((p.status || "").toLowerCase())).reduce((sum, p) => sum + calcSaldoPendiente(p), 0);
-  const totalPayables = payables.filter((p) => p.status === "pending").reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-  document.getElementById("totalIncome").textContent = `$${totalIncome.toFixed(2)}`;
-  document.getElementById("totalExpenses").textContent = `$${totalExpenses.toFixed(2)}`;
-  document.getElementById("totalReceivables").textContent = `$${totalReceivables.toFixed(2)}`;
-  document.getElementById("totalPayables").textContent = `$${totalPayables.toFixed(2)}`;
-  renderBalanceMensual();
-  renderIncomeList();
-  renderExpenseList();
-  renderReceivablesList();
-  renderPayablesList();
-}
-function renderIncomeList() {
-  const q = _norm(document.getElementById("buscarIngresos")?.value || "");
-  const etqFiltro = document.getElementById("filtroEtiquetaIngresos")?.value || "";
-  _ensureEtiquetaFiltro("incomeList", "filtroEtiquetaIngresos", "renderIncomeList");
-  const container = document.getElementById("incomeList");
-  let listaInc = q ? incomes.filter((i) => _norm(i.concept).includes(q) || (i.date || "").includes(q)) : incomes;
-  if (etqFiltro) listaInc = listaInc.filter((i) => (i.etiqueta || "") === etqFiltro);
-  container.innerHTML = listaInc.length === 0 ? '<div class="mk-empty-state"><div class="mk-empty-icon">\u{1F4ED}</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p></div>' : listaInc.slice().reverse().map((income) => `
+    `).join("")}function limpiarMovimientos(){showConfirm("Se borrar\xE1 todo el historial de movimientos de stock. Esta acci\xF3n no se puede deshacer.","\u26A0\uFE0F Limpiar historial").then(e=>{e&&(window.stockMovimientos=[],window.stockMovements=[],saveStockMovimientos(),renderMovimientos(),manekiToastExport("\u{1F5D1}\uFE0F Historial limpiado","ok"))})}function eliminarPedidoFinalizado(e){const o=pedidosFinalizados.find(a=>String(a.id)===String(e));o&&showConfirm(`El pedido ${o.folio||e} ser\xE1 eliminado del historial de ventas.`,"\u26A0\uFE0F Eliminar pedido").then(a=>{a&&(pedidosFinalizados=pedidosFinalizados.filter(t=>String(t.id)!==String(e)),savePedidosFinalizados(),salesHistory=salesHistory.filter(t=>String(t.id)!==String(e)),saveSalesHistory(),typeof _allVentasCache<"u"&&(_allVentasCache=null),renderHistorialPedidos(),renderSalesHistory(),manekiToastExport("\u{1F5D1}\uFE0F Pedido eliminado","ok"))})}function procesarGastosRecurrentes(){if(!Array.isArray(gastosRecurrentes)||gastosRecurrentes.length===0)return;const e=new Date,o=`${e.getFullYear()}-${String(e.getMonth()+1).padStart(2,"0")}`;let a=!1;gastosRecurrentes.forEach(t=>{if(!expenses.some(r=>r.recurrenteAuto===!0&&r.concept===t.concept&&r.date&&r.date.startsWith(o))){const r=e.getFullYear(),d=e.getMonth(),i=new Date(r,d+1,0).getDate(),c=Math.min(t.dia||1,i),n=`${o}-${String(c).padStart(2,"0")}`;expenses.push({id:mkId(),concept:t.concept,concepto:t.concept,amount:t.amount,monto:t.amount,date:n,fecha:n,recurrenteAuto:!0}),a=!0}}),a&&saveExpenses()}function toggleRecurrentesPanel(){const e=document.getElementById("recurrentesPanel");e.classList.toggle("hidden"),e.classList.contains("hidden")||renderRecurrentesPanel()}function renderRecurrentesPanel(){const e=document.getElementById("recurrentesLista");if(e){if(!gastosRecurrentes||gastosRecurrentes.length===0){e.innerHTML='<p class="text-xs text-amber-600">Sin gastos recurrentes. Marca "recurrente" al agregar un gasto.</p>';return}e.innerHTML=gastosRecurrentes.map((o,a)=>{const t=o.dia?`<span class="text-xs text-gray-400 ml-1">(d\xEDa ${o.dia})</span>`:"";return`<div class="flex justify-between items-center py-1">
+            <span class="text-xs text-amber-800 font-semibold">${_escBal(o.concept)} \u2014 $${Number(o.amount).toFixed(2)}/mes ${t}</span>
+            <button onclick="eliminarRecurrente(${a})" class="text-red-400 hover:text-red-600 text-xs">\u2715</button>
+        </div>`}).join("")}}function eliminarRecurrente(e){showConfirm("Este gasto recurrente ya no se registrar\xE1 autom\xE1ticamente.","\xBFEliminar gasto recurrente?").then(o=>{o&&(gastosRecurrentes.splice(e,1),saveGastosRecurrentes(),renderRecurrentesPanel(),manekiToastExport("\u{1F5D1}\uFE0F Gasto recurrente eliminado","ok"))})}function toggleIngresosRecurrentesPanel(){let e=document.getElementById("ingresosRecurrentesPanel");if(!e){const o=document.getElementById("recurrentesPanel");if(!o)return;e=document.createElement("div"),e.id="ingresosRecurrentesPanel",e.className="hidden mt-2 p-3 bg-green-50 border border-green-200 rounded-xl",e.innerHTML='<ul id="ingresosRecurrentesLista"></ul>',o.parentElement.insertBefore(e,o.nextSibling)}e.classList.toggle("hidden"),e.classList.contains("hidden")||renderIngresosRecurrentesPanel()}function renderIngresosRecurrentesPanel(){const e=document.getElementById("ingresosRecurrentesLista");if(!e)return;const o=window.ingresosRecurrentes||[];if(o.length===0){e.innerHTML='<p class="text-xs text-green-700">Sin ingresos recurrentes configurados.</p>';return}e.innerHTML=o.map((a,t)=>{const s=a.dia?`<span class="text-xs text-gray-400 ml-1">(d\xEDa ${a.dia})</span>`:"";return`<div class="flex justify-between items-center py-1">
+            <span class="text-xs text-green-800 font-semibold">${_escBal(a.concept)} \u2014 $${Number(a.amount).toFixed(2)}/mes ${s}</span>
+            <button onclick="eliminarIngresoRecurrente(${t})" class="text-red-400 hover:text-red-600 text-xs">\u{1F5D1}\uFE0F Eliminar</button>
+        </div>`}).join("")}function eliminarIngresoRecurrente(e){window.ingresosRecurrentes.splice(e,1),saveIngresosRecurrentes(),renderIngresosRecurrentesPanel(),manekiToastExport("\u2705 Ingreso recurrente eliminado","ok")}window.toggleIngresosRecurrentesPanel=toggleIngresosRecurrentesPanel,window.renderIngresosRecurrentesPanel=renderIngresosRecurrentesPanel,window.eliminarIngresoRecurrente=eliminarIngresoRecurrente;function renderBalance(){procesarGastosRecurrentes(),procesarIngresosRecurrentes();const e=window.incomes||[],o=e.filter(n=>!n.fromPOS&&!n.folioOrigen).reduce((n,l)=>n+(Number(l.amount)||0),0),a=new Set(e.map(n=>n.folio||n.folioOrigen).filter(Boolean)),t=(window.pedidosFinalizados||[]).filter(n=>!a.has(n.folio)).reduce((n,l)=>n+Number(l.total||0),0),s=(window.salesHistory||[]).filter(n=>n.type!=="pedido"&&n.type!=="abono"&&n.type!=="anticipo"&&n.method!=="Cancelado").reduce((n,l)=>n+Number(l.total||0),0),r=o+t+s,d=(window.expenses||[]).filter(n=>!n.fromPayable).reduce((n,l)=>n+(Number(l.amount||l.monto)||0),0),i=receivables.filter(n=>n.status==="pending").reduce((n,l)=>n+(Number(l.amount)||0),0)+(window.pedidos||[]).filter(n=>!["finalizado","cancelado","entregado"].includes((n.status||"").toLowerCase())).reduce((n,l)=>n+calcSaldoPendiente(l),0),c=payables.filter(n=>n.status==="pending").reduce((n,l)=>n+(Number(l.amount)||0),0);document.getElementById("totalIncome").textContent=`$${r.toFixed(2)}`,document.getElementById("totalExpenses").textContent=`$${d.toFixed(2)}`,document.getElementById("totalReceivables").textContent=`$${i.toFixed(2)}`,document.getElementById("totalPayables").textContent=`$${c.toFixed(2)}`,renderBalanceMensual(),renderIncomeList(),renderExpenseList(),renderReceivablesList(),renderPayablesList()}function renderIncomeList(){const e=_norm(document.getElementById("buscarIngresos")?.value||""),o=document.getElementById("filtroEtiquetaIngresos")?.value||"";_ensureEtiquetaFiltro("incomeList","filtroEtiquetaIngresos","renderIncomeList");const a=document.getElementById("incomeList");let t=e?incomes.filter(s=>_norm(s.concept).includes(e)||(s.date||"").includes(e)):incomes;o&&(t=t.filter(s=>(s.etiqueta||"")===o)),a.innerHTML=t.length===0?'<div class="mk-empty-state"><div class="mk-empty-icon">\u{1F4ED}</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p></div>':t.slice().reverse().map(s=>`
             <div class="mk-tx-income flex justify-between items-center p-3 bg-green-50 rounded-xl mb-2">
                 <div>
-                    <p class="font-semibold text-gray-800">${_esc(income.concept)}</p>
-                    <p class="text-xs text-gray-500">${_esc(income.date)}${income.etiqueta ? " " + _etiquetaBadge(income.etiqueta) : ""}${income.recurrente ? ' <span class="text-xs text-blue-500 font-semibold">\u21BA</span>' : ""}</p>
+                    <p class="font-semibold text-gray-800">${_esc(s.concept)}</p>
+                    <p class="text-xs text-gray-500">${_esc(s.date)}${s.etiqueta?" "+_etiquetaBadge(s.etiqueta):""}${s.recurrente?' <span class="text-xs text-blue-500 font-semibold">\u21BA</span>':""}</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="font-bold text-green-600">+$${Number(income.amount || 0).toFixed(2)}</span>
-                    <button onclick="editBalanceItem('income', '${_esc(String(income.id))}')" class="text-blue-400 hover:text-blue-600" title="Editar">
+                    <span class="font-bold text-green-600">+$${Number(s.amount||0).toFixed(2)}</span>
+                    <button onclick="editBalanceItem('income', '${_esc(String(s.id))}')" class="text-blue-400 hover:text-blue-600" title="Editar">
                         <i class="fas fa-edit text-xs"></i>
                     </button>
-                    <button onclick="deleteBalanceItem('income', '${_esc(String(income.id))}')" class="text-red-400 hover:text-red-600" title="Eliminar">
+                    <button onclick="deleteBalanceItem('income', '${_esc(String(s.id))}')" class="text-red-400 hover:text-red-600" title="Eliminar">
                         <i class="fas fa-trash text-xs"></i>
                     </button>
                 </div>
             </div>
-        `).join("");
-}
-function renderExpenseList() {
-  const q = _norm(document.getElementById("buscarEgresos")?.value || "");
-  const etqFiltro = document.getElementById("filtroEtiquetaEgresos")?.value || "";
-  _ensureEtiquetaFiltro("expenseList", "filtroEtiquetaEgresos", "renderExpenseList");
-  const container = document.getElementById("expenseList");
-  let listaExp = q ? expenses.filter((e) => _norm(e.concept).includes(q) || (e.date || "").includes(q)) : expenses;
-  if (etqFiltro) listaExp = listaExp.filter((e) => (e.etiqueta || "") === etqFiltro);
-  container.innerHTML = listaExp.length === 0 ? '<div class="mk-empty-state"><div class="mk-empty-icon">\u{1F4ED}</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p></div>' : listaExp.slice().reverse().map((expense) => `
+        `).join("")}function renderExpenseList(){const e=_norm(document.getElementById("buscarEgresos")?.value||""),o=document.getElementById("filtroEtiquetaEgresos")?.value||"";_ensureEtiquetaFiltro("expenseList","filtroEtiquetaEgresos","renderExpenseList");const a=document.getElementById("expenseList");let t=e?expenses.filter(s=>_norm(s.concept).includes(e)||(s.date||"").includes(e)):expenses;o&&(t=t.filter(s=>(s.etiqueta||"")===o)),a.innerHTML=t.length===0?'<div class="mk-empty-state"><div class="mk-empty-icon">\u{1F4ED}</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p></div>':t.slice().reverse().map(s=>`
             <div class="mk-tx-expense flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
                 <div>
-                    <p class="font-semibold text-gray-800">${_esc(expense.concept)}</p>
-                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` \xB7 <span style="color:#C5A572;font-weight:600">${_esc(expense.categoria)}</span>` : ""}${expense.etiqueta ? " " + _etiquetaBadge(expense.etiqueta) : ""}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">\u21BA</span>' : ""}</p>
+                    <p class="font-semibold text-gray-800">${_esc(s.concept)}</p>
+                    <p class="text-xs text-gray-500">${_esc(s.date)}${s.categoria?` \xB7 <span style="color:#C5A572;font-weight:600">${_esc(s.categoria)}</span>`:""}${s.etiqueta?" "+_etiquetaBadge(s.etiqueta):""}${s.recurrente?' <span class="text-xs text-orange-500 font-semibold">\u21BA</span>':""}</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="font-bold text-red-600">-$${Number(expense.amount || 0).toFixed(2)}</span>
-                    <button onclick="editBalanceItem('expense', '${_esc(String(expense.id))}')" class="text-blue-400 hover:text-blue-600" title="Editar">
+                    <span class="font-bold text-red-600">-$${Number(s.amount||0).toFixed(2)}</span>
+                    <button onclick="editBalanceItem('expense', '${_esc(String(s.id))}')" class="text-blue-400 hover:text-blue-600" title="Editar">
                         <i class="fas fa-edit text-xs"></i>
                     </button>
-                    <button onclick="deleteBalanceItem('expense', '${_esc(String(expense.id))}')" class="text-red-400 hover:text-red-600" title="Eliminar">
+                    <button onclick="deleteBalanceItem('expense', '${_esc(String(s.id))}')" class="text-red-400 hover:text-red-600" title="Eliminar">
                         <i class="fas fa-trash text-xs"></i>
                     </button>
                 </div>
             </div>
-        `).join("");
-}
-function renderReceivablesList() {
-  const container = document.getElementById("receivablesList");
-  const orden = document.getElementById("cxcOrden")?.value || "dias";
-  let lista = [...receivables];
-  const hoy = /* @__PURE__ */ new Date();
-  hoy.setHours(0, 0, 0, 0);
-  lista = lista.map((rec) => {
-    const fechaCreacion = rec.createdAt ? new Date(rec.createdAt) : rec.dueDate ? /* @__PURE__ */ new Date(rec.dueDate + "T00:00:00") : null;
-    const diasPendiente = fechaCreacion ? Math.round((hoy - fechaCreacion) / 864e5) : 0;
-    return { ...rec, diasPendiente };
-  });
-  if (orden === "dias") lista.sort((a, b) => b.diasPendiente - a.diasPendiente);
-  else if (orden === "monto") lista.sort((a, b) => b.amount - a.amount);
-  else lista.sort((a, b) => (a.client || "").localeCompare(b.client || ""));
-  const totalCxC = lista.filter((r) => !r.status || r.status === "pending").reduce((s, r) => s + (Number(r.amount) || 0), 0);
-  const vencidas = lista.filter((r) => r.diasPendiente > 30).length;
-  const resumen = document.getElementById("cxcResumen");
-  if (resumen) {
-    resumen.innerHTML = `
-                    <div class="px-3 py-1.5 rounded-xl bg-blue-50 text-xs font-semibold text-blue-700">Total: $${totalCxC.toFixed(2)}</div>
-                    <div class="px-3 py-1.5 rounded-xl bg-red-50 text-xs font-semibold text-red-700">${lista.length} deudores</div>
-                    ${vencidas > 0 ? `<div class="px-3 py-1.5 rounded-xl bg-orange-50 text-xs font-semibold text-orange-700">\u26A0\uFE0F ${vencidas} +30 d\xEDas</div>` : ""}`;
-  }
-  container.innerHTML = lista.map((rec) => {
-    const urgencia = rec.diasPendiente > 30 ? "bg-red-50 border-red-200" : rec.diasPendiente > 14 ? "bg-orange-50 border-orange-200" : "bg-blue-50 border-blue-200";
-    const diasLabel = rec.diasPendiente === 0 ? "Hoy" : rec.diasPendiente > 0 ? `${rec.diasPendiente} d\xEDas` : "\u2014";
-    const diasColor = rec.diasPendiente > 30 ? "text-red-600" : rec.diasPendiente > 14 ? "text-orange-600" : "text-blue-600";
-    const waLink = rec.phone ? `<a href="https://wa.me/52${rec.phone.replace(/\\D/g, "")}" target="_blank" class="p-1.5 rounded-lg hover:bg-green-100 transition-all" style="color:#25D366" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>` : "";
-    return `
-                <div class="flex justify-between items-center p-3 rounded-xl border ${urgencia}">
+        `).join("")}function renderReceivablesList(){const e=document.getElementById("receivablesList"),o=document.getElementById("cxcOrden")?.value||"dias";let a=[...receivables];const t=new Date;t.setHours(0,0,0,0),a=a.map(i=>{const c=i.createdAt?new Date(i.createdAt):i.dueDate?new Date(i.dueDate+"T00:00:00"):null,n=c?Math.round((t-c)/864e5):0;return{...i,diasPendiente:n}}),o==="dias"?a.sort((i,c)=>c.diasPendiente-i.diasPendiente):o==="monto"?a.sort((i,c)=>c.amount-i.amount):a.sort((i,c)=>(i.client||"").localeCompare(c.client||""));const s=a.filter(i=>!i.status||i.status==="pending").reduce((i,c)=>i+(Number(c.amount)||0),0),r=a.filter(i=>i.diasPendiente>30).length,d=document.getElementById("cxcResumen");d&&(d.innerHTML=`
+                    <div class="px-3 py-1.5 rounded-xl bg-blue-50 text-xs font-semibold text-blue-700">Total: $${s.toFixed(2)}</div>
+                    <div class="px-3 py-1.5 rounded-xl bg-red-50 text-xs font-semibold text-red-700">${a.length} deudores</div>
+                    ${r>0?`<div class="px-3 py-1.5 rounded-xl bg-orange-50 text-xs font-semibold text-orange-700">\u26A0\uFE0F ${r} +30 d\xEDas</div>`:""}`),e.innerHTML=a.map(i=>{const c=i.diasPendiente>30?"bg-red-50 border-red-200":i.diasPendiente>14?"bg-orange-50 border-orange-200":"bg-blue-50 border-blue-200",n=i.diasPendiente===0?"Hoy":i.diasPendiente>0?`${i.diasPendiente} d\xEDas`:"\u2014",l=i.diasPendiente>30?"text-red-600":i.diasPendiente>14?"text-orange-600":"text-blue-600",p=i.phone?`<a href="https://wa.me/52${i.phone.replace(/\\D/g,"")}" target="_blank" class="p-1.5 rounded-lg hover:bg-green-100 transition-all" style="color:#25D366" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>`:"";return`
+                <div class="flex justify-between items-center p-3 rounded-xl border ${c}">
                     <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-gray-800 text-sm">${_escBal(rec.client)}</p>
-                        <p class="text-xs text-gray-500">Vence: ${_escBal(rec.dueDate)}</p>
-                        ${rec.concept ? `<p class="text-xs text-gray-400">${_escBal(rec.concept)}</p>` : ""}
+                        <p class="font-semibold text-gray-800 text-sm">${_escBal(i.client)}</p>
+                        <p class="text-xs text-gray-500">Vence: ${_escBal(i.dueDate)}</p>
+                        ${i.concept?`<p class="text-xs text-gray-400">${_escBal(i.concept)}</p>`:""}
                     </div>
                     <div class="text-right flex items-center gap-2">
                         <div>
-                            <p class="font-bold text-blue-600">$${Number(rec.amount || 0).toFixed(2)}</p>
-                            <p class="text-xs font-semibold ${diasColor}">\u23F1 ${diasLabel}</p>
+                            <p class="font-bold text-blue-600">$${Number(i.amount||0).toFixed(2)}</p>
+                            <p class="text-xs font-semibold ${l}">\u23F1 ${n}</p>
                         </div>
                         <div class="flex flex-col gap-1">
-                            ${waLink}
-                            <button onclick="markAsPaid('receivable', '${rec.id}')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs text-green-600 transition-all" title="Marcar pagado"><i class="fas fa-check"></i></button>
+                            ${p}
+                            <button onclick="markAsPaid('receivable', '${i.id}')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs text-green-600 transition-all" title="Marcar pagado"><i class="fas fa-check"></i></button>
                         </div>
                     </div>
-                </div>`;
-  }).join("") || '<div class="mk-empty"><div class="mk-empty-icon">\u{1F4ED}</div><div class="mk-empty-title">Sin cuentas por cobrar</div><div class="mk-empty-sub">No hay saldos pendientes de clientes</div></div>';
-  renderCxCPedidos();
-}
-function renderCxCPedidos() {
-  const container = document.getElementById("cxcPedidosList");
-  if (!container) return;
-  const hoy = /* @__PURE__ */ new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const conSaldo = (window.pedidos || []).filter((p) => calcSaldoPendiente(p) > 0).map((p) => {
-    const fechaRef = p.fechaPedido ? /* @__PURE__ */ new Date(p.fechaPedido + "T00:00:00") : null;
-    const dias = fechaRef ? Math.round((hoy - fechaRef) / 864e5) : 0;
-    return { ...p, dias, _saldo: calcSaldoPendiente(p) };
-  }).sort((a, b) => b.dias - a.dias);
-  if (conSaldo.length === 0) {
-    container.innerHTML = '<p class="text-xs text-gray-400 text-center py-2">Todos los pedidos est\xE1n al corriente \u{1F389}</p>';
-    return;
-  }
-  container.innerHTML = conSaldo.map((p) => {
-    const diasColor = p.dias > 30 ? "text-red-600" : p.dias > 14 ? "text-orange-600" : "text-gray-500";
-    const diasLabel = p.dias === 0 ? "Hoy" : `${p.dias}d`;
-    const _safeId = String(p.id).replace(/'/g, "");
-    const waBtn = p.telefono ? `<button onclick="abrirWhatsAppPedido('${_safeId}')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>` : "";
-    return `<div class="flex items-center gap-2 p-2 bg-blue-50 rounded-xl">
+                </div>`}).join("")||'<div class="mk-empty"><div class="mk-empty-icon">\u{1F4ED}</div><div class="mk-empty-title">Sin cuentas por cobrar</div><div class="mk-empty-sub">No hay saldos pendientes de clientes</div></div>',renderCxCPedidos()}function renderCxCPedidos(){const e=document.getElementById("cxcPedidosList");if(!e)return;const o=new Date;o.setHours(0,0,0,0);const a=(window.pedidos||[]).filter(t=>calcSaldoPendiente(t)>0).map(t=>{const s=t.fechaPedido?new Date(t.fechaPedido+"T00:00:00"):null,r=s?Math.round((o-s)/864e5):0;return{...t,dias:r,_saldo:calcSaldoPendiente(t)}}).sort((t,s)=>s.dias-t.dias);if(a.length===0){e.innerHTML='<p class="text-xs text-gray-400 text-center py-2">Todos los pedidos est\xE1n al corriente \u{1F389}</p>';return}e.innerHTML=a.map(t=>{const s=t.dias>30?"text-red-600":t.dias>14?"text-orange-600":"text-gray-500",r=t.dias===0?"Hoy":`${t.dias}d`,d=String(t.id).replace(/'/g,""),i=t.telefono?`<button onclick="abrirWhatsAppPedido('${d}')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>`:"";return`<div class="flex items-center gap-2 p-2 bg-blue-50 rounded-xl">
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold text-amber-600">${p.folio}</p>
-                        <p class="text-xs text-gray-700 truncate">${p.cliente}</p>
+                        <p class="text-xs font-bold text-amber-600">${t.folio}</p>
+                        <p class="text-xs text-gray-700 truncate">${t.cliente}</p>
                     </div>
-                    <span class="text-xs font-bold text-red-600 whitespace-nowrap">$${Number(p._saldo).toFixed(2)}</span>
-                    <span class="text-xs font-semibold ${diasColor} whitespace-nowrap">${diasLabel}</span>
-                    ${waBtn}
-                    <button onclick="openAbonoPedido('${_safeId}')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs text-green-600"><i class="fas fa-dollar-sign"></i></button>
-                </div>`;
-  }).join("");
-}
-function renderPayablesList() {
-  const container = document.getElementById("payablesList");
-  container.innerHTML = payables.map((pay) => `
+                    <span class="text-xs font-bold text-red-600 whitespace-nowrap">$${Number(t._saldo).toFixed(2)}</span>
+                    <span class="text-xs font-semibold ${s} whitespace-nowrap">${r}</span>
+                    ${i}
+                    <button onclick="openAbonoPedido('${d}')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs text-green-600"><i class="fas fa-dollar-sign"></i></button>
+                </div>`}).join("")}function renderPayablesList(){const e=document.getElementById("payablesList");e.innerHTML=payables.map(o=>`
                 <div class="flex justify-between items-center p-3 bg-orange-50 rounded-xl">
                     <div>
-                        <p class="font-semibold text-gray-800">${_escBal(pay.supplier)}</p>
-                        <p class="text-xs text-gray-500">Vence: ${_escBal(pay.dueDate)}</p>
+                        <p class="font-semibold text-gray-800">${_escBal(o.supplier)}</p>
+                        <p class="text-xs text-gray-500">Vence: ${_escBal(o.dueDate)}</p>
                     </div>
                     <div class="text-right">
-                        <p class="font-bold text-orange-600">$${Number(pay.amount || 0).toFixed(2)}</p>
-                        <button onclick="markAsPaid('payable', '${_escBal(String(pay.id))}')" class="text-xs text-green-600 hover:text-green-700">
+                        <p class="font-bold text-orange-600">$${Number(o.amount||0).toFixed(2)}</p>
+                        <button onclick="markAsPaid('payable', '${_escBal(String(o.id))}')" class="text-xs text-green-600 hover:text-green-700">
                             Marcar pagado
                         </button>
                     </div>
                 </div>
-            `).join("") || '<div class="mk-empty"><div class="mk-empty-icon">\u{1F5C2}\uFE0F</div><div class="mk-empty-title">Sin cuentas por pagar</div><div class="mk-empty-sub">No hay pagos pendientes a proveedores</div></div>';
-}
-function openIncomeModal() {
-  document.getElementById("transactionForm").reset();
-  document.getElementById("transactionModalTitle").textContent = "Nuevo Ingreso";
-  document.getElementById("transactionType").value = "income";
-  document.getElementById("clientFieldContainer").classList.add("hidden");
-  document.getElementById("recurrenteContainer").classList.remove("hidden");
-  document.getElementById("transactionRecurrente").checked = false;
-  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
-  const modal = document.getElementById("transactionModal");
-  modal.dataset.editId = "";
-  modal.dataset.editType = "";
-  _toggleEtiquetaField(true);
-  _toggleCatField(false);
-  openModal(modal);
-}
-function openExpenseModal() {
-  document.getElementById("transactionForm").reset();
-  document.getElementById("transactionModalTitle").textContent = "Nuevo Egreso";
-  document.getElementById("transactionType").value = "expense";
-  document.getElementById("clientFieldContainer").classList.add("hidden");
-  document.getElementById("recurrenteContainer").classList.remove("hidden");
-  document.getElementById("transactionRecurrente").checked = false;
-  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
-  const modal = document.getElementById("transactionModal");
-  modal.dataset.editId = "";
-  modal.dataset.editType = "";
-  _toggleCatField(true);
-  _toggleEtiquetaField(true);
-  openModal(modal);
-}
-function openReceivableModal() {
-  document.getElementById("transactionForm").reset();
-  document.getElementById("transactionModalTitle").textContent = "Nueva Cuenta por Cobrar";
-  document.getElementById("transactionType").value = "receivable";
-  document.getElementById("clientFieldContainer").classList.remove("hidden");
-  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
-  const modal = document.getElementById("transactionModal");
-  modal.dataset.editId = "";
-  modal.dataset.editType = "";
-  openModal(modal);
-}
-function openPayableModal() {
-  document.getElementById("transactionModalTitle").textContent = "Nueva Cuenta por Pagar";
-  document.getElementById("transactionType").value = "payable";
-  document.getElementById("clientFieldContainer").classList.remove("hidden");
-  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
-  const modal = document.getElementById("transactionModal");
-  modal.dataset.editId = "";
-  modal.dataset.editType = "";
-  document.getElementById("transactionForm").reset();
-  openModal(modal);
-}
-function editBalanceItem(type, id) {
-  const list = type === "income" ? incomes : expenses;
-  const item = list.find((i) => String(i.id) === String(id));
-  if (!item) return;
-  document.getElementById("transactionForm").reset();
-  document.getElementById("transactionModalTitle").textContent = type === "income" ? "Editar Ingreso" : "Editar Egreso";
-  document.getElementById("transactionType").value = type;
-  document.getElementById("transactionConcept").value = item.concept || "";
-  document.getElementById("transactionAmount").value = item.amount || "";
-  document.getElementById("transactionDate").value = item.date || "";
-  document.getElementById("clientFieldContainer").classList.add("hidden");
-  document.getElementById("recurrenteContainer").classList.remove("hidden");
-  document.getElementById("transactionRecurrente").checked = !!item.recurrente;
-  document.getElementById("transactionSubmitBtn").textContent = "\u{1F4BE} Guardar";
-  const modal = document.getElementById("transactionModal");
-  modal.dataset.editId = String(item.id);
-  modal.dataset.editType = type;
-  if (type === "expense") {
-    _toggleCatField(true);
-    const catEl = document.getElementById("transactionCategoria");
-    if (catEl) catEl.value = item.categoria || "";
-  } else {
-    _toggleCatField(false);
-  }
-  _toggleEtiquetaField(true);
-  const etqEl = document.getElementById("transactionEtiqueta");
-  if (etqEl) etqEl.value = item.etiqueta || "";
-  openModal(modal);
-}
-window.editBalanceItem = editBalanceItem;
-function _toggleCatField(show) {
-  let wrap = document.getElementById("transactionCategoriaWrap");
-  if (!wrap) {
-    const recContainer = document.getElementById("recurrenteContainer");
-    if (!recContainer) return;
-    wrap = document.createElement("div");
-    wrap.id = "transactionCategoriaWrap";
-    wrap.className = "mb-3";
-    wrap.innerHTML = `<label class="block text-xs font-semibold text-gray-600 mb-1">Categor\xEDa del gasto</label>
+            `).join("")||'<div class="mk-empty"><div class="mk-empty-icon">\u{1F5C2}\uFE0F</div><div class="mk-empty-title">Sin cuentas por pagar</div><div class="mk-empty-sub">No hay pagos pendientes a proveedores</div></div>'}function openIncomeModal(){document.getElementById("transactionForm").reset(),document.getElementById("transactionModalTitle").textContent="Nuevo Ingreso",document.getElementById("transactionType").value="income",document.getElementById("clientFieldContainer").classList.add("hidden"),document.getElementById("recurrenteContainer").classList.remove("hidden"),document.getElementById("transactionRecurrente").checked=!1,document.getElementById("transactionSubmitBtn").textContent="\u{1F4BE} Guardar";const e=document.getElementById("transactionModal");e.dataset.editId="",e.dataset.editType="",_toggleEtiquetaField(!0),_toggleCatField(!1),openModal(e)}function openExpenseModal(){document.getElementById("transactionForm").reset(),document.getElementById("transactionModalTitle").textContent="Nuevo Egreso",document.getElementById("transactionType").value="expense",document.getElementById("clientFieldContainer").classList.add("hidden"),document.getElementById("recurrenteContainer").classList.remove("hidden"),document.getElementById("transactionRecurrente").checked=!1,document.getElementById("transactionSubmitBtn").textContent="\u{1F4BE} Guardar";const e=document.getElementById("transactionModal");e.dataset.editId="",e.dataset.editType="",_toggleCatField(!0),_toggleEtiquetaField(!0),openModal(e)}function openReceivableModal(){document.getElementById("transactionForm").reset(),document.getElementById("transactionModalTitle").textContent="Nueva Cuenta por Cobrar",document.getElementById("transactionType").value="receivable",document.getElementById("clientFieldContainer").classList.remove("hidden"),document.getElementById("transactionSubmitBtn").textContent="\u{1F4BE} Guardar";const e=document.getElementById("transactionModal");e.dataset.editId="",e.dataset.editType="",openModal(e)}function openPayableModal(){document.getElementById("transactionModalTitle").textContent="Nueva Cuenta por Pagar",document.getElementById("transactionType").value="payable",document.getElementById("clientFieldContainer").classList.remove("hidden"),document.getElementById("transactionSubmitBtn").textContent="\u{1F4BE} Guardar";const e=document.getElementById("transactionModal");e.dataset.editId="",e.dataset.editType="",document.getElementById("transactionForm").reset(),openModal(e)}function editBalanceItem(e,o){const t=(e==="income"?incomes:expenses).find(d=>String(d.id)===String(o));if(!t)return;document.getElementById("transactionForm").reset(),document.getElementById("transactionModalTitle").textContent=e==="income"?"Editar Ingreso":"Editar Egreso",document.getElementById("transactionType").value=e,document.getElementById("transactionConcept").value=t.concept||"",document.getElementById("transactionAmount").value=t.amount||"",document.getElementById("transactionDate").value=t.date||"",document.getElementById("clientFieldContainer").classList.add("hidden"),document.getElementById("recurrenteContainer").classList.remove("hidden"),document.getElementById("transactionRecurrente").checked=!!t.recurrente,document.getElementById("transactionSubmitBtn").textContent="\u{1F4BE} Guardar";const s=document.getElementById("transactionModal");if(s.dataset.editId=String(t.id),s.dataset.editType=e,e==="expense"){_toggleCatField(!0);const d=document.getElementById("transactionCategoria");d&&(d.value=t.categoria||"")}else _toggleCatField(!1);_toggleEtiquetaField(!0);const r=document.getElementById("transactionEtiqueta");r&&(r.value=t.etiqueta||""),openModal(s)}window.editBalanceItem=editBalanceItem;function _toggleCatField(e){let o=document.getElementById("transactionCategoriaWrap");if(!o){const t=document.getElementById("recurrenteContainer");if(!t)return;o=document.createElement("div"),o.id="transactionCategoriaWrap",o.className="mb-3",o.innerHTML=`<label class="block text-xs font-semibold text-gray-600 mb-1">Categor\xEDa del gasto</label>
                     <select id="transactionCategoria" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
                         <option value="">Sin categor\xEDa</option>
-                        ${_GASTO_CATEGORIAS.map((c) => `<option value="${c}">${c}</option>`).join("")}
-                    </select>`;
-    recContainer.parentElement.insertBefore(wrap, recContainer);
-  }
-  wrap.style.display = show ? "" : "none";
-  const sel = document.getElementById("transactionCategoria");
-  if (sel && !show) sel.value = "";
-}
-window.openIncomeModal = openIncomeModal;
-window.openExpenseModal = openExpenseModal;
-window.openReceivableModal = openReceivableModal;
-window.openPayableModal = openPayableModal;
-window.renderBalance = renderBalance;
-window.renderIncomeList = renderIncomeList;
-window.renderExpenseList = renderExpenseList;
-window.renderReceivablesList = renderReceivablesList;
-window.renderPayablesList = renderPayablesList;
-window.renderCxCPedidos = renderCxCPedidos;
-window.renderBalanceMensual = renderBalanceMensual;
-window.cambiarMesBalance = cambiarMesBalance;
-const _txForm = document.getElementById("transactionForm");
-if (_txForm && !_txForm._mkBound) {
-  _txForm._mkBound = true;
-  _txForm.addEventListener("submit", function(e) {
-    e.preventDefault();
-    const submitBtn = e.target.querySelector('[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Guardando...";
-    }
-    const _restoreBtn = () => {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "\u{1F4BE} Guardar";
-      }
-    };
-    const modal = document.getElementById("transactionModal");
-    const editId = modal.dataset.editId ? modal.dataset.editId : null;
-    const editType = modal.dataset.editType || null;
-    const type = document.getElementById("transactionType").value;
-    const concept = document.getElementById("transactionConcept").value.trim();
-    const amount = parseFloat(document.getElementById("transactionAmount").value);
-    const date = document.getElementById("transactionDate").value;
-    const client = document.getElementById("transactionClient")?.value || "";
-    if (!concept) {
-      _restoreBtn();
-      manekiToastExport("\u26A0\uFE0F Escribe un concepto para la transacci\xF3n.", "warn");
-      return;
-    }
-    if (!Number.isFinite(amount) || amount <= 0) {
-      _restoreBtn();
-      manekiToastExport("\u26A0\uFE0F Ingresa un monto v\xE1lido mayor a $0.", "warn");
-      return;
-    }
-    if (!date) {
-      _restoreBtn();
-      manekiToastExport("\u26A0\uFE0F Selecciona una fecha.", "warn");
-      return;
-    }
-    if (editId && editType) {
-      const list = editType === "income" ? incomes : expenses;
-      const item = list.find((i) => String(i.id) === String(editId));
-      if (item) {
-        item.concept = concept;
-        item.concepto = concept;
-        item.amount = amount;
-        item.monto = amount;
-        item.date = date;
-        item.fecha = date;
-        item.client = client;
-        item.cliente = client;
-        if (editType === "expense") item.categoria = document.getElementById("transactionCategoria")?.value || item.categoria || "";
-        item.etiqueta = document.getElementById("transactionEtiqueta")?.value || item.etiqueta || "";
-      }
-      if (editType === "income") saveIncomes();
-      else saveExpenses();
-      _restoreBtn();
-      closeTransactionModal();
-      renderBalance();
-      updateDashboard();
-      return;
-    }
-    const newItem = {
-      id: mkId(),
-      concept,
-      concepto: concept,
-      amount,
-      monto: amount,
-      date,
-      fecha: date,
-      client,
-      cliente: client,
-      categoria: document.getElementById("transactionCategoria")?.value || "",
-      etiqueta: document.getElementById("transactionEtiqueta")?.value || ""
-    };
-    if (type === "income") {
-      const esRecurrenteInc = document.getElementById("transactionRecurrente")?.checked;
-      if (esRecurrenteInc) {
-        newItem.recurrente = true;
-        if (!window.ingresosRecurrentes) window.ingresosRecurrentes = [];
-        window.ingresosRecurrentes.push({ concept, amount, dia: date && date.includes("-") ? parseInt(date.split("-")[2], 10) || 1 : new Date(date).getDate() || 1 });
-        saveIngresosRecurrentes();
-      }
-      incomes.push(newItem);
-      saveIncomes();
-    } else if (type === "expense") {
-      const esRecurrente = document.getElementById("transactionRecurrente")?.checked;
-      if (esRecurrente) {
-        newItem.recurrente = true;
-        if (!gastosRecurrentes) gastosRecurrentes = [];
-        gastosRecurrentes.push({ concept, amount, dia: date && date.includes("-") ? parseInt(date.split("-")[2], 10) || 1 : new Date(date).getDate() || 1 });
-        saveGastosRecurrentes();
-      }
-      expenses.push(newItem);
-      saveExpenses();
-    } else if (type === "receivable") {
-      receivables.push({ ...newItem, status: "pending" });
-      saveReceivables();
-    } else if (type === "payable") {
-      payables.push({ ...newItem, status: "pending" });
-      savePayables();
-    }
-    _restoreBtn();
-    closeTransactionModal();
-    renderBalance();
-    updateDashboard();
-  });
-}
-function _etiquetaBadge(valor) {
-  if (!valor) return "";
-  const e = _ETIQUETAS.find((x) => x.valor === valor);
-  if (!e) return `<span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" style="background:#f3f4f6;color:#6b7280">${valor}</span>`;
-  return `<span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" style="background:${e.bg};color:${e.color}">${e.label}</span>`;
-}
-function _toggleEtiquetaField(show) {
-  let wrap = document.getElementById("transactionEtiquetaWrap");
-  if (!wrap) {
-    const recContainer = document.getElementById("recurrenteContainer");
-    if (!recContainer) return;
-    wrap = document.createElement("div");
-    wrap.id = "transactionEtiquetaWrap";
-    wrap.className = "mb-3";
-    const opts = _ETIQUETAS.map((e) => `<option value="${e.valor}">${e.label}</option>`).join("");
-    wrap.innerHTML = `<label class="block text-xs font-semibold text-gray-600 mb-1">Etiqueta</label>
+                        ${_GASTO_CATEGORIAS.map(s=>`<option value="${s}">${s}</option>`).join("")}
+                    </select>`,t.parentElement.insertBefore(o,t)}o.style.display=e?"":"none";const a=document.getElementById("transactionCategoria");a&&!e&&(a.value="")}window.openIncomeModal=openIncomeModal,window.openExpenseModal=openExpenseModal,window.openReceivableModal=openReceivableModal,window.openPayableModal=openPayableModal,window.renderBalance=renderBalance,window.renderIncomeList=renderIncomeList,window.renderExpenseList=renderExpenseList,window.renderReceivablesList=renderReceivablesList,window.renderPayablesList=renderPayablesList,window.renderCxCPedidos=renderCxCPedidos,window.renderBalanceMensual=renderBalanceMensual,window.cambiarMesBalance=cambiarMesBalance;const _txForm=document.getElementById("transactionForm");_txForm&&!_txForm._mkBound&&(_txForm._mkBound=!0,_txForm.addEventListener("submit",function(e){e.preventDefault();const o=e.target.querySelector('[type="submit"]');o&&(o.disabled=!0,o.textContent="Guardando...");const a=()=>{o&&(o.disabled=!1,o.textContent="\u{1F4BE} Guardar")},t=document.getElementById("transactionModal"),s=t.dataset.editId?t.dataset.editId:null,r=t.dataset.editType||null,d=document.getElementById("transactionType").value,i=document.getElementById("transactionConcept").value.trim(),c=parseFloat(document.getElementById("transactionAmount").value),n=document.getElementById("transactionDate").value,l=document.getElementById("transactionClient")?.value||"";if(!i){a(),manekiToastExport("\u26A0\uFE0F Escribe un concepto para la transacci\xF3n.","warn");return}if(!Number.isFinite(c)||c<=0){a(),manekiToastExport("\u26A0\uFE0F Ingresa un monto v\xE1lido mayor a $0.","warn");return}if(!n){a(),manekiToastExport("\u26A0\uFE0F Selecciona una fecha.","warn");return}if(s&&r){const m=(r==="income"?incomes:expenses).find(u=>String(u.id)===String(s));m&&(m.concept=i,m.concepto=i,m.amount=c,m.monto=c,m.date=n,m.fecha=n,m.client=l,m.cliente=l,r==="expense"&&(m.categoria=document.getElementById("transactionCategoria")?.value||m.categoria||""),m.etiqueta=document.getElementById("transactionEtiqueta")?.value||m.etiqueta||""),r==="income"?saveIncomes():saveExpenses(),a(),closeTransactionModal(),renderBalance(),updateDashboard();return}const p={id:mkId(),concept:i,concepto:i,amount:c,monto:c,date:n,fecha:n,client:l,cliente:l,categoria:document.getElementById("transactionCategoria")?.value||"",etiqueta:document.getElementById("transactionEtiqueta")?.value||""};d==="income"?(document.getElementById("transactionRecurrente")?.checked&&(p.recurrente=!0,window.ingresosRecurrentes||(window.ingresosRecurrentes=[]),window.ingresosRecurrentes.push({concept:i,amount:c,dia:n&&n.includes("-")?parseInt(n.split("-")[2],10)||1:new Date(n).getDate()||1}),saveIngresosRecurrentes()),incomes.push(p),saveIncomes()):d==="expense"?(document.getElementById("transactionRecurrente")?.checked&&(p.recurrente=!0,gastosRecurrentes||(gastosRecurrentes=[]),gastosRecurrentes.push({concept:i,amount:c,dia:n&&n.includes("-")?parseInt(n.split("-")[2],10)||1:new Date(n).getDate()||1}),saveGastosRecurrentes()),expenses.push(p),saveExpenses()):d==="receivable"?(receivables.push({...p,status:"pending"}),saveReceivables()):d==="payable"&&(payables.push({...p,status:"pending"}),savePayables()),a(),closeTransactionModal(),renderBalance(),updateDashboard()}));function _etiquetaBadge(e){if(!e)return"";const o=_ETIQUETAS.find(a=>a.valor===e);return o?`<span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" style="background:${o.bg};color:${o.color}">${o.label}</span>`:`<span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" style="background:#f3f4f6;color:#6b7280">${e}</span>`}function _toggleEtiquetaField(e){let o=document.getElementById("transactionEtiquetaWrap");if(!o){const t=document.getElementById("recurrenteContainer");if(!t)return;o=document.createElement("div"),o.id="transactionEtiquetaWrap",o.className="mb-3";const s=_ETIQUETAS.map(r=>`<option value="${r.valor}">${r.label}</option>`).join("");o.innerHTML=`<label class="block text-xs font-semibold text-gray-600 mb-1">Etiqueta</label>
                     <select id="transactionEtiqueta" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
-                        <option value="">Sin etiqueta</option>${opts}
-                    </select>`;
-    recContainer.parentElement.insertBefore(wrap, recContainer);
-  }
-  wrap.style.display = show ? "" : "none";
-  const sel = document.getElementById("transactionEtiqueta");
-  if (sel && !show) sel.value = "";
-}
-function _ensureEtiquetaFiltro(listId, filtroId, renderFn) {
-  if (document.getElementById(filtroId)) return;
-  const listEl = document.getElementById(listId);
-  if (!listEl || !listEl.parentElement) return;
-  const opts = _ETIQUETAS.map((e) => `<option value="${e.valor}">${e.label}</option>`).join("");
-  const wrap = document.createElement("div");
-  wrap.className = "mb-2";
-  wrap.innerHTML = `<select id="${filtroId}" onchange="${renderFn}()"
+                        <option value="">Sin etiqueta</option>${s}
+                    </select>`,t.parentElement.insertBefore(o,t)}o.style.display=e?"":"none";const a=document.getElementById("transactionEtiqueta");a&&!e&&(a.value="")}function _ensureEtiquetaFiltro(e,o,a){if(document.getElementById(o))return;const t=document.getElementById(e);if(!t||!t.parentElement)return;const s=_ETIQUETAS.map(d=>`<option value="${d.valor}">${d.label}</option>`).join(""),r=document.createElement("div");r.className="mb-2",r.innerHTML=`<select id="${o}" onchange="${a}()"
                 class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-400 bg-white">
-                <option value="">Todas las etiquetas</option>${opts}
-            </select>`;
-  listEl.parentElement.insertBefore(wrap, listEl);
-}
-if (!window.ingresosRecurrentes) window.ingresosRecurrentes = [];
-function saveIngresosRecurrentes() {
-  (async () => {
-    await sbSave("ingresosRecurrentes", window.ingresosRecurrentes);
-  })();
-}
-window.saveIngresosRecurrentes = saveIngresosRecurrentes;
-function procesarIngresosRecurrentes() {
-  if (!Array.isArray(window.ingresosRecurrentes) || window.ingresosRecurrentes.length === 0) return;
-  const hoy = /* @__PURE__ */ new Date();
-  const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
-  let huboNuevos = false;
-  window.ingresosRecurrentes.forEach((ir) => {
-    const yaExiste = incomes.some(
-      (i) => i.recurrenteAuto === true && i.concept === ir.concept && (i.date || "").startsWith(mesActual)
-    );
-    if (!yaExiste) {
-      const ano = hoy.getFullYear();
-      const mes = hoy.getMonth();
-      const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-      const diaValido = Math.min(ir.dia || 1, ultimoDia);
-      const fecha = `${mesActual}-${String(diaValido).padStart(2, "0")}`;
-      incomes.push({
-        id: mkId(),
-        concept: ir.concept,
-        concepto: ir.concept,
-        amount: ir.amount,
-        monto: ir.amount,
-        date: fecha,
-        fecha,
-        recurrenteAuto: true
-      });
-      huboNuevos = true;
-    }
-  });
-  if (huboNuevos) saveIncomes();
-}
-window.procesarIngresosRecurrentes = procesarIngresosRecurrentes;
-function _renderUtilidadNeta(totalIngresos, totalGastos) {
-  const utilidad = totalIngresos - totalGastos;
-  const margen = totalIngresos > 0 ? utilidad / totalIngresos * 100 : 0;
-  const esPos = utilidad > 0;
-  const esNeg = utilidad < 0;
-  const textColor = esPos ? "#15803d" : esNeg ? "#dc2626" : "#ca8a04";
-  let card = document.getElementById("balUtilidadNetaCard");
-  if (!card) {
-    const anchor = document.getElementById("balMesNetoBg");
-    if (!anchor) return;
-    card = document.createElement("div");
-    card.id = "balUtilidadNetaCard";
-    anchor.parentElement.insertBefore(card, anchor.nextSibling);
-  }
-  card.className = "bg-white rounded-xl p-4 border border-gray-100 mb-4";
-  card.innerHTML = `
+                <option value="">Todas las etiquetas</option>${s}
+            </select>`,t.parentElement.insertBefore(r,t)}window.ingresosRecurrentes||(window.ingresosRecurrentes=[]);function saveIngresosRecurrentes(){(async()=>await sbSave("ingresosRecurrentes",window.ingresosRecurrentes))()}window.saveIngresosRecurrentes=saveIngresosRecurrentes;function procesarIngresosRecurrentes(){if(!Array.isArray(window.ingresosRecurrentes)||window.ingresosRecurrentes.length===0)return;const e=new Date,o=`${e.getFullYear()}-${String(e.getMonth()+1).padStart(2,"0")}`;let a=!1;window.ingresosRecurrentes.forEach(t=>{if(!incomes.some(r=>r.recurrenteAuto===!0&&r.concept===t.concept&&(r.date||"").startsWith(o))){const r=e.getFullYear(),d=e.getMonth(),i=new Date(r,d+1,0).getDate(),c=Math.min(t.dia||1,i),n=`${o}-${String(c).padStart(2,"0")}`;incomes.push({id:mkId(),concept:t.concept,concepto:t.concept,amount:t.amount,monto:t.amount,date:n,fecha:n,recurrenteAuto:!0}),a=!0}}),a&&saveIncomes()}window.procesarIngresosRecurrentes=procesarIngresosRecurrentes;function _renderUtilidadNeta(e,o){const a=e-o,t=e>0?a/e*100:0,s=a>0,r=a<0,d=s?"#15803d":r?"#dc2626":"#ca8a04";let i=document.getElementById("balUtilidadNetaCard");if(!i){const c=document.getElementById("balMesNetoBg");if(!c)return;i=document.createElement("div"),i.id="balUtilidadNetaCard",c.parentElement.insertBefore(i,c.nextSibling)}i.className="bg-white rounded-xl p-4 border border-gray-100 mb-4",i.innerHTML=`
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs text-gray-400 mb-0.5">Utilidad neta acumulada</p>
-                        <p class="text-2xl font-extrabold" style="color:${textColor}">$${utilidad.toFixed(2)}</p>
+                        <p class="text-2xl font-extrabold" style="color:${d}">$${a.toFixed(2)}</p>
                     </div>
                     <div class="text-right">
                         <p class="text-xs text-gray-400 mb-0.5">Margen</p>
-                        <p class="text-lg font-bold" style="color:${textColor}">${totalIngresos === 0 ? "N/A" : isFinite(margen) ? margen.toFixed(1) + "%" : "N/A"}</p>
+                        <p class="text-lg font-bold" style="color:${d}">${e===0?"N/A":isFinite(t)?t.toFixed(1)+"%":"N/A"}</p>
                     </div>
-                </div>`;
-}
-function renderProyeccionCashflow() {
-  const hoy = /* @__PURE__ */ new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const pedidosActivos = (window.pedidos || []).filter((p) => {
-    if (!p.entrega) return false;
-    const fe = /* @__PURE__ */ new Date(p.entrega + "T00:00:00");
-    const diff = Math.round((fe - hoy) / 864e5);
-    return diff >= 0 && diff <= 30 && !["finalizado", "cancelado", "entregado"].includes((p.status || "").toLowerCase());
-  });
-  let card = document.getElementById("balCashflowCard");
-  function _cashflowAnchor() {
-    return document.getElementById("balUtilidadNetaCard") || document.getElementById("balCatGastosContainer") || document.getElementById("balMesNetoBg");
-  }
-  if (pedidosActivos.length === 0) {
-    if (!card) {
-      const anchor = _cashflowAnchor();
-      if (!anchor) return;
-      card = document.createElement("div");
-      card.id = "balCashflowCard";
-      anchor.parentElement.insertBefore(card, anchor.nextSibling);
-    }
-    card.className = "bg-white rounded-xl p-4 border border-gray-100 mb-4";
-    card.innerHTML = '<p style="text-align:center;color:#9ca3af;font-size:12px;padding:8px 0">Sin pedidos activos con entrega en los pr\xF3ximos 30 d\xEDas</p>';
-    return;
-  }
-  const buckets = [
-    { label: "Esta semana", min: 0, max: 7, cobros: 0, gastos: 0 },
-    { label: "Pr\xF3ximas 2 semanas", min: 8, max: 14, cobros: 0, gastos: 0 },
-    { label: "Este mes", min: 15, max: 30, cobros: 0, gastos: 0 }
-  ];
-  pedidosActivos.forEach((p) => {
-    const fe = /* @__PURE__ */ new Date(p.entrega + "T00:00:00");
-    const diff = Math.round((fe - hoy) / 864e5);
-    const saldo = typeof calcSaldoPendiente === "function" ? calcSaldoPendiente(p) : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
-    const bk = buckets.find((b) => diff >= b.min && diff <= b.max);
-    if (bk) bk.cobros += saldo;
-  });
-  if (Array.isArray(gastosRecurrentes)) {
-    gastosRecurrentes.forEach((gr) => {
-      const diaGasto = gr.dia || 1;
-      const ano = hoy.getFullYear();
-      const mes = hoy.getMonth();
-      const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-      const diaReal = Math.min(diaGasto, ultimoDia);
-      const fechaGasto = new Date(ano, mes, diaReal);
-      fechaGasto.setHours(0, 0, 0, 0);
-      const diff = Math.round((fechaGasto - hoy) / 864e5);
-      const bk = buckets.find((b) => diff >= b.min && diff <= b.max);
-      if (bk) bk.gastos += Number(gr.amount || 0);
-    });
-  }
-  if (!card) {
-    const anchor = _cashflowAnchor();
-    if (!anchor) return;
-    card = document.createElement("div");
-    card.id = "balCashflowCard";
-    anchor.parentElement.insertBefore(card, anchor.nextSibling);
-  }
-  const filas = buckets.map((b) => {
-    const neto = b.cobros - b.gastos;
-    const netoColor = neto >= 0 ? "#15803d" : "#dc2626";
-    return `<tr class="border-t border-gray-100">
-                    <td class="py-1.5 pr-2 text-xs font-medium text-gray-700">${b.label}</td>
-                    <td class="py-1.5 pr-2 text-xs text-green-700 font-semibold text-right">$${b.cobros.toFixed(2)}</td>
-                    <td class="py-1.5 pr-2 text-xs text-red-600 font-semibold text-right">$${b.gastos.toFixed(2)}</td>
-                    <td class="py-1.5 text-xs font-bold text-right" style="color:${netoColor}">$${neto.toFixed(2)}</td>
-                </tr>`;
-  }).join("");
-  card.className = "bg-white rounded-xl p-4 border border-gray-100 mb-4";
-  card.innerHTML = `
+                </div>`}function renderProyeccionCashflow(){const e=new Date;e.setHours(0,0,0,0);const o=(window.pedidos||[]).filter(d=>{if(!d.entrega)return!1;const i=new Date(d.entrega+"T00:00:00"),c=Math.round((i-e)/864e5);return c>=0&&c<=30&&!["finalizado","cancelado","entregado"].includes((d.status||"").toLowerCase())});let a=document.getElementById("balCashflowCard");function t(){return document.getElementById("balUtilidadNetaCard")||document.getElementById("balCatGastosContainer")||document.getElementById("balMesNetoBg")}if(o.length===0){if(!a){const d=t();if(!d)return;a=document.createElement("div"),a.id="balCashflowCard",d.parentElement.insertBefore(a,d.nextSibling)}a.className="bg-white rounded-xl p-4 border border-gray-100 mb-4",a.innerHTML='<p style="text-align:center;color:#9ca3af;font-size:12px;padding:8px 0">Sin pedidos activos con entrega en los pr\xF3ximos 30 d\xEDas</p>';return}const s=[{label:"Esta semana",min:0,max:7,cobros:0,gastos:0},{label:"Pr\xF3ximas 2 semanas",min:8,max:14,cobros:0,gastos:0},{label:"Este mes",min:15,max:30,cobros:0,gastos:0}];if(o.forEach(d=>{const i=new Date(d.entrega+"T00:00:00"),c=Math.round((i-e)/864e5),n=typeof calcSaldoPendiente=="function"?calcSaldoPendiente(d):Math.max(0,Number(d.total||0)-Number(d.anticipo||0)),l=s.find(p=>c>=p.min&&c<=p.max);l&&(l.cobros+=n)}),Array.isArray(gastosRecurrentes)&&gastosRecurrentes.forEach(d=>{const i=d.dia||1,c=e.getFullYear(),n=e.getMonth(),l=new Date(c,n+1,0).getDate(),p=Math.min(i,l),f=new Date(c,n,p);f.setHours(0,0,0,0);const m=Math.round((f-e)/864e5),u=s.find(b=>m>=b.min&&m<=b.max);u&&(u.gastos+=Number(d.amount||0))}),!a){const d=t();if(!d)return;a=document.createElement("div"),a.id="balCashflowCard",d.parentElement.insertBefore(a,d.nextSibling)}const r=s.map(d=>{const i=d.cobros-d.gastos,c=i>=0?"#15803d":"#dc2626";return`<tr class="border-t border-gray-100">
+                    <td class="py-1.5 pr-2 text-xs font-medium text-gray-700">${d.label}</td>
+                    <td class="py-1.5 pr-2 text-xs text-green-700 font-semibold text-right">$${d.cobros.toFixed(2)}</td>
+                    <td class="py-1.5 pr-2 text-xs text-red-600 font-semibold text-right">$${d.gastos.toFixed(2)}</td>
+                    <td class="py-1.5 text-xs font-bold text-right" style="color:${c}">$${i.toFixed(2)}</td>
+                </tr>`}).join("");a.className="bg-white rounded-xl p-4 border border-gray-100 mb-4",a.innerHTML=`
                 <div class="flex items-center justify-between mb-3">
                     <h4 class="text-sm font-bold text-gray-700">Flujo de efectivo</h4>
-                    <span class="text-xs text-gray-400">${pedidosActivos.length} pedidos activos</span>
+                    <span class="text-xs text-gray-400">${o.length} pedidos activos</span>
                 </div>
                 <table class="w-full">
                     <thead><tr>
@@ -891,35 +143,6 @@ function renderProyeccionCashflow() {
                         <th class="text-right text-xs text-gray-400 pb-1 pr-2">Gastos prog.</th>
                         <th class="text-right text-xs text-gray-400 pb-1">Neto proyectado</th>
                     </tr></thead>
-                    <tbody>${filas}</tbody>
-                </table>`;
-}
-window.renderProyeccionCashflow = renderProyeccionCashflow;
-function markAsPaid(type, id) {
-  if (type === "receivable") {
-    const index = receivables.findIndex((r) => String(r.id) === String(id));
-    if (index !== -1) {
-      const rec = receivables[index];
-      const amount = rec.amount;
-      const concept = `Cobro realizado: ${rec.client || rec.concept || "CxC #" + id}`;
-      receivables.splice(index, 1);
-      incomes.push({ id: mkId(), concept, amount, date: _fechaLocal() });
-      saveReceivables();
-      saveIncomes();
-    }
-  } else if (type === "payable") {
-    const index = payables.findIndex((p) => String(p.id) === String(id));
-    if (index !== -1) {
-      const pay = payables[index];
-      const amount = pay.amount;
-      const concept = `Pago realizado: ${pay.supplier || pay.concept || "CxP #" + id}`;
-      payables.splice(index, 1);
-      expenses.push({ id: mkId(), concept, amount, date: _fechaLocal(), fromPayable: true });
-      savePayables();
-      saveExpenses();
-    }
-  }
-  renderBalance();
-  updateDashboard();
-}
+                    <tbody>${r}</tbody>
+                </table>`}window.renderProyeccionCashflow=renderProyeccionCashflow;function markAsPaid(e,o){if(e==="receivable"){const a=receivables.findIndex(t=>String(t.id)===String(o));if(a!==-1){const t=receivables[a],s=t.amount,r=`Cobro realizado: ${t.client||t.concept||"CxC #"+o}`;receivables.splice(a,1),incomes.push({id:mkId(),concept:r,amount:s,date:_fechaLocal()}),saveReceivables(),saveIncomes()}}else if(e==="payable"){const a=payables.findIndex(t=>String(t.id)===String(o));if(a!==-1){const t=payables[a],s=t.amount,r=`Pago realizado: ${t.supplier||t.concept||"CxP #"+o}`;payables.splice(a,1),expenses.push({id:mkId(),concept:r,amount:s,date:_fechaLocal(),fromPayable:!0}),savePayables(),saveExpenses()}}renderBalance(),updateDashboard()}
 //# sourceMappingURL=balance.js.map
