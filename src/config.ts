@@ -213,14 +213,17 @@ function saveStoreConfig() {
         manekiToastExport('Agrega un logo válido antes de guardar', 'warn');
     }
 
-    sbSave('storeConfig', storeConfig).then(() => done(true)).catch(() => done(false));
+    // TOAST-FIX: mover feedback dentro del callback de sbSave para que el toast
+    // solo aparezca cuando Supabase confirma el guardado, no antes.
+    sbSave('storeConfig', storeConfig)
+        .then(() => { done(true); manekiToastExport('Configuración guardada ✓', 'ok'); })
+        .catch(() => { done(false); manekiToastExport('❌ Error al guardar configuración. Revisa tu conexión.', 'err'); });
 
     const sidebarH1 = document.querySelector('#sidebar .sidebar-store-name');
     const sidebarP  = document.querySelector('#sidebar .sidebar-store-slogan');
     if (sidebarH1) sidebarH1.textContent = storeConfig.name;
     if (sidebarP)  sidebarP.textContent  = storeConfig.slogan;
     updateSidebarLogo();
-    manekiToastExport('Configuración guardada ✓', 'ok');
 }
 
 function _safeLogo(url) {
@@ -410,9 +413,11 @@ function renderTagsSeleccionados(tags) {
     _tagsActuales = [...tags];
     const cont = document.getElementById('tagsSeleccionados');
     if (!cont) return;
+    // XSS-FIX: usar data-tag + _esc() en lugar de interpolar el tag crudo en el onclick.
+    // this.dataset.tag retorna el valor ya decodificado por el browser, evitando el breakout.
     cont.innerHTML = _tagsActuales.map(t =>
         `<span class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
-            ${t} <button type="button" onclick="eliminarTag('${t}')" class="ml-1 text-amber-600 hover:text-red-500">✕</button>
+            ${_esc(t)} <button type="button" onclick="eliminarTag(this.dataset.tag)" data-tag="${_esc(t)}" class="ml-1 text-amber-600 hover:text-red-500">✕</button>
         </span>`
     ).join('');
     const tagInput = document.getElementById('productTags');

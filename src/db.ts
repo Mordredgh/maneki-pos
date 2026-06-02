@@ -910,9 +910,7 @@ function _calcStockParaSupabase(p) {
 
 function saveProducts() {
     return (async () => {
-
-
-        // 2) Tabla relacional public.products
+        // Persistir en tabla relacional public.products (fuente de verdad)
         try {
             // Migrar imágenes base64 a Storage antes de escribir
         await Promise.all(products.map(p => _migrarBase64AStorage(p)));
@@ -974,12 +972,10 @@ function saveClients() {
         } catch(e){}
     })();
 }
-// ── saveSalesHistory — dual write: store (legacy) + public.sales_history ──
+// ── saveSalesHistory — escribe en public.sales_history ──
 function saveSalesHistory() {
     (async () => {
-
-
-        // 2) Tabla relacional public.sales_history
+        // Persistir en tabla relacional public.sales_history
         try {
             const rows = salesHistory.map(s => ({
                 id:       String(s.id),
@@ -1037,12 +1033,10 @@ let gastosRecurrentes = [];
 function saveGastosRecurrentes() { (async () => { await sbSave('gastosRecurrentes', gastosRecurrentes); })(); }
 function saveReceivables()   { (async () => { await sbSave('receivables', receivables); })(); }
 function savePayables()      { (async () => { await sbSave('payables', payables); })(); }
-// ── savePedidos — dual write: store (legacy) + public.orders ──
+// ── savePedidos — escribe en public.orders ──
 function savePedidos() {
     return (async () => {
-
-
-        // 2) Tabla relacional public.orders
+        // Persistir en tabla relacional public.orders
         try {
             const rows = pedidos.map(p => ({
                 id:                   String(p.id),
@@ -1085,12 +1079,10 @@ function savePedidos() {
         }
     })();
 }
-// ── savePedidosFinalizados — dual write: store (legacy) + public.orders_finalizados ──
+// ── savePedidosFinalizados — escribe en public.orders_finalizados ──
 function savePedidosFinalizados() {
     return (async () => {
-
-
-        // 2) Tabla relacional public.orders_finalizados
+        // Persistir en tabla relacional public.orders_finalizados
         try {
             const rows = pedidosFinalizados.map(p => ({
                 id:                    String(p.id),

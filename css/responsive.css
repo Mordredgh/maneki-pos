@@ -9,6 +9,13 @@
 ───────────────────────────────────────────────────────────── */
 @media (max-width: 1023px) {
 
+  /* iOS-SCROLL-FIX: background-attachment:fixed desactiva la aceleración GPU del scroll
+     en Safari iOS, causando scroll laggy en tablet e iPhone en modo landscape.
+     Sobreescribir a 'scroll' evita el problema sin perder el efecto visual. */
+  body {
+    background-attachment: scroll !important;
+  }
+
   /* Sidebar → overlay deslizable */
   #sidebar {
     transform: translateX(-100%);

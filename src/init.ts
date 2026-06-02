@@ -1,6 +1,22 @@
 (function() {
     'use strict';
 
+    // ── SW_UPDATED: toast cuando el service worker activa una nueva versión ──
+    // El SW hace postMessage({ type:'SW_UPDATED', version }) al activarse.
+    // El toast informa al usuario sin forzar una recarga automática.
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data?.type === 'SW_UPDATED') {
+                const toastFn = typeof (window as any).manekiToastExport === 'function'
+                    ? (window as any).manekiToastExport
+                    : null;
+                if (toastFn) {
+                    toastFn('🐱 App actualizada — recarga para aplicar cambios', 'ok');
+                }
+            }
+        });
+    }
+
     // ── Remove no-transition after first paint ──
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {

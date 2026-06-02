@@ -1,4 +1,4 @@
-const CACHE_NAME = "maneki-v2.3.1";
+const CACHE_NAME = "maneki-v2.3.2";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -47,11 +47,20 @@ self.addEventListener("install", (e) => {
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    caches.keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ includeUncontrolled: true, type: "window" }))
+      .then((clients) => {
+        // SW-NOTIFY: avisar a todas las pestañas abiertas que hay una nueva versión.
+        // El listener en init.js muestra un toast para que el usuario pueda recargar.
+        if (clients.length > 0) {
+          clients.forEach((c) => c.postMessage({ type: "SW_UPDATED", version: CACHE_NAME }));
+        }
+      })
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (e) => {
