@@ -738,9 +738,12 @@ function updatePedidosStats() {
 // ── Render Kanban ──
 // ── NTH-03: Filtro kanban por urgencia ──────────────────────────────────────
 let _kanbanUrgenciaFiltro = 'todos'; // 'todos' | 'hoy' | 'pronto' | 'vencido'
+const _kanbanExpandidos = new Set<string>(); // columnas con "ver más" expandidas
+const _KANBAN_PAGE = 10;
 
 function setKanbanUrgencia(filtro, btn) {
     _kanbanUrgenciaFiltro = filtro;
+    _kanbanExpandidos.clear();
     document.querySelectorAll('.btn-kanban-urgencia').forEach(b => {
         b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
     });
@@ -802,9 +805,18 @@ function renderKanbanBoard() {
             badge.textContent = items.length;
             badge.style.cssText = 'background:rgba(197,151,59,0.15);color:#C5A572;font-size:.7rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:6px;';
         }
+        const expandido = _kanbanExpandidos.has(col);
+        const visibles = expandido ? items : items.slice(0, _KANBAN_PAGE);
+        const restantes = items.length - _KANBAN_PAGE;
         el.innerHTML = items.length === 0
             ? `<p class="text-center text-gray-400 text-xs py-6">${q || _kanbanUrgenciaFiltro !== 'todos' ? 'Sin resultados' : 'Sin pedidos'}</p>`
-            : items.map(p => kanbanCardHTML(p)).join('');
+            : visibles.map(p => kanbanCardHTML(p)).join('')
+              + (!expandido && restantes > 0
+                  ? `<button data-col="${col}" onclick="window._kanbanVerMas(this.dataset.col)"
+                       class="w-full mt-2 py-2 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors">
+                       ↓ Ver ${restantes} más
+                     </button>`
+                  : '');
     });
 
     // Mensaje global cuando el filtro no encuentra nada en ninguna columna
@@ -816,6 +828,11 @@ function renderKanbanBoard() {
             : 'Sin pedidos con este filtro de urgencia';
     }
 }
+
+window._kanbanVerMas = function(col: string) {
+    _kanbanExpandidos.add(col);
+    renderKanbanBoard();
+};
 
 const _statusLabel = s => ({confirmado:'✅ Confirmado',pago:'💰 Pagado',produccion:'🔧 Producción',envio:'📦 Envío',salida:'🚚 Salió',retirar:'🏪 Retirar',finalizado:'🎉 Listo',cancelado:'❌ Cancelado'})[s] || s;
 

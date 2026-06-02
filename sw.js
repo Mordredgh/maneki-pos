@@ -64,6 +64,9 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
+  // cache.put() solo soporta http/https — ignorar chrome-extension:// y similares
+  if (!e.request.url.startsWith("http")) return;
+
   const url = new URL(e.request.url);
 
   if (url.origin.includes("supabase.co") || url.origin.includes("telegram")) {
