@@ -121,9 +121,14 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <!-- Mobile Topbar -->
 <div id="mobileTopbar" style="display:none" class="fixed top-0 left-0 right-0 z-[198] flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
-  <button id="hamburgerBtn" onclick="(typeof toggleSidebar==='function'?toggleSidebar():void 0)" style="background:none;border:none;cursor:pointer;padding:4px;font-size:22px;">☰</button>
+  <!-- UX16/17: min 44px tap target, aria-label, transición en hamburguesa -->
+  <button id="hamburgerBtn" onclick="(typeof toggleSidebar==='function'?toggleSidebar():void 0)"
+    aria-label="Abrir menú"
+    style="background:none;border:none;cursor:pointer;padding:10px;font-size:22px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;transition:transform .2s;">☰</button>
   <img src="logo.png" alt="Maneki Store" style="height:32px;object-fit:contain;" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<span style=\'font-family:Cormorant Garamond,serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;\'>Maneki Store</span>')">
-  <button onclick="typeof _abrirBusquedaOverlay === 'function' && _abrirBusquedaOverlay()" style="background:none;border:none;cursor:pointer;padding:4px;font-size:18px;">🔍</button>
+  <button onclick="typeof _abrirBusquedaOverlay === 'function' && _abrirBusquedaOverlay()"
+    aria-label="Buscar"
+    style="background:none;border:none;cursor:pointer;padding:10px;font-size:18px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">🔍</button>
 </div>
 <!-- Overlay para cerrar sidebar en mobile -->
 <div id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -215,7 +220,7 @@ input:focus, select:focus, textarea:focus, button:focus {
               </div>
             </div>
             <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2 cursor-pointer" onclick="showSection('configuracion')" title="Ir a Configuración">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="showSection('configuracion')" title="Ir a Configuración" aria-label="Abrir configuración">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(197,151,59,0.18) !important;">
                         <i class="fas fa-user text-sm" style="color: #C5A572 !important;"></i>
                     </div>
@@ -224,6 +229,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <p class="text-xs truncate" style="color: #C5A572 !important;">⚙️ Configuración</p>
                     </div>
                 </div>
+                <!-- UX6: botón de atajos de teclado visible -->
+                <button onclick="if(typeof _createShortcutsOverlay==='function'){_createShortcutsOverlay();document.getElementById('mk-shortcuts-overlay').classList.add('visible');}"
+                    title="Atajos de teclado (también presiona ?)"
+                    aria-label="Ver atajos de teclado"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors text-xs font-bold border border-gray-200"
+                    style="flex-shrink:0;">?</button>
                 <button onclick="toggleDarkMode()" id="darkModeBtn"
                         title="Modo oscuro"
                         class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-110"
@@ -368,10 +379,12 @@ input:focus, select:focus, textarea:focus, button:focus {
           <span class="text-gray-300">/</span>
           <div class="flex items-center gap-1">
             <span class="text-xs text-gray-400">$</span>
-            <input type="number" id="dashMonthGoal" value="5000" min="0" step="500"
+            <!-- UX19: min=1, protección contra valor negativo o cero -->
+            <input type="number" id="dashMonthGoal" value="5000" min="1" step="500"
                    class="w-20 text-sm px-2 py-1 border rounded-lg text-right outline-none"
                    style="border-color:#fcd34d;"
-                   onchange="updateDashboard(); storeConfig.metaMensual=parseFloat(this.value)||5000; sbSave('storeConfig',storeConfig);" title="Meta del mes">
+                   onchange="const _mv=Math.max(1,parseFloat(this.value)||5000);this.value=_mv;storeConfig.metaMensual=_mv;updateDashboard();sbSave('storeConfig',storeConfig);"
+                   title="Meta mensual de ventas (mínimo $1)">
           </div>
         </div>
       </div>
@@ -1408,6 +1421,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <span id="anioAnioResumen" class="text-xs text-gray-400"></span>
                     </div>
                     <div style="height:200px;position:relative;"><canvas id="comparativaAnioChart"></canvas></div>
+                    <!-- UX10: tabla detalle mes a mes (inyectada por JS) -->
+                    <div id="anioAnioTable"></div>
                 </div>
 
                 <!-- Historial de ventas -->

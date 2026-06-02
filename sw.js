@@ -1,5 +1,7 @@
-const CACHE_NAME = "maneki-v2.3.3";
-const STATIC_ASSETS = [
+const CACHE_NAME = "maneki-v2.3.4";
+
+// P6: assets críticos (deben estar en caché para que la app arranque)
+const CRITICAL_ASSETS = [
   "/",
   "/index.html",
   "/css/tailwind.css",
@@ -15,6 +17,10 @@ const STATIC_ASSETS = [
   "/js/init.js",
   "/js/design-system.js",
   "/js/navigation.js",
+];
+
+// Assets secundarios: se intentan cachear pero no bloquean el install si fallan
+const SECONDARY_ASSETS = [
   "/js/lazy-loader.js",
   "/js/templates.js",
   "/js/ui-extras.js",
@@ -40,7 +46,15 @@ const STATIC_ASSETS = [
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      // Críticos: si alguno falla, el install falla (comportamiento esperado)
+      return cache.addAll(CRITICAL_ASSETS).then(() => {
+        // Secundarios: se cachean individualmente; un fallo no rompe el install
+        return Promise.allSettled(
+          SECONDARY_ASSETS.map(url => cache.add(url).catch(() => {}))
+        );
+      });
+    })
   );
   self.skipWaiting();
 });

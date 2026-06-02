@@ -167,6 +167,12 @@ function renderInventoryTable() {
 
     const allProducts = window.products || [];
 
+    // P2: pre-cachear getStockEfectivo para evitar recalcular en cada fila del render
+    const _stockCache: Map<string, number> = new Map(
+        allProducts.map(p => [String(p.id), typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock) || 0)])
+    );
+    (window as any)._invStockCache = _stockCache;
+
     // Poblar filtro de proveedores cada vez que se renderiza
     if (typeof poblarFiltroProveedores === 'function') poblarFiltroProveedores();
 
@@ -269,7 +275,7 @@ function renderInventoryTable() {
     // ── Render fila de MATERIA PRIMA ──────────────────────────────────────────
     function renderFilaMP(product, ri) {
         const pid     = String(product.id);
-        const stockEf = getStockEfectivo(product);
+        const stockEf = _stockCache.get(pid) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : parseInt(product.stock) || 0);
         const imgHTML = product.imageUrl
             ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'🏭'}</span>`;
@@ -396,7 +402,7 @@ function renderInventoryTable() {
                     ? '<span class="badge-warning">MP bajo</span>'
                     : '<span class="badge-success">Disponible</span>';
         } else {
-            const _stEf = typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : (product.stock || 0);
+            const _stEf = _stockCache.get(String(product.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : (product.stock || 0));
             const _stMin = product.stockMin || 5;
             const _clr = _stEf === 0 ? '#ef4444' : _stEf <= _stMin ? '#f59e0b' : '#10b981';
             const _bgClr = _stEf === 0 ? '#fee2e2' : _stEf <= _stMin ? '#fef3c7' : '#d1fae5';
@@ -659,11 +665,11 @@ function renderInventoryTable() {
     const activeProds = allProducts.filter(p => !p.deletedAt);
     const totalProductos = activeProds.length;
     const valorInventario = activeProds.reduce((s, p) => {
-        const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0);
+        const stk = _stockCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0));
         return s + (Number(p.cost)||0) * Math.max(0, stk);
     }, 0);
     const bajoStock = activeProds.filter(p => {
-        const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0);
+        const stk = _stockCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0));
         return stk <= (p.stockMin||5);
     }).length;
     const ptConPrecio = activeProds.filter(p => (!p.tipo || p.tipo === 'producto' || p.tipo === 'producto_interno' || p.tipo === 'pack') && Number(p.price) > 0);

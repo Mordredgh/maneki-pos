@@ -593,7 +593,8 @@ function setPedidoStatus(status) {
             const _tipo = (_pedSalida.tipoEntrega || _pedSalida.entrega_tipo || '').toLowerCase();
             // Considerar domicilio cuando el campo tipoEntrega lo indica, o cuando no hay tipo definido
             // y el pedido no tiene lugar de entrega (la columna "Salida" implica salida a domicilio)
-            const _esDomicilio = _tipo.includes('domicilio') || _tipo.includes('envio') || _tipo.includes('envío') || _tipo === '';
+            // B9: solo requerir dirección si el tipo indica entrega a domicilio explícitamente
+            const _esDomicilio = _tipo.includes('domicilio') || _tipo.includes('envio') || _tipo.includes('envío');
             const _sinDireccion = !(_pedSalida.lugarEntrega || '').trim();
             if (_esDomicilio && _sinDireccion) {
                 manekiToastExport('Agrega una dirección de entrega antes de marcar como Salida', 'warn');
@@ -744,7 +745,7 @@ async function confirmarAbonoPedido() {
 
     // ── ROLLBACK FIX: guardar copias antes de mutar para poder restaurar si falla el save ──
     const _pagosBefore       = p.pagos.slice();
-    const _incomesBefore     = window.incomes     !== undefined ? window.incomes.slice()     : undefined;
+    const _incomesBefore     = Array.isArray(window.incomes)     ? window.incomes.slice()     : undefined;
     const _salesHistBefore   = window.salesHistory !== undefined ? window.salesHistory.slice() : undefined;
 
     p.pagos.push({
@@ -760,7 +761,7 @@ async function confirmarAbonoPedido() {
     // ── BUG-006 FIX: Registrar abono en Balance (incomes) ──
     // BUG-PED-02 FIX: incluir folioOrigen para que renderBalance() pueda deduplicar
     // este income cuando el pedido se finalice (totalPedidosFin excluye folios en incomes).
-    if (window.incomes !== undefined) {
+    if (Array.isArray(window.incomes)) {
         window.incomes.push({
             id: abonoId,
             concept: `Abono pedido ${p.folio}`,
@@ -790,7 +791,7 @@ async function confirmarAbonoPedido() {
     // ── Persistir todo al final; si falla, revertir mutaciones en memoria ──
     try {
         await savePedidos();
-        if (window.incomes !== undefined && typeof saveIncomes === 'function') saveIncomes();
+        if (Array.isArray(window.incomes) && typeof saveIncomes === 'function') saveIncomes();
         if (window.salesHistory !== undefined) {
             if (typeof saveSalesHistory === 'function') saveSalesHistory();
         }
@@ -839,6 +840,9 @@ async function kanbanDrop(event, newStatus) {
     const el = document.getElementById('kCol-' + newStatus);
     if (el) el.style.background = '';
     if (!_kanbanDragId) return;
+    // UX1: loading visual en la card mientras se procesa el cambio de estado
+    const _dropCard = document.querySelector(`.kanban-card[data-id="${_kanbanDragId}"]`) as HTMLElement|null;
+    if (_dropCard) { _dropCard.style.opacity = '0.45'; _dropCard.style.pointerEvents = 'none'; }
     const idx = (window.pedidos || []).findIndex(p => String(p.id) === String(_kanbanDragId));
     if (idx !== -1) {
         if (newStatus === 'finalizado' || newStatus === 'completado') {
@@ -884,7 +888,8 @@ async function kanbanDrop(event, newStatus) {
         if (newStatus === 'salida') {
             const _pedSalida = window.pedidos[idx];
             const _tipo = (_pedSalida.tipoEntrega || _pedSalida.entrega_tipo || '').toLowerCase();
-            const _esDomicilio = _tipo.includes('domicilio') || _tipo.includes('envio') || _tipo.includes('envío') || _tipo === '';
+            // B9: solo requerir dirección si el tipo indica entrega a domicilio explícitamente
+            const _esDomicilio = _tipo.includes('domicilio') || _tipo.includes('envio') || _tipo.includes('envío');
             const _sinDireccion = !(_pedSalida.lugarEntrega || '').trim();
             if (_esDomicilio && _sinDireccion) {
                 manekiToastExport('Agrega una dirección de entrega antes de marcar como Salida', 'warn');
@@ -1501,10 +1506,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── N2: Swipe touch para cambiar estado en kanban (mobile) ───────────────────
 const _KANBAN_TOUCH_COLS = ['confirmado','pago','produccion','envio','salida','retirar'];
 
+// B4: AbortController para limpiar listeners anteriores sin acumularlos
+let _kanbanTouchAbort: AbortController|null = null;
+
 function _initKanbanTouchSwipe() {
     const container = document.getElementById('vistaKanban');
-    if (!container || (container as any)._mkSwipeDone) return;
-    (container as any)._mkSwipeDone = true;
+    if (!container) return;
+    // Limpiar listeners previos antes de añadir nuevos (evita acumulación)
+    if (_kanbanTouchAbort) { _kanbanTouchAbort.abort(); }
+    _kanbanTouchAbort = new AbortController();
+    const { signal } = _kanbanTouchAbort;
 
     let _card: HTMLElement|null = null;
     let _startX = 0, _startY = 0;
@@ -1518,7 +1529,7 @@ function _initKanbanTouchSwipe() {
         _startY = e.touches[0].clientY;
         _cardId = card.dataset.id || '';
         _cardStatus = card.dataset.status || '';
-    }, { passive: true });
+    }, { passive: true, signal } as any);
 
     container.addEventListener('touchmove', function(e: TouchEvent) {
         if (!_card) return;
@@ -1529,7 +1540,7 @@ function _initKanbanTouchSwipe() {
         _card.style.transform = `translateX(${dx}px)`;
         _card.style.transition = 'none';
         _card.style.opacity = String(Math.max(0.5, 1 - Math.abs(dx) / 220));
-    }, { passive: true });
+    }, { passive: true, signal } as any);
 
     container.addEventListener('touchend', function(e: TouchEvent) {
         if (!_card) return;
@@ -1553,7 +1564,17 @@ function _initKanbanTouchSwipe() {
 
         _kanbanDragId = _cardId;
         kanbanDrop({ preventDefault: () => {} } as any, targetStatus);
-    }, { passive: true });
+    }, { passive: true, signal } as any);
+
+    // UX8: hint de swipe en primera visita mobile (solo una vez)
+    if (window.innerWidth <= 768 && !localStorage.getItem('mk_swipe_hint_shown')) {
+        localStorage.setItem('mk_swipe_hint_shown', '1');
+        const hint = document.createElement('div');
+        hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(30,20,10,0.82);color:#fff;padding:9px 18px;border-radius:20px;font-size:.8rem;font-weight:600;z-index:9000;pointer-events:none;animation:fadeUp .4s ease both;';
+        hint.textContent = '← Desliza las tarjetas para cambiar estado →';
+        document.body.appendChild(hint);
+        setTimeout(() => hint.remove(), 3500);
+    }
 }
 (window as any)._initKanbanTouchSwipe = _initKanbanTouchSwipe;
 

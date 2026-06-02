@@ -40,7 +40,7 @@ function generarFolioPedido() {
     // Persistir en Supabase y en localStorage como respaldo offline
     const _fc = window._folioCounter;
     if (typeof db !== 'undefined') {
-        (async () => { try { await db.from('store').upsert({ key: 'folioCounter', value: String(_fc) }); } catch(e) { console.warn('[Folio] Error al persistir contador:', e?.message); } })();
+        (async () => { try { await db.from('store').upsert({ key: 'folioCounter', value: String(_fc) }); } catch(e) { console.warn('[Folio] Error al persistir contador:', e?.message); if (typeof manekiToastExport === 'function') manekiToastExport('⚠️ Folio guardado localmente (sin conexión)', 'warn'); } })();
     }
     try { localStorage.setItem('maneki_folioCounter', String(_fc)); } catch(e) {}
 
@@ -258,8 +258,17 @@ function calcPedidoTotal() {
 
     // Precio libre: se usa cuando no hay productos del inventario
     if (total === 0 && items.length === 0) {
-        const precioLibreEl = document.getElementById('pedidoPrecioLibre');
-        if (precioLibreEl) total = parseFloat(precioLibreEl.value) || 0;
+        const precioLibreEl = document.getElementById('pedidoPrecioLibre') as HTMLInputElement|null;
+        if (precioLibreEl && precioLibreEl.value.trim()) {
+            const rawVal = precioLibreEl.value.replace(/[$,\s]/g, '');
+            const parsed = parseFloat(rawVal);
+            if (isNaN(parsed)) {
+                if (typeof manekiToastExport === 'function') manekiToastExport('⚠️ Precio inválido — ingresa solo números', 'warn');
+                precioLibreEl.value = '';
+            } else {
+                total = parsed;
+            }
+        }
     }
     // FIX validación: anticipo debe ser >= 0
     const anticipoRaw = parseFloat(document.getElementById('pedidoAnticipo').value);

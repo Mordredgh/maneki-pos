@@ -188,10 +188,7 @@ function _inyectarBtnExport(containerId, chartVarName, fileName) {
 function initComparativaMeses() {
     const canvas = document.getElementById('comparativaMesesChart');
     if (!canvas) return;
-    if (comparativaMesesChart) {
-        try { comparativaMesesChart.destroy(); } catch(e) {}
-        comparativaMesesChart = null;
-    }
+
     const meses = [], ventas = [], gastos = [], ventasAnioAnterior = [];
     const now = new Date();
     const todasVentas = _getAllVentas();
@@ -200,67 +197,70 @@ function initComparativaMeses() {
     for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const mesStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        // Mismo mes pero un año antes
         const dAnio = new Date(d.getFullYear() - 1, d.getMonth(), 1);
         const mesStrAnio = `${dAnio.getFullYear()}-${String(dAnio.getMonth()+1).padStart(2,'0')}`;
         const label = d.toLocaleDateString('es-MX', { month: 'short', year: '2-digit' });
         meses.push(label);
-        // FIX 6: exclude cancelled orders from monthly chart
         ventas.push(todasVentas.filter(function(s){ return s.date && s.date.startsWith(mesStr) && s.method !== 'Cancelado' && s.metodo !== 'cancelado'; }).reduce(function(s,v){ return s+(Number(v.total)||0); }, 0));
         gastos.push(todasGastos.filter(function(e){ return e.date && e.date.startsWith(mesStr); }).reduce(function(s, e){ return s + (e.amount || 0); }, 0));
         ventasAnioAnterior.push(todasVentas.filter(function(s){ return s.date && s.date.startsWith(mesStrAnio) && s.method !== 'Cancelado' && s.metodo !== 'cancelado'; }).reduce(function(s,v){ return s+(Number(v.total)||0); }, 0));
     }
 
-    comparativaMesesChart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: meses,
-            datasets: [
-                { label: 'Ventas', data: ventas, backgroundColor: '#C5A572', borderRadius: 6 },
-                { label: 'Gastos', data: gastos, backgroundColor: '#FCA5A5', borderRadius: 6 },
-                { label: 'Ventas año anterior', data: ventasAnioAnterior, backgroundColor: 'rgba(197,165,114,0.45)', borderRadius: 6, hidden: true }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true, ticks: { callback: function(v){ return '$' + v.toLocaleString(); } } } }
+    // P7: actualizar chart en lugar de destruir y recrear (más rápido, sin flicker)
+    if (comparativaMesesChart) {
+        comparativaMesesChart.data.labels = meses;
+        comparativaMesesChart.data.datasets[0].data = ventas;
+        comparativaMesesChart.data.datasets[1].data = gastos;
+        comparativaMesesChart.data.datasets[2].data = ventasAnioAnterior;
+        comparativaMesesChart.update('none');
+    } else {
+        comparativaMesesChart = new (window as any).Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: meses,
+                datasets: [
+                    { label: 'Ventas', data: ventas, backgroundColor: '#C5A572', borderRadius: 6 },
+                    { label: 'Gastos', data: gastos, backgroundColor: '#FCA5A5', borderRadius: 6 },
+                    { label: 'Ventas año anterior', data: ventasAnioAnterior, backgroundColor: 'rgba(197,165,114,0.45)', borderRadius: 6, hidden: true }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { y: { beginAtZero: true, ticks: { callback: function(v){ return '$' + v.toLocaleString(); } } } }
+            }
+        });
+
+        // Toggle y export solo se inyectan una vez al crear el chart
+        var chartWrapper = canvas.closest('div[style*="height"]') || canvas.parentElement;
+        if (chartWrapper && !document.getElementById('toggleAnioAnterior')) {
+            chartWrapper.insertAdjacentHTML('beforeend',
+                '<div style="text-align:center;margin-top:8px;">' +
+                '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#6B7280;">' +
+                '<input type="checkbox" id="toggleAnioAnterior" ' +
+                'onchange="(function(cb){if(comparativaMesesChart){comparativaMesesChart.data.datasets[2].hidden=!cb.checked;comparativaMesesChart.update();}})(this)" ' +
+                'style="cursor:pointer;accent-color:#C5A572;"> 📅 vs. año anterior</label></div>'
+            );
         }
-    });
-
-    // Toggle "vs. año anterior"
-    var chartWrapper = canvas.closest('div[style*="height"]') || canvas.parentElement;
-    if (chartWrapper && !document.getElementById('toggleAnioAnterior')) {
-        chartWrapper.insertAdjacentHTML('beforeend',
-            '<div style="text-align:center;margin-top:8px;">' +
-            '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#6B7280;">' +
-            '<input type="checkbox" id="toggleAnioAnterior" ' +
-            'onchange="(function(cb){if(comparativaMesesChart){comparativaMesesChart.data.datasets[2].hidden=!cb.checked;comparativaMesesChart.update();}})(this)" ' +
-            'style="cursor:pointer;accent-color:#C5A572;"> 📅 vs. año anterior</label></div>'
-        );
+        var comparativaContainer = canvas.closest('div.bg-white') || canvas.parentElement;
+        if (comparativaContainer && !comparativaContainer.id) comparativaContainer.id = 'comparativaContainer';
+        comparativaContainer.style.position = 'relative';
+        if (!comparativaContainer.querySelector('.mk-export-png-btn')) {
+            comparativaContainer.insertAdjacentHTML('afterbegin',
+                '<button class="mk-export-png-btn" ' +
+                'onclick="exportarGraficaPNG(comparativaMesesChart, \'ventas-mensuales\')" ' +
+                'title="Exportar como PNG" ' +
+                'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
+                'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
+                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+            );
+        }
+        var summaryEl = document.getElementById('mejorPeorMes');
+        if (summaryEl) summaryEl.style.display = 'none';
     }
 
-    // MEJORA 5: Ticket promedio y métricas por mes
+    // Ticket promedio siempre se actualiza
     _renderTicketPromedioStats(meses, ventas, todasVentas, now);
-
-    // Exportar PNG
-    var comparativaContainer = canvas.closest('div.bg-white') || canvas.parentElement;
-    if (comparativaContainer && !comparativaContainer.id) comparativaContainer.id = 'comparativaContainer';
-    comparativaContainer.style.position = 'relative';
-    if (!comparativaContainer.querySelector('.mk-export-png-btn')) {
-        comparativaContainer.insertAdjacentHTML('afterbegin',
-            '<button class="mk-export-png-btn" ' +
-            'onclick="exportarGraficaPNG(comparativaMesesChart, \'ventas-mensuales\')" ' +
-            'title="Exportar como PNG" ' +
-            'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
-            'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
-            'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
-        );
-    }
-
-    // Mejor/peor mes — ocultar del canvas (ya se muestra en ticketPromedioStats)
-    var summaryEl = document.getElementById('mejorPeorMes');
-    if (summaryEl) summaryEl.style.display = 'none';
 }
 
 // ── MEJORA 5: Ticket promedio por mes ────────────────────────────────────────
@@ -539,10 +539,7 @@ window.initMargenCategoriaChart = initMargenCategoriaChart;
 function initComparativaAnio() {
     const canvas = document.getElementById('comparativaAnioChart') as HTMLCanvasElement;
     if (!canvas) return;
-    if (comparativaAnioChart) {
-        try { (comparativaAnioChart as any).destroy(); } catch(e) {}
-        comparativaAnioChart = null;
-    }
+
     const now = new Date();
     const anioActual = now.getFullYear();
     const anioAnterior = anioActual - 1;
@@ -571,35 +568,67 @@ function initComparativaAnio() {
             : `vs ${anioAnterior}`;
     }
 
-    comparativaAnioChart = new (window as any).Chart(canvas, {
-        type: 'line',
-        data: {
-            labels: meses,
-            datasets: [
-                {
-                    label: String(anioActual),
-                    data: ventasActual,
-                    borderColor: '#C5A572',
-                    backgroundColor: 'rgba(197,165,114,0.12)',
-                    fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5,
-                    borderWidth: 2
-                },
-                {
-                    label: String(anioAnterior),
-                    data: ventasAnterior,
-                    borderColor: '#94a3b8',
-                    backgroundColor: 'rgba(148,163,184,0.08)',
-                    fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5,
-                    borderDash: [5,4], borderWidth: 2
-                }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
-            scales: { y: { beginAtZero: true, ticks: { callback: function(v: any){ return '$' + Number(v).toLocaleString('es-MX', { maximumFractionDigits: 0 }); } } } }
-        }
-    });
+    // P7: actualizar chart si ya existe, crear si no
+    if (comparativaAnioChart) {
+        (comparativaAnioChart as any).data.labels = meses;
+        (comparativaAnioChart as any).data.datasets[0].data = ventasActual;
+        (comparativaAnioChart as any).data.datasets[1].data = ventasAnterior;
+        (comparativaAnioChart as any).update('none');
+    } else {
+        comparativaAnioChart = new (window as any).Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [
+                    { label: String(anioActual), data: ventasActual, borderColor: '#C5A572', backgroundColor: 'rgba(197,165,114,0.12)', fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 },
+                    { label: String(anioAnterior), data: ventasAnterior, borderColor: '#94a3b8', backgroundColor: 'rgba(148,163,184,0.08)', fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, borderDash: [5,4], borderWidth: 2 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+                scales: { y: { beginAtZero: true, ticks: { callback: function(v: any){ return '$' + Number(v).toLocaleString('es-MX', { maximumFractionDigits: 0 }); } } } }
+            }
+        });
+    }
+
+    // UX10: tabla detalle mes a mes debajo del chart
+    const tableWrap = document.getElementById('anioAnioTable');
+    if (tableWrap) {
+        const mesNombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const mesActual = now.getMonth();
+        const filas = meses.map(function(_: string, i: number) {
+            if (i > mesActual && ventasActual[i] === 0 && ventasAnterior[i] === 0) return '';
+            const va = ventasActual[i], vb = ventasAnterior[i];
+            const diff = vb > 0 ? ((va - vb) / vb * 100) : (va > 0 ? 100 : null);
+            const diffHtml = diff !== null
+                ? `<span style="font-size:.72rem;font-weight:700;color:${diff >= 0 ? '#059669' : '#dc2626'}">${diff >= 0 ? '▲' : '▼'}${Math.abs(diff).toFixed(0)}%</span>`
+                : '<span style="color:#9ca3af;font-size:.72rem">—</span>';
+            const isActual = i === mesActual;
+            return `<tr style="background:${isActual ? '#fffbf5' : ''};${isActual ? 'font-weight:600' : ''}">
+                <td style="padding:5px 8px;font-size:.78rem;color:#374151">${mesNombres[i]}</td>
+                <td style="padding:5px 8px;font-size:.78rem;text-align:right;color:#C5A572;font-weight:600">$${va.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+                <td style="padding:5px 8px;font-size:.78rem;text-align:right;color:#94a3b8">$${vb.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+                <td style="padding:5px 8px;text-align:right">${diffHtml}</td>
+            </tr>`;
+        }).join('');
+        tableWrap.innerHTML = `<div style="overflow-x:auto;margin-top:10px">
+            <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+                <thead><tr style="background:#f9fafb;border-bottom:2px solid #f3f4f6">
+                    <th style="padding:5px 8px;text-align:left;color:#6b7280;font-size:.7rem">Mes</th>
+                    <th style="padding:5px 8px;text-align:right;color:#C5A572;font-size:.7rem">${anioActual}</th>
+                    <th style="padding:5px 8px;text-align:right;color:#94a3b8;font-size:.7rem">${anioAnterior}</th>
+                    <th style="padding:5px 8px;text-align:right;color:#6b7280;font-size:.7rem">Var.</th>
+                </tr></thead>
+                <tbody>${filas}</tbody>
+                <tfoot><tr style="border-top:2px solid #f3f4f6;background:#f9fafb">
+                    <td style="padding:5px 8px;font-size:.78rem;font-weight:700">Total</td>
+                    <td style="padding:5px 8px;text-align:right;font-size:.78rem;font-weight:700;color:#C5A572">$${totalActual.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+                    <td style="padding:5px 8px;text-align:right;font-size:.78rem;font-weight:700;color:#94a3b8">$${totalAnterior.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+                    <td style="padding:5px 8px;text-align:right">${pct !== null ? `<span style="font-weight:700;color:${pct>=0?'#059669':'#dc2626'}">${pct>=0?'▲':'▼'}${Math.abs(pct).toFixed(1)}%</span>` : '—'}</td>
+                </tfoot>
+            </table></div>`;
+    }
 }
 window.initComparativaAnio = initComparativaAnio;
 

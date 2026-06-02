@@ -228,6 +228,18 @@ function _updateDashboardImpl() {
     const outOfStock = products.filter(p => _gse(p) === 0);
     const lowStockBadge = document.getElementById('lowStockBadge');
     if (lowStockBadge) lowStockBadge.textContent = (lowStockItems.length + outOfStock.length) + ' items';
+    // UX5: badge de stock crítico en el sidebar para visibilidad sin entrar al módulo
+    const _sidebarBadgeInv = document.getElementById('sidebarBadgeInventory');
+    if (_sidebarBadgeInv) {
+        const _totalAlerts = lowStockItems.length + outOfStock.length;
+        if (_totalAlerts > 0) {
+            _sidebarBadgeInv.textContent = String(_totalAlerts);
+            _sidebarBadgeInv.style.display = '';
+            _sidebarBadgeInv.title = `${outOfStock.length} agotado(s) · ${lowStockItems.length} bajo stock`;
+        } else {
+            _sidebarBadgeInv.style.display = 'none';
+        }
+    }
 
     // Calcular promedio de ventas por día para cada producto (últimos 30 días)
     const hace30 = new Date(); hace30.setDate(hace30.getDate() - 30);
