@@ -269,14 +269,47 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 | U3/N4 | **Skeleton screens** inyectadas en `inventoryTable`, `pedidosTable`, `clientsTable` antes del Promise.all | `src/config.ts` |
 | N1 | **PWA install prompt** — `beforeinstallprompt` capturado; banner tras 3 visitas | `src/init.ts` |
 
-### Sesión 8 (2 junio 2026) — Auditoría exhaustiva: 30 mejoras
+### Sesión 8 (2 junio 2026) — Auditoría exhaustiva (3 agentes: bugs, performance, UX)
 
-| Área | Fixes | Detalle |
-|------|-------|---------|
-| Bugs | B1,B3,B6,B7,B9 | Folio toast offline; _esDomicilio lógica; Array.isArray incomes; precio libre validado; domicilio solo explícito |
-| Performance | P2,P6,P7 | stockMap pre-cache O(1); SW 2-fases install; chart.update() sin destroy+new |
-| UX Sprint3 | UX1,UX5,UX8 | Loading kanban drop; badge sidebar stock; hint swipe mobile |
-| Nice-to-have | UX6,UX10,UX16-19 | Botón "?" shortcuts; tabla año-a-año; aria+44px mobile; meta≥1 |
+**Metodología:** Se lanzaron 3 agentes en paralelo para auditar bugs, performance y UX/nice-to-have. De ~43 hallazgos se aplicaron 17 en esta sesión; el resto queda en PENDIENTES abajo.
+
+#### ✅ Bugs aplicados
+
+| # | Fix | Archivos |
+|---|-----|---------|
+| B1 | **Folio offline warning** — el IIFE fire-and-forget de Supabase ahora muestra toast `⚠️ Folio guardado localmente` si falla la persistencia | `src/pedidos-1.ts` |
+| B4 | **AbortController en swipe kanban** — `_kanbanTouchAbort.abort()` antes de añadir nuevos listeners; elimina acumulación de handlers | `src/pedidos-2.ts` |
+| B6 | **`Array.isArray(window.incomes)`** — reemplaza `!== undefined`; protege contra `null` en rollback de abonos | `src/pedidos-2.ts` |
+| B7 | **Precio libre inválido** — `parseFloat("$500")` → NaN → toast `⚠️ Precio inválido` + limpia el campo | `src/pedidos-1.ts` |
+| B9 | **`_esDomicilio` sin asumir vacío** — ya no requiere dirección cuando `tipoEntrega` está vacío; solo si contiene "domicilio/envio/envío" explícitamente | `src/pedidos-2.ts` |
+
+#### ✅ Performance aplicada
+
+| # | Fix | Archivos |
+|---|-----|---------|
+| P2 | **`_stockCache` pre-calculado** — `renderInventoryTable()` crea un `Map<id→stock>` antes del loop; elimina llamadas redundantes a `getStockEfectivo()` | `src/inventory-5.ts` |
+| P6 | **SW v2.3.4 install 2 fases** — assets críticos con `addAll()` (falla = install falla), secundarios con `Promise.allSettled()` (un 404 ya no mata el install) | `sw.js` |
+| P7 | **`chart.update('none')`** — `initComparativaMeses()` e `initComparativaAnio()` usan update en-place en visitas posteriores; elimina destroy+new y ~180ms de flicker | `src/reportes.ts` |
+
+#### ✅ UX aplicada
+
+| # | Fix | Archivos |
+|---|-----|---------|
+| UX1 | **Loading en kanban drop** — card se pone `opacity:0.45 + pointerEvents:none` mientras procesa el cambio de estado | `src/pedidos-2.ts` |
+| UX5 | **Badge stock en sidebar** — `sidebarBadgeInventory` se actualiza con `lowStock + outOfStock` en cada `_updateDashboardImpl()` | `src/dashboard.ts` |
+| UX6 | **Botón "?" de shortcuts** — visible junto al perfil en sidebar inferior; abre el overlay de atajos de teclado | `index.html` |
+| UX8 | **Hint swipe kanban mobile** — "← Desliza las tarjetas →" aparece 1 sola vez (flag en localStorage) | `src/pedidos-2.ts` |
+| UX10 | **Tabla año a año** — debajo del chart: mes, $año_actual, $año_anterior, variación %; fila de total | `src/reportes.ts`, `index.html` |
+| UX16/17 | **Mobile topbar mejorado** — botones 44×44px min-tap-target, `aria-label`, `transition:transform` en hamburguesa | `index.html` |
+| UX19 | **Meta mensual protegida** — `min="1"` + `Math.max(1,…)` evita meta en cero o negativa | `index.html` |
+
+#### ℹ️ Ya existían (confirmados, no requerían cambio)
+
+- **UX3** Confirmar eliminar cliente — `showConfirm()` ya estaba
+- **UX14** Copy toast — clipboard handlers ya mostraban toast
+- **UX18** cursor:pointer en KPIs — CSS `[onclick], .clickable { cursor:pointer }` ya lo cubría
+- **UX20** CxC mora coloring — `bg-red-50/orange-50/blue-50` ya en `balance.ts`
+- **B5** División por cero en márgenes — ya guardado por `filter(price > 0)` en línea 470
 
 ### Sesión 7 (2 junio 2026) — N2/N3/N6/N9/S2
 
@@ -313,11 +346,44 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
 ## 🚨 PENDIENTES — Próxima Sesión
 
-*(Todas las mejoras de esta lista han sido implementadas — lista limpia para próxima sesión)*
+### 🔴 Bugs — Quedan sin aplicar
+
+| # | Área | Descripción | Dificultad |
+|---|------|-------------|-----------|
+| B2 | Storage | Fotos huérfanas en Supabase Storage: `_eliminarFotoStorageAlFinalizar()` falla silenciosamente; usuario no sabe que hay archivos no borrados. Agregar toast visible si falla. | Baja |
+| B3 | Pedidos | Doble-click en "Guardar Pedido" puede crear 2 pedidos simultáneos. `_folioGenerando` protege el folio pero no el form submit. Fix: `btn.disabled = true` en submit, restaurar en error. | Baja |
+| B8 | Pedidos | Dos fuentes de verdad para pagos: `p.anticipo` (legacy) + `p.pagos[]` (actual). Pueden desincronizarse. Requiere migración de datos y limpieza de código. | Alta |
+| B10 | Pedidos | `pedidoForm` submit muta `cp.stock` en `window.products[]` directamente al procesar kits. Si el usuario no guarda después, hay stock incorrecto en memoria hasta el siguiente sync. | Media |
+
+### 🟠 Performance — Quedan sin aplicar
+
+| # | Área | Descripción | Impacto |
+|---|------|-------------|---------|
+| P1 | Global | Re-render completo de `renderInventoryTable`, `renderPedidosTable`, `renderClientsTable` aunque cambie 1 registro. Requiere diff-patch con hash por fila. | Alto |
+| P3 | Inventario | `patchInventoryButtons()` se ejecuta con 3 `setTimeout` (400/800/1500ms). Reemplazar con `MutationObserver` que dispara cuando el modal es visible. | Medio |
+| P4 | Realtime | 5 canales Supabase realtime con debounces independientes (600-800ms cada uno). Consolidar en un único debounce con flags `{productsChanged, pedidosChanged, …}`. | Alto |
+| P5 | DB | Queries `sbLoad()` sin `.limit()` en `config.ts`. Con 2000+ registros descargan todo. Agregar `.limit(2000).order('updated_at',{ascending:false})` en cada tabla. | Alto |
+| P8 | Reportes | `_getAllVentas()` se llama 3 veces por `initReports()` (comparativaMeses, comparativaAnio, topProductos). La caché interna ayuda pero el cacheKey se recalcula 3 veces. Pasar el resultado como parámetro. | Bajo |
+| P9 | Realtime | `_applyRTRelacional()` descarga la tabla completa en cada cambio. Implementar `_lastSyncAt` y usar `.gt('updated_at', _lastSyncAt)` para solo descargar el delta. | Alto |
+
+### 🟡 UX — Quedan sin aplicar
+
+| # | Módulo | Descripción | Esfuerzo |
+|---|--------|-------------|---------|
+| UX2 | Inventario | Bulk edit sin vista previa antes de ejecutar. Mostrar tabla "Precio anterior → Precio nuevo" antes de confirmar cambio masivo. | Medio |
+| UX4 | Pedidos | Columnas kanban vacías sin estado decorativo. Agregar SVG minimalista + texto "Sin pedidos en este estado" en columnas vacías. | Pequeño |
+| UX7 | Pedidos | Fecha en tabla mobile trunca "2026-06-02 14:30" a "2026-06-...". Mostrar solo fecha en celda, hora en `title` tooltip o segunda línea gris. | Pequeño |
+| UX9 | Balance | Campo descripción en ingresos/gastos es texto libre sin historial. Agregar `<datalist>` con últimas 10 descripciones desde localStorage. | Pequeño |
+| UX11 | Clientes | Panel RFM sin acción directa. Agregar botón "📱 Contactar por WA" en el detalle de cada segmento para abrir WhatsApp masivamente. | Pequeño |
+| UX12 | Inventario | Editar producto requiere 4 clicks. Doble-click en celda de precio/stock = campo editable inline. | Grande |
+| UX13 | Reportes | Filtros de fecha requieren escribir YYYY-MM-DD. Agregar selector "Mes actual \| Mes anterior \| Últimos 3 meses \| Rango". | Medio |
+| UX15 | Config | Si el onboarding se rechazó no hay forma de reactivarlo. Agregar botón "Ver tutorial de nuevo" en Configuración → zona de ayuda. | Pequeño |
+
+### ℹ️ Nota de seguridad permanente
 
 | # | Área | Nota |
 |---|------|------|
-| S2 | Seguridad | RLS **verificado activo** en tabla `store` y todas las tablas. Telegram Token en `storeConfig` sigue como string plano — requiere backend proxy para ofuscarlo más. |
+| S2 | Supabase | RLS **verificado activo** en tabla `store` y todas las 27 tablas. Telegram Token en `storeConfig` sigue como string plano — fix real requiere backend proxy (Edge Function). No hay solución frontend-only segura. |
 
 ---
 
