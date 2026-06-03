@@ -113,10 +113,10 @@ function renderRFMPanel() {
 
     const cards = _RFM_SEGMENTS.map(seg => {
         const lista = counts[seg.key] || [];
-        const preview = lista.slice(0, 3).map(n => `<span style="font-size:.7rem;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1px 8px;color:#374151">${_escAttr ? _escAttr(n) : n}</span>`).join(' ');
+        const preview = lista.slice(0, 3).map(n => `<span style="font-size:.7rem;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1px 8px;color:#374151">${(_escAttr || _esc)(n)}</span>`).join(' ');
         const mas = lista.length > 3 ? `<span style="font-size:.7rem;color:#9ca3af">+${lista.length - 3} más</span>` : '';
         // N-TOOLTIP-002: tooltip extendido con descripción completa
-        const tooltipDesc = _escAttr ? _escAttr(rfmDescriptions[seg.label] || seg.desc) : (rfmDescriptions[seg.label] || seg.desc);
+        const tooltipDesc = (_escAttr || _esc)(rfmDescriptions[seg.label] || seg.desc);
         return `<div style="background:${seg.bg};border-radius:14px;padding:14px;cursor:help;transition:box-shadow .15s"
             onclick="window._rfmVerSegmento('${seg.key}')"
             title="${tooltipDesc}"

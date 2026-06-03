@@ -16,8 +16,8 @@ window._invalidarCacheVentas = function() { _allVentasCache = null; _allVentasCa
 function _getAllVentas() {
     const sh = window.salesHistory || [];
     const pf = window.pedidosFinalizados || [];
-    // Incluir suma de totales de pedidosFinalizados para detectar ediciones sin cambio de cantidad
-    const cacheKey = `${sh.length}_${pf.length}_${pf.reduce((s,p)=>s+Number(p.total||0),0).toFixed(0)}`;
+    // Incluir suma de totales de salesHistory Y pedidosFinalizados para detectar ediciones sin cambio de cantidad
+    const cacheKey = `${sh.length}_${pf.length}_${sh.reduce((s,v)=>s+Number(v.total||0),0).toFixed(0)}_${pf.reduce((s,p)=>s+Number(p.total||0),0).toFixed(0)}`;
     if (_allVentasCache && _allVentasCacheKey === cacheKey) return _allVentasCache;
 
     // 1. Folios ya en salesHistory como type:'pedido' → no duplicar desde pedidosFinalizados
@@ -105,17 +105,21 @@ function _getAllVentas() {
             anticiposPorFolio[s.folio] = (anticiposPorFolio[s.folio] || 0) + Number(s.total || 0);
         }
     });
-    resultado.forEach(function(s) {
+    resultado = resultado.map(function(s) {
         if (s.type === 'pedido' && s.folio && anticiposPorFolio[s.folio]) {
             var totalOriginal = Number(s.totalPedido || s.total || 0);
             var yaCobrado = anticiposPorFolio[s.folio];
             // Solo ajustar si el total del registro parece ser el total completo del pedido
             // (es decir, no fue ya corregido con el fix de saldo pendiente)
             if (!s.totalPedido && totalOriginal > yaCobrado) {
-                s.totalPedido = totalOriginal;
-                s.total = Math.max(0, totalOriginal - yaCobrado);
+                // Crear una copia shallow para no mutar el objeto original de salesHistory
+                return Object.assign({}, s, {
+                    totalPedido: totalOriginal,
+                    total: Math.max(0, totalOriginal - yaCobrado)
+                });
             }
         }
+        return s;
     });
 
     _allVentasCacheKey = cacheKey;
@@ -1436,7 +1440,7 @@ function renderAnalisisABC(lista, totalGanancia) {
         return `<tr class="hover:bg-gray-50 ${p.clase==='A'?'border-l-4 border-green-400':p.clase==='B'?'border-l-4 border-amber-400':'border-l-4 border-gray-200'}">
             <td class="px-4 py-3 text-center"><span class="inline-flex items-center justify-center w-8 h-8 rounded-full ${c.dot} text-white text-xs font-bold shadow-sm">${p.clase}</span></td>
             <td class="px-4 py-3"><div class="flex items-center gap-2"><span class="text-xl">${p.emoji}</span>
-                <span class="font-semibold text-gray-800 truncate max-w-[200px]">${p.nombre}</span></div></td>
+                <span class="font-semibold text-gray-800 truncate max-w-[200px]">${_esc(p.nombre)}</span></div></td>
             <td class="px-4 py-3 text-right font-bold ${gc}">$${p.ganancia.toFixed(2)}</td>
             <td class="px-4 py-3 text-right"><span class="font-semibold text-gray-700">${p.pctInd.toFixed(1)}%</span></td>
             <td class="px-4 py-3 text-right"><div class="flex items-center justify-end gap-2">
@@ -1573,7 +1577,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ── Pedidos: funciones de productos en pedido ─────────────────────────────
-// (mantenidas aquí para no romper referencias existentes)
+// filtrarProductosPedido, seleccionarProductoPedido y limpiarSeleccionProductoPedido
+// viven en pedidos-3.ts (versiones canónicas con soporte de variantes, producto variable, galería).
+// poblarSelectPedido se mantiene aquí para el select de fallback del modal.
 function poblarSelectPedido() {
     const sel = document.getElementById('pedidoProductoSelect');
     if (!sel) return;
@@ -1586,51 +1592,8 @@ function poblarSelectPedido() {
     (sel as any)._cacheKey = cacheKey;
     if (!(window.products||[]).length) { sel.innerHTML='<option value="">-- Sin productos en inventario --</option>'; return; }
     sel.innerHTML = '<option value="">-- Seleccionar producto (opcional) --</option>' +
-        (window.products||[]).map(p => `<option value="${p.id}">${p.name} - $${Number(p.price).toFixed(2)}</option>`).join('');
+        (window.products||[]).map(p => `<option value="${_esc(String(p.id))}">${_esc(p.name)} - $${Number(p.price).toFixed(2)}</option>`).join('');
 }
-
-function filtrarProductosPedido() {
-    const q    = (document.getElementById('pedidoBuscadorProducto')?.value||'').toLowerCase().trim();
-    const grid = document.getElementById('pedidoProductoGrid');
-    if (!grid) return;
-    const lista = (window.products||[]).filter(p => p.tipo!=='materia_prima' && p.tipo!=='servicio' && (!q || p.name.toLowerCase().includes(q)));
-    if (!q) { grid.classList.add('hidden'); return; }
-    grid.classList.remove('hidden');
-    grid.innerHTML = lista.slice(0,12).map(p => {
-        const img = p.imageUrl
-            ? `<img src="${p.imageUrl}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`
-            : `<div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-xl flex-shrink-0">${p.image||'📦'}</div>`;
-        return `<div onclick="seleccionarProductoPedido('${p.id}')"
-            class="cursor-pointer border border-gray-200 rounded-xl p-2 hover:border-amber-400 hover:bg-amber-50 transition-all flex items-center gap-3">
-            ${img}<div class="min-w-0">
-                <div class="text-xs font-semibold text-gray-800 truncate">${p.name}</div>
-                <div class="text-xs text-amber-700 font-bold">$${Number(p.price).toFixed(2)}</div>
-            </div></div>`;
-    }).join('');
-}
-window.filtrarProductosPedido = filtrarProductosPedido;
-
-function seleccionarProductoPedido(pid) {
-    const prod = (window.products||[]).find(p => String(p.id)===String(pid));
-    if (!prod) return;
-    document.getElementById('pedidoProductoSelect').value = pid;
-    document.getElementById('pedidoProductoGrid')?.classList.add('hidden');
-    if(document.getElementById('pedidoBuscadorProducto')) document.getElementById('pedidoBuscadorProducto').value='';
-    const row = document.getElementById('pedidoProductoSelRow');
-    if (row) row.classList.remove('hidden');
-    if(document.getElementById('pedidoProductoSelNombre')) document.getElementById('pedidoProductoSelNombre').textContent = prod.name;
-    if(document.getElementById('pedidoProductoSelPrecio')) document.getElementById('pedidoProductoSelPrecio').textContent = '$'+Number(prod.price).toFixed(2);
-    mostrarVariantesPedido();
-}
-window.seleccionarProductoPedido = seleccionarProductoPedido;
-
-function limpiarSeleccionProductoPedido() {
-    if(document.getElementById('pedidoProductoSelect')) document.getElementById('pedidoProductoSelect').value='';
-    document.getElementById('pedidoProductoSelRow')?.classList.add('hidden');
-    document.getElementById('pedidoVarianteRow')?.classList.add('hidden');
-    if(document.getElementById('pedidoBuscadorProducto')) document.getElementById('pedidoBuscadorProducto').value='';
-}
-window.limpiarSeleccionProductoPedido = limpiarSeleccionProductoPedido;
 
 function mostrarVariantesPedido() {
     const pid = document.getElementById('pedidoProductoSelect')?.value;
