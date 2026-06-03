@@ -158,8 +158,11 @@ function manekiExportar(tipo) {
 // Destruir+crear en cada updateDashboard() tiene costo de inicialización (~5ms) y puede
 // causar memory leaks si hay animaciones en vuelo. chart.update() es O(datos) sin overhead.
 let sparklineChart = null;
-// Helper: fecha local YYYY-MM-DD (evita bug UTC donde toISOString() puede dar el día siguiente)
-function _fechaLocal(d) {
+// Helper: fecha local YYYY-MM-DD para un Date pasado como argumento
+// (renombrada de _fechaLocal → _fechaLocalDe para no colisionar con balance.ts
+//  que tenía una _fechaLocal() sin argumentos — la colisión hacía que sparkline
+//  y comparativaSemanal siempre recibieran la fecha de HOY en vez de la histórica)
+function _fechaLocalDe(d) {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
@@ -224,7 +227,7 @@ function renderSparkline() {
     const datos = [], labels = [];
     for (let i = 6; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-        const dStr = _fechaLocal(d);
+        const dStr = _fechaLocalDe(d);
         labels.push(d.toLocaleDateString('es-MX', {weekday:'short'}));
         datos.push(_totalVentasDia(dStr));
     }
@@ -267,7 +270,7 @@ function renderComparativaSemanal() {
         let total = 0;
         for (let i = 0; i < 7; i++) {
             const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - offsetDays - i);
-            total += _totalVentasDia(_fechaLocal(d));
+            total += _totalVentasDia(_fechaLocalDe(d));
         }
         return total;
     };
@@ -486,7 +489,7 @@ function busquedaGlobal(query) {
           onmousedown="cerrarBusquedaGlobal(); showSection('inventory'); setTimeout(()=>{ if(typeof editProduct==='function') editProduct(this.dataset.id); },300);">
         ${img}
         <div class="flex-1 min-w-0">
-          <div class="font-medium text-gray-800 truncate">${p.name}</div>
+          <div class="font-medium text-gray-800 truncate">${_esc(p.name)}</div>
           <div class="text-xs text-gray-400">Stock: ${p.stock ?? '—'} · SKU: ${p.sku||'—'}</div>
         </div>
         <div class="text-amber-700 font-bold text-sm flex-shrink-0">$${Number(p.price||0).toFixed(2)}</div>
@@ -509,7 +512,7 @@ function busquedaGlobal(query) {
           onmousedown="cerrarBusquedaGlobal(); showSection('clientes'); setTimeout(()=>{ const searchInput = document.getElementById('searchClient'); if(searchInput && '${c.name.replace(/'/g,"\\'")}') { searchInput.value = '${c.name.replace(/'/g,"\\'")}'; searchInput.dispatchEvent(new Event('input', { bubbles: true })); } }, 200);">
         <span class="text-lg">👤</span>
         <div class="flex-1 min-w-0">
-          <div class="font-medium text-gray-800">${c.name}</div>
+          <div class="font-medium text-gray-800">${_esc(c.name)}</div>
           <div class="text-xs text-gray-400">${c.phone||c.telefono||'Sin teléfono'} · ${ventas} venta${ventas!==1?'s':''} · ${pedidosCli} pedido${pedidosCli!==1?'s':''}</div>
         </div>
         <div class="text-blue-400 text-xs flex-shrink-0">Ver →</div>
@@ -698,8 +701,8 @@ function irAReportes() {
             stockAntes: stockActual, stockDespues: p.stock
           });
         } catch(e) {
-          // Firma vieja: (id, name, tipo, cantidad, motivo)
-          try { registrarMovimiento(p.id, p.name, num > 0 ? 'entrada' : 'salida', Math.abs(num), motivo); } catch(e2) {}
+          // Firma objeto canónica (inventory-1.ts)
+          try { registrarMovimiento({ productoId: p.id, productoNombre: p.name, tipo: num > 0 ? 'entrada' : 'salida', cantidad: Math.abs(num), motivo: motivo || '' }); } catch(e2) {}
         }
       }
       if (typeof saveProducts  === 'function') saveProducts();

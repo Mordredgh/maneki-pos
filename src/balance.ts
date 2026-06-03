@@ -1,12 +1,10 @@
 // ============== BALANCE MODULE ==============
 
-// FIX 1 — Timezone: fecha local sin conversión UTC
-// Delegates to global _fechaHoy() (config.js) to avoid duplicate logic
-function _fechaLocal() {
-    if (typeof _fechaHoy === 'function') return _fechaHoy();
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-}
+// FIX 1 — _fechaLocal() removed: use global _fechaHoy() (config.js) directly
+// (having a local _fechaLocal() here caused a collision with ui-extras.ts's
+//  _fechaLocal(d) that accepts a Date argument — after balance.ts loaded, the
+//  no-arg version overwrote the global, making sparkline and comparativa semanal
+//  always return today's date instead of a historical one.)
 
 // FIX 5 — CxC unificada: calcula saldo pendiente de un pedido usando pagos[] como fuente de verdad
 const calcSaldoPendiente = (p) => {
@@ -320,10 +318,10 @@ window.exportarBalanceMesCSV = exportarBalanceMesCSV;
 function toggleMovimientos() {
     const panel = document.getElementById('movimientosPanel');
     panel.classList.toggle('hidden');
-    if (!panel.classList.contains('hidden')) renderMovimientos();
+    if (!panel.classList.contains('hidden')) _renderMovimientosBalance();
 }
 
-function renderMovimientos() {
+function _renderMovimientosBalance() {
     const q = _norm(document.getElementById('movBuscar')?.value || '');
     const lista = document.getElementById('movimientosLista');
     const filtrados = [...(window.stockMovimientos||[])].reverse().filter(m =>
@@ -358,7 +356,7 @@ function limpiarMovimientos() {
         window.stockMovimientos = [];
         window.stockMovements = []; // alias si existe
         saveStockMovimientos();
-        renderMovimientos();
+        _renderMovimientosBalance();
         manekiToastExport('🗑️ Historial limpiado', 'ok');
     });
 }
@@ -1241,7 +1239,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                     // FIX #10: concepto descriptivo con nombre del cliente
                     const concept = `Cobro realizado: ${rec.client || rec.concept || 'CxC #' + id}`;
                     receivables.splice(index, 1);
-                    incomes.push({ id: mkId(), concept, amount, date: _fechaLocal() }); // FIX 1: fecha local
+                    incomes.push({ id: mkId(), concept, amount, date: _fechaHoy() }); // FIX 1: fecha local
                     saveReceivables();
                     saveIncomes();
                 }
@@ -1253,7 +1251,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                     // FIX #10: concepto descriptivo con nombre del proveedor
                     const concept = `Pago realizado: ${pay.supplier || pay.concept || 'CxP #' + id}`;
                     payables.splice(index, 1);
-                    expenses.push({ id: mkId(), concept, amount, date: _fechaLocal(), fromPayable: true }); // FIX 1: fecha local; fromPayable: evitar doble conteo
+                    expenses.push({ id: mkId(), concept, amount, date: _fechaHoy(), fromPayable: true }); // FIX 1: fecha local; fromPayable: evitar doble conteo
                     savePayables();
                     saveExpenses();
                 }
