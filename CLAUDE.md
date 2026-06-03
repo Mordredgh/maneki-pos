@@ -1,7 +1,7 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 2 junio 2026 — Sesión 10 (Auditoría exhaustiva II: 50+ fixes bugs/perf/ux/sec/nice-to-have)
-> **Versión app:** 2.2.0 | **Service Worker:** v2.3.5 | **Branch:** fresh-start → master
+> **Última actualización:** 2 junio 2026 — Sesión 11 (Rediseño dashboard + todas las nice-to-have + fixes consola/performance)
+> **Versión app:** 2.2.0 | **Service Worker:** v2.3.6 | **Branch:** fresh-start → master
 
 ---
 
@@ -352,28 +352,86 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
 ---
 
-## ✅ PENDIENTES — Todos resueltos en Sesión 10 (2 junio 2026)
+## ✅ PENDIENTES — Sin pendientes de código (2 junio 2026)
 
-Auditoría exhaustiva II: 5 agentes en paralelo aplicaron 50+ mejoras. Commits: `d3bdad0` (UX/CSS/SW) + `cdf8c45` (TS/JS).
+Todo el backlog de auditorías fue aplicado. Lo único pendiente requiere infraestructura externa.
 
-### Sesión 10 — Resumen de cambios
+### Sesión 11 (2 junio 2026) — Rediseño dashboard + todas las nice-to-have + fixes
 
-| Área | Cambios |
-|------|---------|
-| **Bugs** | BUG-5 rollback window.products en inventario, BUG-2 mensaje folio, SEC-4 validación versión backup |
-| **Performance** | P-7 prodMap O(1) en descuento inventario, P-1 debounce búsqueda 300ms, P-2 _getAllVentas() una vez, P-3 chart.update('none') vs destroy |
-| **UX** | Wizard steps 1-4 en modal pedido, label "Precio personalizado", anticipo min=0, tooltips en campos clave, estado Cancelado contraste |
-| **CSS** | Placeholder opacidad .75, sidebar dark mode .88, shimmer skeleton, cursor:help en [title], cancelado line-through |
-| **Nice-to-have** | N-KANBAN-003 badges contador columnas, N-SEARCH-003/005 filter badges + limpiar, N-UI-12 duplicar pedido, N-UI-10 filtros guardados localStorage, empty states inventario/balance/clientes/RFM, badge pop animation |
-| **SW** | v2.3.5: cache-first para assets locales, network-first solo para Supabase/APIs |
+#### Dashboard rediseño v2 (commits `73baaf1`, `a08fe1b`)
+- Hero header oscuro premium (`#1A0533→#2D0B5C`) con grain, glow, línea dorada
+- KPI row: 5 cards con accent bars de color (meta integrada + ventas/ganancia/pedidos/me deben)
+- Layout 3:2 (gráficas izq / info operativa der), stats 3 col + 2 col + notas
+- CSS: `.mk-dash-hero`, `.mk-kpi-v2`, `.mk-dash-content-grid`, `.mk-dash-stats-row-2`
 
-### ℹ️ Notas permanentes de seguridad
+#### Nice-to-have aplicadas (commits `5fa059e`, `a08fe1b`)
+
+| Feature | Descripción | Archivos |
+|---------|-------------|---------|
+| N-KANBAN-002 | Sub-headers urgencia dentro columnas (Urgente/Próximo/Normal) | `pedidos-1.ts` |
+| N-KANBAN-004 | Doble-clic en fecha → inline date picker + save inmediato | `pedidos-1.ts` |
+| N-KANBAN-005 | Undo visual si falla drop: card shake + regresa a columna | `pedidos-2.ts` |
+| N-ANIM-002 | Bounce dorado al mover card exitosamente (`mkKanbanMoved`) | `pedidos-2.ts`, `maneki-premium.css` |
+| N-PEDIDOS-004 | Saldo pendiente del cliente visible al abrirse el modal | `pedidos-1.ts` |
+| N-PEDIDOS-005 | Precio promedio histórico del cliente como hint | `pedidos-1.ts` |
+| UX-3 JS | Wizard steps 1→4 se activan según campo enfocado | `pedidos-1.ts` |
+| N-EMPTY-002 | Empty states diferenciados en tabla pedidos | `pedidos-1.ts` |
+| N-VIZ-001 | Tendencia lineal (regresión) en gráfica flujo de caja | `dashboard.ts` |
+| N-VIZ-002 | Donut chart gastos por categoría en balance mensual | `balance.ts` |
+| N-VIZ-003 | Heatmap 7×6 actividad pedidos por día × bloque horario | `dashboard.ts` |
+| N-SEARCH-004 | Fuzzy search Levenshtein (threshold=2) en inventario y clientes | `inventory-5.ts`, `clientes.ts` |
+| N-TOOLTIP-003 | Tooltips en badges predicción stock (prom/día + stock + días) | `dashboard.ts` |
+| DES-006 | Eliminar cliente usa `showConfirm()` del design system | `clientes.ts` |
+| N-KEY-001 | Ctrl+A → seleccionar todos en inventario | `ui-extras.ts` |
+| N-KEY-002 | Ctrl+Q → abrir cotizaciones | `ui-extras.ts` |
+| N-KEY-003 | Ctrl+E → exportar sección activa | `ui-extras.ts` |
+
+#### Fixes de bugs consola (commits `1b97e56`, `c611d18`, `78630ad`, `ad535e8`)
+
+| Bug | Causa | Fix |
+|-----|-------|-----|
+| Error 400 `clients` | Tabla sin columna `updated_at`, queries fallaban | Migración Supabase + `updated_at` en `saveClients()` upsert |
+| SW `TypeError: clone body used` | `response.clone()` dentro de callback async ya consumido | Clonar síncronamente antes de `return response` → v2.3.6 |
+| `ReferenceError: eliminarPedidoFinalizado` | `window.X = X` en `pedidos-3.ts` fuera de scope | Mover asignación a `balance.ts` donde la función existe |
+| `ReferenceError: openPtModal/MpModal/SvcModal` | Aliases en HTML no existían como funciones globales | Aliases en `inventory-1.ts` que mapean a funciones reales |
+
+#### Performance fixes (commits `ca16d52`, `78630ad`, `757302d`)
+
+| Fix | Impacto |
+|-----|---------|
+| `animarNumero`: `_fmtFast()` para frames intermedios (~0.1ms vs ~8ms) | Elimina rAF >50ms violation |
+| `renderBalancePieChart`: Chart.js init diferido con rAF | Reduce forced reflow al cargar Balance |
+| `navigation.ts`: `void target.offsetWidth` → `animationName:none + rAF` | Elimina reflow en **cada** cambio de sección |
+| `design-system.ts`: `void _overlay.offsetWidth` → doble rAF | Elimina reflow en morph de sección |
+| `dashboard.ts`: 2× `void badge.offsetWidth` → doble rAF | Elimina reflow en actualización de badges |
+| `pedidos-2.ts`: `void card.offsetWidth` → doble rAF | Elimina reflow en animación kanban |
+| `navigation.ts`: `sidebarBtn.animate()` → rAF | Elimina reflow de Web Animations API |
+| Charts en `_updateDashboardImpl` → un único rAF | Defer Chart.js getBoundingClientRect |
+| `[DOM] Password not in form` → `<form>` en inputs PIN | Elimina warning DOM en consola |
+
+### ℹ️ Notas permanentes (infraestructura — no solucionable en frontend)
 
 | # | Área | Nota |
 |---|------|------|
-| S-NGINX | Rate limiting | Pendiente agregar `limit_req_zone` en nginx para proteger Basic Auth contra brute-force |
-| S-TOKEN | Supabase | RLS **verificado activo** en todas las tablas. Telegram Token en `storeConfig` sigue como string plano — fix real requiere Edge Function proxy. No hay solución frontend-only segura. |
-| BUG-2 | Folios | Race condition multi-tab sigue requiriendo UNIQUE constraint en Supabase a nivel DB para solución completa |
+| S-NGINX | Rate limiting | Pendiente: `limit_req_zone` en nginx contra brute-force Basic Auth |
+| S-TOKEN | Telegram token | En `storeConfig` como string plano — fix requiere Edge Function proxy |
+| BUG-2 | Folios multi-tab | Race condition requiere UNIQUE constraint en Supabase a nivel DB |
+
+### ⚠️ Convención importante descubierta en Sesión 11
+
+```
+// Aliases de modales de inventario (NO cambiar nombres en index.html sin actualizar inventory-1.ts)
+window.openPtModal  → openAddProductModal()           // Producto Terminado
+window.openMpModal  → injectMpModal() + openModal()   // Materia Prima
+window.openSvcModal → injectSvcModal() + openModal()  // Servicio
+// Producto Variable tiene su propio modal independiente
+
+// Tabla 'clients' en Supabase tiene columna updated_at (agregada sesión 11)
+// saveClients() DEBE incluir updated_at: new Date().toISOString() en el upsert row
+
+// void element.offsetWidth está PROHIBIDO para reiniciar animaciones CSS
+// Usar: element.classList.remove('cls'); rAF(() => rAF(() => element.classList.add('cls')));
+```
 
 ---
 
