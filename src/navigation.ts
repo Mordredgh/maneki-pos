@@ -32,7 +32,13 @@ function showSection(sectionName) {
     const sidebarBtn = document.querySelector(`[data-section="${sectionName}"]`);
     if (sidebarBtn) {
         sidebarBtn.classList.add('active');
-        sidebarBtn.animate([{background:'rgba(197,151,59,0.35)'},{background:'rgba(197,151,59,0.20)'}],{duration:400,easing:'ease-out'});
+        // Defer Web Animations API (lee layout en el starting state → forced reflow)
+        requestAnimationFrame(() => {
+            (sidebarBtn as HTMLElement).animate(
+                [{background:'rgba(197,151,59,0.35)'},{background:'rgba(197,151,59,0.20)'}],
+                {duration:400, easing:'ease-out'}
+            );
+        });
     }
 
     if (window.innerWidth < 768) document.getElementById('sidebar')?.classList.add('collapsed');

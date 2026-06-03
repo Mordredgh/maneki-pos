@@ -433,12 +433,16 @@ function _updateDashboardImpl() {
     }
     if (ar) animarNumero(ar, 0, accountsReceivable, 700, '$', '');
     if (ap) ap.textContent = activePedidos;
-    try { renderSparkline(); } catch(e) {}
-    try { renderComparativaSemanal(); } catch(e) {}
-    try { renderCashFlowChart(); } catch(e) {}
-    try { checkGastosInusuales(); } catch(e) {}
-    try { renderWidgetClima(); } catch(e) {}
-    try { renderHeatmapPedidos(); } catch(e) {}
+    // Defer chart renders al siguiente frame — Chart.js llama getBoundingClientRect()
+    // internamente al inicializar, lo que fuerza layout si hay escrituras DOM pendientes.
+    requestAnimationFrame(() => {
+        try { renderSparkline(); } catch(e) {}
+        try { renderComparativaSemanal(); } catch(e) {}
+        try { renderCashFlowChart(); } catch(e) {}
+        try { checkGastosInusuales(); } catch(e) {}
+        try { renderWidgetClima(); } catch(e) {}
+        try { renderHeatmapPedidos(); } catch(e) {}
+    });
 
     // R2-A5: Desglose "Me deben" por cliente — onclick en la tarjeta
     const arCard = ar ? ar.closest('[onclick]') || ar.parentElement : null;

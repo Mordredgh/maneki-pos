@@ -2065,17 +2065,17 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                   <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
                     <p class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-lock mr-2 -dk" style="color:#C4A8E0;"></i>Cambiar PIN de acceso</p>
-                    <div class="grid grid-cols-3 gap-2">
-                      <input type="password" id="pinActual" maxlength="8" placeholder="PIN actual"
+                    <form onsubmit="cambiarPIN(); return false;" autocomplete="on" class="grid grid-cols-3 gap-2">
+                      <input type="password" id="pinActual" name="pin-actual" maxlength="8" placeholder="PIN actual"
                              class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none text-center font-mono" autocomplete="current-password">
-                      <input type="password" id="pinNuevo" maxlength="8" placeholder="PIN nuevo"
+                      <input type="password" id="pinNuevo" name="pin-nuevo" maxlength="8" placeholder="PIN nuevo"
                              class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none text-center font-mono" autocomplete="new-password">
-                      <button onclick="cambiarPIN()"
+                      <button type="submit"
                               class="px-3 py-2 rounded-xl text-white text-sm font-bold"
                               style="background:linear-gradient(135deg,#9B7BC4,#C4A8E0)">
                         Cambiar
                       </button>
-                    </div>
+                    </form>
                   </div>
 
                   <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
