@@ -1,6 +1,6 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 2 junio 2026 — Sesión 11 (Rediseño dashboard + todas las nice-to-have + fixes consola/performance)
+> **Última actualización:** 3 junio 2026 — Sesión 12 (Auditoría profunda 5 agentes — 19 bugs corregidos)
 > **Versión app:** 2.2.0 | **Service Worker:** v2.3.6 | **Branch:** fresh-start → master
 
 ---
@@ -352,9 +352,53 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
 ---
 
-## ✅ PENDIENTES — Sin pendientes de código (2 junio 2026)
+## ✅ PENDIENTES — Sin pendientes de código (3 junio 2026)
 
 Todo el backlog de auditorías fue aplicado. Lo único pendiente requiere infraestructura externa.
+
+### Sesión 12 (3 junio 2026) — Auditoría profunda 5 agentes: 19 bugs corregidos
+
+**Metodología:** 5 agentes en paralelo con isolation worktree. 4 commits en `fresh-start`.
+
+| Commit | Área | Fixes |
+|--------|------|-------|
+| `a040faf` | balance + ui-extras | `_fechaLocal` colisión, `renderMovimientos` rename, `registrarMovimiento` posicional, XSS nombres |
+| `7d97059` | db | incomes/expenses read path, sbSave promesas, image retry, RT deferred queue, registrarMovimiento duplicado |
+| `692850f` | reportes + clientes | `_getAllVentas` muta salesHistory, cacheKey mejorado, trio duplicado eliminado, XSS, escAttr fallback |
+| `e02d73b` | inv-2 + config + pedidos + dashboard | rollback saveProducts, ganancia neta correcta, XSS ×6, null guards ×7, setInterval handle |
+
+**Críticos resueltos:**
+- `_fechaLocal` en balance.ts sobrescribía la versión de ui-extras → sparkline y comparativa semanal siempre mostraban hoy. **Fix:** eliminada de balance.ts, renombrada en ui-extras a `_fechaLocalDe(d)`.
+- `_getAllVentas()` mutaba objetos reales de `salesHistory` → totales podían persistirse alterados. **Fix:** `Object.assign({}, s, {...})` en lugar de mutación directa.
+- `saveIncomes`/`saveExpenses` escribían en tabla relacional pero `sbLoad` leía del store vacío → datos desaparecían al recargar. **Fix:** `incomes`/`expenses` agregados a `_RELATIONAL_TABLES`.
+- `sbSave()` dejaba promesas colgadas al cancelar debounce. **Fix:** `_sbSavePendingCbs` registry que resuelve/rechaza todos los waiters.
+- Realtime descartaba updates con modal abierto. **Fix:** `_rtDeferredQueue` que re-encola y ejecuta al cerrar modal.
+- `renderMovimientos` duplicada (balance vs inventory-5) escribía en el mismo `#movimientosLista`. **Fix:** renombrada la de balance a `_renderMovimientosBalance()`.
+- Rollback de `saveProducts` era código muerto (fuera del try, sin await). **Fix:** `await saveProducts()` dentro del try con catch que activa `_rollbackData`.
+- `registrarMovimiento` duplicada con firmas incompatibles (posicional en db.ts vs objeto en inventory-1.ts). **Fix:** eliminada la posicional de db.ts; corregida llamada en ui-extras.ts.
+- Ganancia neta inflada en dashboard: `totalCosts` no incluía pedidos finalizados. **Fix:** `totalCosts += costo` en el loop de pedidosFinalizados.
+- `client.name.toLowerCase()` crash con null. **Fix:** `(client.name || '').toLowerCase()`.
+- ~15 puntos de `p.name`/`c.name` sin `_esc()` en innerHTML. **Fix:** aplicado en ui-extras, reportes, pedidos-2/3, inventory-2, config.
+- Trio `filtrarProductosPedido/seleccionar/limpiar` duplicado en reportes.ts. **Fix:** eliminado (canónico en pedidos-3.ts).
+- `setInterval` verificarEntregas sin handle. **Fix:** `window._entregasCheckInterval` con clearInterval previo.
+- `_migrationFailed` flag permanente impedía reintentos de migración base64→Storage. **Fix:** eliminado.
+
+### ⚠️ Notas Sesión 12 (convenciones descubiertas)
+
+```
+// _fechaLocal: NO usar este nombre en ningún módulo — colisiona
+// Usar _fechaHoy() para "hoy" y _fechaLocalDe(d) (ui-extras) para formatear fecha arbitraria
+
+// renderMovimientos: nombre reservado para inventory-5.ts (movimientos de stock)
+// la versión de balance se llama _renderMovimientosBalance()
+
+// registrarMovimiento: siempre usar firma de objeto (inventory-1.ts)
+//   ✅ registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motivo, stockAntes, stockDespues })
+//   ❌ registrarMovimiento(id, nombre, tipo, cantidad, motivo) — eliminado
+
+// _getAllVentas(): nunca mutar los objetos del array devuelto — son referencias a salesHistory
+// Usar Object.assign({}, s, {...}) si necesitas modificar propiedades
+```
 
 ### Sesión 11 (2 junio 2026) — Rediseño dashboard + todas las nice-to-have + fixes
 
