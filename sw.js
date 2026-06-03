@@ -1,4 +1,4 @@
-const CACHE_NAME = "maneki-v2.3.4";
+const CACHE_NAME = "maneki-v2.3.5";
 
 // P6: assets críticos (deben estar en caché para que la app arranque)
 const CRITICAL_ASSETS = [
@@ -106,6 +106,23 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
+  // P-6: Para assets locales (mismo hostname) → cache-first
+  if (url.hostname === self.location.hostname) {
+    e.respondWith(
+      caches.match(e.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(e.request).then((response) => {
+          if (response.ok && e.request.method === "GET") {
+            caches.open(CACHE_NAME).then((c) => c.put(e.request, response.clone()));
+          }
+          return response;
+        }).catch(() => caches.match(e.request));
+      })
+    );
+    return;
+  }
+
+  // Resto (otros orígenes no cubiertos arriba): network-first
   e.respondWith(
     fetch(e.request).then((response) => {
       if (response.ok && e.request.method === "GET") {

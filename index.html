@@ -849,6 +849,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   <div class="relative flex-1 min-w-[200px]">
     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
     <input type="text" id="inventorySearch" placeholder="Buscar producto, SKU o código..."
+      title="Busca por nombre, SKU o proveedor"
       oninput="(function(v){clearTimeout(window._invSearchT);window._invSearchT=setTimeout(function(){renderInventoryTable();},160);})(this.value)"
       class="pl-9 pr-4 py-2 w-full border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
   </div>
@@ -1754,6 +1755,10 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <button onclick="document.getElementById('pedidoFechaDesde').value='';document.getElementById('pedidoFechaHasta').value='';renderPedidosTable()"
                     class="px-3 py-2 rounded-xl text-sm text-gray-500 border border-gray-200 hover:bg-gray-50"
                     title="Limpiar fechas">✕ Fechas</button>
+                <button onclick="window._guardarFiltroActual?.()" title="Guardar esta combinación de filtros" class="text-xs px-2 py-1 border border-gray-200 rounded text-gray-500 hover:border-amber-300 hover:text-amber-600 transition-colors">💾 Guardar</button>
+                <select id="filtrosGuardadosSelect" onchange="window._cargarFiltroGuardado?.(this.value); this.value=''" class="text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 max-w-[140px]">
+                  <option value="">📁 Mis filtros...</option>
+                </select>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                 <div class="overflow-x-auto">
@@ -2272,7 +2277,7 @@ input:focus, select:focus, textarea:focus, button:focus {
           <p class="text-xs text-gray-400 mt-1">Opcional — de dónde obtienes este producto</p>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">📝 Notas internas</label>
+          <label class="block text-sm font-semibold text-gray-700 mb-2" title="Solo visible para el equipo — no aparece en recibos ni mensajes al cliente">📝 Notas internas</label>
           <textarea id="productNotas" rows="2" placeholder="Ej: proveedor, instrucciones especiales, recordatorios..."
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none text-sm resize-none"></textarea>
         </div>
@@ -2368,7 +2373,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
 
              <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">📝 Notas internas</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2" title="Solo visible para el equipo — no aparece en recibos ni mensajes al cliente">📝 Notas internas</label>
                     <textarea id="clientNotas" rows="2" placeholder="Ej: cliente frecuente, preferencias, alergias..."
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none text-sm resize-none"></textarea>
                 </div>
@@ -2723,6 +2728,28 @@ input:focus, select:focus, textarea:focus, button:focus {
             <button onclick="closePedidoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="overflow-y-auto flex-1 px-8">
+        <!-- UX-3: Barra de pasos visual -->
+        <div id="pedido-steps" class="flex items-center gap-1 mb-5 pb-4 border-b border-gray-100">
+          <div class="flex-1 text-center">
+            <div class="w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mx-auto">1</div>
+            <p class="text-xs mt-1 text-amber-600 font-medium">Cliente</p>
+          </div>
+          <div class="flex-1 h-px bg-gray-200 mt-[-10px]"></div>
+          <div class="flex-1 text-center">
+            <div class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center mx-auto">2</div>
+            <p class="text-xs mt-1 text-gray-400">Productos</p>
+          </div>
+          <div class="flex-1 h-px bg-gray-200 mt-[-10px]"></div>
+          <div class="flex-1 text-center">
+            <div class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center mx-auto">3</div>
+            <p class="text-xs mt-1 text-gray-400">Detalles</p>
+          </div>
+          <div class="flex-1 h-px bg-gray-200 mt-[-10px]"></div>
+          <div class="flex-1 text-center">
+            <div class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center mx-auto">4</div>
+            <p class="text-xs mt-1 text-gray-400">Confirmar</p>
+          </div>
+        </div>
         <form id="pedidoForm" class="space-y-4 pb-2">
             <input type="hidden" id="editPedidoId">
             <div class="grid grid-cols-2 gap-4">
@@ -2780,8 +2807,8 @@ input:focus, select:focus, textarea:focus, button:focus {
   <div id="pedidoPrecioLibreRow" class="mt-3 flex items-center gap-3 p-3 bg-amber-50 border-2 border-amber-300 rounded-xl">
     <span class="text-amber-700 text-lg">💵</span>
     <div class="flex-1">
-      <label class="text-sm font-bold text-amber-800 block mb-0.5">Precio del pedido *</label>
-      <p class="text-xs text-amber-600">No agregaste productos del inventario — escribe aquí el precio total a cobrar</p>
+      <label class="text-sm font-bold text-amber-800 block mb-0.5">Precio personalizado</label>
+      <p class="text-xs text-gray-400 mt-0.5">Reemplaza el precio calculado automáticamente</p>
     </div>
     <input type="number" id="pedidoPrecioLibre" step="0.01" min="0" value="" placeholder="0.00"
            class="w-28 px-3 py-2 border-2 border-amber-400 rounded-lg outline-none text-sm font-bold text-gray-800 bg-white text-right"
@@ -2807,7 +2834,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div id="pedidoEmpaquesList" class="space-y-1"></div>
   </div>
 </div>
-            <div><label class="block text-sm font-semibold text-gray-700 mb-2">¿Qué pidieron?</label><input type="text" id="pedidoConcepto" list="conceptoSuggestions" placeholder="Ej: Taza personalizada con logo de empresa" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"><datalist id="conceptoSuggestions"></datalist></div>
+            <div><label class="block text-sm font-semibold text-gray-700 mb-2" title="Descripción del producto o servicio personalizado">¿Qué pidieron?</label><input type="text" id="pedidoConcepto" list="conceptoSuggestions" placeholder="Ej: Taza personalizada con logo de empresa" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"><datalist id="conceptoSuggestions"></datalist></div>
             <input type="hidden" id="pedidoCantidad" value="1">
             <input type="hidden" id="pedidoCosto" value="0">
             <div class="bg-gray-50 rounded-xl p-4 space-y-3">
@@ -3483,5 +3510,51 @@ input:focus, select:focus, textarea:focus, button:focus {
   </button>
 </nav>
 <script>if("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(function(){})</script>
+<script>
+// N-UI-10: Filtros guardados en pedidos
+(function() {
+    const FK = 'mk_filtros_guardados';
+    function _getFiltros() { try { return JSON.parse(localStorage.getItem(FK)||'[]'); } catch(e){ return []; } }
+    function _guardarFiltroActual() {
+        var nombre = prompt('Nombre para este filtro:');
+        if (!nombre || !nombre.trim()) return;
+        var filtros = {
+            buscar: (document.getElementById('pedidoBuscar')||{}).value || (document.getElementById('tablaBuscarInput')||{}).value || '',
+            pago: (document.getElementById('filtroPago')||{}).value || (document.getElementById('filtroStatusPago')||{}).value || '',
+            urgencia: (document.getElementById('filtroUrgencia')||{}).value || '',
+            desde: (document.getElementById('pedidoFechaDesde')||{}).value || '',
+            hasta: (document.getElementById('pedidoFechaHasta')||{}).value || ''
+        };
+        var guardados = _getFiltros();
+        guardados.push({ nombre: nombre.trim(), filtros: filtros });
+        localStorage.setItem(FK, JSON.stringify(guardados));
+        _actualizarSelectFiltros();
+    }
+    function _cargarFiltroGuardado(nombre) {
+        if (!nombre) return;
+        var guardados = _getFiltros();
+        var f = guardados.find(function(g){ return g.nombre === nombre; });
+        if (!f) return;
+        function set(id, val) { var el = document.getElementById(id); if(el) el.value = val; }
+        set('pedidoBuscar', f.filtros.buscar); set('tablaBuscarInput', f.filtros.buscar);
+        set('filtroPago', f.filtros.pago); set('filtroStatusPago', f.filtros.pago);
+        set('filtroUrgencia', f.filtros.urgencia);
+        set('pedidoFechaDesde', f.filtros.desde);
+        set('pedidoFechaHasta', f.filtros.hasta);
+        (window.renderTablaPedidos || window.filtrarPedidos || window.renderPedidosTable || window.renderKanbanBoard || function(){})();
+    }
+    function _actualizarSelectFiltros() {
+        var sel = document.getElementById('filtrosGuardadosSelect');
+        if (!sel) return;
+        var guardados = _getFiltros();
+        sel.innerHTML = '<option value="">📁 Mis filtros...</option>' +
+            guardados.map(function(g){ return '<option value="' + g.nombre.replace(/"/g,'&quot;') + '">' + g.nombre + '</option>'; }).join('');
+    }
+    window._guardarFiltroActual = _guardarFiltroActual;
+    window._cargarFiltroGuardado = _cargarFiltroGuardado;
+    window._actualizarSelectFiltros = _actualizarSelectFiltros;
+    document.addEventListener('DOMContentLoaded', _actualizarSelectFiltros);
+})();
+</script>
 </body>
 </html>

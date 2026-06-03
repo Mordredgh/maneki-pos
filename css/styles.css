@@ -71,7 +71,7 @@
             --text-primary:   var(--ink);
             --text-secondary: var(--ink2);
             --text-muted:     var(--ink3);
-            --text-placeholder: rgba(155,123,90,0.5);
+            --text-placeholder: rgba(155,123,90,0.75);
 
             /* Bordes */
             --border-subtle:  rgba(201,147,58,0.1);
@@ -427,6 +427,8 @@
         button, a, [onclick], .clickable, .cursor-pointer, .numpad-btn, .sidebar-item, .kanban-card {
             cursor: pointer;
         }
+        /* N-UI-2: cursor help para elementos con tooltip */
+        [title]:not(input):not(select):not(textarea):not(button) { cursor: help; }
 
         /* ── TIPOGRAFÍA BASE ── */
         h1 { font-family: 'Outfit', sans-serif !important; font-weight: 800 !important; letter-spacing: -0.03em !important; }
@@ -775,6 +777,13 @@
         .skeleton-text  { height: 14px; margin-bottom: 6px; }
         .skeleton-title { height: 28px; width: 60%; }
         .skeleton-badge { height: 24px; width: 40%; border-radius: 12px; }
+        /* Shimmer class reutilizable */
+        .skeleton-shimmer {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
 
         /* ── PRIVACY MODE ── */
         .privacy-hidden {
@@ -983,7 +992,7 @@ body.dark aside#sidebar {
     box-shadow: 4px 0 32px rgba(0,0,0,0.40), 1px 0 0 rgba(201,147,58,0.10) !important;
 }
 body.dark .sidebar-item {
-    color: rgba(201,168,123,0.65) !important;
+    color: rgba(201,168,123,0.88) !important;
 }
 body.dark .sidebar-item:hover {
     background: rgba(201,147,58,0.12) !important;

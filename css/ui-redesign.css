@@ -1904,6 +1904,13 @@ body.dark .mk-highlight {
   color: #F5DFA8;
 }
 
+/* ══ UX-10: Estado Cancelado — mejora contraste ══ */
+/* mejora contraste cancelado */
+.status-cancelado, [data-status="cancelado"] {
+    color: #4B5563 !important;
+    text-decoration: line-through;
+}
+
 /* ════════════════════════════════════════════
    FIN DE ui-redesign.css
    Maneki POS — UI Redesign v1.0
