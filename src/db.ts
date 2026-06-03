@@ -160,6 +160,15 @@ function _rtTransformarFila(tabla, row) {
     return null;
 }
 
+// FIX #11: Cola de actualizaciones RT diferidas cuando hay modal abierto.
+// Las actualizaciones no se descartan — se encolan y se aplican al cerrar el modal.
+const _rtDeferredQueue: Array<() => void> = [];
+function _flushRTDeferred() {
+    if (document.querySelector('.modal.active')) return; // aún hay modales abiertos
+    const tasks = _rtDeferredQueue.splice(0);
+    tasks.forEach(fn => fn());
+}
+
 function _setupRealtime() {
     // Guard: db puede ser null si la inicialización async todavía no completó
     if (!db) return;
@@ -227,7 +236,10 @@ function _rtInPlace(arr, fresh) {
 // MEJ-13: Aplica cambio relacional en memoria sin recargar tabla completa.
 // Usa el payload del evento (INSERT/UPDATE/DELETE) para modificar el array local.
 async function _applyRTRelacional(tabla, payload) {
-    if (document.querySelector('.modal.active')) return;
+    if (document.querySelector('.modal.active')) {
+        _rtDeferredQueue.push(() => _applyRTRelacional(tabla, payload));
+        return;
+    }
     if (!window.pedidos && !window.products) return;
 
     const key = _rtTablaAKey[tabla];
@@ -293,7 +305,10 @@ async function _applyRTRelacional(tabla, payload) {
 
 // _applyRTDesktop — carga desde store legacy y aplica al estado local
 async function _applyRTDesktop(key) {
-    if (document.querySelector('.modal.active')) return;
+    if (document.querySelector('.modal.active')) {
+        _rtDeferredQueue.push(() => _applyRTDesktop(key));
+        return;
+    }
     if (!window.pedidos && !window.products) return;
     try {
         const fresh = await sbLoad(key, null);
@@ -461,6 +476,8 @@ function closeModal(idOrEl) {
     setTimeout(() => {
         modal.classList.remove('closing');
         modal.style.display = '';
+        // FIX #11: si no quedan modales abiertos, aplicar updates RT diferidos
+        if (!document.querySelector('.modal.active')) _flushRTDeferred();
     }, duration);
 }
 window.closeModal = closeModal;
@@ -557,6 +574,9 @@ window.addEventListener('offline', () => {
 // PERF-02: debounce del upsert a Supabase por key —
 // espera 500ms sin nuevas llamadas para la misma key antes de sincronizar.
 const _sbSaveTimers = {};
+// FIX #4: cola de callbacks pendientes por key — evita que Promises queden colgadas
+// cuando una llamada cancela el setTimeout de la anterior.
+const _sbSavePendingCbs: Record<string, Array<{resolve: (v?: any) => void, reject: (e?: any) => void}>> = {};
 // P-5: debounce independiente para escrituras a localStorage (1 segundo por key)
 const _lsWriteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 async function sbSave(key, data) {
@@ -579,15 +599,20 @@ async function sbSave(key, data) {
     }, 1000);
 
     // Supabase en la nube — sincronización asíncrona (debounced por key)
+    // FIX #4: registrar callbacks antes de cancelar timer anterior — ninguna Promise queda colgada.
     if (_sbSaveTimers[key]) clearTimeout(_sbSaveTimers[key]);
     return new Promise((resolve, reject) => {
+        if (!_sbSavePendingCbs[key]) _sbSavePendingCbs[key] = [];
+        _sbSavePendingCbs[key].push({ resolve, reject });
         _sbSaveTimers[key] = setTimeout(async () => {
             delete _sbSaveTimers[key];
+            const pending = _sbSavePendingCbs[key] || [];
+            delete _sbSavePendingCbs[key];
             try {
                 if (!db) {
                     window._pendingSync = true;
                     actualizarIndicadorConexion(false);
-                    resolve();
+                    pending.forEach(p => p.resolve());
                     return;
                 }
                 const { error } = await _withTimeout(db.from('store').upsert(
@@ -596,19 +621,19 @@ async function sbSave(key, data) {
                 if (error) {
                     window._pendingSync = true;
                     actualizarIndicadorConexion(false);
-                    reject(new Error(error.message || 'Error de Supabase'));
-                }
-                else {
+                    const err = new Error(error.message || 'Error de Supabase');
+                    pending.forEach(p => p.reject(err));
+                } else {
                     actualizarIndicadorConexion(true);
                     // #12 Actualizar indicador de sync
                     if (typeof window._mkUpdateSyncTime === 'function') window._mkUpdateSyncTime();
-                    resolve();
+                    pending.forEach(p => p.resolve());
                 }
             } catch(e) {
                 console.error('sbSave error de red:', e);
                 window._pendingSync = true;
                 actualizarIndicadorConexion(false);
-                reject(e);
+                pending.forEach(p => p.reject(e));
             }
         }, 500);
     });
@@ -671,6 +696,26 @@ const _RELATIONAL_TABLES = {
         pagos: row.pagos || [], empaques: row.empaques || [],
         historialEstados: row.historial_estados || [],
         fechaPedido: row.fecha_pedido, empaquesDescontados: row.empaques_descontados === true
+    })},
+    incomes: { table: 'incomes', min: 0, orderBy: 'date', limit: 2000, map: (row: any) => ({
+        id: row.id,
+        concept: row.concept || row.concepto || null,
+        amount: Number(row.amount || row.monto || 0),
+        date: row.date || row.fecha || null,
+        client: row.client || row.cliente || null,
+        fromPOS: row.from_pos === true,
+        folioOrigen: row.folio_origen || null,
+        pedidoId: row.pedido_id || null
+    })},
+    expenses: { table: 'expenses', min: 0, orderBy: 'date', limit: 2000, map: (row: any) => ({
+        id: row.id,
+        concept: row.concept || row.concepto || null,
+        amount: Number(row.amount || row.monto || 0),
+        date: row.date || row.fecha || null,
+        category: row.category || row.categoria || null,
+        etiqueta: row.etiqueta || null,
+        notas: row.notas || null,
+        fromPayable: row.from_payable === true
     })}
 };
 
@@ -835,21 +880,6 @@ function saveCategories()  { (async () => { await sbSave('categories', categorie
 let stockMovimientos = [];
 function saveStockMovimientos() { (async () => { await sbSave('stockMovimientos', stockMovimientos); })(); }
 
-function registrarMovimiento(productoId, productoNombre, tipo, cantidad, motivo) {
-    stockMovimientos.push({
-        id: mkId(),
-        fecha: _fechaHoy(),
-        hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}),
-        productoId, productoNombre, tipo, cantidad, motivo
-    });
-    if ((window.stockMovimientos || []).length > 500) {
-        window.stockMovimientos = window.stockMovimientos.slice(-500);
-    }
-    if (stockMovimientos.length > 500) {
-        stockMovimientos.splice(0, stockMovimientos.length - 500);
-    }
-    saveStockMovimientos();
-}
 // ── Comprime un data URL base64 usando Canvas (max 1200px, calidad 0.82) ──
 // Devuelve un nuevo data URL JPEG comprimido, siempre < 1 MB aprox.
 function _comprimirBase64(dataUrl) {
@@ -878,8 +908,6 @@ function _comprimirBase64(dataUrl) {
 async function _migrarBase64AStorage(p) {
     if (!p.imageUrl || p.imageUrl.startsWith('http')) return p.imageUrl || null;
     if (!p.imageUrl.startsWith('data:')) return null;
-    // MEJ-18: si ya falló antes, no reintentar hasta próxima sesión
-    if (p._migrationFailed) return null;
     // MEJ-18: si ya migró exitosamente, no volver a intentar
     if (p._base64Migrated) return p.imageUrl;
     try {
@@ -919,7 +947,6 @@ async function _migrarBase64AStorage(p) {
         return urlData.publicUrl;
     } catch(e) {
         console.warn(`No se pudo migrar imagen de "${p.name}" a Storage:`, e);
-        p._migrationFailed = true; // MEJ-18: evitar re-intentos en este ciclo de vida
         return null;
     }
 }
@@ -1045,7 +1072,7 @@ function saveIncomes() {
 
         try {
             const rows = (window.incomes||[]).map(i => ({
-                id: typeof i.id==='number'?i.id:undefined, concept: i.concept||i.concepto||null,
+                id: i.id != null ? i.id : undefined, concept: i.concept||i.concepto||null,
                 amount: Number(i.amount||i.monto)||0, date: i.date||i.fecha||null,
                 client: i.client||i.cliente||null, from_pos: i.fromPOS===true,
                 folio_origen: i.folioOrigen||null, pedido_id: i.pedidoId||null
@@ -1060,7 +1087,7 @@ function saveExpenses() {
 
         try {
             const rows = (window.expenses||[]).map(e => ({
-                id: typeof e.id==='number'?e.id:undefined, concept: e.concept||e.concepto||null,
+                id: e.id != null ? e.id : undefined, concept: e.concept||e.concepto||null,
                 amount: Number(e.amount||e.monto)||0, date: e.date||e.fecha||null,
                 category: e.category||e.categoria||null, etiqueta: e.etiqueta||null,
                 notas: e.notas||null, from_payable: e.fromPayable===true
