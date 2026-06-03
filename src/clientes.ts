@@ -42,6 +42,7 @@ function _calcRFMScores(): Record<string, {r:number, f:number, m:number, segment
     // Scoring en quintiles (1-5). Recencia: menos días = mejor = score 5.
     const quantileScore = (arr: number[], val: number, invertir = false): number => {
         const sorted = [...arr].sort((a, b) => a - b);
+        if (!sorted || sorted.length === 0) return 1; // UX-6: score mínimo si no hay datos
         const rank = sorted.filter(x => x <= val).length;
         const raw = Math.ceil((rank / sorted.length) * 5) || 1;
         return invertir ? (6 - raw) : raw;
@@ -69,28 +70,57 @@ function _calcRFMScores(): Record<string, {r:number, f:number, m:number, segment
 }
 window._calcRFMScores = _calcRFMScores;
 
+// N-TOOLTIP-002: Descripciones extendidas para tooltips en segmentos RFM
+const rfmDescriptions: Record<string, string> = {
+    'Campeones': 'Compraron recientemente, con alta frecuencia y alto gasto. Tus mejores clientes.',
+    'Leales': 'Compran con frecuencia y buen gasto. Son confiables y responden a promociones.',
+    'Prometedores': 'Compraron recientemente pero con baja frecuencia. Potencial de crecer.',
+    'En riesgo': 'Compraron bastante antes pero no han vuelto. Requieren re-engagement.',
+    'Hibernando': 'Hace mucho que no compran. Difícil recuperarlos pero vale intentarlo.',
+    'Ocasionales': 'Compran poco, esporádicamente y gastan poco.'
+};
+
 function renderRFMPanel() {
     const wrapper = document.getElementById('rfmPanelWrapper');
     if (!wrapper) return;
 
+    const pf = (window as any).pedidosFinalizados || [];
+    // UX-6: empty state si no hay suficientes pedidos finalizados para segmentación
+    if (pf.length < 5) {
+        wrapper.innerHTML = `<div class="text-center py-10 text-gray-400">
+  <div class="text-4xl mb-2">📊</div>
+  <p class="font-medium">Sin datos suficientes para segmentación</p>
+  <p class="text-sm mt-1">Necesitas pedidos finalizados para ver el análisis RFM</p>
+</div>`;
+        return;
+    }
+
     const rfm = _calcRFMScores();
     if (!rfm) {
-        wrapper.innerHTML = '<p style="text-align:center;color:#9ca3af;padding:20px;font-size:.85rem">Sin pedidos finalizados para calcular RFM</p>';
+        wrapper.innerHTML = `<div class="text-center py-10 text-gray-400">
+  <div class="text-4xl mb-2">📊</div>
+  <p class="font-medium">Sin datos suficientes para segmentación</p>
+  <p class="text-sm mt-1">Necesitas pedidos finalizados para ver el análisis RFM</p>
+</div>`;
         return;
     }
 
     const counts: Record<string, string[]> = {};
     _RFM_SEGMENTS.forEach(s => { counts[s.key] = []; });
     Object.entries(rfm).forEach(([nombre, v]) => {
-        if (counts[v.segment]) counts[v.segment].push(nombre);
+        if (counts[(v as any).segment]) counts[(v as any).segment].push(nombre);
     });
 
     const cards = _RFM_SEGMENTS.map(seg => {
         const lista = counts[seg.key] || [];
         const preview = lista.slice(0, 3).map(n => `<span style="font-size:.7rem;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1px 8px;color:#374151">${_escAttr ? _escAttr(n) : n}</span>`).join(' ');
         const mas = lista.length > 3 ? `<span style="font-size:.7rem;color:#9ca3af">+${lista.length - 3} más</span>` : '';
-        return `<div style="background:${seg.bg};border-radius:14px;padding:14px;cursor:pointer;transition:box-shadow .15s"
-            onclick="window._rfmVerSegmento('${seg.key}')" title="${seg.desc}">
+        // N-TOOLTIP-002: tooltip extendido con descripción completa
+        const tooltipDesc = _escAttr ? _escAttr(rfmDescriptions[seg.label] || seg.desc) : (rfmDescriptions[seg.label] || seg.desc);
+        return `<div style="background:${seg.bg};border-radius:14px;padding:14px;cursor:help;transition:box-shadow .15s"
+            onclick="window._rfmVerSegmento('${seg.key}')"
+            title="${tooltipDesc}"
+            data-tooltip="${tooltipDesc}">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                 <span style="font-size:1.3rem">${seg.emoji}</span>
                 <div>
@@ -411,17 +441,13 @@ function _renderFiltrosActividad() {
             const listaClientes = _clientesFiltrados();
 
             if (clients.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7">
-  <div class="mk-empty">
-    <div class="mk-empty-icon">👥</div>
-    <p class="mk-empty-title">Sin clientes aún</p>
-    <p class="mk-empty-sub">Agrega tu primer cliente para llevar un registro de compras y datos de contacto.</p>
-    <div class="mk-empty-action">
-      <button onclick="openAddClientModal()" class="btn-primary px-6 py-2.5 rounded-xl text-sm">
-        + Agregar primer cliente
-      </button>
-    </div>
-  </div>
+                tbody.innerHTML = `<tr><td colspan="99" class="text-center py-14">
+  <div class="text-5xl mb-3">👥</div>
+  <p class="text-lg font-medium text-gray-500">Sin clientes registrados</p>
+  <button onclick="document.getElementById('addClientBtn')?.click()"
+          class="mt-3 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors">
+    + Agregar primer cliente
+  </button>
 </td></tr>`;
                 updateClientStats();
                 return;

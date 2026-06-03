@@ -106,11 +106,32 @@ window.animarNumero = animarNumero;
 // Throttle: si updateDashboard se llama múltiples veces seguidas,
 // solo ejecuta la última llamada después de 150ms de silencio.
 // Esto evita animaciones en paralelo cuando varios eventos disparan el update.
+// N-UI-6: Animación "pop" transitoria para badges al actualizarse
+function _animateBadgePop(el: HTMLElement | null): void {
+    if (!el) return;
+    el.style.transform = 'scale(1.35)';
+    el.style.transition = 'transform 0.15s ease-out';
+    setTimeout(() => {
+        el.style.transform = 'scale(1)';
+    }, 150);
+}
+
 let _updateDashboardTimer = null;
+let _lastDashboardHash: string | null = null;
 function updateDashboard() {
     if (_updateDashboardTimer) clearTimeout(_updateDashboardTimer);
     _updateDashboardTimer = setTimeout(() => {
         _updateDashboardTimer = null;
+        // P-4: hash guard — saltar render completo si los datos no cambiaron
+        const _newHash = [
+            (window.salesHistory || []).length,
+            (window.pedidos || []).length,
+            (window.pedidosFinalizados || []).length,
+            (window.expenses || []).length,
+            (window.incomes || []).length
+        ].join('_');
+        if (_newHash === _lastDashboardHash) return;
+        _lastDashboardHash = _newHash;
         _updateDashboardImpl();
     }, 150);
 }
@@ -233,11 +254,16 @@ function _updateDashboardImpl() {
     if (_sidebarBadgeInv) {
         const _totalAlerts = lowStockItems.length + outOfStock.length;
         if (_totalAlerts > 0) {
+            const _prevInvVal = (_sidebarBadgeInv as any)._lastVal;
             _sidebarBadgeInv.textContent = String(_totalAlerts);
             _sidebarBadgeInv.style.display = '';
             _sidebarBadgeInv.title = `${outOfStock.length} agotado(s) · ${lowStockItems.length} bajo stock`;
+            // N-UI-6: pop animation si el valor cambió
+            if (_prevInvVal !== _totalAlerts) _animateBadgePop(_sidebarBadgeInv);
+            (_sidebarBadgeInv as any)._lastVal = _totalAlerts;
         } else {
             _sidebarBadgeInv.style.display = 'none';
+            (_sidebarBadgeInv as any)._lastVal = 0;
         }
     }
 
@@ -667,6 +693,7 @@ function actualizarSidebarBadges() {
                 badgePedidos.classList.remove('badge-new');
                 void badgePedidos.offsetWidth;
                 badgePedidos.classList.add('badge-new');
+                _animateBadgePop(badgePedidos); // N-UI-6
             }
             // Urgente si hay pedidos con entrega próxima ≤2 días — MEJ-16: diasHastaEntrega()
             const urgentes = (pedidos || []).filter(p => {
@@ -705,6 +732,7 @@ function actualizarSidebarBadges() {
                 badgeInv.classList.remove('badge-new');
                 void badgeInv.offsetWidth;
                 badgeInv.classList.add('badge-new');
+                _animateBadgePop(badgeInv); // N-UI-6
             }
             // Rojo si hay agotados, ámbar si solo stock bajo
             const agotados = (products || []).filter(p => p.stock === 0).length;

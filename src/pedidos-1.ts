@@ -190,6 +190,77 @@ function openPedidoModal(id) {
         dlConcepto.innerHTML = unique.map(c => `<option value="${c.replace(/"/g,'&quot;')}">`).join('');
     }
 
+    // N-UI-12: listener en el campo cliente para mostrar botón "Usar último pedido"
+    (function _setupDuplicarUltimoPedido() {
+        const _clienteInput = document.getElementById('pedidoCliente') as HTMLInputElement|null;
+        if (!_clienteInput) return;
+        // Remover listener previo si existe
+        if ((window as any)._duplicarClienteHandler) {
+            _clienteInput.removeEventListener('input', (window as any)._duplicarClienteHandler);
+            _clienteInput.removeEventListener('change', (window as any)._duplicarClienteHandler);
+        }
+        const _handler = function() {
+            const _nombre = _clienteInput.value.trim().toLowerCase();
+            // Remover botón previo si existe
+            const _btnPrev = document.getElementById('btnDuplicarUltimoPedido');
+            if (_btnPrev) _btnPrev.remove();
+            if (!_nombre) return;
+
+            // Buscar pedidos del cliente (activos + finalizados)
+            const _todos = [...(window.pedidos || []), ...(window.pedidosFinalizados || [])];
+            const _delCliente = _todos.filter(p =>
+                (p.cliente || '').toLowerCase().trim() === _nombre
+            );
+            if (_delCliente.length === 0) return;
+
+            // Ordenar por fecha de creación descendente para obtener el último
+            _delCliente.sort((a, b) => {
+                const fa = a.fechaCreacion || a.fechaPedido || '';
+                const fb = b.fechaCreacion || b.fechaPedido || '';
+                return fb.localeCompare(fa);
+            });
+            const _ultimo = _delCliente[0];
+            if (!_ultimo) return;
+
+            const _esc3 = (window as any)._esc || ((s: string) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+            const _btn = document.createElement('button');
+            _btn.type = 'button';
+            _btn.id = 'btnDuplicarUltimoPedido';
+            _btn.style.cssText = 'display:block;margin-top:4px;font-size:.75rem;color:#d97706;text-decoration:underline;background:none;border:none;cursor:pointer;padding:0;';
+            _btn.textContent = '📋 Usar estructura del último pedido';
+            _btn.onclick = function() {
+                // Pre-llenar modal con datos del último pedido (NO: fecha entrega, anticipo, folio, cliente)
+                const _conceptoEl = document.getElementById('pedidoConcepto') as HTMLInputElement|null;
+                const _notasEl    = document.getElementById('pedidoNotas') as HTMLTextAreaElement|null;
+                const _niEl       = document.getElementById('pedidoNotasInternas') as HTMLTextAreaElement|null;
+                const _lugarEl    = document.getElementById('pedidoLugarEntrega') as HTMLInputElement|null;
+
+                if (_conceptoEl && _ultimo.concepto) _conceptoEl.value = _esc3(_ultimo.concepto);
+                if (_notasEl && _ultimo.notas) _notasEl.value = _esc3(_ultimo.notas);
+                if (_niEl && _ultimo.notasInternas) _niEl.value = _esc3(_ultimo.notasInternas);
+                if (_lugarEl && _ultimo.lugarEntrega) _lugarEl.value = _esc3(_ultimo.lugarEntrega);
+
+                // Pre-llenar productos/items del último pedido (copiar profundo)
+                const _itemsPrev = (_ultimo.productosInventario || []).map((i: any) => ({...i}));
+                window.pedidoProductosSeleccionados = _itemsPrev;
+                if (typeof renderPedidoProductosList === 'function') renderPedidoProductosList();
+                if (_itemsPrev.length > 0 && typeof calcPedidoTotal === 'function') calcPedidoTotal();
+
+                // Pre-llenar empaques del último pedido
+                const _empaquesPrev = (_ultimo.empaques || []).map((e: any) => ({...e}));
+                window.pedidoEmpaquesSeleccionados = _empaquesPrev;
+                if (typeof renderPedidoEmpaquesList === 'function') renderPedidoEmpaquesList();
+
+                if (typeof manekiToastExport === 'function') manekiToastExport('📋 Estructura del último pedido pre-cargada.', 'ok');
+                _btn.remove();
+            };
+            _clienteInput.insertAdjacentElement('afterend', _btn);
+        };
+        (window as any)._duplicarClienteHandler = _handler;
+        _clienteInput.addEventListener('input', _handler);
+        _clienteInput.addEventListener('change', _handler);
+    })();
+
     openModal('pedidoModal');
 }
 
@@ -515,7 +586,7 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
         if (window._folioCounterReady) await window._folioCounterReady;
         const folio = generarFolioPedido();
         if (!folio) {
-            manekiToastExport('⚠️ Error al generar folio. Intenta de nuevo.', 'err');
+            manekiToastExport('⚠️ No se pudo generar folio único. Verifica conexión y recarga la página.', 'err');
             clearTimeout(_lockTimeout);
             _pedidoGuardando = false;
             if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = 'Guardar Pedido'; }
@@ -812,7 +883,8 @@ function renderKanbanBoard() {
         totalVisible += items.length;
         if (badge) {
             badge.textContent = items.length;
-            badge.style.cssText = 'background:rgba(197,151,59,0.15);color:#C5A572;font-size:.7rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:6px;';
+            // N-KANBAN-003: badge de conteo con estilo consistente en todas las columnas
+            badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:.7rem;font-weight:800;background:rgba(255,255,255,0.6);border-radius:9999px;margin-left:6px;color:inherit;';
         }
         const expandido = _kanbanExpandidos.has(col);
         const visibles = expandido ? items : items.slice(0, _KANBAN_PAGE);
@@ -1143,7 +1215,85 @@ function renderTablaPedidos() {
         </div>`;
     // #11 Totales flotantes
     if (typeof _mkUpdatePedidosTotals === 'function') setTimeout(_mkUpdatePedidosTotals, 50);
+
+    // N-SEARCH-003 + N-SEARCH-005: Renderizar badges de filtros activos + botón limpiar
+    _renderFiltrosActivosBadges();
 }
+
+function _renderFiltrosActivosBadges() {
+    // Leer valores actuales de los inputs de filtro
+    const _buscar    = ((document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null)?.value || '').trim();
+    const _pago      = ((document.getElementById('tablaFiltroPago') as HTMLSelectElement|null)?.value || '');
+    const _urgencia  = ((document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null)?.value || '');
+    const _desde     = ((document.getElementById('pedidoFechaDesde') as HTMLInputElement|null)?.value || '');
+    const _hasta     = ((document.getElementById('pedidoFechaHasta') as HTMLInputElement|null)?.value || '');
+    const _statusFil = _pedidoFiltroActivo !== 'todos' ? _pedidoFiltroActivo : '';
+
+    const filtrosActivos: { label: string; reset: () => void }[] = [];
+    if (_buscar)    filtrosActivos.push({ label: `🔍 "${_buscar}"`, reset: () => { const el = document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null; if (el) { el.value = ''; } _pedidosTablePage = 1; renderTablaPedidos(); } });
+    if (_pago)      filtrosActivos.push({ label: _pago === 'liquidado' ? '✅ Liquidado' : _pago === 'anticipo' ? '🟡 Con anticipo' : '🔴 Pendiente', reset: () => { const el = document.getElementById('tablaFiltroPago') as HTMLSelectElement|null; if (el) el.value = ''; _pedidosTablePage = 1; renderTablaPedidos(); } });
+    if (_urgencia)  filtrosActivos.push({ label: _urgencia === 'hoy' ? '🔴 Hoy' : _urgencia === 'semana' ? '🟡 Esta semana' : '⚫ Vencido', reset: () => { const el = document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null; if (el) el.value = ''; _pedidosTablePage = 1; renderTablaPedidos(); } });
+    if (_desde)     filtrosActivos.push({ label: `Desde ${_desde}`, reset: () => { const el = document.getElementById('pedidoFechaDesde') as HTMLInputElement|null; if (el) el.value = ''; _pedidosTablePage = 1; renderTablaPedidos(); } });
+    if (_hasta)     filtrosActivos.push({ label: `Hasta ${_hasta}`, reset: () => { const el = document.getElementById('pedidoFechaHasta') as HTMLInputElement|null; if (el) el.value = ''; _pedidosTablePage = 1; renderTablaPedidos(); } });
+    if (_statusFil) filtrosActivos.push({ label: `Estado: ${_statusFil}`, reset: () => { filterPedidos('todos', null); } });
+
+    // Buscar o crear el contenedor de badges
+    let _badgeContainer = document.getElementById('filtrosActivosBadges');
+    if (!_badgeContainer) {
+        const _tabla = document.getElementById('vistaTabla');
+        const _bar   = document.getElementById('tablaBuscadorBar');
+        if (_tabla && _bar) {
+            _badgeContainer = document.createElement('div');
+            _badgeContainer.id = 'filtrosActivosBadges';
+            _badgeContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;';
+            _bar.insertAdjacentElement('afterend', _badgeContainer);
+        }
+    }
+    if (!_badgeContainer) return;
+
+    if (filtrosActivos.length === 0) {
+        _badgeContainer.innerHTML = '';
+        _badgeContainer.style.display = 'none';
+        return;
+    }
+    _badgeContainer.style.display = 'flex';
+
+    // Renderizar un badge por cada filtro activo + botón limpiar todo
+    const _esc2 = window._esc || ((s: string) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    _badgeContainer.innerHTML = filtrosActivos.map((f, i) =>
+        `<span data-badge-idx="${i}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600;background:#FFF9F0;color:#92622A;border:1px solid #e8d5b0;cursor:pointer;" title="Quitar filtro" onclick="window._quitarFiltroBadge(${i})">
+            ${_esc2(f.label)} <span style="font-size:.7rem;opacity:.7;">✕</span>
+        </span>`
+    ).join('') +
+    `<button onclick="window._limpiarTodosFiltros()" style="padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;cursor:pointer;">
+        ✕ Limpiar filtros
+    </button>`;
+
+    // Exponer callbacks globales para los onclick inline
+    (window as any)._quitarFiltroBadge = (idx: number) => {
+        if (filtrosActivos[idx]) filtrosActivos[idx].reset();
+    };
+}
+
+(window as any)._limpiarTodosFiltros = function() {
+    const _b = document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null;
+    const _p = document.getElementById('tablaFiltroPago') as HTMLSelectElement|null;
+    const _u = document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null;
+    const _d = document.getElementById('pedidoFechaDesde') as HTMLInputElement|null;
+    const _h = document.getElementById('pedidoFechaHasta') as HTMLInputElement|null;
+    if (_b) _b.value = '';
+    if (_p) _p.value = '';
+    if (_u) _u.value = '';
+    if (_d) _d.value = '';
+    if (_h) _h.value = '';
+    _pedidoFiltroActivo = 'todos';
+    _pedidosTablePage = 1;
+    // Reflejar en los botones de filtro de status
+    document.querySelectorAll('.pedido-filter').forEach((b: any) => {
+        b.style.borderColor = '#E5E7EB'; b.style.background = 'white'; b.style.color = '#4B5563';
+    });
+    renderTablaPedidos();
+};
 
 // ── Eliminar pedido activo ──
 // ─── LISTA DE PRODUCCIÓN DEL DÍA ────────────────────────────────────────────

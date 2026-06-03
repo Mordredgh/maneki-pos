@@ -108,6 +108,27 @@ function renderBalanceMensual() {
     _renderUtilidadNeta(totalVentas + totalPedidos, totalGastos);
     // MEJORA-1: Proyección de cashflow
     renderProyeccionCashflow();
+
+    // N-UI-1: Empty state cuando no hay ingresos NI gastos en el mes
+    const _noDataThisMonth = ventasMes.length === 0 && numPedidos === 0 && gastosMes.length === 0;
+    let _balEmptyCard = document.getElementById('balEmptyMesCard');
+    if (_noDataThisMonth) {
+        if (!_balEmptyCard) {
+            _balEmptyCard = document.createElement('div');
+            _balEmptyCard.id = 'balEmptyMesCard';
+            const _anchor = document.getElementById('balMesNetoBg');
+            if (_anchor) _anchor.parentElement.insertBefore(_balEmptyCard, _anchor.nextSibling);
+        }
+        _balEmptyCard.innerHTML = `
+            <div class="text-center py-12 text-gray-400" style="background:#fff;border-radius:16px;border:1.5px dashed #e5e7eb;margin-bottom:16px;">
+                <div style="font-size:2.5rem;margin-bottom:10px;">📊</div>
+                <p style="font-size:.95rem;font-weight:600;color:#6b7280;margin-bottom:4px;">Sin registros este mes</p>
+                <p style="font-size:.8rem;color:#9ca3af;">Registra tu primer ingreso o gasto</p>
+            </div>`;
+        _balEmptyCard.style.display = '';
+    } else if (_balEmptyCard) {
+        _balEmptyCard.style.display = 'none';
+    }
 }
 
 // NTH-13: Gráfica de categorías de gastos ─────────────────────────────────

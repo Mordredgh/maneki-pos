@@ -28,7 +28,7 @@ let db = null;
         let cfg = null;
         // Intentar config inyectada externamente
         if (!cfg && window.__mkCfg) {
-            try { cfg = await window.__mkCfg.getSupabase(); } catch(e) {}
+            try { cfg = await window.__mkCfg.getSupabase(); } catch(e) { console.warn('[DB] __mkCfg.getSupabase() falló:', e); }
         }
         // Config embebida. La seguridad del anon key se garantiza mediante RLS en Supabase.
         if (!cfg) {
@@ -214,7 +214,7 @@ function _setupRealtime() {
     });
 
     window.addEventListener('beforeunload', () => {
-        (window._mkRTChannels || []).forEach(ch => { try { ch.unsubscribe(); } catch(e) {} });
+        (window._mkRTChannels || []).forEach(ch => { try { ch.unsubscribe(); } catch(e) { console.warn('[DB] Error al desuscribir canal realtime:', e); } });
     });
 }
 
@@ -535,7 +535,7 @@ function _ocultarBannerOfflineConexion() {
     const banner = document.getElementById('mk-offline-banner');
     if (banner) {
         banner.style.animation = 'toastOut 0.3s ease forwards';
-        setTimeout(() => { try { banner.remove(); } catch(e) {} }, 320);
+        setTimeout(() => { try { banner.remove(); } catch(e) { console.warn('[DB] Error al remover banner offline:', e); } }, 320);
     }
 }
 
@@ -557,17 +557,27 @@ window.addEventListener('offline', () => {
 // PERF-02: debounce del upsert a Supabase por key —
 // espera 500ms sin nuevas llamadas para la misma key antes de sincronizar.
 const _sbSaveTimers = {};
+// P-5: debounce independiente para escrituras a localStorage (1 segundo por key)
+const _lsWriteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 async function sbSave(key, data) {
     const dataConTimestamp = data;
 
-    // localStorage cache
-    try { localStorage.setItem('maneki_' + key, JSON.stringify(dataConTimestamp)); } catch(e) {
-        if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
-            console.warn('[Storage] localStorage lleno');
-        } else {
-            console.warn('localStorage falló:', key, e);
+    // P-5: localStorage cache con debounce de 1s — capturar snapshot ahora, escribir diferido
+    if (_lsWriteTimers[key]) clearTimeout(_lsWriteTimers[key]);
+    const dataSnapshot = JSON.stringify(dataConTimestamp);
+    _lsWriteTimers[key] = setTimeout(() => {
+        try {
+            localStorage.setItem('maneki_' + key, dataSnapshot);
+        } catch (e: any) {
+            if (e.name === 'QuotaExceededError' || e.code === 22) {
+                console.warn('[Storage] localStorage lleno — no se pudo guardar caché de', key);
+            } else {
+                console.warn('[Storage] localStorage falló:', key, e);
+            }
         }
-    }
+        delete _lsWriteTimers[key];
+    }, 1000);
+
     // Supabase en la nube — sincronización asíncrona (debounced por key)
     if (_sbSaveTimers[key]) clearTimeout(_sbSaveTimers[key]);
     return new Promise((resolve, reject) => {

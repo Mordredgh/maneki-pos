@@ -136,6 +136,16 @@ function initAutocompleteEnvio() {
             _nominatimDropdown.style.display = 'none';
         }
     });
+
+    // SEC-1: Delegated listener para sugerencias Nominatim (evita onclick inline con datos del usuario)
+    _nominatimDropdown.addEventListener('click', function(e) {
+        const item = (e.target as Element).closest('[data-nominatim-lat]') as HTMLElement | null;
+        if (!item) return;
+        const lat = item.dataset.nominatimLat;
+        const lon = item.dataset.nominatimLon;
+        const addr = item.dataset.nominatimAddr;
+        if (lat && lon && addr) seleccionarNominatim(parseFloat(lat), parseFloat(lon), addr);
+    });
 }
 
 
@@ -161,13 +171,14 @@ function buscarNominatim(q) {
     .then(r => { if (!r.ok) throw new Error('nominatim ' + r.status); return r.json(); })
     .then(data => {
         if (!data.length) { _nominatimDropdown.style.display = 'none'; return; }
+        // SEC-1: usar data-attributes en lugar de onclick inline con datos del usuario
         _nominatimDropdown.innerHTML = data.map((r) => {
-            const label = _esc(r.display_name || 'Dirección');
-            const safeName = label.replace(/'/g,"&#39;");
-            return `<div onclick="seleccionarNominatim(${r.lat},${r.lon},'${safeName}')"
+            const label = r.display_name || 'Dirección';
+            const shortLabel = label.split(',').slice(0,3).join(',');
+            return `<div data-nominatim-lat="${_esc(String(r.lat))}" data-nominatim-lon="${_esc(String(r.lon))}" data-nominatim-addr="${_esc(label)}"
                 style="padding:10px 14px;cursor:pointer;font-size:0.82rem;color:#374151;border-bottom:1px solid #F3F4F6;transition:background 0.15s;"
                 onmouseover="this.style.background='#FFF9F0'" onmouseout="this.style.background='white'">
-                <i class="fas fa-map-marker-alt" style="color:#C5A572;margin-right:6px;"></i>${label.split(',').slice(0,3).join(',')}
+                <i class="fas fa-map-marker-alt" style="color:#C5A572;margin-right:6px;"></i>${_esc(shortLabel)}
             </div>`;
         }).join('');
         _nominatimDropdown.style.display = 'block';
@@ -176,9 +187,10 @@ function buscarNominatim(q) {
 }
 
 function seleccionarNominatim(lat, lng, displayName) {
+    // displayName ya viene limpio desde data-nominatim-addr (nunca desde onclick inline)
     document.getElementById('envioDestinoDireccion').value = displayName.split(',').slice(0,3).join(',').trim();
     _nominatimDropdown.style.display = 'none';
-    procesarDestino(parseFloat(lat), parseFloat(lng), displayName);
+    procesarDestino(parseFloat(String(lat)), parseFloat(String(lng)), displayName);
 }
 
 // ── Copiar cotización de envío para WhatsApp ──

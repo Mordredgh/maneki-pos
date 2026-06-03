@@ -16,9 +16,13 @@ function _descontarInventarioPedido(pedido) {
     let descontados = 0;
     // FIX 1: rollback data collected before each deduction; restored on error
     const _rollback = [];
+    // P-7: snapshot de window.products para rollback completo si falla saveProducts
+    const _rollbackData = window.products ? JSON.parse(JSON.stringify(window.products)) : null;
+    // P-7: lookup O(1) en lugar de O(n) find() en cada iteración
+    const prodMap = new Map<string, any>((window.products || []).map((p: any) => [String(p.id), p]));
     try {
     for (const item of items) {
-        const prod = (window.products || []).find(p => String(p.id) === String(item.id));
+        const prod = prodMap.get(String(item.id));
         if (!prod) continue;
         if (prod.tipo === 'servicio') continue;
         if (item.id === 'libre') continue; // ítem de precio libre, sin producto en inventario
@@ -35,7 +39,7 @@ function _descontarInventarioPedido(pedido) {
             const _rph = prod.rendimientoPorHoja || 1;
             let _minHojas = Infinity;
             for (const comp of prod.mpComponentes) {
-                const mp = (window.products || []).find(x => String(x.id) === String(comp.id));
+                const mp = prodMap.get(String(comp.id));
                 if (mp && mp.tipo !== 'servicio') {
                     const qtyComp = parseFloat(comp.qty) || 1;
                     _minHojas = Math.min(_minHojas, Math.floor((mp.stock || 0) / qtyComp));
@@ -46,7 +50,7 @@ function _descontarInventarioPedido(pedido) {
             const _stockVariantes = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
             let _minFabricable = Infinity;
             for (const comp of prod.mpComponentes) {
-                const mp = (window.products || []).find(x => String(x.id) === String(comp.id));
+                const mp = prodMap.get(String(comp.id));
                 if (mp && mp.tipo !== 'servicio') {
                     const stockMp = mp.stock || 0;
                     const qtyComp = parseFloat(comp.qty) || 1;
@@ -110,7 +114,7 @@ function _descontarInventarioPedido(pedido) {
         // Descontar MP de los componentes del PT × cantidad del pedido
         if (Array.isArray(prod.mpComponentes) && prod.mpComponentes.length > 0) {
             for (const comp of prod.mpComponentes) {
-                const mp = (window.products || []).find(p => String(p.id) === String(comp.id));
+                const mp = prodMap.get(String(comp.id));
                 if (!mp || mp.tipo === 'servicio') continue;
                 const _rph = prod.rendimientoPorHoja || 1;
                 const cantMP = _rph > 0
@@ -163,6 +167,8 @@ function _descontarInventarioPedido(pedido) {
                 r.variantsBefore.forEach((snap, i) => { if (p.variants[i]) p.variants[i].qty = snap.qty; });
             }
         });
+        // BUG-5: restaurar window.products completo desde snapshot si hubo error en saveProducts
+        if (_rollbackData) { window.products = JSON.parse(JSON.stringify(_rollbackData)); }
         console.error('[Inventario] Error al descontar — stock restaurado:', e);
         manekiToastExport('Error al descontar inventario. Se revirtió el stock.', 'err');
         throw e;

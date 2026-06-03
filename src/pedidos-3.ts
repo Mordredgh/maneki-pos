@@ -1052,17 +1052,27 @@ function _mostrarGaleriaPtEnPedido(prod) {
     if (!galDiv) {
         galDiv = document.createElement('div');
         galDiv.id = 'pedidoPtGaleriaStrip';
-        galDiv.style = 'margin-top:8px;';
+        galDiv.style.cssText = 'margin-top:8px;';
         const selRow = document.getElementById('pedidoProductoSelRow');
         if (selRow) selRow.appendChild(galDiv);
+
+        // SEC-2: Delegated listener para abrir fotos — evita onclick inline con URLs de usuario
+        galDiv.addEventListener('click', function(e) {
+            const img = (e.target as Element).closest('img[data-foto-url]') as HTMLElement | null;
+            if (!img) return;
+            const url = img.dataset.fotoUrl;
+            if (url) window.open(url, '_blank', 'noopener,noreferrer');
+        });
     }
     const urls = Array.isArray(prod.imageUrls) && prod.imageUrls.length > 0
         ? prod.imageUrls
         : prod.imageUrl ? [prod.imageUrl] : [];
     if (urls.length === 0) { galDiv.innerHTML = ''; return; }
+    const _e = typeof _esc === 'function' ? _esc : (s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    // SEC-2: data-foto-url escapado con _esc, sin onclick inline con URL del usuario
     galDiv.innerHTML = '<div style="font-size:.72rem;color:#92400e;font-weight:700;margin-bottom:6px;">🖼️ Fotos del producto ('+urls.length+')</div>'
         + '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">'
-        + urls.map(url => { const _safeUrl = url.replace(/'/g, '%27').replace(/"/g, '%22'); return '<img src="'+_safeUrl+'" onclick="window.open(\''+_safeUrl+'\',\'_blank\')" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb;flex-shrink:0;cursor:pointer;" title="Ver foto completa">'; }).join('')
+        + urls.map(url => '<img src="'+_e(url)+'" data-foto-url="'+_e(url)+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb;flex-shrink:0;cursor:pointer;" title="Ver foto completa">').join('')
         + '</div>';
 }
 window._mostrarGaleriaPtEnPedido = _mostrarGaleriaPtEnPedido;

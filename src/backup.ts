@@ -118,6 +118,16 @@ function cargarArchivoBackup(event) {
 
 function _activarBackupPendiente(data, fileName) {
     if (!data.datos) throw new Error('Formato inválido');
+
+    // SEC-4: Validar versión del backup antes de habilitar la restauración
+    const EXPECTED_VERSION = '2.1';
+    if (!data.version) {
+        (window as any).manekiToastExport?.('⚠️ Backup sin versión — puede ser muy antiguo. Revisa los datos restaurados.', 'warn') ||
+        alert('⚠️ Backup sin versión detectada. Puede estar incompleto.');
+    } else if (data.version !== EXPECTED_VERSION && data.version < EXPECTED_VERSION) {
+        (window as any).manekiToastExport?.(`⚠️ Backup versión ${data.version} (actual: ${EXPECTED_VERSION}) — algunos datos pueden faltar`, 'warn');
+    }
+
     backupDataPendiente = data;
     const label = document.getElementById('dropZoneFileName');
     label.textContent = `✅ ${fileName}`;

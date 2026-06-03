@@ -743,7 +743,7 @@ function renderInventoryTable() {
         </div>
     </div>`;
 
-    dualContainer.innerHTML =
+    const _allSectionsHTML =
         buildSection({
             id: 'pt',
             title: '📦 Productos Terminados',
@@ -840,6 +840,23 @@ function renderInventoryTable() {
             ],
             emptyMsg: 'Sin servicios. Agrega el uso del láser, vinil por pieza, etc.'
         });
+
+    // N-UI-1: Empty state cuando la búsqueda no tiene resultados en ninguna sección
+    const _searchActiveNow = (q || tagQ || provQ).length > 0;
+    if (_searchActiveNow && !_allSectionsHTML.trim()) {
+        dualContainer.innerHTML = `
+        <div style="padding:64px 24px;text-align:center;">
+            <div style="font-size:3rem;margin-bottom:12px;">🔍</div>
+            <p style="font-size:1.1rem;font-weight:700;color:#374151;margin-bottom:6px;">Sin resultados para tu búsqueda</p>
+            <p style="font-size:.875rem;color:#9ca3af;margin-bottom:20px;">Intenta con otro término o limpia los filtros</p>
+            <button onclick="(function(){var el=document.getElementById('inventorySearch');if(el){el.value='';el.dispatchEvent(new Event('input'));}var tEl=document.getElementById('inventoryTagFilter');if(tEl)tEl.value='';var pEl=document.getElementById('inventoryProveedorFilter');if(pEl)pEl.value='';renderInventoryTable();})()"
+                style="padding:10px 22px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:.875rem;font-weight:700;cursor:pointer;">
+                Limpiar búsqueda
+            </button>
+        </div>`;
+    } else {
+        dualContainer.innerHTML = _allSectionsHTML;
+    }
 }
 
 // Paginación por sección independiente
@@ -983,6 +1000,14 @@ function invResetPage() {
 window.invResetPage = invResetPage;
 
 window.renderInventoryTable = renderInventoryTable;
+
+// FIX P-1: Debounce para búsqueda de inventario (300ms) — reduce renders mientras el usuario escribe
+let _inventorySearchTimer: ReturnType<typeof setTimeout> | null = null;
+function _debounceInventorySearch(): void {
+    if (_inventorySearchTimer) clearTimeout(_inventorySearchTimer);
+    _inventorySearchTimer = setTimeout(renderInventoryTable, 300);
+}
+(window as any)._debounceInventorySearch = _debounceInventorySearch;
 
 // ── Historial de movimientos: render ──────────────────────────────────────
 function renderMovimientos() {

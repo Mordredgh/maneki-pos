@@ -185,13 +185,14 @@ function _inyectarBtnExport(containerId, chartVarName, fileName) {
 }
 
 // ── MEJORA 1: Comparativa mes a mes con año anterior ────────────────────────
-function initComparativaMeses() {
+// P-2: parámetro opcional ventasCache para evitar recalcular _getAllVentas en initReports
+function initComparativaMeses(ventasCache?: any[]) {
     const canvas = document.getElementById('comparativaMesesChart');
     if (!canvas) return;
 
     const meses = [], ventas = [], gastos = [], ventasAnioAnterior = [];
     const now = new Date();
-    const todasVentas = _getAllVentas();
+    const todasVentas = ventasCache || _getAllVentas();
     const todasGastos = window.expenses || [];
 
     for (let i = 5; i >= 0; i--) {
@@ -319,17 +320,14 @@ function _renderTicketPromedioStats(meses, ventas, todasVentas, now) {
 }
 
 // ── MEJORA 2: Top 10 productos más vendidos (por ingresos, todo el historial) ─
-function initTopProductosChart() {
+// P-2: parámetro opcional ventasCache para evitar recalcular _getAllVentas en initReports
+function initTopProductosChart(ventasCache?: any[]) {
     const canvas = document.getElementById('topProductosChart');
     if (!canvas) return;
-    if (topProductosChart) {
-        try { topProductosChart.destroy(); } catch(e) {}
-        topProductosChart = null;
-    }
 
     // Agrupar por nombre: suma cantidad e ingresos (precio * cantidad)
     const prodMap = {};
-    _getAllVentas().filter(function(s){ return s.type !== 'abono' && s.type !== 'anticipo'; }).forEach(function(s) {
+    (ventasCache || _getAllVentas()).filter(function(s){ return s.type !== 'abono' && s.type !== 'anticipo'; }).forEach(function(s) {
         (s.products || []).forEach(function(p) {
             var nombre = p.name || p.nombre || '—';
             var qty = Number(p.quantity || p.cantidad || 1);
@@ -349,7 +347,7 @@ function initTopProductosChart() {
 
     // Top 10 por ingresos generados
     const top10 = Object.entries(prodMap)
-        .sort(function(a, b) { return b[1].ingresos - a[1].ingresos; })
+        .sort(function(a, b) { return (b[1] as any).ingresos - (a[1] as any).ingresos; })
         .slice(0, 10);
 
     var canvasParent = canvas.parentElement;
@@ -359,7 +357,7 @@ function initTopProductosChart() {
         if (!_nodata) {
             _nodata = document.createElement('p');
             _nodata.className = '_nodata-msg';
-            _nodata.style.cssText = 'text-align:center;color:#9ca3af;padding:24px;font-size:13px;';
+            (_nodata as HTMLElement).style.cssText = 'text-align:center;color:#9ca3af;padding:24px;font-size:13px;';
             canvasParent.appendChild(_nodata);
         }
         _nodata.textContent = 'Sin ventas registradas aún';
@@ -370,49 +368,65 @@ function initTopProductosChart() {
     var _oldMsg = canvasParent.querySelector('._nodata-msg');
     if (_oldMsg) _oldMsg.remove();
 
-    topProductosChart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: top10.map(function(e){ var n = e[0]; return n.length > 22 ? n.slice(0, 22) + '…' : n; }),
-            datasets: [{
-                label: 'Ingresos ($)',
-                data: top10.map(function(e){ return e[1].ingresos; }),
-                backgroundColor: '#8B5CF6',
-                borderRadius: 6
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            var idx = ctx.dataIndex;
-                            var entry = top10[idx];
-                            return ['$' + entry[1].ingresos.toLocaleString('es-MX'), entry[1].cantidad + ' unidades'];
+    const nuevosLabels = top10.map(function(e){ var n = e[0]; return n.length > 22 ? n.slice(0, 22) + '…' : n; });
+    const nuevosData   = top10.map(function(e){ return (e[1] as any).ingresos; });
+
+    // P-3: actualizar chart en-lugar (sin destroy+new) para evitar flicker y costo de re-crear
+    if (topProductosChart) {
+        topProductosChart.data.labels = nuevosLabels;
+        topProductosChart.data.datasets[0].data = nuevosData;
+        // Actualizar tooltip callback para que top10 esté cerrado sobre los nuevos datos
+        (topProductosChart as any).options.plugins.tooltip.callbacks.label = function(ctx) {
+            var idx = ctx.dataIndex;
+            var entry = top10[idx];
+            return entry ? ['$' + (entry[1] as any).ingresos.toLocaleString('es-MX'), (entry[1] as any).cantidad + ' unidades'] : [];
+        };
+        topProductosChart.update('none'); // sin animación: más rápido
+    } else {
+        topProductosChart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: nuevosLabels,
+                datasets: [{
+                    label: 'Ingresos ($)',
+                    data: nuevosData,
+                    backgroundColor: '#8B5CF6',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                var idx = ctx.dataIndex;
+                                var entry = top10[idx];
+                                return entry ? ['$' + (entry[1] as any).ingresos.toLocaleString('es-MX'), (entry[1] as any).cantidad + ' unidades'] : [];
+                            }
                         }
                     }
-                }
-            },
-            scales: { x: { beginAtZero: true, ticks: { callback: function(v){ return '$' + v.toLocaleString(); } } } }
-        }
-    });
+                },
+                scales: { x: { beginAtZero: true, ticks: { callback: function(v){ return '$' + v.toLocaleString(); } } } }
+            }
+        });
 
-    // Botón exportar PNG
-    var topContainer = canvas.closest('div.bg-white') || canvasParent;
-    topContainer.style.position = 'relative';
-    if (!topContainer.querySelector('.mk-export-png-btn')) {
-        topContainer.insertAdjacentHTML('afterbegin',
-            '<button class="mk-export-png-btn" ' +
-            'onclick="exportarGraficaPNG(topProductosChart, \'top-10-productos\')" ' +
-            'title="Exportar como PNG" ' +
-            'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
-            'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
-            'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
-        );
+        // Botón exportar PNG — solo se inyecta una vez al crear el chart
+        var topContainer = canvas.closest('div.bg-white') || canvasParent;
+        (topContainer as HTMLElement).style.position = 'relative';
+        if (!topContainer.querySelector('.mk-export-png-btn')) {
+            topContainer.insertAdjacentHTML('afterbegin',
+                '<button class="mk-export-png-btn" ' +
+                'onclick="exportarGraficaPNG(topProductosChart, \'top-10-productos\')" ' +
+                'title="Exportar como PNG" ' +
+                'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
+                'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
+                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+            );
+        }
     }
 }
 
@@ -436,11 +450,6 @@ function initMargenCategoriaChart() {
 
     var canvas = document.getElementById('margenCategoriaCanvas');
     if (!canvas) return;
-
-    if (margenCategoriaChart) {
-        try { margenCategoriaChart.destroy(); } catch(e) {}
-        margenCategoriaChart = null;
-    }
 
     var cats = window.categories || [];
     var productos = window.products || [];
@@ -488,37 +497,45 @@ function initMargenCategoriaChart() {
         return;
     }
 
-    margenCategoriaChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Margen promedio (%)',
-                data: datos,
-                backgroundColor: colores,
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) { return ctx.parsed.y + '% margen'; }
+    // P5: actualizar chart en-lugar si ya existe (evita destroy+new y su flicker)
+    if (margenCategoriaChart) {
+        margenCategoriaChart.data.labels = labels;
+        margenCategoriaChart.data.datasets[0].data = datos;
+        margenCategoriaChart.data.datasets[0].backgroundColor = colores;
+        margenCategoriaChart.update('none');
+    } else {
+        margenCategoriaChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Margen promedio (%)',
+                    data: datos,
+                    backgroundColor: colores,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) { return ctx.parsed.y + '% margen'; }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { callback: function(v){ return v + '%'; } }
                     }
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { callback: function(v){ return v + '%'; } }
-                }
             }
-        }
-    });
+        });
+    }
 
     // Botón exportar PNG
     var wrap = document.getElementById('margenCategoriaWrap');
@@ -536,14 +553,15 @@ function initMargenCategoriaChart() {
 window.initMargenCategoriaChart = initMargenCategoriaChart;
 
 // ── N6: Comparativa año a año (12 meses actuales vs año anterior) ────────────
-function initComparativaAnio() {
+// P-2: parámetro opcional ventasCache para evitar recalcular _getAllVentas en initReports
+function initComparativaAnio(ventasCache?: any[]) {
     const canvas = document.getElementById('comparativaAnioChart') as HTMLCanvasElement;
     if (!canvas) return;
 
     const now = new Date();
     const anioActual = now.getFullYear();
     const anioAnterior = anioActual - 1;
-    const todasVentas = _getAllVentas();
+    const todasVentas = ventasCache || _getAllVentas();
     const meses: string[] = [], ventasActual: number[] = [], ventasAnterior: number[] = [];
 
     for (let m = 0; m < 12; m++) {
@@ -688,18 +706,19 @@ function _setReportDatePreset(key: string) {
 window._setReportDatePreset = _setReportDatePreset;
 
 function initReports() {
-    // P8: pre-calentar caché de _getAllVentas una sola vez — las funciones siguientes
-    // leen el mismo resultado cacheado sin recalcular el cacheKey 3 veces por separado
-    _getAllVentas();
+    // P-2: calcular _getAllVentas UNA sola vez y reutilizar en todas las subfunciones
+    // El caché interno de _getAllVentas() evita recalcular si los datos no cambiaron,
+    // pero calcular el cacheKey tiene coste O(n); aquí lo hacemos una sola vez por sesión.
+    const _todasVentas = _getAllVentas();
     updateInventoryStats();
-    renderTopProducts();
+    renderTopProducts(_todasVentas);
     renderSalesHistory();
-    updateMonthlyStats();
-    updatePaymentMethods();
+    updateMonthlyStats(_todasVentas);
+    updatePaymentMethods(_todasVentas);
     renderValorInventario();
-    initComparativaMeses();
-    initComparativaAnio();
-    initTopProductosChart();
+    initComparativaMeses(_todasVentas);
+    initComparativaAnio(_todasVentas);
+    initTopProductosChart(_todasVentas);
     initMargenCategoriaChart();
     _inyectarPresetsFechaReportes();
 }
@@ -717,13 +736,14 @@ function updateInventoryStats() {
     if (el('lowStockCount'))   el('lowStockCount').textContent   = lowStockCount;
 }
 
-function updateMonthlyStats() {
+// P-2: parámetro opcional ventasCache para evitar recalcular _getAllVentas en initReports
+function updateMonthlyStats(ventasCache?: any[]) {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear  = now.getFullYear();
     // FIX 6: exclude cancelled orders from monthly stats
     const mesStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
-    const _allV = _getAllVentas().filter(function(s) {
+    const _allV = (ventasCache || _getAllVentas()).filter(function(s) {
         if (!s.date || s.type === 'abono' || s.type === 'anticipo') return false;
         if (s.method === 'Cancelado' || s.metodo === 'cancelado') return false;
         return s.date && String(s.date).startsWith(mesStr);
@@ -747,8 +767,9 @@ function updateMonthlyStats() {
     if (el('monthlyUnitsSold')) el('monthlyUnitsSold').textContent = `${monthlyUnits} unidades`;
 }
 
-function updatePaymentMethods() {
-    const _pmVentas = _getAllVentas().filter(function(s){ return s.type !== 'abono' && s.type !== 'anticipo'; });
+// P-2: parámetro opcional ventasCache para evitar recalcular _getAllVentas en initReports
+function updatePaymentMethods(ventasCache?: any[]) {
+    const _pmVentas = (ventasCache || _getAllVentas()).filter(function(s){ return s.type !== 'abono' && s.type !== 'anticipo'; });
     const el        = id => document.getElementById(id);
     // BM-08 FIX: usar suma de montos en lugar de conteo de transacciones
     const totalMonto = _pmVentas.reduce(function(s, v){ return s + Number(v.total || v.amount || v.monto || 0); }, 0);
@@ -769,10 +790,11 @@ function updatePaymentMethods() {
     if (el('transferPercentage')) el('transferPercentage').textContent = pct('Transferencia');
 }
 
-function renderTopProducts() {
+// P-2: parámetro opcional ventasCache para evitar recalcular _getAllVentas en initReports
+function renderTopProducts(ventasCache?: any[]) {
     const el = document.getElementById('topProductsList');
     if (!el) return;
-    const _todasVentas = _getAllVentas().filter(function(s){ return s.type !== 'abono' && s.type !== 'anticipo'; });
+    const _todasVentas = (ventasCache || _getAllVentas()).filter(function(s){ return s.type !== 'abono' && s.type !== 'anticipo'; });
     if (_todasVentas.length === 0) {
         el.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No hay ventas registradas aún</p>';
         return;
