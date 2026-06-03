@@ -378,7 +378,7 @@ function renderInventoryTable() {
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
-            <td class="px-4 py-3" style="font-size:.85rem;color:#7c3aed;font-weight:600;">$${Number(product.cost||0).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right" style="font-size:.85rem;color:#7c3aed;font-weight:600;">$${Number(product.cost||0).toFixed(2)}</td>
             <td class="px-4 py-3 text-gray-500 text-sm inv-col-hidden-prov">${_esc(product.proveedor||'—')}</td>
             <td class="px-4 py-3 font-semibold" id="stock-cell-${pid}">
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
@@ -429,7 +429,7 @@ function renderInventoryTable() {
                 </div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
-            <td class="px-4 py-3" style="font-size:.95rem;font-weight:700;color:#6d28d9;">$${Number(product.cost||0).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right" style="font-size:.95rem;font-weight:700;color:#6d28d9;">$${Number(product.cost||0).toFixed(2)}</td>
             <td class="px-4 py-3"><span style="font-size:11px;background:#ede9fe;color:#6d28d9;padding:3px 10px;border-radius:99px;font-weight:700;">Sin stock</span></td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;">
@@ -533,7 +533,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
-            <td class="px-4 py-3 text-gray-800 font-semibold" ondblclick="invInlineEditPrice('${pid}', this)" style="font-size:.95rem;cursor:pointer;" title="Doble-click para editar precio">$${Number(product.price||0).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right text-gray-800 font-semibold" ondblclick="invInlineEditPrice('${pid}', this)" style="font-size:.95rem;cursor:pointer;" title="Doble-click para editar precio">$${Number(product.price||0).toFixed(2)}</td>
             <td class="px-4 py-3" ondblclick="invInlineEditStock('${pid}', this)" style="cursor:pointer;" title="Doble-click para editar stock">${stockCell}</td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
@@ -638,7 +638,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm">${_esc(catName)}</td>
             <td class="px-4 py-3"><div style="display:flex;flex-wrap:wrap;gap:3px;">${tablaHTML}</div></td>
-            <td class="px-4 py-3">${precioCell}</td>
+            <td class="px-4 py-3 text-right">${precioCell}</td>
             <td class="px-4 py-3">${stockCell}</td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
@@ -680,9 +680,10 @@ function renderInventoryTable() {
 
         const headersHTML = headers.map(h => {
             const cls = h.colId === 'sku' ? ' inv-col-hidden-sku' : h.colId === 'proveedor' ? ' inv-col-hidden-prov' : '';
+            const alignCls = h.align === 'right' ? ' text-right' : ' text-left';
             return h.sortKey
-                ? `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide sortable-th cursor-pointer select-none${cls}" onclick="sortInventory('${h.sortKey}')" style="white-space:nowrap;">${h.label} ↕</th>`
-                : `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide${cls}" style="white-space:nowrap;">${h.label}</th>`;
+                ? `<th class="px-4 py-3${alignCls} text-xs font-semibold text-gray-500 uppercase tracking-wide sortable-th cursor-pointer select-none${cls}" onclick="sortInventory('${h.sortKey}')" style="white-space:nowrap;">${h.label} ↕</th>`
+                : `<th class="px-4 py-3${alignCls} text-xs font-semibold text-gray-500 uppercase tracking-wide${cls}" style="white-space:nowrap;">${h.label}</th>`;
         }).join('');
 
         // Paginación
@@ -799,7 +800,7 @@ function renderInventoryTable() {
                 {label:'SKU', sortKey:'sku', colId:'sku'},
                 {label:'Categoría', sortKey:'category'},
                 {label:'Variantes'},
-                {label:'Precio', sortKey:'price'},
+                {label:'Precio', sortKey:'price', align:'right'},
                 {label:'Disponible'},
                 {label:'Estado'},
                 {label:'Margen', sortKey:'margin'},
@@ -824,7 +825,7 @@ function renderInventoryTable() {
                 {label:'SKU', sortKey:'sku', colId:'sku'},
                 {label:'Categoría', sortKey:'category'},
                 {label:'Tabla de precios'},
-                {label:'Precio/pza', sortKey:'price'},
+                {label:'Precio/pza', sortKey:'price', align:'right'},
                 {label:'Disponible'},
                 {label:'Estado'},
                 {label:'Margen', sortKey:'margen'},
@@ -848,7 +849,7 @@ function renderInventoryTable() {
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
                 {label:'Categoría', sortKey:'category'},
-                {label:'Costo'},
+                {label:'Costo', align:'right'},
                 {label:'Proveedor', colId:'proveedor'},
                 {label:'Stock', sortKey:'stock'},
                 {label:'Estado'},
@@ -871,7 +872,7 @@ function renderInventoryTable() {
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
-                {label:'Costo/uso'},
+                {label:'Costo/uso', align:'right'},
                 {label:'Estado'},
                 {label:'Acciones'},
             ],

@@ -471,10 +471,12 @@ function _renderFiltrosActividad() {
                     { key:null,             label:'Tipo' },
                     { key:null,             label:'Acciones' },
                 ];
-                thead.innerHTML = cols.map(c => c.key
-                    ? `<th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-amber-600 select-none" onclick="sortClientes('${_escAttr(c.key)}')">${c.label} ${_sortArrow(c.key)}</th>`
-                    : `<th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">${c.label}</th>`
-                ).join('');
+                thead.innerHTML = cols.map(c => {
+                    const al = c.key === 'totalPurchases' ? 'text-right' : 'text-left';
+                    return c.key
+                        ? `<th class="px-6 py-3 ${al} text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-amber-600 select-none" onclick="sortClientes('${_escAttr(c.key)}')">${c.label} ${_sortArrow(c.key)}</th>`
+                        : `<th class="px-6 py-3 ${al} text-xs font-semibold text-gray-500 uppercase tracking-wider">${c.label}</th>`;
+                }).join('');
             }
 
             // NTH-12: colores de avatar por inicial — usando clases mk-avatar del ui-redesign
@@ -573,7 +575,7 @@ ${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(
 ${!client.phone && !client.facebook ? '—' : ''}
 </td>
 <td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : '—'}</td>
-                    <td class="px-6 py-4 text-gray-800 font-semibold">$${(client.totalPurchases||0).toFixed(2)}</td>
+                    <td class="px-6 py-4 text-right text-gray-800 font-semibold">$${(client.totalPurchases||0).toFixed(2)}</td>
                     <td class="px-6 py-4 text-gray-600">${client.lastPurchase || '—'}</td>
                     <td class="px-6 py-4">
                         ${esVIP ? '<span class="badge-vip">VIP</span>' : '<span class="badge-success">Regular</span>'}
@@ -816,7 +818,7 @@ ${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(
 ${!client.phone && !client.facebook ? '—' : ''}
 </td>
                         <td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : '—'}</td>
-                        <td class="px-6 py-4 text-gray-800 font-semibold">$${(client.totalPurchases || 0).toFixed(2)}</td>
+                        <td class="px-6 py-4 text-right text-gray-800 font-semibold">$${(client.totalPurchases || 0).toFixed(2)}</td>
                         <td class="px-6 py-4 text-gray-600">${client.lastPurchase || '—'}</td>
                         <td class="px-6 py-4">
                             ${esVIP ? '<span class="badge-vip">VIP</span>' : '<span class="badge-success">Regular</span>'}
@@ -839,3 +841,66 @@ ${!client.phone && !client.facebook ? '—' : ''}
                 }, 180); // fin debounce setTimeout
             });
         }
+
+// ══════════════════════════════════════════════════════════════════════════
+// Op4 — Contador "Mostrando X de Y" + chips de filtro activo en Clientes.
+// Hook único vía MutationObserver sobre #clientsTable (cubre todas las rutas
+// de render: filtro por tag, búsqueda con debounce y render general).
+// ══════════════════════════════════════════════════════════════════════════
+const _MK_CLI_TAG_LABEL: Record<string,string> = { activo:'Activos', 'en-riesgo':'En riesgo', inactivo:'Inactivos', nuevo:'Nuevos' };
+const _mkCliNorm = (s: any) => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+
+(window as any)._mkCliClearSearch = function() {
+  const s = document.getElementById('searchClient') as HTMLInputElement | null;
+  if (s) { s.value = ''; s.dispatchEvent(new Event('input')); }
+};
+(window as any)._mkCliClearTag = function() {
+  (window as any)._clienteFiltroTag = '';
+  document.querySelectorAll('#_mkFiltrosActividad button').forEach((b: any) => { b.style.border = '2px solid transparent'; });
+  if (typeof (window as any).renderClientsTable === 'function') (window as any).renderClientsTable();
+};
+
+function _mkCliRenderInfo() {
+  const anchor = document.getElementById('_mkFiltrosActividad')
+    || (document.getElementById('searchClient') as HTMLElement | null)?.closest('div');
+  if (!anchor || !anchor.parentElement) return;
+  let info = document.getElementById('mkCliFilterInfo');
+  if (!info) {
+    info = document.createElement('div');
+    info.id = 'mkCliFilterInfo';
+    info.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 24px 0;';
+    anchor.parentElement.insertBefore(info, anchor.nextSibling);
+  }
+  const all = (window as any).clients || [];
+  const total = all.length;
+  const q = ((document.getElementById('searchClient') as HTMLInputElement | null)?.value || '').trim();
+  const tag = (window as any)._clienteFiltroTag || '';
+  let shown = all as any[];
+  if (tag && typeof (window as any)._tagActividad === 'function')
+    shown = shown.filter(c => (window as any)._tagActividad(c).clase === tag);
+  if (q) {
+    const qn = _mkCliNorm(q);
+    shown = shown.filter(c => _mkCliNorm(c.name).includes(qn) || _mkCliNorm(c.email||'').includes(qn) || String(c.phone||c.telefono||'').includes(qn));
+  }
+  const chips: string[] = [];
+  if (q) chips.push(`<span class="mk-filter-chip">Buscar: ${_esc(q)}<button data-tip="Quitar" onclick="_mkCliClearSearch()">✕</button></span>`);
+  if (tag) chips.push(`<span class="mk-filter-chip">Filtro: ${_esc(_MK_CLI_TAG_LABEL[tag] || tag)}<button data-tip="Quitar" onclick="_mkCliClearTag()">✕</button></span>`);
+  let html = `<span class="mk-result-count">Mostrando <b>${shown.length}</b> de ${total} cliente${total !== 1 ? 's' : ''}</span>`;
+  if (chips.length)
+    html += `<div class="mk-filter-chips">${chips.join('')}<button class="mk-filter-clear" onclick="_mkCliClearSearch();_mkCliClearTag();">Limpiar todo</button></div>`;
+  info.innerHTML = html;
+}
+(window as any)._mkCliRenderInfo = _mkCliRenderInfo;
+
+(function _mkCliObserve() {
+  let _t: any = null;
+  const start = () => {
+    const tbody = document.getElementById('clientsTable');
+    if (!tbody) { setTimeout(start, 800); return; }
+    const obs = new MutationObserver(() => { clearTimeout(_t); _t = setTimeout(_mkCliRenderInfo, 30); });
+    obs.observe(tbody, { childList: true });
+    _mkCliRenderInfo();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();

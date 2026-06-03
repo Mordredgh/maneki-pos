@@ -1,7 +1,7 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 3 junio 2026 — Sesión 14 (Auditoría de diseño/UX aplicada)
-> **Versión app:** 2.2.0 | **Service Worker:** v2.3.7 | **Branch:** fresh-start → master
+> **Última actualización:** 3 junio 2026 — Sesión 14 (Auditoría de diseño/UX aplicada + pendientes menores)
+> **Versión app:** 2.2.0 | **Service Worker:** v2.3.8 | **Branch:** fresh-start → master
 
 ---
 
@@ -386,12 +386,16 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 //   .mk-filter-chip / .mk-result-count / .mk-table-summary / .mk-cmdk / .mk-kbd-hint
 ```
 
-### Pendientes menores que quedan (baja prioridad)
+### Pendientes menores — APLICADOS (continuación Sesión 14)
 
-- **Contador + chips de filtro** replicar en **Clientes** e **Historial de pedidos** (solo se aplicó a Inventario, la tabla principal).
-- **Alineación a la derecha por columna** en la tabla custom de inventario (los 4 renderizadores de fila): hoy el `tabular-nums` global ya alinea por dígito, falta el `text-right` explícito por celda.
-- **Barra "calma"** opcional en dashboard cuando no hay alertas (decidido NO añadir para evitar ruido visual; el banner se oculta).
-- **Consolidar Reportes/Herramientas en menú `⋯ Más`** (no aplicado; los toolbars actuales no tenían ese exceso).
+- ✅ **Contador + chips de filtro en Clientes** — `_mkCliRenderInfo()` vía MutationObserver sobre `#clientsTable` (cubre filtro por tag y búsqueda con debounce). Chips: Buscar / Filtro de actividad. Helpers `_mkCliClearSearch`, `_mkCliClearTag`. Columna "Total Compras" alineada a la derecha. → `src/clientes.ts`
+- ✅ **Contador + chips de filtro en Historial de pedidos** — bloque inyectado en `renderHistorialPedidos()` tras filtrar. Chips: Buscar / Mes / Estado / Desde / Hasta. Helper global `_mkHistClear(field)`. → `src/pedidos-2.ts`
+- ✅ **Alineación a la derecha por columna en inventario** — columnas de dinero (Precio, Precio/pza, Costo, Costo/uso) con `text-right` en `<th>` (vía `align:'right'` en `buildSection`) y en `<td>` de los 4 renderizadores. Stock/Margen se conservan como indicadores visuales (pills/barras). → `src/inventory-5.ts`
+
+### Pendientes que se decidió NO aplicar (justificado)
+
+- **Barra "calma"** en dashboard cuando no hay alertas: el banner `#alertaEntregas` ya se oculta solo; añadir una barra permanente metería ruido visual.
+- **Consolidar Reportes/Herramientas en menú `⋯ Más`**: los toolbars actuales ya son neutros y no tienen ese exceso de botones.
 
 ---
 

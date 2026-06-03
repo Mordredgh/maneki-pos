@@ -1323,6 +1323,32 @@ function renderHistorialPedidos() {
     }
 
     const totalItems = items.length;
+
+    // Op4: contador "Mostrando X de Y" + chips de filtro activo
+    (function _mkHistInfo() {
+        const bloque = document.getElementById('histFiltrosBloque');
+        if (!bloque || !bloque.parentElement) return;
+        let info = document.getElementById('mkHistFilterInfo');
+        if (!info) {
+            info = document.createElement('div');
+            info.id = 'mkHistFilterInfo';
+            info.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-4px 0 12px;';
+            bloque.insertAdjacentElement('afterend', info);
+        }
+        const _e = (s: any) => (typeof _esc === 'function' ? _esc(s) : String(s));
+        const _statusLbl: Record<string,string> = { finalizado: '✅ Finalizado', cancelado: '❌ Cancelado' };
+        const chips: string[] = [];
+        if (q) chips.push(`<span class="mk-filter-chip">Buscar: ${_e(q)}<button data-tip="Quitar" onclick="_mkHistClear('cliente')">✕</button></span>`);
+        if (mes) chips.push(`<span class="mk-filter-chip">Mes: ${_e(mes)}<button data-tip="Quitar" onclick="_mkHistClear('mes')">✕</button></span>`);
+        if (filtroStatus !== 'todos') chips.push(`<span class="mk-filter-chip">Estado: ${_e(_statusLbl[filtroStatus] || filtroStatus)}<button data-tip="Quitar" onclick="_mkHistClear('status')">✕</button></span>`);
+        if (filtroDesde) chips.push(`<span class="mk-filter-chip">Desde: ${_e(filtroDesde)}<button data-tip="Quitar" onclick="_mkHistClear('desde')">✕</button></span>`);
+        if (filtroHasta) chips.push(`<span class="mk-filter-chip">Hasta: ${_e(filtroHasta)}<button data-tip="Quitar" onclick="_mkHistClear('hasta')">✕</button></span>`);
+        let html = `<span class="mk-result-count">Mostrando <b>${totalItems}</b> de ${todosHistorial.length} pedido${todosHistorial.length !== 1 ? 's' : ''}</span>`;
+        if (chips.length)
+            html += `<div class="mk-filter-chips">${chips.join('')}<button class="mk-filter-clear" onclick="_mkHistClear('all')">Limpiar todo</button></div>`;
+        info.innerHTML = html;
+    })();
+
     const totalPages = Math.max(1, Math.ceil(totalItems / _HIST_PER_PAGE));
     if (_histPage > totalPages) _histPage = totalPages;
     const start = (_histPage - 1) * _HIST_PER_PAGE;
@@ -1768,3 +1794,23 @@ window.editarPedidoFinalizado = editarPedidoFinalizado;
 })();
 
 // ── Ticket/comprobante de pedido finalizado ──────────────────────────────────
+
+// Op4 — limpiar un filtro de Historial desde su chip
+(window as any)._mkHistClear = function(field: string) {
+    const f = (window as any)._historialFiltros || ((window as any)._historialFiltros = { cliente:'', status:'todos', desde:'', hasta:'' });
+    const setVal = (id: string, v: string) => { const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null; if (el) el.value = v; };
+    switch (field) {
+        case 'cliente': f.cliente = ''; setVal('histFiltroCliente', ''); setVal('histPedidoBuscar', ''); break;
+        case 'mes':     setVal('histPedidoMes', ''); break;
+        case 'status':  f.status = 'todos'; setVal('histFiltroStatus', 'todos'); break;
+        case 'desde':   f.desde = ''; setVal('histFiltroDesde', ''); break;
+        case 'hasta':   f.hasta = ''; setVal('histFiltroHasta', ''); break;
+        case 'all':
+            (window as any)._historialFiltros = { cliente:'', status:'todos', desde:'', hasta:'' };
+            setVal('histFiltroCliente', ''); setVal('histPedidoBuscar', ''); setVal('histFiltroStatus', 'todos');
+            setVal('histFiltroDesde', ''); setVal('histFiltroHasta', ''); setVal('histPedidoMes', '');
+            break;
+    }
+    (window as any)._histPage = 1;
+    if (typeof (window as any).renderHistorialPedidos === 'function') (window as any).renderHistorialPedidos();
+};
