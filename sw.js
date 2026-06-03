@@ -1,4 +1,4 @@
-const CACHE_NAME = "maneki-v2.3.5";
+const CACHE_NAME = "maneki-v2.3.6";
 
 // P6: assets críticos (deben estar en caché para que la app arranque)
 const CRITICAL_ASSETS = [
@@ -113,7 +113,8 @@ self.addEventListener("fetch", (e) => {
         if (cached) return cached;
         return fetch(e.request).then((response) => {
           if (response.ok && e.request.method === "GET") {
-            caches.open(CACHE_NAME).then((c) => c.put(e.request, response.clone()));
+            const clone = response.clone(); // clonar ANTES de que el body sea consumido
+            caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
           }
           return response;
         }).catch(() => caches.match(e.request));
