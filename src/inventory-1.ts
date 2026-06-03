@@ -981,6 +981,18 @@ window.closePtModal = closePtModal;
 function closeAddProductModal() { closePtModal(); }
 window.closeAddProductModal = closeAddProductModal;
 
+// Aliases globales para los botones del dropdown "Agregar" en index.html
+// El HTML llama openPtModal / openMpModal / openSvcModal
+(window as any).openPtModal  = openAddProductModal;
+(window as any).openMpModal  = function() {
+    if (typeof (window as any).injectMpModal === 'function') (window as any).injectMpModal();
+    if (typeof openModal === 'function') openModal('mpModal');
+};
+(window as any).openSvcModal = function() {
+    if (typeof (window as any).injectSvcModal === 'function') (window as any).injectSvcModal();
+    if (typeof openModal === 'function') openModal('svcModal');
+};
+
 // ══════════════════════════════════════════════════════════════════════════
 // ── IMPORTACIÓN CSV ──────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════
