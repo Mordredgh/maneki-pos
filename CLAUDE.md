@@ -352,9 +352,65 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
 ---
 
-## ✅ PENDIENTES — Sin pendientes de código (3 junio 2026)
+## 🎨 PENDIENTES — Auditoría de Diseño/UX (para aplicar en próxima sesión)
 
-Todo el backlog de auditorías fue aplicado. Lo único pendiente requiere infraestructura externa.
+> Auditoría realizada en Sesión 13 (3 junio 2026). Aplicar TODO en una sola sesión de agentes en paralelo.
+
+### Oportunidad 1 — Disciplina del sistema de diseño (estructural)
+El `index.html` hardcodea colores y gradientes inline en casi todos lados en vez de usar los tokens de `maneki-premium.css`. Ejemplo: `style="background:linear-gradient(135deg,#7c3aed,#a855f7)"` repetido con variaciones en cada botón de toolbar.
+- Crear clases utilitarias premium: `.mk-btn-primary`, `.mk-btn-warning`, `.mk-chip`, `.mk-toolbar-btn`
+- Reemplazar todos los `style="background:linear-gradient(...)"` inline de botones/headers por esas clases
+- Resultado: consistencia perfecta, cambiar marca = cambiar 1 token
+
+### Oportunidad 2 — Legibilidad de datos en tablas (ALTO IMPACTO, bajo esfuerzo)
+La tabla de inventario tiene 11 columnas; los números están alineados a la izquierda sin tipografía tabular.
+- **`font-variant-numeric: tabular-nums`** en `.mk-kpi-value` y todas las celdas de cifras `$` — los dígitos se alinean por unidad/decena y el ojo los compara instantáneamente
+- **Alinear Precio/Stock/Margen/Total a la DERECHA** en todas las tablas (`text-right` en `<th>` y `<td>`)
+- **Toggle densidad Cómodo / Compacto** — en compacto ver ~2× más filas sin scroll. Guardar preferencia en `localStorage`
+- **Agrupar columnas:** SKU como subtítulo gris bajo el nombre del producto; Categoría como chip pequeño → de 11 a ~8 columnas
+- **Fila de resumen sticky al pie de tabla:** "Valor total: $X · N productos · Y bajo stock"
+
+### Oportunidad 3 — Disciplina de color en toolbars (look premium)
+En inventario hay 4 botones de gradientes distintos compitiendo. Un producto de alta gama usa el color solo para la acción principal.
+- **1 solo botón primario lleno de color:** `+ Agregar`
+- **Resto como botones ghost neutros** (borde sutil, ícono, texto gris — color solo en hover)
+- **Consolidar "Reportes" y "Herramientas" en un solo menú `⋯ Más`**
+- Aplicar el mismo patrón en Balance, Clientes y Pedidos
+
+### Oportunidad 4 — Filtros con feedback visual
+Los filtros no muestran qué está activo ni cuántos resultados hay.
+- **Contador de resultados:** "Mostrando 23 de 187 productos" junto al buscador (en inventario, clientes, historial)
+- **Chips de filtro activo removibles:** al filtrar por tag/proveedor, aparece chip "Proveedor: ABC ✕" + botón "Limpiar todo"
+- **Tipo como segmented control (pills):** reemplazar el `<select>` "Todos / Productos / Materia Prima" por toggle de 3 botones visuales. Mismo patrón en Balance (ingresos/egresos)
+
+### Oportunidad 5 — Velocidad de trabajo (nice-to-have)
+- **Command palette (Ctrl+K):** elevar `busquedaGlobal()` existente a paleta de comandos que además *ejecuta*: "Nuevo pedido", "Ir a Balance", "Exportar inventario". Sin mouse.
+- **Barra de acción flotante por selección:** cuando hay items seleccionados en inventario (`Ctrl+A` ya existe), que flote barra inferior: "3 seleccionados · Cambiar precio · Etiquetas · Eliminar"
+- **Totales en vivo por columna kanban:** mostrar `$` total y conteo de pedidos en el sub-header de cada columna
+- **Hints de atajo visibles:** añadir `⌘K` como placeholder en el buscador global; `data-tip="Ctrl+K"` en el botón de búsqueda
+
+### Oportunidad 6 — Micro-pulido de alta gama
+- **Estados vacíos con acción primaria:** cada tabla vacía debe ofrecer el botón de acción ("Aún no hay productos — + Agregar el primero"). Ya existe `.mk-empty`, faltan acciones en algunas secciones
+- **Alertas del dashboard colapsadas:** las 2 tarjetas de alerta (entregas urgentes / sin movimiento) compiten con los KPIs. Colapsarlas a una sola barra discreta cuando no hay urgencias; se expanden solo cuando hay alertas reales
+- **Migrar sombras Tailwind a tokens premium:** muchas tarjetas usan `shadow-sm` en vez de `--sh-md/--sh-lg` con tinte morado. Resultado: profundidad premium uniforme en toda la app
+- **`aria-live="polite"`** en el contenedor de toasts
+
+### Prioridad de aplicación
+
+| Prio | Mejora | Impacto | Esfuerzo |
+|------|--------|---------|----------|
+| 🥇 | Tipografía tabular + alineación derecha en tablas | Altísimo | Bajo |
+| 🥇 | Toggle densidad Cómodo/Compacto | Alto | Bajo |
+| 🥈 | Contador de resultados + chips de filtro activo | Alto | Medio |
+| 🥈 | Disciplina de color en toolbars | Alto (look) | Medio |
+| 🥉 | Command palette Ctrl+K | Alto (wow factor) | Medio-Alto |
+| 🥉 | Fila de totales sticky en tablas | Medio | Medio |
+| ⭐ | Clases utilitarias anti-deriva de tokens | Estructural | Medio |
+| ⭐ | Micro-pulido (empty states, alertas, sombras, aria) | Medio | Bajo |
+
+---
+
+## ✅ COMPLETADO — Sin pendientes de código (3 junio 2026)
 
 ### Sesión 12 (3 junio 2026) — Auditoría profunda 5 agentes: 19 bugs corregidos
 
