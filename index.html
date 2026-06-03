@@ -279,6 +279,9 @@ input:focus, select:focus, textarea:focus, button:focus {
           onfocus="const _dk=document.body.classList.contains('dark');this.style.borderColor='rgba(168,85,247,0.5)';this.style.background=_dk?'transparent':'rgba(255,255,255,0.97)';this.style.boxShadow='0 0 0 3.5px rgba(168,85,247,0.13),inset 0 1px 2px rgba(21,4,40,0.03)'"
           onblur="const _dk2=document.body.classList.contains('dark');this.style.borderColor='rgba(197,151,59,0.15)';this.style.background=_dk2?'transparent':'rgba(255,255,255,0.8)';this.style.boxShadow='inset 0 1.5px 4px rgba(21,4,40,0.04)'"
         />
+        <span class="mk-kbd-hint" data-tip="Paleta de comandos"
+          onclick="mkOpenCommandPalette&&mkOpenCommandPalette()"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">⌘K</span>
         <div id="globalSearchResults" class="hidden absolute top-11 left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto" style="box-shadow:0 24px 64px rgba(21,4,40,0.15),0 8px 24px rgba(124,58,237,0.08);border-radius:20px;border:1px solid rgba(197,151,59,0.12);"></div>
       </div>
       <button onclick="refrescarPagina()" id="btnRefrescar"

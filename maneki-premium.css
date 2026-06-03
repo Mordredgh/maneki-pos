@@ -1870,3 +1870,253 @@ body.dark .mk-dash-meta-card {
   animation: mkKanbanShake 0.45s ease both;
   border-color: #ef4444 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SESIÓN 13 — AUDITORÍA DE DISEÑO/UX
+   Clases utilitarias anti-deriva de tokens + legibilidad de datos +
+   disciplina de color + filtros + command palette + micro-pulido.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Op1/Op3 — BOTONES UTILITARIOS (anti-gradientes inline) ──
+   Un solo primario lleno por toolbar; el resto neutros (ghost). */
+.mk-btn-primary {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, #C5973B 0%, #E8B84B 55%, #F0C060 100%) !important;
+  color: #fff !important; border: none !important;
+  border-radius: 12px !important; padding: 8px 16px !important;
+  font-weight: 700 !important; font-size: 0.82rem !important; letter-spacing: 0.01em;
+  cursor: pointer; white-space: nowrap;
+  box-shadow: var(--hi-top), var(--sh-gold) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  transition: transform 0.18s var(--snap), box-shadow 0.18s ease !important;
+}
+.mk-btn-primary:hover { transform: translateY(-2px); box-shadow: var(--hi-top), var(--sh-gold-lg) !important; }
+.mk-btn-primary:active { transform: scale(0.96); }
+
+/* Botón de toolbar NEUTRO (ghost): el color sólo aparece en hover */
+.mk-toolbar-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.9) !important;
+  color: var(--tx-secondary) !important;
+  border: 1.5px solid var(--bd-soft) !important;
+  border-radius: 12px !important; padding: 8px 14px !important;
+  font-weight: 600 !important; font-size: 0.8rem !important;
+  cursor: pointer; white-space: nowrap;
+  box-shadow: var(--sh-xs) !important;
+  transition: transform 0.16s var(--snap), border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
+}
+.mk-toolbar-btn:hover {
+  border-color: var(--mk-g400) !important; color: var(--mk-g700) !important;
+  box-shadow: var(--sh-sm) !important; transform: translateY(-1px);
+}
+.mk-toolbar-btn.danger:hover { border-color: var(--clr-danger) !important; color: var(--clr-danger) !important; }
+.mk-toolbar-btn .mk-tb-ico { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.75; }
+.mk-toolbar-btn:hover .mk-tb-ico { opacity: 1; }
+body.dark .mk-toolbar-btn { background: rgba(255,255,255,0.05) !important; color: #cbd5e1 !important; border-color: rgba(255,255,255,0.1) !important; }
+
+/* Chip de datos neutro (SKU/categoría como sub-etiqueta) */
+.mk-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(124,58,237,0.07);
+  color: var(--tx-secondary);
+  border: 1px solid rgba(124,58,237,0.12);
+  border-radius: 99px; padding: 1px 9px;
+  font-size: 0.68rem; font-weight: 600; white-space: nowrap;
+}
+.mk-chip.gold { background: rgba(197,151,59,0.1); color: var(--mk-g700); border-color: rgba(197,151,59,0.18); }
+body.dark .mk-chip { background: rgba(124,58,237,0.18); color: #c4b5fd; border-color: rgba(124,58,237,0.25); }
+
+/* ── Op2 — LEGIBILIDAD DE DATOS ──
+   Tipografía tabular en TODA cifra; alineación a la derecha de números. */
+.mk-num, td.text-right, th.text-right,
+table tbody td:is(:nth-child(3), :nth-child(4), :nth-child(5), :nth-child(6), :nth-child(7)) {
+  font-variant-numeric: tabular-nums;
+}
+td.text-right, th.text-right { text-align: right !important; }
+.mk-num { font-variant-numeric: tabular-nums; }
+
+/* Densidad de tabla: Cómodo (default) / Compacto */
+body.mk-dense table thead th { padding: 7px 12px !important; }
+body.mk-dense table tbody td { padding: 7px 12px !important; font-size: 0.8rem; }
+body.mk-dense .kanban-card { margin-bottom: 6px !important; }
+.mk-density-toggle {
+  display: inline-flex; align-items: center; border-radius: 10px;
+  border: 1.5px solid var(--bd-soft); overflow: hidden; background: rgba(255,255,255,0.9);
+  box-shadow: var(--sh-xs);
+}
+.mk-density-toggle button {
+  border: none !important; background: transparent !important;
+  padding: 6px 10px !important; font-size: 0.72rem !important; font-weight: 700 !important;
+  color: var(--tx-muted) !important; cursor: pointer; line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mk-density-toggle button.active {
+  background: linear-gradient(135deg, var(--mk-g500), var(--mk-g400)) !important;
+  color: #fff !important;
+}
+body.dark .mk-density-toggle { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+
+/* Fila de resumen sticky al pie de tabla */
+.mk-table-summary {
+  position: sticky; bottom: 0; z-index: 3;
+  background: linear-gradient(135deg, rgba(250,247,255,0.97), rgba(253,246,220,0.85)) !important;
+  backdrop-filter: blur(6px);
+  border-top: 1.5px solid rgba(197,151,59,0.25) !important;
+  font-weight: 700 !important; color: var(--tx-primary) !important;
+}
+.mk-table-summary td { font-size: 0.8rem !important; font-variant-numeric: tabular-nums; }
+body.dark .mk-table-summary { background: linear-gradient(135deg, #1e1e2e, #252540) !important; color: #f1f5f9 !important; }
+
+/* ── Op4 — FILTROS CON FEEDBACK ── */
+.mk-result-count {
+  font-size: 0.72rem; font-weight: 600; color: var(--tx-muted);
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.mk-result-count b { color: var(--mk-g700); font-weight: 800; }
+body.dark .mk-result-count b { color: var(--mk-g300); }
+
+.mk-filter-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mk-filter-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(168,85,247,0.06));
+  color: var(--mk-p600); border: 1px solid rgba(124,58,237,0.18);
+  border-radius: 99px; padding: 2px 6px 2px 11px;
+  font-size: 0.72rem; font-weight: 700;
+}
+.mk-filter-chip button {
+  border: none; background: rgba(124,58,237,0.14); color: var(--mk-p600);
+  width: 16px; height: 16px; border-radius: 50%; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; line-height: 1; transition: background 0.14s ease;
+}
+.mk-filter-chip button:hover { background: var(--clr-danger); color: #fff; }
+.mk-filter-clear {
+  border: none; background: none; cursor: pointer;
+  color: var(--tx-muted); font-size: 0.72rem; font-weight: 700;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.mk-filter-clear:hover { color: var(--clr-danger); }
+body.dark .mk-filter-chip { background: rgba(124,58,237,0.2); color: #c4b5fd; border-color: rgba(124,58,237,0.3); }
+
+/* Segmented control (pills) reemplaza <select> de tipo */
+.mk-segmented {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: rgba(124,58,237,0.06); border: 1px solid var(--bd-soft);
+  border-radius: 12px; padding: 3px;
+}
+.mk-segmented button {
+  border: none !important; background: transparent !important;
+  padding: 5px 12px !important; border-radius: 9px !important;
+  font-size: 0.74rem !important; font-weight: 700 !important;
+  color: var(--tx-muted) !important; cursor: pointer; white-space: nowrap; line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.mk-segmented button.active {
+  background: #fff !important; color: var(--mk-p600) !important;
+  box-shadow: var(--sh-xs);
+}
+body.dark .mk-segmented { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+body.dark .mk-segmented button.active { background: #2d2d44 !important; color: #c4b5fd !important; }
+
+/* ── Op5 — COMMAND PALETTE (Ctrl+K) ── */
+#mk-cmdk-overlay {
+  position: fixed; inset: 0; z-index: 100000;
+  background: rgba(10,2,22,0.5); backdrop-filter: blur(6px);
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 12vh;
+}
+#mk-cmdk-overlay.visible { display: flex; }
+#mk-cmdk {
+  width: 92vw; max-width: 580px;
+  background: var(--sf-white); border-radius: 18px;
+  border: 1px solid rgba(197,151,59,0.18);
+  box-shadow: var(--sh-2xl);
+  overflow: hidden; animation: mkModalIn 0.22s var(--spring) both;
+}
+body.dark #mk-cmdk { background: #1c1e2e; border-color: rgba(197,151,59,0.2); }
+#mk-cmdk-input {
+  width: 100%; border: none !important; outline: none !important;
+  background: transparent !important; box-shadow: none !important;
+  padding: 16px 20px !important; font-size: 1rem !important;
+  border-bottom: 1px solid rgba(197,151,59,0.12) !important; border-radius: 0 !important;
+}
+#mk-cmdk-list { max-height: 52vh; overflow-y: auto; padding: 6px; }
+.mk-cmdk-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 10px; cursor: pointer;
+  font-size: 0.86rem; color: var(--tx-secondary);
+}
+.mk-cmdk-item .mk-cmdk-ico { font-size: 1.05rem; width: 24px; text-align: center; flex-shrink: 0; }
+.mk-cmdk-item .mk-cmdk-sub { margin-left: auto; font-size: 0.68rem; color: var(--tx-faint); font-weight: 600; }
+.mk-cmdk-item.active, .mk-cmdk-item:hover {
+  background: linear-gradient(90deg, rgba(124,58,237,0.1), rgba(197,151,59,0.06));
+  color: var(--tx-primary);
+}
+body.dark .mk-cmdk-item { color: #cbd5e1; }
+body.dark .mk-cmdk-item.active, body.dark .mk-cmdk-item:hover { background: rgba(124,58,237,0.18); color: #fff; }
+.mk-cmdk-empty { padding: 24px; text-align: center; color: var(--tx-muted); font-size: 0.82rem; }
+.mk-cmdk-group {
+  padding: 8px 14px 4px; font-size: 0.6rem; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--tx-faint);
+}
+/* Hint ⌘K en buscador global */
+.mk-kbd-hint {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.16);
+  border-radius: 6px; padding: 1px 6px;
+  font-size: 0.62rem; font-weight: 700; color: var(--tx-muted);
+  font-family: 'Space Grotesk', monospace; pointer-events: none;
+}
+body.dark .mk-kbd-hint { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #94a3b8; }
+
+/* ── Op5 — BARRA FLOTANTE DE SELECCIÓN ── */
+#mk-selbar {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(120%);
+  z-index: 9995; display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, rgba(26,5,51,0.97), rgba(45,11,92,0.97));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(197,151,59,0.22); border-radius: 16px;
+  padding: 10px 16px; color: #fff;
+  box-shadow: 0 16px 48px rgba(10,2,22,0.45);
+  transition: transform 0.3s var(--spring), opacity 0.2s ease; opacity: 0;
+}
+#mk-selbar.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+#mk-selbar .mk-selbar-count { font-weight: 800; font-size: 0.86rem; }
+#mk-selbar .mk-selbar-count b { color: var(--mk-g300); }
+#mk-selbar button {
+  border: 1px solid rgba(255,255,255,0.16) !important;
+  background: rgba(255,255,255,0.08) !important; color: #fff !important;
+  border-radius: 10px !important; padding: 6px 12px !important;
+  font-size: 0.76rem !important; font-weight: 700 !important; cursor: pointer;
+  transition: background 0.15s ease;
+}
+#mk-selbar button:hover { background: rgba(255,255,255,0.18) !important; }
+#mk-selbar button.danger:hover { background: var(--clr-danger) !important; border-color: var(--clr-danger) !important; }
+@media (max-width: 640px) { #mk-selbar { width: 92vw; flex-wrap: wrap; justify-content: center; } }
+
+/* ── Op5 — TOTALES EN VIVO POR COLUMNA KANBAN ── */
+.mk-kanban-col-total {
+  font-size: 0.66rem; font-weight: 700; color: var(--mk-g700);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+body.dark .mk-kanban-col-total { color: var(--mk-g300); }
+
+/* ── Op6 — ALERTAS DASHBOARD COLAPSADAS ── */
+.mk-alert-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px; border-radius: 12px;
+  background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.18);
+  font-size: 0.78rem; font-weight: 600; color: #047857;
+  cursor: default;
+}
+.mk-alert-bar.has-alerts {
+  background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25);
+  color: #B45309; cursor: pointer;
+}
+.mk-alert-bar.has-alerts:hover { background: rgba(245,158,11,0.16); }
+body.dark .mk-alert-bar { background: rgba(16,185,129,0.12); color: #34d399; }
+body.dark .mk-alert-bar.has-alerts { background: rgba(245,158,11,0.14); color: #fbbf24; }
+
+/* ── Op6 — MIGRAR SOMBRAS A TOKENS PREMIUM (tinte morado) ── */
+.shadow-sm:not(.mk-toast):not(.shortcut-key) { box-shadow: var(--sh-sm) !important; }
+.mk-card.shadow-sm, .stat-card.shadow-sm { box-shadow: var(--hi-top), var(--sh-md) !important; }

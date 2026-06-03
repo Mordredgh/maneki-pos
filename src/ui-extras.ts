@@ -368,6 +368,8 @@ function manekiToastExport(msg, tipo) {
         container = document.createElement('div');
         container.id = 'mk-toast-container';
         container.className = 'mk-toast-container';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'true');
         document.body.appendChild(container);
     }
 
@@ -738,16 +740,14 @@ document.addEventListener('keydown', function(e) {
         }
     }
 
-    // Ctrl+K / Cmd+K — global search overlay
+    // Ctrl+K / Cmd+K — command palette (navega + ejecuta acciones)
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        // Intentar abrir overlay modal primero, fallback al input inline
-        const overlay = document.getElementById('busquedaGlobalOverlay');
-        if (overlay) {
-            _abrirBusquedaOverlay();
+        if (typeof (window as any).mkOpenCommandPalette === 'function') {
+            (window as any).mkOpenCommandPalette();
         } else {
             const searchInput = document.getElementById('globalSearchInput');
-            if (searchInput) { searchInput.focus(); searchInput.select(); }
+            if (searchInput) { (searchInput as HTMLInputElement).focus(); (searchInput as HTMLInputElement).select(); }
         }
         return;
     }
@@ -931,6 +931,158 @@ document.addEventListener('keydown', function(e) {
         _mkUndo();
     }
 });
+
+// ══════════════════════════════════════════════════════════════════════════
+// Op2 — DENSIDAD DE TABLA (Cómodo / Compacto) — persistida en localStorage
+// ══════════════════════════════════════════════════════════════════════════
+function mkAplicarDensidad() {
+    const compacto = localStorage.getItem('mk_density') === 'compact';
+    document.body.classList.toggle('mk-dense', compacto);
+    document.querySelectorAll('.mk-density-toggle').forEach(tg => {
+        tg.querySelectorAll('button').forEach(b => {
+            b.classList.toggle('active', (b.dataset.density === 'compact') === compacto);
+        });
+    });
+}
+function mkToggleDensidad(modo?: string) {
+    const actual = localStorage.getItem('mk_density') === 'compact' ? 'compact' : 'comfortable';
+    const nuevo = modo || (actual === 'compact' ? 'comfortable' : 'compact');
+    localStorage.setItem('mk_density', nuevo);
+    mkAplicarDensidad();
+}
+(window as any).mkToggleDensidad = mkToggleDensidad;
+(window as any).mkAplicarDensidad = mkAplicarDensidad;
+// Inyecta el control segmentado Cómodo/Compacto en un contenedor dado
+(window as any).mkRenderDensityToggle = function(): string {
+    return `<div class="mk-density-toggle" role="group" aria-label="Densidad de tabla">
+        <button type="button" data-density="comfortable" onclick="mkToggleDensidad('comfortable')" data-tip="Vista cómoda">Cómodo</button>
+        <button type="button" data-density="compact" onclick="mkToggleDensidad('compact')" data-tip="Más filas por pantalla">Compacto</button>
+    </div>`;
+};
+document.addEventListener('DOMContentLoaded', mkAplicarDensidad);
+mkAplicarDensidad();
+
+// ══════════════════════════════════════════════════════════════════════════
+// Op5 — COMMAND PALETTE (Ctrl+K) — navega y ejecuta acciones sin mouse
+// ══════════════════════════════════════════════════════════════════════════
+interface MkCommand { ico: string; label: string; sub?: string; keys: string; group: string; run: () => void; }
+
+function _mkCall(fn: string, ...args: any[]) {
+    const f = (window as any)[fn];
+    if (typeof f === 'function') { f(...args); return true; }
+    manekiToastExport('Acción no disponible aquí', 'warn');
+    return false;
+}
+
+function _mkBuildCommands(): MkCommand[] {
+    const nav = (s: string) => () => _mkCall('showSection', s);
+    return [
+        // Navegación
+        { ico:'🏠', label:'Ir a Dashboard',     keys:'inicio home bienvenida panel', group:'Navegar', run: nav('bienvenida') },
+        { ico:'📋', label:'Ir a Pedidos',        keys:'orders kanban encargos',      group:'Navegar', run: nav('pedidos') },
+        { ico:'📦', label:'Ir a Inventario',     keys:'productos stock materia',     group:'Navegar', run: nav('inventory') },
+        { ico:'💰', label:'Ir a Balance',        keys:'cxc cxp ingresos gastos',     group:'Navegar', run: nav('balance') },
+        { ico:'📊', label:'Ir a Reportes',       keys:'graficas estadisticas ventas',group:'Navegar', run: nav('reportes') },
+        { ico:'👥', label:'Ir a Clientes',       keys:'customers rfm contactos',     group:'Navegar', run: nav('clientes') },
+        { ico:'🚚', label:'Ir a Envíos',         keys:'shipping mapa anillos',       group:'Navegar', run: nav('envios') },
+        { ico:'⚙️', label:'Ir a Equipos / ROI',  keys:'maquinas inversion roi',      group:'Navegar', run: nav('equipos') },
+        { ico:'🗂️', label:'Ir a Configuración',  keys:'settings ajustes tema',       group:'Navegar', run: nav('configuracion') },
+        { ico:'💾', label:'Ir a Respaldo',       keys:'backup exportar importar',    group:'Navegar', run: nav('backup') },
+        // Acciones
+        { ico:'➕', label:'Nuevo pedido',        sub:'N', keys:'crear orden encargo', group:'Acción', run: () => _mkCall('openPedidoModal') },
+        { ico:'🏷️', label:'Nuevo producto',      keys:'crear inventario alta',       group:'Acción', run: () => _mkCall('openAddProductModal') },
+        { ico:'🧾', label:'Nueva cotización',    sub:'Ctrl+Q', keys:'quote presupuesto', group:'Acción', run: () => { if (typeof (window as any).openQuoteModal==='function') (window as any).openQuoteModal(); else _mkCall('showSection','analisis'); } },
+        { ico:'📤', label:'Exportar inventario', keys:'excel csv descargar',         group:'Acción', run: () => _mkCall('exportarInventarioExcel') },
+        { ico:'📤', label:'Exportar balance',    keys:'csv descargar mes',           group:'Acción', run: () => _mkCall('exportarBalanceMesCSV') },
+        { ico:'📤', label:'Exportar clientes',   keys:'csv descargar',               group:'Acción', run: () => _mkCall('exportarClientesCSV') },
+        { ico:'🔄', label:'Recargar dashboard',  sub:'R', keys:'refresh actualizar',  group:'Acción', run: () => _mkCall('updateDashboard') },
+        // Preferencias
+        { ico:'🌓', label:'Alternar modo oscuro', keys:'dark light tema',            group:'Preferencias', run: () => _mkCall('toggleDarkMode') },
+        { ico:'↕️', label:'Alternar densidad de tabla', keys:'compacto comodo filas', group:'Preferencias', run: () => mkToggleDensidad() },
+        { ico:'⌨️', label:'Ver atajos de teclado', sub:'?', keys:'shortcuts ayuda',   group:'Preferencias', run: () => _mkCall('mostrarAtajos') },
+    ];
+}
+
+let _mkCmdkCommands: MkCommand[] = [];
+let _mkCmdkFiltered: MkCommand[] = [];
+let _mkCmdkActive = 0;
+
+function _mkEnsureCmdkDom() {
+    if (document.getElementById('mk-cmdk-overlay')) return;
+    const ov = document.createElement('div');
+    ov.id = 'mk-cmdk-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-label', 'Paleta de comandos');
+    ov.innerHTML = `<div id="mk-cmdk">
+        <input id="mk-cmdk-input" type="text" placeholder="Escribe un comando o sección…" autocomplete="off" spellcheck="false" aria-label="Buscar comando">
+        <div id="mk-cmdk-list" role="listbox"></div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click', (e) => { if (e.target === ov) mkCloseCommandPalette(); });
+    const input = ov.querySelector('#mk-cmdk-input') as HTMLInputElement;
+    input.addEventListener('input', () => { _mkCmdkActive = 0; _mkRenderCmdk(input.value); });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); _mkCmdkActive = Math.min(_mkCmdkActive + 1, _mkCmdkFiltered.length - 1); _mkHighlightCmdk(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); _mkCmdkActive = Math.max(_mkCmdkActive - 1, 0); _mkHighlightCmdk(); }
+        else if (e.key === 'Enter') { e.preventDefault(); _mkRunCmdk(_mkCmdkActive); }
+        else if (e.key === 'Escape') { e.preventDefault(); mkCloseCommandPalette(); }
+    });
+}
+
+function _mkRenderCmdk(q: string) {
+    const list = document.getElementById('mk-cmdk-list');
+    if (!list) return;
+    const term = (q || '').trim().toLowerCase();
+    _mkCmdkFiltered = !term ? _mkCmdkCommands
+        : _mkCmdkCommands.filter(c => (c.label + ' ' + c.keys + ' ' + c.group).toLowerCase().includes(term));
+    if (_mkCmdkFiltered.length === 0) {
+        list.innerHTML = `<div class="mk-cmdk-empty">Sin resultados para “${typeof _esc==='function'?_esc(q):q}”</div>`;
+        return;
+    }
+    let html = ''; let lastGroup = '';
+    _mkCmdkFiltered.forEach((c, i) => {
+        if (c.group !== lastGroup) { html += `<div class="mk-cmdk-group">${c.group}</div>`; lastGroup = c.group; }
+        html += `<div class="mk-cmdk-item${i === _mkCmdkActive ? ' active' : ''}" role="option" data-idx="${i}" onclick="_mkRunCmdkGlobal(${i})">
+            <span class="mk-cmdk-ico">${c.ico}</span><span>${c.label}</span>${c.sub ? `<span class="mk-cmdk-sub">${c.sub}</span>` : ''}</div>`;
+    });
+    list.innerHTML = html;
+}
+
+function _mkHighlightCmdk() {
+    const list = document.getElementById('mk-cmdk-list');
+    if (!list) return;
+    list.querySelectorAll('.mk-cmdk-item').forEach((el, i) => {
+        const on = i === _mkCmdkActive;
+        el.classList.toggle('active', on);
+        if (on) (el as HTMLElement).scrollIntoView({ block: 'nearest' });
+    });
+}
+
+function _mkRunCmdk(idx: number) {
+    const cmd = _mkCmdkFiltered[idx];
+    if (!cmd) return;
+    mkCloseCommandPalette();
+    setTimeout(() => { try { cmd.run(); } catch(err) { manekiToastExport('Error al ejecutar comando', 'err'); } }, 60);
+}
+(window as any)._mkRunCmdkGlobal = _mkRunCmdk;
+
+function mkOpenCommandPalette() {
+    _mkEnsureCmdkDom();
+    _mkCmdkCommands = _mkBuildCommands();
+    _mkCmdkActive = 0;
+    const ov = document.getElementById('mk-cmdk-overlay');
+    const input = document.getElementById('mk-cmdk-input') as HTMLInputElement;
+    if (!ov || !input) return;
+    input.value = '';
+    _mkRenderCmdk('');
+    ov.classList.add('visible');
+    setTimeout(() => input.focus(), 30);
+}
+function mkCloseCommandPalette() {
+    document.getElementById('mk-cmdk-overlay')?.classList.remove('visible');
+}
+(window as any).mkOpenCommandPalette = mkOpenCommandPalette;
+(window as any).mkCloseCommandPalette = mkCloseCommandPalette;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ── MEJORA 1: BÚSQUEDA GLOBAL OVERLAY (Ctrl+K / "/") ─────────────────────
@@ -1499,6 +1651,8 @@ function manekiUndoToast(msg, undoFn, duracion) {
         container = document.createElement('div');
         container.id = 'mk-toast-container';
         container.className = 'mk-toast-container';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'true');
         document.body.appendChild(container);
     }
     const toast = document.createElement('div');

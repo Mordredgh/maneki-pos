@@ -274,12 +274,10 @@ function renderInventoryTable() {
             <p class="mk-empty-title">Sin productos aún</p>
             <p class="mk-empty-sub">Tu inventario está vacío. Agrega tu primer producto para empezar.</p>
             <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
-                <button onclick="openAddProductModal()" class="btn-primary px-5 py-2.5 rounded-xl text-sm">
+                <button onclick="openAddProductModal()" class="mk-btn-primary">
                     📦 Agregar Producto Terminado
                 </button>
-                <button onclick="injectMpModal();openAddMateriaPrimaModal()"
-                    class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold"
-                    style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+                <button onclick="injectMpModal();openAddMateriaPrimaModal()" class="mk-toolbar-btn">
                     🏭 Agregar Materia Prima
                 </button>
             </div>
@@ -1392,3 +1390,145 @@ function invBulkCambiarCategoria() {
   manekiToastExport(`📁 Categoría actualizada en ${ids.length} producto(s)`, 'ok');
 }
 window.invBulkCambiarCategoria = invBulkCambiarCategoria;
+
+// ══════════════════════════════════════════════════════════════════════════
+// Op2/Op4 — Mejoras tabla inventario: contador, chips de filtro activo,
+// segmented control de tipo, toggle de densidad y fila resumen sticky.
+// Implementado como wrapper post-render para no tocar los 4 renderizadores.
+// ══════════════════════════════════════════════════════════════════════════
+const _MK_TIPO_LABELS: Record<string,string> = { '': 'Todos', producto: 'Productos', materia: 'Materia Prima' };
+
+(window as any)._mkInvSetTipo = function(v: string) {
+  const s = document.getElementById('inventoryTipoFilter') as HTMLSelectElement | null;
+  if (s) { s.value = v; s.dispatchEvent(new Event('change')); }
+};
+(window as any)._mkInvClearOne = function(which: string) {
+  const el = document.getElementById(which) as HTMLInputElement | HTMLSelectElement | null;
+  if (!el) return;
+  el.value = '';
+  el.dispatchEvent(new Event(which === 'inventorySearch' ? 'input' : 'change'));
+};
+(window as any)._mkInvClearFilters = function() {
+  ['inventoryTagFilter','inventoryProveedorFilter','inventoryTipoFilter'].forEach(id => {
+    const e = document.getElementById(id) as HTMLSelectElement | null; if (e) e.value = '';
+  });
+  const s = document.getElementById('inventorySearch') as HTMLInputElement | null;
+  if (s) { s.value = ''; s.dispatchEvent(new Event('input')); }
+  else if (typeof renderInventoryTable === 'function') renderInventoryTable();
+};
+
+function _mkInvSyncSeg() {
+  const s = document.getElementById('inventoryTipoFilter') as HTMLSelectElement | null;
+  const seg = document.getElementById('mkInvTipoSeg');
+  if (!s || !seg) return;
+  seg.querySelectorAll('button').forEach((b: any) => b.classList.toggle('active', b.dataset.v === s.value));
+}
+
+function _mkInvToolbarOnce() {
+  const tipoSel = document.getElementById('inventoryTipoFilter') as HTMLSelectElement | null;
+  const toolbar = tipoSel?.parentElement as HTMLElement | null;
+  if (!tipoSel || !toolbar) return;
+
+  // (a) Segmented control de tipo (oculta el <select>, lo conserva como fuente de verdad)
+  if (!document.getElementById('mkInvTipoSeg')) {
+    tipoSel.style.display = 'none';
+    const seg = document.createElement('div');
+    seg.id = 'mkInvTipoSeg';
+    seg.className = 'mk-segmented';
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', 'Tipo de producto');
+    seg.innerHTML = [...tipoSel.options].map(o => {
+      const label = _MK_TIPO_LABELS[o.value] ?? (o.textContent || '').replace(/^[^\p{L}]+/u, '').trim();
+      return `<button type="button" data-v="${o.value}" onclick="_mkInvSetTipo('${o.value}')">${label}</button>`;
+    }).join('');
+    tipoSel.parentElement!.insertBefore(seg, tipoSel);
+  }
+
+  // (b) Toggle de densidad Cómodo/Compacto
+  if (!document.getElementById('mkInvDensity') && typeof (window as any).mkRenderDensityToggle === 'function') {
+    const wrap = document.createElement('span');
+    wrap.id = 'mkInvDensity';
+    wrap.style.marginLeft = 'auto';
+    wrap.innerHTML = (window as any).mkRenderDensityToggle();
+    toolbar.appendChild(wrap);
+    if (typeof (window as any).mkAplicarDensidad === 'function') (window as any).mkAplicarDensidad();
+  }
+
+  // (c) Contenedor de contador + chips (debajo de la toolbar)
+  if (!document.getElementById('mkInvFilterInfo')) {
+    const info = document.createElement('div');
+    info.id = 'mkInvFilterInfo';
+    info.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-2px 0 12px;';
+    toolbar.parentElement!.insertBefore(info, toolbar.nextSibling);
+  }
+}
+
+function _mkInvCounterChips() {
+  const info = document.getElementById('mkInvFilterInfo');
+  if (!info) return;
+  const dual = document.getElementById('invDualContainer');
+  const shown = dual ? dual.querySelectorAll('.inv-bulk-cb').length : 0;
+  const total = (window.products || []).length;
+
+  const search = document.getElementById('inventorySearch') as HTMLInputElement | null;
+  const tag    = document.getElementById('inventoryTagFilter') as HTMLSelectElement | null;
+  const prov   = document.getElementById('inventoryProveedorFilter') as HTMLSelectElement | null;
+  const tipo   = document.getElementById('inventoryTipoFilter') as HTMLSelectElement | null;
+
+  const chips: string[] = [];
+  if (search && search.value.trim())
+    chips.push(`<span class="mk-filter-chip">Buscar: ${_esc(search.value.trim())}<button data-tip="Quitar" onclick="_mkInvClearOne('inventorySearch')">✕</button></span>`);
+  if (tipo && tipo.value)
+    chips.push(`<span class="mk-filter-chip">Tipo: ${_esc(_MK_TIPO_LABELS[tipo.value] || tipo.value)}<button data-tip="Quitar" onclick="_mkInvSetTipo('')">✕</button></span>`);
+  if (tag && tag.value)
+    chips.push(`<span class="mk-filter-chip">Tag: ${_esc(tag.value)}<button data-tip="Quitar" onclick="_mkInvClearOne('inventoryTagFilter')">✕</button></span>`);
+  if (prov && prov.value)
+    chips.push(`<span class="mk-filter-chip">Proveedor: ${_esc(prov.options[prov.selectedIndex]?.text || prov.value)}<button data-tip="Quitar" onclick="_mkInvClearOne('inventoryProveedorFilter')">✕</button></span>`);
+
+  let html = `<span class="mk-result-count">Mostrando <b>${shown}</b> de ${total} producto${total !== 1 ? 's' : ''}</span>`;
+  if (chips.length)
+    html += `<div class="mk-filter-chips">${chips.join('')}<button class="mk-filter-clear" onclick="_mkInvClearFilters()">Limpiar todo</button></div>`;
+  info.innerHTML = html;
+  _mkInvSyncSeg();
+}
+
+function _mkInvSummaryRow() {
+  const dual = document.getElementById('invDualContainer');
+  if (!dual || !dual.parentElement) return;
+  const ids = new Set([...dual.querySelectorAll('.inv-bulk-cb')].map((cb: any) => String(cb.dataset.id)));
+  const stockCache: Map<string, number> | undefined = (window as any)._invStockCache;
+  let valor = 0, low = 0, n = 0;
+  (window.products || []).forEach((p: any) => {
+    if (!ids.has(String(p.id))) return;
+    n++;
+    const st = stockCache?.get(String(p.id)) ?? (Number(p.stock) || 0);
+    valor += (Number(p.price) || 0) * st;
+    if (st <= (Number(p.stockMin) || 5)) low++;
+  });
+  let sum = document.getElementById('mkInvSummary');
+  if (n === 0) { if (sum) sum.remove(); return; }
+  if (!sum) {
+    sum = document.createElement('div');
+    sum.id = 'mkInvSummary';
+    sum.className = 'mk-table-summary';
+    sum.style.cssText = 'display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:10px 18px;border-radius:0 0 14px 14px;margin-top:-2px;';
+    dual.parentElement.insertBefore(sum, dual.nextSibling);
+  }
+  sum.innerHTML =
+    `<span>Valor de inventario: <b>$${valor.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</b></span>` +
+    `<span style="color:var(--tx-muted);">${n} producto${n !== 1 ? 's' : ''}</span>` +
+    (low > 0 ? `<span style="color:#dc2626;font-weight:800;">⚠ ${low} bajo stock</span>` : `<span style="color:#059669;font-weight:700;">✓ stock saludable</span>`);
+}
+
+// Envolver renderInventoryTable para ejecutar las mejoras tras cada render
+(function _mkWrapRenderInventory() {
+  const orig = (window as any).renderInventoryTable;
+  if (typeof orig !== 'function' || (orig as any)._mkWrapped) return;
+  const wrapped = function(this: any, ...args: any[]) {
+    const r = orig.apply(this, args);
+    try { _mkInvToolbarOnce(); _mkInvCounterChips(); _mkInvSummaryRow(); } catch (e) { /* nunca romper el render */ }
+    return r;
+  };
+  (wrapped as any)._mkWrapped = true;
+  (window as any).renderInventoryTable = wrapped;
+})();

@@ -969,6 +969,23 @@ function renderKanbanBoard() {
             // N-KANBAN-003: badge de conteo con estilo consistente en todas las columnas
             badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:.7rem;font-weight:800;background:rgba(255,255,255,0.6);border-radius:9999px;margin-left:6px;color:inherit;';
         }
+        // Op5: totales en vivo por columna ($ + saldo pendiente)
+        const _totCol = items.reduce((s, p) => s + (Number(p.total) || 0), 0);
+        const _saldoCol = items.reduce((s, p) => s + (typeof calcSaldoPendiente === 'function' ? (Number(calcSaldoPendiente(p)) || 0) : 0), 0);
+        let totEl = document.getElementById('kTotal-' + col);
+        if (!totEl && el.parentElement) {
+            totEl = document.createElement('div');
+            totEl.id = 'kTotal-' + col;
+            totEl.className = 'mk-kanban-col-total';
+            totEl.style.cssText = 'padding:0 8px 6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;';
+            el.parentElement.insertBefore(totEl, el);
+        }
+        if (totEl) {
+            totEl.innerHTML = items.length
+                ? `<span>$${_totCol.toLocaleString('es-MX')}</span>` +
+                  (_saldoCol > 0.5 ? `<span style="color:#dc2626;">⏳ $${_saldoCol.toLocaleString('es-MX')}</span>` : '')
+                : '';
+        }
         const expandido = _kanbanExpandidos.has(col);
         const visibles = expandido ? items : items.slice(0, _KANBAN_PAGE);
         const restantes = items.length - _KANBAN_PAGE;

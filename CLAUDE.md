@@ -1,7 +1,7 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 3 junio 2026 — Sesión 12 (Auditoría profunda 5 agentes — 19 bugs corregidos)
-> **Versión app:** 2.2.0 | **Service Worker:** v2.3.6 | **Branch:** fresh-start → master
+> **Última actualización:** 3 junio 2026 — Sesión 14 (Auditoría de diseño/UX aplicada)
+> **Versión app:** 2.2.0 | **Service Worker:** v2.3.7 | **Branch:** fresh-start → master
 
 ---
 
@@ -352,9 +352,52 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
 ---
 
-## 🎨 PENDIENTES — Auditoría de Diseño/UX (para aplicar en próxima sesión)
+## ✅ Sesión 14 (3 junio 2026) — Auditoría de Diseño/UX APLICADA
 
-> Auditoría realizada en Sesión 13 (3 junio 2026). Aplicar TODO en una sola sesión de agentes en paralelo.
+> Se aplicaron las 6 oportunidades de la auditoría de Sesión 13. Implementación con
+> **parches pequeños** y **wrappers post-render** para no tocar los renderizadores complejos.
+
+| Op | Qué se aplicó | Archivos |
+|----|---------------|---------|
+| **1** | Clases utilitarias premium `.mk-btn-primary`, `.mk-toolbar-btn`, `.mk-chip` (anti-deriva de tokens). Empty-state de inventario migrado a 1 primario + 1 ghost (quitado gradiente inline). | `maneki-premium.css`, `src/inventory-5.ts` |
+| **2** | `font-variant-numeric: tabular-nums` global en celdas numéricas + `.text-right`. **Toggle densidad Cómodo/Compacto** (`body.mk-dense`) persistido en `localStorage` (`mk_density`), control segmentado inyectado en toolbar de inventario. **Fila resumen sticky** en inventario: valor de inventario + N productos + Y bajo stock. | `maneki-premium.css`, `src/ui-extras.ts`, `src/inventory-5.ts` |
+| **3** | Toolbars con disciplina de color (botón primario lleno + resto neutros ghost). Toolbar de inventario ya era neutro de sesiones previas; KPIs con accent-color son intencionales y se conservan. | `maneki-premium.css` |
+| **4** | **Contador de resultados** "Mostrando X de Y" + **chips de filtro activo removibles** + "Limpiar todo" en inventario. **Segmented control** (pills) reemplaza el `<select>` de tipo (Todos/Productos/Materia Prima), conservando el select oculto como fuente de verdad. | `maneki-premium.css`, `src/inventory-5.ts` |
+| **5** | **Command palette Ctrl+K** (`mkOpenCommandPalette`): navega y *ejecuta* (Nuevo pedido, Ir a sección, Exportar, densidad, modo oscuro…) con teclado. Hint `⌘K` clickeable en buscador global. **Totales en vivo por columna kanban** ($ total + saldo pendiente). Barra flotante de selección ya existía (`invBulkBar`). | `maneki-premium.css`, `src/ui-extras.ts`, `src/pedidos-1.ts`, `index.html` |
+| **6** | `aria-live="polite"` + `aria-atomic` en contenedor de toasts. Sombras `.shadow-sm` migradas a token `--sh-sm` (tinte morado). Alertas de dashboard ya se ocultan cuando no hay urgencias (`#alertaEntregas` toggle `.visible`). | `maneki-premium.css`, `src/ui-extras.ts` |
+
+### Convenciones nuevas (Sesión 14)
+
+```
+// DENSIDAD: localStorage 'mk_density' = 'compact' | 'comfortable'
+//   window.mkToggleDensidad(modo?), window.mkAplicarDensidad(), window.mkRenderDensityToggle()
+//   CSS: body.mk-dense compacta padding de tablas
+
+// COMMAND PALETTE: window.mkOpenCommandPalette() — Ctrl+K rebind en ui-extras.ts
+//   Comandos definidos en _mkBuildCommands(); cada acción usa _mkCall(fn) defensivo
+
+// INVENTARIO: renderInventoryTable() está ENVUELTO (wrapper post-render en inventory-5.ts)
+//   que inyecta contador/chips/segmented/densidad/resumen. NO re-envolver.
+//   Helpers globales: _mkInvSetTipo, _mkInvClearOne, _mkInvClearFilters
+
+// KANBAN: elemento kTotal-<col> inyectado antes de cada columna kCol-<col>
+
+// Clases utilitarias: .mk-btn-primary / .mk-toolbar-btn / .mk-chip / .mk-segmented /
+//   .mk-filter-chip / .mk-result-count / .mk-table-summary / .mk-cmdk / .mk-kbd-hint
+```
+
+### Pendientes menores que quedan (baja prioridad)
+
+- **Contador + chips de filtro** replicar en **Clientes** e **Historial de pedidos** (solo se aplicó a Inventario, la tabla principal).
+- **Alineación a la derecha por columna** en la tabla custom de inventario (los 4 renderizadores de fila): hoy el `tabular-nums` global ya alinea por dígito, falta el `text-right` explícito por celda.
+- **Barra "calma"** opcional en dashboard cuando no hay alertas (decidido NO añadir para evitar ruido visual; el banner se oculta).
+- **Consolidar Reportes/Herramientas en menú `⋯ Más`** (no aplicado; los toolbars actuales no tenían ese exceso).
+
+---
+
+## 🎨 Auditoría de Diseño/UX — detalle original (Sesión 13)
+
+> Referencia. La mayoría aplicado en Sesión 14 (ver tabla arriba).
 
 ### Oportunidad 1 — Disciplina del sistema de diseño (estructural)
 El `index.html` hardcodea colores y gradientes inline en casi todos lados en vez de usar los tokens de `maneki-premium.css`. Ejemplo: `style="background:linear-gradient(135deg,#7c3aed,#a855f7)"` repetido con variaciones en cada botón de toolbar.
