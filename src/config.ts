@@ -17,7 +17,7 @@ function openClientHistory(clientId) {
     document.getElementById('historyClientEmail').textContent = client.email ? '✉️ ' + client.email : '';
     document.getElementById('historyClientEmoji').textContent = client.type === 'vip' ? '⭐' : '👤';
 
-    const clientName = client.name.toLowerCase().trim();
+    const clientName = (client.name || '').toLowerCase().trim();
 
     // Buscar ventas directas
     const ventas = salesHistory.filter(s =>
@@ -498,7 +498,7 @@ function poblarKitSelect() {
     const sel      = document.getElementById('kitComponentSelect');
     const materias = products.filter(p => p.tipo === 'materia');
     sel.innerHTML  = '<option value="">-- Seleccionar materia prima --</option>' +
-        materias.map(p => `<option value="${p.id}">${p.name} (Stock: ${p.stock})</option>`).join('');
+        materias.map(p => `<option value="${_esc(String(p.id || ''))}">${_esc(p.name || 'Sin nombre')} (Stock: ${p.stock || 0})</option>`).join('');
 }
 
 function agregarComponenteKit() {
@@ -521,7 +521,7 @@ function renderKitComponentesList() {
         ? '<p class="text-xs text-gray-400">Sin componentes</p>'
         : _kitComponentes.map((c, i) =>
             `<div class="flex justify-between items-center bg-white rounded-lg px-3 py-1 text-sm border border-gray-100">
-                <span>${c.name} x${c.quantity}</span>
+                <span>${_esc(c.name || '')} x${c.quantity || 1}</span>
                 <button type="button" onclick="eliminarComponenteKit(${i})" class="text-red-400 hover:text-red-600">✕</button>
             </div>`
         ).join('');

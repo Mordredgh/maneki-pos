@@ -297,7 +297,7 @@ async function imprimirTicketPedido(id) {
       ${p.concepto ? `
       <div class="info-cell full">
         <div class="info-label">Concepto</div>
-        <div class="info-value" style="font-weight:500;font-size:12px;">${p.concepto}</div>
+        <div class="info-value" style="font-weight:500;font-size:12px;">${_esc(p.concepto || '')}</div>
       </div>` : ''}
     </div>
   </div>
@@ -590,7 +590,7 @@ function filtrarProductosPedido() {
                 ${img}
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-1 flex-wrap">
-                        <span class="font-semibold text-sm text-gray-800 truncate">${p.name}</span>
+                        <span class="font-semibold text-sm text-gray-800 truncate">${_esc(p.name || '')}</span>
                         ${tipoLabel}
                     </div>
                     <div class="flex items-center gap-2">
@@ -829,7 +829,7 @@ function renderPedidoProductosList() {
         return `
         <div class="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-100 rounded-xl text-sm">
             <div class="flex-1 min-w-0">
-                <div class="font-medium text-gray-800 truncate">${item.name}${item.variante ? ` <span class="text-xs text-purple-600 font-semibold">(${(()=>{const p=item.variante.indexOf(':');if(p===-1)return item.variante;const t=item.variante.slice(0,p).trim(),val=item.variante.slice(p+1).trim();return t+': '+(typeof _mkColorDot==='function'?_mkColorDot(t,val):val);})()})</span>` : ''}</div>
+                <div class="font-medium text-gray-800 truncate">${_esc(item.name || '')}${item.variante ? ` <span class="text-xs text-purple-600 font-semibold">(${(()=>{const p=item.variante.indexOf(':');if(p===-1)return _esc(item.variante);const t=item.variante.slice(0,p).trim(),val=item.variante.slice(p+1).trim();return _esc(t)+': '+(typeof _mkColorDot==='function'?_mkColorDot(t,val):_esc(val));})()})</span>` : ''}</div>
                 <div class="flex items-center gap-1 mt-1">
                     <span class="text-xs text-gray-500">×</span>
                     <input type="number" min="1" value="${item.quantity || 1}"
@@ -864,7 +864,7 @@ function poblarSelectEmpaquesPedido() {
     sel.innerHTML = '<option value="">— Seleccionar empaque —</option>' +
         empaques.map(p => {
             const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (p.stock || 0);
-            return `<option value="${p.id}">${p.name} (Stock: ${stk})</option>`;
+            return `<option value="${p.id}">${_esc(p.name || '')} (Stock: ${stk})</option>`;
         }).join('');
 }
 window.poblarSelectEmpaquesPedido = poblarSelectEmpaquesPedido;
@@ -1391,5 +1391,6 @@ window.verificarEntregasProximas = verificarEntregasProximas;
 (function initRecordatorioEntregas() {
     // Esperar a que los datos estén cargados antes del primer chequeo
     setTimeout(() => verificarEntregasProximas({ silencioso: true }), 8000);
-    setInterval(() => verificarEntregasProximas({ silencioso: true }), 12 * 60 * 60 * 1000);
+    if (window._entregasCheckInterval) clearInterval(window._entregasCheckInterval);
+    window._entregasCheckInterval = setInterval(() => verificarEntregasProximas({ silencioso: true }), 12 * 60 * 60 * 1000);
 })();

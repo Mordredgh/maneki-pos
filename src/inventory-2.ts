@@ -595,7 +595,7 @@ async function guardarProductoTerminado() {
     // GUARD: detectar nombre duplicado (no solo SKU)
     const _excludeIdPt = window.modoEdicion ? window.edicionProductoId : null;
     const _nombreDupPt = (window.products||[]).find(p =>
-        p.name.trim().toLowerCase() === nombre.toLowerCase() && String(p.id) !== String(_excludeIdPt)
+        (p.name || '').trim().toLowerCase() === nombre.toLowerCase() && String(p.id) !== String(_excludeIdPt)
     );
     if (_nombreDupPt) {
         manekiToastExport(`⚠️ Ya existe un producto llamado "${_nombreDupPt.name}". Usa un nombre diferente o edita el existente.`, 'warn');
@@ -1032,7 +1032,7 @@ function packFiltrarPT() {
     const pts = (window.products || []).filter(p =>
         (p.tipo === 'producto' || p.tipo === 'producto_interno') &&
         !yaAgregados.includes(String(p.id)) &&
-        (!q || p.name.toLowerCase().includes(q))
+        (!q || (p.name || '').toLowerCase().includes(q))
     );
     const res = document.getElementById('packPtResults');
     if (!res) return;
@@ -1167,7 +1167,7 @@ function packFiltrarMP() {
     const mps = (window.products || []).filter(p =>
         (p.tipo === 'materia_prima' || p.tipo === 'servicio') &&
         !yaAgregados.includes(String(p.id)) &&
-        (!q || p.name.toLowerCase().includes(q))
+        (!q || (p.name || '').toLowerCase().includes(q))
     );
     const res = document.getElementById('packMpResults');
     if (!res) return;
@@ -1369,7 +1369,7 @@ async function guardarPack() {
 
     const excludeId = window._packModoEdicion ? window._packEdicionId : null;
     const nombreDup = (window.products || []).find(p =>
-        p.name.trim().toLowerCase() === nombre.toLowerCase() && String(p.id) !== String(excludeId)
+        (p.name || '').trim().toLowerCase() === nombre.toLowerCase() && String(p.id) !== String(excludeId)
     );
     if (nombreDup) { manekiToastExport(`⚠️ Ya existe un producto llamado "${nombreDup.name}"`, 'warn'); return; }
     if (sku && !skuEsUnico(sku, excludeId)) { manekiToastExport(`⚠️ El SKU "${sku}" ya está en uso`, 'warn'); return; }
@@ -1558,14 +1558,14 @@ function pvFiltrarMP(q) {
     if (!box) return;
     const mps = (window.products || []).filter(p =>
         p.tipo === 'materia_prima' || p.tipo === 'servicio'
-    ).filter(p => !q || p.name.toLowerCase().includes(q.toLowerCase()));
+    ).filter(p => !q || (p.name || '').toLowerCase().includes(q.toLowerCase()));
     if (!mps.length) { box.style.display = 'none'; return; }
     box.style.display = 'block';
     box.innerHTML = mps.slice(0, 8).map(p =>
         `<div onclick="pvSeleccionarMP('${p.id}')"
             style="padding:8px 12px;cursor:pointer;font-size:.85rem;border-bottom:1px solid #f3f4f6;"
             onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background=''">
-            ${p.name} <span style="color:#9ca3af;font-size:.75rem;">$${Number(p.cost||0).toFixed(2)}/ud</span>
+            ${_esc(p.name || '')} <span style="color:#9ca3af;font-size:.75rem;">$${Number(p.cost||0).toFixed(2)}/ud</span>
         </div>`
     ).join('');
 }
@@ -1598,7 +1598,7 @@ function pvRenderMpList() {
     const costoTotal = comps.reduce((s, c) => s + (parseFloat(c.costUnit)||0) * (parseFloat(c.qty)||1), 0);
     list.innerHTML = comps.map((c, i) => `
         <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f5f3ff;border-radius:10px;font-size:.82rem;">
-            <span style="flex:1;font-weight:600;color:#4c1d95;">${c.name}</span>
+            <span style="flex:1;font-weight:600;color:#4c1d95;">${_esc(c.name || '')}</span>
             <span style="color:#9ca3af;">qty:</span>
             <input type="number" min="0.01" step="0.01" value="${c.qty}"
                 onchange="pvEditarQtyComp(${i}, this.value)"

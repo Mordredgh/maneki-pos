@@ -228,8 +228,9 @@ function _updateDashboardImpl() {
         const fecha = ((p.fechaFinalizado || p.fecha || '')).split('T')[0];
         if (!fecha) continue;
         const monto = Number(p.total);
+        const costo = Number(p.costoMateriales || p.costo || 0);
         if (fecha === today)                           todaySales     += monto;
-        if (fecha.startsWith(mesActualStr))          { totalSales += monto; monthlySales   += monto; ventasMesActual  += monto; }
+        if (fecha.startsWith(mesActualStr))          { totalSales += monto; totalCosts += costo; monthlySales   += monto; ventasMesActual  += monto; }
         if (fecha.startsWith(mesAnteriorStr))          ventasMesAnterior += monto;
     }
     const netProfit = totalSales - totalCosts;

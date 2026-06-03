@@ -10,7 +10,7 @@ async function _eliminarFotoStorageAlFinalizar(pedido) {
 }
 
 // ── Helpers de inventario para pedidos ──────────────────────────────────────
-function _descontarInventarioPedido(pedido) {
+async function _descontarInventarioPedido(pedido) {
     const items = pedido.productosInventario || [];
     if (items.length === 0) return 0;
     let descontados = 0;
@@ -173,7 +173,19 @@ function _descontarInventarioPedido(pedido) {
         manekiToastExport('Error al descontar inventario. Se revirtió el stock.', 'err');
         throw e;
     }
-    if (descontados > 0 && typeof saveProducts === 'function') saveProducts();
+    if (descontados > 0 && typeof saveProducts === 'function') {
+        try {
+            await saveProducts();
+        } catch(saveErr) {
+            // Restaurar productos desde snapshot si saveProducts falla
+            if (_rollbackData) {
+                window.products = JSON.parse(JSON.stringify(_rollbackData));
+            }
+            console.error('[Inventario] saveProducts falló — stock restaurado desde snapshot:', saveErr);
+            manekiToastExport('Error al guardar inventario. Se revirtió el stock.', 'err');
+            throw saveErr;
+        }
+    }
     return descontados;
 }
 
@@ -1482,7 +1494,7 @@ function renderTopClientes() {
         ? '<p class="text-xs text-gray-400 text-center py-2">Sin datos aún</p>'
         : top.map((c,i) => `<div class="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
             <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0" style="background:#C5A572">${i+1}</span>
-            <div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">${c.nombre}</p><p class="text-xs text-gray-400">${c.pedidos} pedidos</p></div>
+            <div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">${_esc(c.nombre || '')}</p><p class="text-xs text-gray-400">${c.pedidos} pedidos</p></div>
             <span class="text-sm font-bold text-gray-700">$${c.total.toFixed(0)}</span>
         </div>`).join('');
 }
