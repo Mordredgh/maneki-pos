@@ -1005,7 +1005,8 @@ function saveClients() {
                 total_purchases: Number(c.totalPurchases)||0,
                 last_purchase: c.lastPurchase||null,
                 is_vip: c.type==='vip',
-                tags: c.tags||[]
+                tags: c.tags||[],
+                updated_at: new Date().toISOString()
             }));
             if (rows.length) await db.from('clients').upsert(rows, {onConflict:'id'}).catch(e=>console.warn('[clients]',e));
         } catch(e){ console.warn('[saveClients] Error al guardar en Supabase:', e?.message); }
