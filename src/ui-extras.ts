@@ -825,6 +825,48 @@ document.addEventListener('keydown', function(e) {
         return;
     }
 
+    // Ctrl+A: seleccionar todos en inventario
+    if (e.ctrlKey && e.key === 'a' && !e.shiftKey && !e.altKey) {
+        const section = document.querySelector('section:not(.hidden[style*="display: none"]):not(.hidden)')?.id;
+        if (section?.includes('inventory') || section?.includes('inventario')) {
+            e.preventDefault();
+            const checkboxes = Array.from(document.querySelectorAll('#inventoryTable input[type="checkbox"], .product-checkbox, [data-product-checkbox]')) as HTMLInputElement[];
+            if (checkboxes.length === 0) { (window as any).manekiToastExport?.('Sin productos para seleccionar', 'warn'); return; }
+            const allChecked = checkboxes.every(cb => cb.checked);
+            checkboxes.forEach(cb => { cb.checked = !allChecked; cb.dispatchEvent(new Event('change')); });
+            if (typeof (window as any).toggleSeleccionarTodos === 'function') (window as any).toggleSeleccionarTodos(!allChecked);
+            (window as any).manekiToastExport?.(allChecked ? '☐ Selección limpiada' : `☑ ${checkboxes.length} productos seleccionados`, 'info');
+        }
+    }
+
+    // Ctrl+Q: abrir cotizaciones
+    if (e.ctrlKey && (e.key === 'q' || e.key === 'Q') && !e.shiftKey) {
+        e.preventDefault();
+        if (typeof (window as any).openQuoteModal === 'function') (window as any).openQuoteModal();
+        else if (typeof (window as any).showSection === 'function') (window as any).showSection('analisis');
+        (window as any).manekiToastExport?.('📊 Cotizaciones (Ctrl+Q)', 'info');
+    }
+
+    // Ctrl+E: exportar
+    if (e.ctrlKey && (e.key === 'e' || e.key === 'E') && !e.shiftKey) {
+        e.preventDefault();
+        const activeSection = document.querySelector('section:not(.hidden):not([style*="display: none"])')?.id?.replace('-section','') || '';
+        const exportFns: Record<string, string> = {
+            inventario:  'exportarInventarioExcel',
+            inventory:   'exportarInventarioExcel',
+            balance:     'exportarBalanceMesCSV',
+            pedidos:     'exportarPedidosCSV',
+            clientes:    'exportarClientesCSV',
+            reportes:    'exportarReportePDF',
+        };
+        const fnName = exportFns[activeSection];
+        if (fnName && typeof (window as any)[fnName] === 'function') {
+            (window as any)[fnName]();
+        } else {
+            (window as any).manekiToastExport?.('No hay exportación disponible en esta sección', 'warn');
+        }
+    }
+
 });
 
 // ══════════════════════════════════════════════════════════════════════════

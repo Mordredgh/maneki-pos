@@ -226,6 +226,9 @@
             <div class="shortcut-row"><span>Recargar dashboard</span><span class="shortcut-key">R</span></div>
             <div class="shortcut-row"><span>Log de errores</span><span class="shortcut-key">Ctrl ⇧ L</span></div>
             <div class="shortcut-row"><span>Mostrar atajos</span><span class="shortcut-key">?</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 text-xs">Seleccionar todos (inventario)</span><span class="shortcut-key">Ctrl</span><span style="font-size:.65rem;color:#9ca3af;margin:0 2px;">+</span><span class="shortcut-key">A</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 text-xs">Abrir cotizaciones</span><span class="shortcut-key">Ctrl</span><span style="font-size:.65rem;color:#9ca3af;margin:0 2px;">+</span><span class="shortcut-key">Q</span></div>
+            <div class="shortcut-row"><span class="text-gray-600 text-xs">Exportar sección activa</span><span class="shortcut-key">Ctrl</span><span style="font-size:.65rem;color:#9ca3af;margin:0 2px;">+</span><span class="shortcut-key">E</span></div>
             <div style="border-top:1px solid #f3f4f6;margin:10px 0 6px;padding-top:6px;">
                 <p style="font-size:.65rem;color:#9ca3af;margin:0;font-weight:600;">Secciones (Ctrl+número)</p>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:4px;font-size:.65rem;color:#6b7280;">
