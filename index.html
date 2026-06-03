@@ -303,230 +303,242 @@ input:focus, select:focus, textarea:focus, button:focus {
 
     <main class="md:ml-64 min-h-screen">
 
-<!-- EXTRACTABLE: dashboard-section (starts here, ~223 lines) -->
-<section id="dashboard-section" class="p-5 md:p-8 animate-fade-in">
-  <div class="max-w-7xl mx-auto">
+<!-- EXTRACTABLE: dashboard-section (redesign v2) -->
+<section id="dashboard-section" class="animate-fade-in" style="padding:0;overflow-x:hidden;">
 
-    <div class="mb-7 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-      <div>
-        <div class="flex items-center gap-3 mb-1">
-          <span id="dashGreetingEmoji" class="text-3xl">&#9728;&#65039;</span>
-          <h2 class="text-3xl font-bold text-gray-800" id="dashGreeting">&#161;Buen d&#237;a!</h2>
-        </div>
-        <div class="flex items-center gap-2 mt-1 flex-wrap">
-          <span class="mk-store-tag">&#128049; <span id="dashStoreName">Maneki Store</span></span>
-          <span class="text-gray-300 hidden sm:block">&#183;</span>
-          <span class="text-xs text-gray-400" id="dashDate">&#8212;</span>
-        </div>
+  <!-- ── HERO HEADER ─────────────────────────────────────── -->
+  <div class="mk-dash-hero">
+    <div class="mk-dash-hero-glow"></div>
+    <div style="position:relative;z-index:1;">
+      <div class="flex items-center gap-3 mb-2">
+        <span id="dashGreetingEmoji" class="leading-none" style="font-size:2.2rem;filter:drop-shadow(0 2px 10px rgba(255,210,80,.4))">☀️</span>
+        <h1 id="dashGreeting" class="mk-dash-greeting-text">¡Buenos días!</h1>
       </div>
-      <div class="flex flex-col items-start sm:items-end gap-2">
-        <p class="text-sm text-gray-400" id="dashTime">&#8212;</p>
-        <div class="flex items-center gap-2 flex-wrap">
-          <button onclick="togglePrivacidad()" id="privacyToggleBtn" class="mk-btn mk-btn-ghost" title="Ocultar montos">
-            <i class="fas fa-eye" id="privacyIcon"></i>
-            <span id="privacyLabel" class="hidden sm:inline">Privacidad</span>
-          </button>
-          <button onclick="mostrarResumenDia()" class="mk-btn mk-btn-gold">
-            <i class="fas fa-chart-bar"></i> Resumen del d&#237;a
-          </button>
-        </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="mk-dash-store-pill">🐱 <span id="dashStoreName">Maneki</span></span>
+        <span class="mk-dash-sep hidden sm:inline">·</span>
+        <span class="mk-dash-date-text" id="dashDate">—</span>
+        <span class="mk-dash-sep hidden sm:inline">·</span>
+        <span class="mk-dash-time-text" id="dashTime">—</span>
       </div>
     </div>
+    <div class="flex items-center gap-2 flex-wrap justify-end" style="position:relative;z-index:1;">
+      <button onclick="togglePrivacidad()" id="privacyToggleBtn" class="mk-dash-hero-btn" title="Ocultar montos">
+        <i class="fas fa-eye" id="privacyIcon"></i>
+        <span id="privacyLabel" class="hidden sm:inline">Privacidad</span>
+      </button>
+      <button onclick="mostrarResumenDia()" class="mk-btn mk-btn-gold" style="padding:8px 18px;">
+        <i class="fas fa-chart-bar"></i>
+        <span class="hidden sm:inline">Resumen</span>
+      </button>
+    </div>
+  </div>
 
-    <!-- Atención hoy widget — card oculto eliminado (FC-01: ID duplicado) -->
+  <!-- ── BODY ────────────────────────────────────────────── -->
+  <div class="p-4 md:p-6" style="display:flex;flex-direction:column;gap:16px;">
 
-    <!-- Banner: alertas de entrega próxima -->
-    <div id="alertaEntregas" class="mb-4">
-      <div class="mk-card" style="background:linear-gradient(135deg,#fef2f2,#fff7ed);border:1px solid #fca5a5;padding:18px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <!-- Resumen del día (contenido inyectado por JS) -->
+    <div id="resumenDia"></div>
+
+    <!-- Alertas: entregas urgentes -->
+    <div id="alertaEntregas">
+      <div class="mk-card" style="background:linear-gradient(135deg,#fef2f2,#fff7ed);border:1.5px solid #fca5a5;padding:16px 18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:1.3rem;">🚨</span>
+            <span style="font-size:1.2rem;">🚨</span>
             <div>
-              <p style="font-size:.68rem;font-weight:800;color:#991b1b;text-transform:uppercase;letter-spacing:.08em;margin:0;">Entregas urgentes</p>
-              <p id="alertaSubtitulo" style="font-size:.8rem;color:#b91c1c;font-weight:600;margin:0;">—</p>
+              <p style="font-size:.64rem;font-weight:800;color:#991b1b;text-transform:uppercase;letter-spacing:.09em;margin:0;">Entregas urgentes</p>
+              <p id="alertaSubtitulo" style="font-size:.78rem;color:#b91c1c;font-weight:600;margin:0;">—</p>
             </div>
           </div>
-          <button onclick="cerrarAlertaEntregas()" style="background:none;border:none;color:#9ca3af;font-size:1rem;cursor:pointer;padding:4px;">✕</button>
+          <button onclick="cerrarAlertaEntregas()" style="background:rgba(153,27,27,0.08);border:none;color:#9ca3af;font-size:.85rem;cursor:pointer;padding:5px 9px;border-radius:8px;" title="Cerrar">✕</button>
         </div>
         <div id="alertaEntregasLista" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
     </div>
 
-    <!-- Banner: pedidos sin movimiento -->
-    <div id="alertaSinMovimiento" class="mb-4">
-      <div class="mk-card" style="background:linear-gradient(135deg,#f9fafb,#f3f4f6);border:1px solid #d1d5db;padding:18px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:1.3rem;">⏸️</span>
-            <div>
-              <p style="font-size:.68rem;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.08em;margin:0;">Pedidos sin avance</p>
-              <p id="alertaSinMovimientoSubtitulo" style="font-size:.8rem;color:#6b7280;font-weight:600;margin:0;">—</p>
-            </div>
+    <!-- Alertas: pedidos sin movimiento -->
+    <div id="alertaSinMovimiento">
+      <div class="mk-card" style="background:linear-gradient(135deg,#f9fafb,#f3f4f6);border:1.5px solid #d1d5db;padding:16px 18px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <span style="font-size:1.2rem;">⏸️</span>
+          <div>
+            <p style="font-size:.64rem;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.09em;margin:0;">Pedidos sin avance</p>
+            <p id="alertaSinMovimientoSubtitulo" style="font-size:.78rem;color:#6b7280;font-weight:600;margin:0;">—</p>
           </div>
         </div>
         <div id="alertaSinMovimientoLista" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
     </div>
 
-    <div class="mk-card mb-5" style="padding:20px 24px;background:linear-gradient(135deg,#fffbf5,#fff8f0);">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <p class="mk-kpi-label" style="color:#C5A572;">&#127919; Meta mensual</p>
-          <p class="text-xs font-semibold mt-0.5" style="color:#92400e;" id="dashGoalPercent">0% alcanzado</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-gray-800 privacy-target text-lg" id="dashMonthSales">$0</span>
-          <span class="text-gray-300">/</span>
+    <!-- ── KPIs — Meta + 4 métricas ──────────────────────── -->
+    <div class="mk-dash-kpi-row">
+
+      <!-- Meta mensual (card amplia) -->
+      <div class="mk-card mk-kpi-v2 mk-dash-meta-card" style="padding:20px 22px;">
+        <div class="flex items-center justify-between mb-3">
+          <p class="mk-kpi-label" style="color:#C5A572;font-size:.62rem;">🎯 META MENSUAL</p>
           <div class="flex items-center gap-1">
-            <span class="text-xs text-gray-400">$</span>
-            <!-- UX19: min=1, protección contra valor negativo o cero -->
+            <span style="font-size:.72rem;color:#9ca3af;">$</span>
             <input type="number" id="dashMonthGoal" value="5000" min="1" step="500"
-                   class="w-20 text-sm px-2 py-1 border rounded-lg text-right outline-none"
-                   style="border-color:#fcd34d;"
+                   style="width:76px;font-size:.82rem;padding:4px 8px;border-radius:8px;border:1.5px solid #fcd34d;text-align:right;background:rgba(255,255,255,.85);outline:none;font-family:inherit;"
                    onchange="const _mv=Math.max(1,parseFloat(this.value)||5000);this.value=_mv;storeConfig.metaMensual=_mv;updateDashboard();sbSave('storeConfig',storeConfig);"
                    title="Meta mensual de ventas (mínimo $1)">
           </div>
         </div>
+        <h3 class="mk-kpi-value privacy-target" id="dashMonthSales" style="color:#92400e;font-size:1.75rem;margin-bottom:4px;">$0</h3>
+        <p class="text-xs font-bold mb-3" style="color:#b45309;" id="dashGoalPercent">0% de tu meta</p>
+        <div class="mk-goal-track" style="height:7px;"><div id="dashGoalBar" class="mk-goal-fill" style="width:0%;height:100%;"></div></div>
       </div>
-      <div class="mk-goal-track"><div id="dashGoalBar" class="mk-goal-fill" style="width:0%;"></div></div>
-    </div>
 
-    <div class="mk-kpi-grid mb-5">
-      <div class="mk-card mk-kpi">
-        <div class="mk-kpi-icon" style="background:rgba(197,165,114,0.15);">
-          <i class="fas fa-store" style="color:#C5A572;"></i>
+      <!-- Ventas hoy -->
+      <div class="mk-card mk-kpi mk-kpi-v2 kpi-amber" style="padding:18px 20px;">
+        <div class="flex items-center justify-between mb-3">
+          <p class="mk-kpi-label">Ventas hoy</p>
+          <div class="mk-kpi-icon-sm" style="background:rgba(197,151,59,0.12);">
+            <i class="fas fa-store" style="color:#C5973B;font-size:.88rem;"></i>
+          </div>
         </div>
-        <p class="mk-kpi-label">Ventas de hoy</p>
         <h3 class="mk-kpi-value privacy-target" id="dailySales" style="color:#92400e;"></h3>
-        <p class="mk-kpi-sub"><span id="salesTrend" class="mk-kpi-badge" style="background:#fef3c7;color:#92400e;">hoy</span></p>
+        <p class="mk-kpi-sub mt-2"><span id="salesTrend" class="mk-kpi-badge" style="background:#fef3c7;color:#92400e;">hoy</span></p>
       </div>
-      <div class="mk-card mk-kpi">
-        <div class="mk-kpi-icon" style="background:rgba(16,185,129,0.12);">
-          <i class="fas fa-chart-line" style="color:#10b981;"></i>
+
+      <!-- Ganancia neta -->
+      <div class="mk-card mk-kpi mk-kpi-v2 kpi-green" style="padding:18px 20px;">
+        <div class="flex items-center justify-between mb-3">
+          <p class="mk-kpi-label">Ganancia neta</p>
+          <div class="mk-kpi-icon-sm" style="background:rgba(16,185,129,0.11);">
+            <i class="fas fa-chart-line" style="color:#10b981;font-size:.88rem;"></i>
+          </div>
         </div>
-        <p class="mk-kpi-label">Ganancia neta</p>
         <h3 class="mk-kpi-value privacy-target" id="netProfit" style="color:#065f46;"></h3>
-        <div style="height:36px;position:relative;margin-top:8px;"><canvas id="sparklineGanancia" style="opacity:.8;"></canvas></div>
+        <div style="height:30px;position:relative;margin-top:8px;"><canvas id="sparklineGanancia" style="opacity:.75;"></canvas></div>
       </div>
-      <div class="mk-card mk-kpi clickable" onclick="showSection('pedidos')">
-        <div class="mk-kpi-icon" style="background:rgba(155,123,196,0.12);">
-          <i class="fas fa-clipboard-list" style="color:#9B7BC4;"></i>
+
+      <!-- Pedidos activos -->
+      <div class="mk-card mk-kpi mk-kpi-v2 kpi-purple clickable" style="padding:18px 20px;" onclick="showSection('pedidos')">
+        <div class="flex items-center justify-between mb-3">
+          <p class="mk-kpi-label">Pedidos activos</p>
+          <div class="mk-kpi-icon-sm" style="background:rgba(139,92,246,0.11);">
+            <i class="fas fa-clipboard-list" style="color:#8B5CF6;font-size:.88rem;"></i>
+          </div>
         </div>
-        <p class="mk-kpi-label">Pedidos activos</p>
         <h3 class="mk-kpi-value" id="dashActivePedidos" style="color:#3B2659;"></h3>
-        <p class="mk-kpi-sub"><span class="mk-kpi-badge" style="background:#EDE5F8;color:#6B4A8E;">ver todos &#8594;</span></p>
+        <p class="mk-kpi-sub mt-2"><span class="mk-kpi-badge" style="background:#EDE5F8;color:#6B4A8E;">ver todos →</span></p>
       </div>
-      <div class="mk-card mk-kpi clickable" onclick="showSection('balance')">
-        <div class="mk-kpi-icon" style="background:rgba(255,107,157,0.12);">
-          <i class="fas fa-hand-holding-usd" style="color:#FF6B9D;"></i>
+
+      <!-- Me deben -->
+      <div class="mk-card mk-kpi mk-kpi-v2 kpi-rose clickable" style="padding:18px 20px;" onclick="showSection('balance')">
+        <div class="flex items-center justify-between mb-3">
+          <p class="mk-kpi-label">Me deben</p>
+          <div class="mk-kpi-icon-sm" style="background:rgba(244,63,94,0.11);">
+            <i class="fas fa-hand-holding-usd" style="color:#F43F5E;font-size:.88rem;"></i>
+          </div>
         </div>
-        <p class="mk-kpi-label">Me deben</p>
         <h3 class="mk-kpi-value privacy-target" id="accountsReceivable" style="color:#9d174d;"></h3>
-        <p class="mk-kpi-sub"><span class="mk-kpi-badge" style="background:#fce7f3;color:#9d174d;">cobrar &#8594;</span></p>
+        <p class="mk-kpi-sub mt-2"><span class="mk-kpi-badge" style="background:#fce7f3;color:#9d174d;">cobrar →</span></p>
       </div>
+
     </div>
 
-    <div class="mk-main-grid mb-5" id="mkMainGrid">
-      <div class="mk-card mk-chart-area">
-        <div class="mk-chart-title"><span>&#128200; Ventas &#183; &#250;ltimos 7 d&#237;as</span></div>
-        <canvas id="salesChart" height="130"></canvas>
-      </div>
-      <div style="display:grid;gap:16px;">
-        <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#fffbf5,#fff7ed);">
-          <div class="mk-chart-title">
-            <span>&#128230; Stock bajo</span>
-            <span style="font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:99px;background:#ffedd5;color:#c2410c;" id="lowStockBadge">0 items</span>
-          </div>
-          <div id="dashLowStockList" class="space-y-1" style="max-height:180px;overflow-y:auto;"></div>
+    <!-- ── CONTENIDO PRINCIPAL — Gráficas + Panel derecho ── -->
+    <div class="mk-dash-content-grid">
+
+      <!-- Izquierda: gráficas principales -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="mk-card" style="padding:20px 22px;">
+          <div class="mk-chart-title"><span>📈 Ventas · últimos 7 días</span></div>
+          <canvas id="salesChart" height="130"></canvas>
         </div>
-        <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);">
-          <div class="mk-chart-title">
-            <span>&#9200; Entregas pr&#243;ximas</span>
-            <button onclick="showSection('pedidos')" style="font-size:.7rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;">Ver &#8594;</button>
+        <div class="mk-card" style="padding:20px 22px;">
+          <div class="mk-chart-title" style="color:#0e7490;">
+            <span>💰 Flujo de caja — 8 semanas</span>
           </div>
-          <div id="dashUpcomingDeliveries"><p class="text-gray-400 text-xs text-center py-4">Sin entregas pr&#243;ximas &#127881;</p></div>
+          <div style="height:200px;position:relative;margin-top:8px;"><canvas id="dashCashFlowChart"></canvas></div>
         </div>
       </div>
+
+      <!-- Derecha: información operativa -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);">
+          <div class="mk-chart-title">
+            <span>⏰ Entregas próximas</span>
+            <button onclick="showSection('pedidos')" style="font-size:.7rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;">Ver →</button>
+          </div>
+          <div id="dashUpcomingDeliveries"><p class="text-gray-400 text-xs text-center py-4">Sin entregas próximas 🎉</p></div>
+        </div>
+        <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#fffbf5,#fff7ed);">
+          <div class="mk-chart-title">
+            <span>📦 Stock bajo</span>
+            <span style="font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:99px;background:#ffedd5;color:#c2410c;" id="lowStockBadge">0 items</span>
+          </div>
+          <div id="dashLowStockList" class="space-y-1" style="max-height:155px;overflow-y:auto;"></div>
+        </div>
+        <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#fff7ed,#ffedd5);">
+          <div class="mk-chart-title" style="color:#c2410c;"><span>🔔 Atención hoy</span></div>
+          <div id="atencionHoyList" style="margin-top:8px;"></div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="mk-bottom-grid" id="mkBottomGrid">
+    <!-- ── ESTADÍSTICAS — 3 columnas ─────────────────────── -->
+    <div class="mk-dash-stats-row">
+
       <div class="mk-card mk-chart-area">
         <div class="mk-chart-title" style="display:flex;justify-content:space-between;align-items:center;">
-          <span>&#128202; Comparativa semanal</span>
+          <span>📊 Comparativa semanal</span>
           <button onclick="generarResumenSemanalWA()" title="Copiar resumen para WhatsApp"
-            style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">
+            style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:.7rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
             📋 WA
           </button>
         </div>
         <div id="semanalWidget"></div>
       </div>
-      <!-- NTH-08: Widget día más rentable -->
-      <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);">
-        <div class="mk-chart-title" style="color:#065f46;">
-          <span>&#127881; D&#237;a m&#225;s rentable</span>
-          <span style="font-size:.68rem;color:#6ee7b7;font-weight:600;text-transform:none;letter-spacing:0;">Promedio por día</span>
-        </div>
-        <div id="diaMasRentableWidget" style="margin-top:10px;"></div>
-      </div>
-      <div class="mk-card" style="padding:22px 24px;background:linear-gradient(135deg,#fff8f9,#fdf2f8);">
-        <div class="mk-chart-title" style="color:#9d174d;">
-          <span>&#128221; Notas r&#225;pidas</span>
-          <span id="notasCount" style="font-size:.68rem;color:#f9a8d4;font-weight:600;text-transform:none;letter-spacing:0;">0 notas</span>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
-          <input type="text" id="notaInput" placeholder="Escribe una nota... (Enter)"
-                 class="mk-note-input" onkeydown="if(event.key==='Enter') agregarNota()">
-          <button onclick="agregarNota()" class="mk-btn mk-btn-gold" style="padding:8px 14px;"><i class="fas fa-plus"></i></button>
-        </div>
-        <div id="notasList" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;">
-          <p class="text-gray-400 text-xs text-center py-4">Sin notas &#9999;&#65039;</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Fila extra de métricas ── -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;" id="mkExtraStats">
 
       <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
-        <div class="mk-chart-title" style="color:#166534;">
-          <span>&#128203; Pedidos por estado</span>
-        </div>
+        <div class="mk-chart-title" style="color:#166534;"><span>📋 Pedidos por estado</span></div>
         <div id="dashPedidosEstado" style="margin-top:4px;"></div>
       </div>
 
       <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#eff6ff,#dbeafe);">
-        <div class="mk-chart-title" style="color:#1e40af;">
-          <span>&#128197; Este mes vs anterior</span>
-        </div>
+        <div class="mk-chart-title" style="color:#1e40af;"><span>📅 Este mes vs anterior</span></div>
         <div id="dashMesVsAnterior" style="margin-top:4px;"></div>
       </div>
 
+    </div>
+
+    <!-- ── FILA SECUNDARIA — 2 columnas ──────────────────── -->
+    <div class="mk-dash-stats-row-2">
+
       <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#fdf4ff,#fae8ff);">
-        <div class="mk-chart-title" style="color:#7e22ce;">
-          <span>&#129513; Material m&#225;s usado</span>
-        </div>
+        <div class="mk-chart-title" style="color:#7e22ce;"><span>💎 Material más usado</span></div>
         <div id="dashMaterialTop" style="margin-top:4px;"></div>
       </div>
 
-    </div>
-
-    <!-- ── Flujo de caja ── -->
-    <div style="margin-top:16px;">
-      <div class="mk-card" style="padding:20px 24px;">
-        <div class="mk-chart-title" style="color:#0e7490;">
-          <span>&#128200; Flujo de caja — &#250;ltimas 8 semanas</span>
+      <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);">
+        <div class="mk-chart-title" style="color:#065f46;">
+          <span>🏆 Día más rentable</span>
+          <span style="font-size:.65rem;color:#6ee7b7;font-weight:600;text-transform:none;letter-spacing:0;">promedio</span>
         </div>
-        <div style="height:220px;position:relative;margin-top:8px;"><canvas id="dashCashFlowChart"></canvas></div>
+        <div id="diaMasRentableWidget" style="margin-top:10px;"></div>
       </div>
+
     </div>
 
-    <!-- ── Atención hoy ── -->
-    <div style="margin-top:16px;">
-      <div class="mk-card" style="padding:20px 24px;background:linear-gradient(135deg,#fff7ed,#ffedd5);">
-        <div class="mk-chart-title" style="color:#c2410c;">
-          <span>&#128276; Qu&#233; necesita atenci&#243;n hoy</span>
-        </div>
-        <div id="atencionHoyList" style="margin-top:8px;"></div>
+    <!-- ── NOTAS RÁPIDAS ──────────────────────────────────── -->
+    <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#fff8f9,#fdf2f8);">
+      <div class="mk-chart-title" style="color:#9d174d;">
+        <span>📝 Notas rápidas</span>
+        <span id="notasCount" style="font-size:.68rem;color:#f9a8d4;font-weight:600;text-transform:none;letter-spacing:0;">0 notas</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <input type="text" id="notaInput" placeholder="Escribe una nota... (Enter)"
+               class="mk-note-input" onkeydown="if(event.key==='Enter') agregarNota()">
+        <button onclick="agregarNota()" class="mk-btn mk-btn-gold" style="padding:8px 14px;"><i class="fas fa-plus"></i></button>
+      </div>
+      <div id="notasList" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;">
+        <p class="text-gray-400 text-xs text-center py-4">Sin notas ✏️</p>
       </div>
     </div>
 
