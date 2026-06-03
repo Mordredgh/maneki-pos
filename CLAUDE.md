@@ -1,7 +1,7 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 2 junio 2026 — Sesión 8 (Auditoría exhaustiva: 30 fixes bugs/perf/ux)
-> **Versión app:** 2.2.0 | **Service Worker:** v2.3.4 | **Branch:** fresh-start → master
+> **Última actualización:** 2 junio 2026 — Sesión 10 (Auditoría exhaustiva II: 50+ fixes bugs/perf/ux/sec/nice-to-have)
+> **Versión app:** 2.2.0 | **Service Worker:** v2.3.5 | **Branch:** fresh-start → master
 
 ---
 
@@ -352,15 +352,28 @@ const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
 ---
 
-## ✅ PENDIENTES — Resueltos en Sesión 9 (2 junio 2026)
+## ✅ PENDIENTES — Todos resueltos en Sesión 10 (2 junio 2026)
 
-Todos los 18 pendientes de la auditoría anterior fueron aplicados. Ver commit `a6d1547`.
+Auditoría exhaustiva II: 5 agentes en paralelo aplicaron 50+ mejoras. Commits: `d3bdad0` (UX/CSS/SW) + `cdf8c45` (TS/JS).
 
-### ℹ️ Nota de seguridad permanente
+### Sesión 10 — Resumen de cambios
+
+| Área | Cambios |
+|------|---------|
+| **Bugs** | BUG-5 rollback window.products en inventario, BUG-2 mensaje folio, SEC-4 validación versión backup |
+| **Performance** | P-7 prodMap O(1) en descuento inventario, P-1 debounce búsqueda 300ms, P-2 _getAllVentas() una vez, P-3 chart.update('none') vs destroy |
+| **UX** | Wizard steps 1-4 en modal pedido, label "Precio personalizado", anticipo min=0, tooltips en campos clave, estado Cancelado contraste |
+| **CSS** | Placeholder opacidad .75, sidebar dark mode .88, shimmer skeleton, cursor:help en [title], cancelado line-through |
+| **Nice-to-have** | N-KANBAN-003 badges contador columnas, N-SEARCH-003/005 filter badges + limpiar, N-UI-12 duplicar pedido, N-UI-10 filtros guardados localStorage, empty states inventario/balance/clientes/RFM, badge pop animation |
+| **SW** | v2.3.5: cache-first para assets locales, network-first solo para Supabase/APIs |
+
+### ℹ️ Notas permanentes de seguridad
 
 | # | Área | Nota |
 |---|------|------|
-| S2 | Supabase | RLS **verificado activo** en tabla `store` y todas las 27 tablas. Telegram Token en `storeConfig` sigue como string plano — fix real requiere backend proxy (Edge Function). No hay solución frontend-only segura. |
+| S-NGINX | Rate limiting | Pendiente agregar `limit_req_zone` en nginx para proteger Basic Auth contra brute-force |
+| S-TOKEN | Supabase | RLS **verificado activo** en todas las tablas. Telegram Token en `storeConfig` sigue como string plano — fix real requiere Edge Function proxy. No hay solución frontend-only segura. |
+| BUG-2 | Folios | Race condition multi-tab sigue requiriendo UNIQUE constraint en Supabase a nivel DB para solución completa |
 
 ---
 
