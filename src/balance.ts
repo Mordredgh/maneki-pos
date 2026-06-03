@@ -231,6 +231,9 @@ function renderBalancePieChart(): void {
     }
     container.style.display = '';
 
+    // Defer Chart.js init al siguiente frame para evitar forced reflow
+    // (Chart.js lee getBoundingClientRect del canvas al inicializar)
+    requestAnimationFrame(() => {
     const canvas = document.getElementById('balancePieChart') as HTMLCanvasElement;
     if (!canvas) return;
 
@@ -273,6 +276,7 @@ function renderBalancePieChart(): void {
             }
         });
     }
+    }); // end requestAnimationFrame
 }
 (window as any).renderBalancePieChart = renderBalancePieChart;
 

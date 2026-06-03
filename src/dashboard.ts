@@ -75,28 +75,37 @@
 // ── animarNumero: anima un valor numérico en un elemento ──────────────────
 // Protegida contra llamadas múltiples simultáneas — cancela animación previa
 // antes de iniciar una nueva para evitar valores aleatorios intermedios.
+// PERF: usa _fmtFast para frames intermedios (toFixed, ~0.1ms) y toLocaleString
+// solo en el valor final (~8ms) — evita el rAF >50ms violation.
+const _fmtFast = (v: number): string => {
+    const abs = Math.abs(v);
+    const sign = v < 0 ? '-' : '';
+    const int = Math.floor(abs);
+    const dec = Math.round((abs - int) * 100).toString().padStart(2, '0');
+    return sign + int.toLocaleString('es-MX') + '.' + dec;
+};
+const _fmtFinal = (v: number): string =>
+    Number(v).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+
 function animarNumero(el, desde, hasta, duracion, prefijo, sufijo) {
     if (!el) return;
-    // Cancelar animación previa en este elemento
     if (el._animFrame) cancelAnimationFrame(el._animFrame);
-    // Si la duración es 0 o el valor es igual, escribir directo
     if (!duracion || desde === hasta) {
-        el.textContent = prefijo + Number(hasta).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2}) + sufijo;
+        el.textContent = prefijo + _fmtFinal(hasta) + sufijo;
         return;
     }
     const startTime = performance.now();
     function step(now) {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duracion, 1);
-        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
         const current = desde + (hasta - desde) * eased;
-        el.textContent = prefijo + Number(current).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2}) + sufijo;
         if (progress < 1) {
+            el.textContent = prefijo + _fmtFast(current) + sufijo;
             el._animFrame = requestAnimationFrame(step);
         } else {
             el._animFrame = null;
-            // Valor final exacto
-            el.textContent = prefijo + Number(hasta).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2}) + sufijo;
+            el.textContent = prefijo + _fmtFinal(hasta) + sufijo;
         }
     }
     el._animFrame = requestAnimationFrame(step);
