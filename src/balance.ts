@@ -496,6 +496,7 @@ function eliminarIngresoRecurrente(idx) {
 window.toggleIngresosRecurrentesPanel = toggleIngresosRecurrentesPanel;
 window.renderIngresosRecurrentesPanel = renderIngresosRecurrentesPanel;
 window.eliminarIngresoRecurrente = eliminarIngresoRecurrente;
+window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
 
         function renderBalance() {
             procesarGastosRecurrentes();

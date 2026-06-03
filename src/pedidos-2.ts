@@ -926,8 +926,9 @@ async function kanbanDrop(event, newStatus) {
             const movedCard = document.querySelector(`[data-kanban-id="${_pedidoMovidoId}"], [data-id="${_pedidoMovidoId}"]`);
             if (movedCard) {
                 (movedCard as HTMLElement).classList.remove('mk-kanban-card-moved');
-                void (movedCard as HTMLElement).offsetWidth; // forzar reflow
-                (movedCard as HTMLElement).classList.add('mk-kanban-card-moved');
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    (movedCard as HTMLElement).classList.add('mk-kanban-card-moved');
+                }));
             }
         } catch(e) {
             // N-KANBAN-005: undo visual — restaurar status anterior

@@ -350,9 +350,10 @@ function _morphTo(name) {
     const to   = SECTION_PALETTE[name]         || 'rgba(124,58,237,0.08)';
     _overlay.style.background = `linear-gradient(135deg,${from},${to})`;
     _overlay.classList.remove('active');
-    void _overlay.offsetWidth;
-    _overlay.classList.add('active');
-    setTimeout(() => _overlay.classList.remove('active'), 420);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        _overlay.classList.add('active');
+        setTimeout(() => _overlay.classList.remove('active'), 420);
+    }));
     _prevSection = name;
 }
 // #23 — Exponer para uso directo desde showSection consolidado en reportes.js

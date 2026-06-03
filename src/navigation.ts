@@ -20,8 +20,12 @@ function showSection(sectionName) {
     const target = document.getElementById(`${sectionName}-section`);
     if (target) {
         target.classList.remove('hidden');
-        void target.offsetWidth;
-        target.style.animation = 'mkSectionIn 0.38s cubic-bezier(0.16,1,0.3,1) both';
+        // Usar CSS animation-name:none + rAF en vez de void offsetWidth para evitar forced reflow
+        target.style.animationName = 'none';
+        requestAnimationFrame(() => {
+            target.style.animationName = '';
+            target.style.animation = 'mkSectionIn 0.38s cubic-bezier(0.16,1,0.3,1) both';
+        });
     }
 
     document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));

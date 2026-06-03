@@ -716,9 +716,11 @@ function actualizarSidebarBadges() {
             // Animación pop solo si el número cambió
             if (prevVal !== activos) {
                 badgePedidos.classList.remove('badge-new');
-                void badgePedidos.offsetWidth;
-                badgePedidos.classList.add('badge-new');
-                _animateBadgePop(badgePedidos); // N-UI-6
+                // doble rAF para reiniciar animación sin forced reflow (evita void offsetWidth)
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    badgePedidos.classList.add('badge-new');
+                    _animateBadgePop(badgePedidos);
+                }));
             }
             // Urgente si hay pedidos con entrega próxima ≤2 días — MEJ-16: diasHastaEntrega()
             const urgentes = (pedidos || []).filter(p => {
@@ -755,9 +757,10 @@ function actualizarSidebarBadges() {
             badgeInv.style.display = 'inline-block';
             if (prevVal !== bajos) {
                 badgeInv.classList.remove('badge-new');
-                void badgeInv.offsetWidth;
-                badgeInv.classList.add('badge-new');
-                _animateBadgePop(badgeInv); // N-UI-6
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    badgeInv.classList.add('badge-new');
+                    _animateBadgePop(badgeInv);
+                }));
             }
             // Rojo si hay agotados, ámbar si solo stock bajo
             const agotados = (products || []).filter(p => p.stock === 0).length;

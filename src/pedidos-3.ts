@@ -541,7 +541,7 @@ window.generarFolioPedido = generarFolioPedido;
 window.openCancelPedidoModal = openCancelPedidoModal;
 window.closeCancelPedidoModal = closeCancelPedidoModal;
 window.confirmarCancelPedido = confirmarCancelPedido;
-window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
+
 // ── Buscador de productos en modal de pedido ────────────────────────────────
 // Incluye: Productos Terminados Y Materias Primas (para pedidos que requieren MP específica)
 function filtrarProductosPedido() {
