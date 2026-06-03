@@ -907,6 +907,8 @@ async function kanbanDrop(event, newStatus) {
                 return;
             }
         }
+        // N-KANBAN-005: capturar status anterior para undo visual si falla
+        const statusAnterior = window.pedidos[idx].status;
         window.pedidos[idx].status = newStatus;
         window.pedidos[idx].fechaUltimoEstado = new Date().toISOString();
         if (!window.pedidos[idx].historialEstados) window.pedidos[idx].historialEstados = [];
@@ -915,8 +917,30 @@ async function kanbanDrop(event, newStatus) {
             fecha: typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0],
             hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'})
         });
-        savePedidos();
-        renderPedidosTable();
+        const _pedidoMovidoId = _kanbanDragId;
+        try {
+            await savePedidos();
+            renderPedidosTable();
+            if (typeof renderKanbanBoard === 'function') renderKanbanBoard();
+            // N-ANIM-002: animación al mover card exitosamente
+            const movedCard = document.querySelector(`[data-kanban-id="${_pedidoMovidoId}"], [data-id="${_pedidoMovidoId}"]`);
+            if (movedCard) {
+                (movedCard as HTMLElement).classList.remove('mk-kanban-card-moved');
+                void (movedCard as HTMLElement).offsetWidth; // forzar reflow
+                (movedCard as HTMLElement).classList.add('mk-kanban-card-moved');
+            }
+        } catch(e) {
+            // N-KANBAN-005: undo visual — restaurar status anterior
+            window.pedidos[idx].status = statusAnterior;
+            window.pedidos[idx].historialEstados.pop();
+            const errorCard = document.querySelector(`[data-kanban-id="${_pedidoMovidoId}"], [data-id="${_pedidoMovidoId}"]`);
+            if (errorCard) {
+                (errorCard as HTMLElement).classList.add('mk-kanban-card-error');
+            }
+            manekiToastExport('❌ No se pudo mover el pedido — estado restaurado', 'err');
+            if (typeof renderKanbanBoard === 'function') renderKanbanBoard();
+            else renderPedidosTable();
+        }
     }
     _kanbanDragId = null;
 }

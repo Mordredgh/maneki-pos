@@ -183,6 +183,23 @@ function openPedidoModal(id) {
     if (typeof poblarSelectPedido === 'function') poblarSelectPedido();
     if (typeof poblarSelectEmpaquesPedido === 'function') poblarSelectEmpaquesPedido();
 
+    // UX-3: activar step 1 al abrir el modal
+    _updatePedidoStep(1);
+
+    // UX-3: step 3 cuando concepto recibe focus
+    (function _setupWizardFocusListeners() {
+        const _conceptoEl = document.getElementById('pedidoConcepto');
+        const _precioEl   = document.getElementById('pedidoCosto') || document.getElementById('pedidoPrecioLibre');
+        if (_conceptoEl && !((_conceptoEl as any)._wizardFocus)) {
+            (_conceptoEl as any)._wizardFocus = true;
+            _conceptoEl.addEventListener('focus', () => _updatePedidoStep(3));
+        }
+        if (_precioEl && !((_precioEl as any)._wizardFocus)) {
+            (_precioEl as any)._wizardFocus = true;
+            _precioEl.addEventListener('focus', () => _updatePedidoStep(4));
+        }
+    })();
+
     // M6: Populate concepto suggestions from existing pedidos
     const dlConcepto = document.getElementById('conceptoSuggestions');
     if (dlConcepto && window.pedidos) {
@@ -204,6 +221,50 @@ function openPedidoModal(id) {
             // Remover botón previo si existe
             const _btnPrev = document.getElementById('btnDuplicarUltimoPedido');
             if (_btnPrev) _btnPrev.remove();
+
+            // N-PEDIDOS-004: mostrar saldo pendiente de pedidos anteriores del cliente
+            (function _mostrarSaldoCliente() {
+                const _todosActivos = (window.pedidos || []).filter((p: any) =>
+                    (p.cliente || '').toLowerCase().trim() === _nombre && p.status !== 'cancelado'
+                );
+                const _saldoTotal = _todosActivos.reduce((s: number, p: any) => s + (typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : 0), 0);
+                let _warn = document.getElementById('clienteSaldoWarning');
+                if (_saldoTotal > 0 && _nombre) {
+                    if (!_warn) {
+                        _warn = document.createElement('div');
+                        _warn.id = 'clienteSaldoWarning';
+                        _clienteInput.insertAdjacentElement('afterend', _warn);
+                    }
+                    _warn.style.cssText = 'background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:6px 12px;font-size:.74rem;color:#92400e;margin-top:4px;display:flex;align-items:center;gap:6px;';
+                    _warn.innerHTML = `💳 Saldo pendiente de pedidos anteriores: <strong>$${_saldoTotal.toFixed(2)}</strong>`;
+                } else if (_warn) {
+                    _warn.remove();
+                }
+            })();
+
+            // N-PEDIDOS-005: precio sugerido basado en historial del cliente
+            (function _mostrarPrecioSugerido() {
+                const _todosHist = [...(window.pedidos || []), ...(window.pedidosFinalizados || [])].filter((p: any) =>
+                    (p.cliente || '').toLowerCase().trim() === _nombre && Number(p.total || 0) > 0
+                );
+                let _hint = document.getElementById('precioSugeridoHint');
+                if (_todosHist.length >= 2 && _nombre) {
+                    const _promedio = _todosHist.reduce((s: number, p: any) => s + Number(p.total || 0), 0) / _todosHist.length;
+                    // Buscar el input de precio en el modal
+                    const _precioEl = document.getElementById('pedidoCosto') || document.getElementById('pedidoPrecioLibre') || document.getElementById('pedidoTotal');
+                    if (_precioEl) {
+                        if (!_hint) {
+                            _hint = document.createElement('div');
+                            _hint.id = 'precioSugeridoHint';
+                            _precioEl.insertAdjacentElement('afterend', _hint);
+                        }
+                        _hint.style.cssText = 'font-size:.7rem;color:#9ca3af;margin-top:3px;display:flex;align-items:center;gap:4px;';
+                        _hint.innerHTML = `💡 Promedio histórico de este cliente: <strong style="color:#C5973B;">$${_promedio.toFixed(2)}</strong>`;
+                    }
+                } else if (_hint) {
+                    _hint.remove();
+                }
+            })();
             if (!_nombre) return;
 
             // Buscar pedidos del cliente (activos + finalizados)
@@ -318,6 +379,9 @@ function closePedidoModal() {
 
 function calcPedidoTotal() {
     const items = window.pedidoProductosSeleccionados || [];
+
+    // UX-3: activar step 2 cuando se agrega un producto al pedido
+    if (items.length > 0 && typeof _updatePedidoStep === 'function') _updatePedidoStep(2);
 
     // Mostrar/ocultar campo de precio libre según si hay productos
     const precioLibreRow = document.getElementById('pedidoPrecioLibreRow');
@@ -754,6 +818,25 @@ function _calcularCostoProduccionPedido() {
 }
 window._calcularCostoProduccionPedido = _calcularCostoProduccionPedido;
 
+// UX-3: Wizard steps del modal de pedido
+function _updatePedidoStep(step: number): void {
+    const steps = document.querySelectorAll('#pedido-steps .step-circle');
+    if (!steps.length) return;
+    steps.forEach((el: any, i: number) => {
+        const n = i + 1;
+        el.style.background = n < step ? '#10b981' : n === step ? 'var(--mk-g500, #C5973B)' : '#e5e7eb';
+        el.style.color = n <= step ? 'white' : '#6b7280';
+    });
+    // También colorear las labels
+    const labels = document.querySelectorAll('#pedido-steps span.text-xs');
+    labels.forEach((el: any, i: number) => {
+        const n = i + 1;
+        el.style.color = n === step ? '#C5973B' : n < step ? '#10b981' : '#9ca3af';
+        el.style.fontWeight = n === step ? '700' : '400';
+    });
+}
+(window as any)._updatePedidoStep = _updatePedidoStep;
+
 // ── Template chips para el campo de notas ──────────────────────────────────
 function pedidoInsertarTemplate(texto) {
     // MEJORA 2: insertar en el campo con foco activo (notas o notasInternas)
@@ -889,6 +972,27 @@ function renderKanbanBoard() {
         const expandido = _kanbanExpandidos.has(col);
         const visibles = expandido ? items : items.slice(0, _KANBAN_PAGE);
         const restantes = items.length - _KANBAN_PAGE;
+
+        // N-KANBAN-002: agrupar cards por urgencia dentro de la columna
+        function _kanbanGrupoHeader(label: string, n: number, color: string): string {
+            return `<div style="font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:${color};padding:3px 8px 2px;margin:6px 0 3px;border-left:2.5px solid ${color};">${label} (${n})</div>`;
+        }
+        function _buildKanbanGrupos(cards: any[]): string {
+            const urgentes: any[] = [], proximos: any[] = [], normales: any[] = [];
+            const _hoyGrp = new Date(); _hoyGrp.setHours(0,0,0,0);
+            cards.forEach(p => {
+                const dias = (typeof window.diasHastaEntrega === 'function') ? window.diasHastaEntrega(p) : (p.entrega ? Math.round((new Date(p.entrega + 'T00:00:00').getTime() - _hoyGrp.getTime()) / 86400000) : null);
+                if (dias !== null && (dias === 0 || dias === 1)) urgentes.push(p);
+                else if (dias !== null && dias >= 2 && dias <= 4) proximos.push(p);
+                else normales.push(p);
+            });
+            let html = '';
+            if (urgentes.length) html += _kanbanGrupoHeader('Urgente', urgentes.length, '#dc2626') + urgentes.map(p => kanbanCardHTML(p)).join('');
+            if (proximos.length) html += _kanbanGrupoHeader('Próximo', proximos.length, '#f97316') + proximos.map(p => kanbanCardHTML(p)).join('');
+            if (normales.length) html += _kanbanGrupoHeader('Normal', normales.length, '#6b7280') + normales.map(p => kanbanCardHTML(p)).join('');
+            return html;
+        }
+
         el.innerHTML = items.length === 0
             ? `<div style="text-align:center;padding:24px 10px;color:#d1d5db;">
                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="margin:0 auto 8px;display:block;">
@@ -898,7 +1002,7 @@ function renderKanbanBoard() {
                    </svg>
                    <p style="font-size:.72rem;color:#9ca3af;">${q || _kanbanUrgenciaFiltro !== 'todos' ? 'Sin resultados' : 'Sin pedidos'}</p>
                </div>`
-            : visibles.map(p => kanbanCardHTML(p)).join('')
+            : _buildKanbanGrupos(visibles)
               + (!expandido && restantes > 0
                   ? `<button data-col="${col}" onclick="window._kanbanVerMas(this.dataset.col)"
                        class="w-full mt-2 py-2 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors">
@@ -922,6 +1026,55 @@ function renderKanbanBoard() {
 window._kanbanVerMas = function(col: string) {
     _kanbanExpandidos.add(col);
     renderKanbanBoard();
+};
+
+// N-KANBAN-004: quick-edit de fecha de entrega con doble-clic en la card
+(window as any)._kanbanQuickEditFecha = function(event: MouseEvent, pedidoId: string) {
+    const span = event.currentTarget as HTMLElement || event.target as HTMLElement;
+    if (!span) return;
+    const textoOriginal = span.textContent || '';
+    // Obtener fecha actual del pedido
+    const pedido = (window.pedidos || []).find((p: any) => String(p.id) === String(pedidoId));
+    const fechaActual = pedido ? (pedido.entrega || '') : '';
+    let _cambiado = false;
+
+    const input = document.createElement('input');
+    input.type = 'date';
+    input.value = fechaActual;
+    input.style.cssText = 'font-size:.72rem;border:1.5px solid #C5973B;border-radius:6px;padding:2px 6px;background:#fffbf5;outline:none;';
+
+    span.textContent = '';
+    span.appendChild(input);
+    input.focus();
+
+    input.addEventListener('change', async function() {
+        _cambiado = true;
+        const newDate = input.value;
+        const p = (window.pedidos || []).find((x: any) => String(x.id) === String(pedidoId));
+        if (p) {
+            p.entrega = newDate;
+            if (typeof savePedidos === 'function') await savePedidos();
+            if (typeof updateDashboard === 'function') updateDashboard();
+            if (typeof renderKanbanBoard === 'function') renderKanbanBoard();
+        }
+        if (typeof (window as any).manekiToastExport === 'function') (window as any).manekiToastExport('✅ Fecha actualizada', 'ok');
+    });
+
+    input.addEventListener('blur', function() {
+        if (!_cambiado) {
+            span.innerHTML = '';
+            span.textContent = textoOriginal;
+        }
+    });
+
+    input.addEventListener('keydown', function(e: KeyboardEvent) {
+        if (e.key === 'Escape') {
+            _cambiado = false;
+            span.innerHTML = '';
+            span.textContent = textoOriginal;
+            input.blur();
+        }
+    });
 };
 
 const _statusLabel = s => ({confirmado:'✅ Confirmado',pago:'💰 Pagado',produccion:'🔧 Producción',envio:'📦 Envío',salida:'🚚 Salió',retirar:'🏪 Retirar',finalizado:'🎉 Listo',cancelado:'❌ Cancelado'})[s] || s;
@@ -1013,7 +1166,7 @@ function kanbanCardHTML(p) {
         <p class="text-xs text-gray-500 mb-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${_e(p.concepto)}</p>
         ${p.lugarEntrega ? `<p class="text-xs mb-1 truncate" style="color:#7c3aed;">📍 ${_e(p.lugarEntrega)}</p>` : ''}
         <div class="flex justify-between items-center text-xs text-gray-500 mb-1">
-            <span>📅 ${p.entrega || '—'}</span>
+            <span ondblclick="window._kanbanQuickEditFecha(event,'${_e(p.id)}')" style="cursor:pointer;padding:1px 3px;border-radius:4px;" title="Doble-clic para editar fecha">📅 ${p.entrega || '—'}</span>
             <span class="${_saldo > 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'}">
                 ${_saldo > 0 ? '💰 $' + _saldo.toFixed(0) : '✅ Pagado'}
             </span>
@@ -1080,8 +1233,9 @@ function renderTablaPedidos() {
     _inyectarBuscadorTabla();
     const tbody = document.getElementById('pedidosTable');
     if (!tbody) return;
-    // P1: hash guard — saltar re-render si los datos no cambiaron
-    const _tHash = (window.pedidos||[]).length + '_' + (window.pedidos||[]).reduce((s,p)=>s+Number(p.total||0)+Number(p.resta||0),0).toFixed(0) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'');
+    // P1: hash guard — saltar re-render si los datos no cambiaron (incluye valores de filtros activos)
+    const _qHash = ((document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null)?.value || '') + ((document.getElementById('tablaFiltroPago') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('pedidoFechaDesde') as HTMLInputElement|null)?.value || '') + ((document.getElementById('pedidoFechaHasta') as HTMLInputElement|null)?.value || '');
+    const _tHash = (window.pedidos||[]).length + '_' + (window.pedidos||[]).reduce((s,p)=>s+Number(p.total||0)+Number(p.resta||0),0).toFixed(0) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash;
     if ((tbody as any)._lastHash === _tHash) return;
     (tbody as any)._lastHash = _tHash;
     const q = ((document.getElementById('tablaPedidosBuscar') || document.getElementById('kanbanBuscar') || {}).value || '').toLowerCase().trim();
@@ -1150,9 +1304,25 @@ function renderTablaPedidos() {
         envio:'📦 Envío', salida:'🚚 Salió', retirar:'🏪 Retirar'
     };
     const _et = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
-    tbody.innerHTML = page.length === 0
-        ? '<tr><td colspan="10" class="text-center py-10 text-gray-400">Sin pedidos</td></tr>'
-        : page.map(p => {
+    // N-EMPTY-002: empty states con y sin filtros activos
+    const _hayFiltros = q || _fp || _fu || desde || hasta || _pedidoFiltroActivo !== 'todos';
+    if (page.length === 0) {
+        if (_hayFiltros) {
+            tbody.innerHTML = `<tr><td colspan="99" class="text-center py-12">
+                <div class="text-4xl mb-2">🔍</div>
+                <p class="font-medium text-gray-500">Sin pedidos con esos filtros</p>
+                <button onclick="window._limpiarTodosFiltros?.()" class="mt-3 text-xs text-amber-600 underline">Limpiar filtros</button>
+            </td></tr>`;
+        } else {
+            tbody.innerHTML = `<tr><td colspan="99" class="text-center py-14">
+                <div class="text-5xl mb-3">📋</div>
+                <p class="text-lg font-medium text-gray-500">Sin pedidos registrados</p>
+                <p class="text-sm text-gray-400 mb-4">Crea el primer pedido para empezar</p>
+                <button onclick="openPedidoModal()" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors">+ Crear primer pedido</button>
+            </td></tr>`;
+        }
+    } else {
+    tbody.innerHTML = page.map(p => {
             const _wa  = p.telefono || p.whatsapp || '';
             const _fb  = p.redes   || p.facebook  || '';
             const _dir = p.lugarEntrega || '';
@@ -1198,6 +1368,7 @@ function renderTablaPedidos() {
                 </div>
             </td>
         </tr>`;}).join('');
+    } // fin del else (page.length > 0)
     // Render pagination controls
     let paginador = document.getElementById('pedidosTablePaginador');
     if (!paginador) {

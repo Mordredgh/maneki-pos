@@ -727,20 +727,22 @@ function closeAddClientModal() {
 
         function deleteClient(id) {
             const c = clients.find(x => String(x.id) === String(id));
+            const nombreCliente = c ? c.name : 'este cliente';
 
             // FIX A3: verificar pedidos activos antes de confirmar borrado
             const _pedidosCliente = (window.pedidos || []).filter(p =>
                 String(p.clienteId || '') === String(id) ||
-                String(p.cliente || '').toLowerCase() === String(c ? c.name : '').toLowerCase()
+                String(p.cliente || '').toLowerCase() === String(nombreCliente).toLowerCase()
             );
             const _pedidosActivos = _pedidosCliente.filter(p =>
                 p.status !== 'finalizado' && p.status !== 'cancelado' && p.status !== 'entregado'
             );
 
+            // DES-006: usar showConfirm del design system con _esc() en el nombre del cliente
             const _msgConfirm = _pedidosActivos.length > 0
-                ? `Este cliente tiene ${_pedidosActivos.length} pedido(s) activo(s). ¿Deseas eliminarlo de todas formas? Los pedidos quedarán sin cliente asignado.\n\n"${c ? c.name : 'este cliente'}" y su historial serán eliminados.`
-                : `"${c ? c.name : 'este cliente'}" y su historial serán eliminados.`;
-            const _titleConfirm = _pedidosActivos.length > 0 ? '⚠️ Eliminar cliente con pedidos' : '⚠️ Eliminar cliente';
+                ? `Este cliente tiene ${_pedidosActivos.length} pedido(s) activo(s). ¿Deseas eliminarlo de todas formas? Los pedidos quedarán sin cliente asignado.\n\nSe eliminará permanentemente "${_esc(nombreCliente)}". Esta acción no se puede deshacer.`
+                : `Se eliminará permanentemente "${_esc(nombreCliente)}". Esta acción no se puede deshacer.`;
+            const _titleConfirm = _pedidosActivos.length > 0 ? '⚠️ Eliminar cliente con pedidos' : '¿Eliminar cliente?';
 
             showConfirm(_msgConfirm, _titleConfirm).then(ok => {
                 if (!ok) return;

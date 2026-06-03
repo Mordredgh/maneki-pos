@@ -129,6 +129,9 @@ function renderBalanceMensual() {
     } else if (_balEmptyCard) {
         _balEmptyCard.style.display = 'none';
     }
+
+    // N-VIZ-002: Donut chart de gastos por categoría
+    renderBalancePieChart();
 }
 
 // NTH-13: Gráfica de categorías de gastos ─────────────────────────────────
@@ -179,6 +182,99 @@ function _renderGraficaCategorias(gastosMes, mesStr) {
 }
 
 window._GASTO_CATEGORIAS = _GASTO_CATEGORIAS;
+
+// N-VIZ-002: Donut chart de gastos por categoría en balance ──────────────────
+function renderBalancePieChart(): void {
+    if (typeof (window as any).Chart === 'undefined') return;
+
+    // Determinar mes actual
+    const now = new Date();
+    const mesActual = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    // Agrupar gastos por categoría
+    const expByCat: Record<string, number> = {};
+    ((window as any).expenses || []).forEach((e: any) => {
+        if (!e.date?.startsWith(mesActual)) return;
+        const cat = e.etiqueta || e.category || e.concepto || 'Otros';
+        expByCat[cat] = (expByCat[cat] || 0) + Number(e.amount || 0);
+    });
+
+    const labels = Object.keys(expByCat).sort((a, b) => expByCat[b] - expByCat[a]);
+    const data = labels.map(k => expByCat[k]);
+
+    if (!labels.length) {
+        const container = document.getElementById('balancePieContainer');
+        if (container) container.style.display = 'none';
+        return;
+    }
+
+    // Obtener o crear canvas
+    let container = document.getElementById('balancePieContainer');
+    if (!container) {
+        // Buscar un lugar adecuado en la sección balance para inyectar
+        const balanceSection = document.getElementById('balance-section');
+        const insertTarget = balanceSection?.querySelector('.mk-card:last-child, [id*="gastos"], [id*="balance"]')
+            || balanceSection?.querySelector('.mk-card');
+        if (!insertTarget) return;
+        container = document.createElement('div');
+        container.id = 'balancePieContainer';
+        container.className = 'mk-card';
+        container.style.cssText = 'padding:20px 22px;margin-top:16px;';
+        container.innerHTML = `
+            <div class="mk-chart-title" style="color:#7C3AED;">
+              <span>🍩 Gastos por categoría — mes actual</span>
+            </div>
+            <div style="height:220px;position:relative;margin-top:12px;">
+              <canvas id="balancePieChart"></canvas>
+            </div>`;
+        insertTarget.insertAdjacentElement('afterend', container);
+    }
+    container.style.display = '';
+
+    const canvas = document.getElementById('balancePieChart') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const colors = ['#8B5CF6','#F59E0B','#10B981','#EF4444','#3B82F6','#F97316','#EC4899','#6366F1','#14B8A6','#A855F7'];
+
+    const existingChart = (window as any)._balancePieChart;
+    if (existingChart) {
+        existingChart.data.labels = labels;
+        existingChart.data.datasets[0].data = data;
+        existingChart.data.datasets[0].backgroundColor = colors.slice(0, labels.length);
+        existingChart.update('none');
+    } else {
+        (window as any)._balancePieChart = new (window as any).Chart(canvas, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverBorderColor: '#ffffff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { font: { size: 11, family: 'Outfit' }, boxWidth: 12, padding: 10 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx: any) => ` ${ctx.label}: $${ctx.parsed.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+(window as any).renderBalancePieChart = renderBalancePieChart;
 
 // MEJORA-5: Botón exportar CSV mejorado ──────────────────────────────────────────
 function _renderExportarBalanceBtn(mesStr) {

@@ -1,3 +1,28 @@
+// ── N-SEARCH-004: Búsqueda typo-tolerant (Levenshtein distance) ───────────
+function _levenshtein(a: string, b: string): number {
+    const m = a.length, n = b.length;
+    const dp: number[][] = Array.from({length: m+1}, (_, i) =>
+        Array.from({length: n+1}, (_, j) => j === 0 ? i : 0));
+    for (let j = 1; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++)
+        for (let j = 1; j <= n; j++)
+            dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] :
+                1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    return dp[m][n];
+}
+function _fuzzyMatch(query: string, target: string, threshold = 2): boolean {
+    query = query.toLowerCase().trim();
+    target = target.toLowerCase();
+    if (!query) return true;
+    if (target.includes(query)) return true;
+    const words = target.split(/[\s,.-]+/);
+    return words.some(w => {
+        const cmp = w.substring(0, query.length + 2);
+        return cmp.length >= query.length - 1 && _levenshtein(query, cmp) <= threshold;
+    });
+}
+(window as any)._fuzzyMatch = _fuzzyMatch;
+
 // ── Calcular cuántas unidades se pueden producir desde MP ──────────────────
 function calcularProducibles(prod) {
     if (!Array.isArray(prod.mpComponentes) || prod.mpComponentes.length === 0) return null;
@@ -271,16 +296,30 @@ function renderInventoryTable() {
         const _ns = window._normSearch || (s => String(s||'').toLowerCase());
         const qN = _ns(q);
         const provQN = _ns(provQ);
-        return list.filter(p => {
-            const nombreMatch = !q || _ns(p.name).includes(qN)
+        const tagMatch  = (p) => !tagQ  || (p.tags && p.tags.includes(tagQ));
+        const provMatch = (p) => !provQ || _ns(p.proveedor||'').includes(provQN);
+
+        if (!q) return list.filter(p => tagMatch(p) && provMatch(p));
+
+        // Primero: coincidencia exacta (substring)
+        const exactos = list.filter(p => {
+            const nombreMatch = _ns(p.name).includes(qN)
                 || _ns(p.sku||'').includes(qN)
                 || _ns(p.proveedor||'').includes(qN)
                 || _ns(p.notas||'').includes(qN)
                 || (p.tags||[]).some(t => _ns(t).includes(qN));
-            const tagMatch  = !tagQ  || (p.tags && p.tags.includes(tagQ));
-            const provMatch = !provQ || _ns(p.proveedor||'').includes(provQN);
-            return nombreMatch && tagMatch && provMatch;
+            return nombreMatch && tagMatch(p) && provMatch(p);
         });
+
+        if (exactos.length > 0) return exactos;
+
+        // Fallback: fuzzy matching si no hay resultados exactos (N-SEARCH-004)
+        return list.filter(p =>
+            (_fuzzyMatch(qN, p.name || '') ||
+             _fuzzyMatch(qN, p.sku || '') ||
+             _fuzzyMatch(qN, p.proveedor || '')) &&
+            tagMatch(p) && provMatch(p)
+        );
     }
 
     const mps  = applyFilters(allProducts.filter(p => p.tipo === 'materia_prima'));

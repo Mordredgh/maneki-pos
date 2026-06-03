@@ -294,6 +294,14 @@ function _updateDashboardImpl() {
         return Math.floor(_gse2(producto) / promDiario);
     }
 
+    // N-TOOLTIP-003: helper para calcular promDiario de un producto
+    function _promDiarioProd(producto) {
+        const k = String(producto.id || '');
+        const kn = (producto.name || '').toLowerCase();
+        const totalVendido = (ventasPorProductoId[k] || 0) || (ventasPorProductoNombre[kn] || 0);
+        return totalVendido / 30;
+    }
+
     const lowStockList = document.getElementById('dashLowStockList');
     if (lowStockList) {
         const all = [...outOfStock.map(p => ({...p, out: true})), ...lowStockItems];
@@ -302,16 +310,23 @@ function _updateDashboardImpl() {
         } else {
             lowStockList.innerHTML = all.slice(0, 8).map(p => {
                 const dias = p.out ? null : diasRestantes(p);
+                const _gse3 = typeof getStockEfectivo === 'function' ? getStockEfectivo : (x => x.stock || 0);
+                const _stockActual = _gse3(p);
+                const _prom = _promDiarioProd(p);
                 let predBadge = '';
                 if (p.out) {
-                    predBadge = `<span class="pred-badge pred-critico">Agotado</span>`;
+                    // N-TOOLTIP-003: tooltip en badge Agotado
+                    predBadge = `<span class="pred-badge pred-critico" title="Sin stock — reorden urgente">Agotado</span>`;
                 } else if (dias !== null) {
-                    if      (dias <= 2)  predBadge = `<span class="pred-badge pred-critico">~${dias}d ⚠️</span>`;
-                    else if (dias <= 5)  predBadge = `<span class="pred-badge pred-urgente">~${dias}d</span>`;
-                    else if (dias <= 14) predBadge = `<span class="pred-badge pred-pronto">~${dias}d</span>`;
-                    else                predBadge = `<span class="pred-badge pred-ok">~${dias}d</span>`;
+                    // N-TOOLTIP-003: tooltip con detalle de cálculo
+                    const _tooltipText = `Prom. ventas: ${_prom.toFixed(1)} u/día · Stock actual: ${_stockActual} u · Estimado: ~${dias} días`;
+                    if      (dias <= 2)  predBadge = `<span class="pred-badge pred-critico" title="${_tooltipText}">~${dias}d ⚠️</span>`;
+                    else if (dias <= 5)  predBadge = `<span class="pred-badge pred-urgente" title="${_tooltipText}">~${dias}d</span>`;
+                    else if (dias <= 14) predBadge = `<span class="pred-badge pred-pronto"  title="${_tooltipText}">~${dias}d</span>`;
+                    else                predBadge = `<span class="pred-badge pred-ok"       title="${_tooltipText}">~${dias}d</span>`;
                 } else {
-                    predBadge = `<span class="pred-badge" style="background:#f3f4f6;color:#9ca3af;">${p.stock} uds</span>`;
+                    // N-TOOLTIP-003: tooltip en badge Sin datos
+                    predBadge = `<span class="pred-badge" style="background:#f3f4f6;color:#9ca3af;" title="Sin historial de ventas — no se puede predecir">${p.stock} uds</span>`;
                 }
                 return `
                 <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
@@ -414,6 +429,7 @@ function _updateDashboardImpl() {
     try { renderCashFlowChart(); } catch(e) {}
     try { checkGastosInusuales(); } catch(e) {}
     try { renderWidgetClima(); } catch(e) {}
+    try { renderHeatmapPedidos(); } catch(e) {}
 
     // R2-A5: Desglose "Me deben" por cliente — onclick en la tarjeta
     const arCard = ar ? ar.closest('[onclick]') || ar.parentElement : null;
@@ -993,6 +1009,21 @@ function renderAccesosRapidos() {
 window.renderAccesosRapidos = renderAccesosRapidos;
 
 // ══════════════════════════════════════════════════════════════
+// N-VIZ-001: Regresión lineal para línea de tendencia en gráficas
+// ══════════════════════════════════════════════════════════════
+function _calcTrend(data: number[]): number[] {
+    const n = data.length;
+    if (n < 2) return data.map(() => 0);
+    const xMean = (n - 1) / 2;
+    const yMean = data.reduce((a, b) => a + b, 0) / n;
+    let num = 0, den = 0;
+    data.forEach((y, x) => { num += (x - xMean) * (y - yMean); den += (x - xMean) ** 2; });
+    const slope = den ? num / den : 0;
+    const intercept = yMean - slope * xMean;
+    return data.map((_, x) => Math.max(0, Math.round(slope * x + intercept)));
+}
+
+// ══════════════════════════════════════════════════════════════
 // #14 — GRÁFICA FLUJO DE CAJA (Ingresos vs Gastos últimas 8 semanas)
 // ══════════════════════════════════════════════════════════════
 let _cashFlowChart = null;
@@ -1057,6 +1088,20 @@ function renderCashFlowChart() {
                     backgroundColor: 'rgba(220, 38, 38, 0.55)',
                     borderRadius: 6,
                     borderSkipped: false,
+                },
+                {
+                    label: 'Tendencia',
+                    data: _calcTrend(ingresos),
+                    type: 'line' as any,
+                    borderColor: 'rgba(197,151,59,0.7)',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    fill: false,
+                    tension: 0,
+                    order: 0,
                 }
             ]
         },
@@ -1287,3 +1332,59 @@ function _renderClimaHTML(card: HTMLElement, data: any) {
         </div>`;
 }
 window.renderWidgetClima = renderWidgetClima;
+
+// ══════════════════════════════════════════════════════════════
+// N-VIZ-003: Heatmap de pedidos por día y hora
+// ══════════════════════════════════════════════════════════════
+function renderHeatmapPedidos(): void {
+    const el = document.getElementById('dashHeatmapWidget');
+    if (!el) return;
+
+    const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    const bloques = ['6–9','9–12','12–15','15–18','18–21','21+'];
+    const grid: number[][] = Array.from({length: 7}, () => new Array(6).fill(0));
+
+    // Fuentes: pedidos (fechaCreacion) + salesHistory (date + hour si existe)
+    const fuentes = [
+        ...(window.pedidos || []).map((p: any) => p.fechaCreacion || p.fecha),
+        ...(window.pedidosFinalizados || []).map((p: any) => p.fechaCreacion || p.fechaFinalizado || p.fecha),
+        ...(window.salesHistory || []).map((s: any) => s.createdAt || (s.date ? s.date + 'T12:00:00' : null)),
+    ].filter(Boolean);
+
+    fuentes.forEach((ts: string) => {
+        try {
+            const d = new Date(ts);
+            if (isNaN(d.getTime())) return;
+            const dia = d.getDay();
+            const hora = d.getHours();
+            const bloque = hora < 6 ? 5 : hora < 9 ? 0 : hora < 12 ? 1 : hora < 15 ? 2 : hora < 18 ? 3 : hora < 21 ? 4 : 5;
+            grid[dia][bloque]++;
+        } catch(_) {}
+    });
+
+    const maxVal = Math.max(...grid.flat(), 1);
+    const bg = (v: number) => {
+        const t = v / maxVal;
+        if (t === 0) return '#f9fafb';
+        if (t < 0.25) return 'rgba(197,151,59,0.12)';
+        if (t < 0.5)  return 'rgba(197,151,59,0.32)';
+        if (t < 0.75) return 'rgba(197,151,59,0.58)';
+        return 'rgba(197,151,59,0.85)';
+    };
+    const fg = (v: number) => v / maxVal > 0.5 ? '#5c3a00' : '#6b7280';
+
+    el.innerHTML = `
+        <div style="display:grid;grid-template-columns:44px repeat(6,1fr);gap:3px;font-size:.62rem;">
+            <div></div>
+            ${bloques.map(b => `<div style="text-align:center;color:#9ca3af;font-weight:700;padding-bottom:4px;">${b}</div>`).join('')}
+            ${dias.map((dia, d) => `
+                <div style="color:#6b7280;font-weight:700;display:flex;align-items:center;">${dia}</div>
+                ${grid[d].map((v, b) => `
+                    <div title="${v} registros" style="aspect-ratio:1;border-radius:5px;background:${bg(v)};display:flex;align-items:center;justify-content:center;color:${fg(v)};font-weight:${v>0?'700':'400'}">
+                        ${v > 0 ? v : ''}
+                    </div>
+                `).join('')}
+            `).join('')}
+        </div>`;
+}
+window.renderHeatmapPedidos = renderHeatmapPedidos;
