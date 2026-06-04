@@ -1,7 +1,7 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 3 junio 2026 — Sesión 14 (Auditoría de diseño/UX aplicada + pendientes menores)
-> **Sesión 15 (pendiente):** Aplicar los 52 hallazgos de la auditoría completa — ver sección **🔍 PENDIENTES AUDITORÍA SESIÓN 15** abajo.
+> **Última actualización:** 3 junio 2026 — Sesión 15 (35/52 hallazgos de auditoría aplicados — commit `e2f3c31`)
+> **Sesión 16 (pendiente):** 17 hallazgos restantes — ver sección **🔍 PENDIENTES** abajo.
 > **Versión app:** 2.2.0 | **Service Worker:** v2.3.8 | **Branch:** fresh-start → master
 
 ---
