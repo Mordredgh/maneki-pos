@@ -1,6 +1,7 @@
 # Maneki POS — Web App (Coolify)
 
 > **Última actualización:** 3 junio 2026 — Sesión 14 (Auditoría de diseño/UX aplicada + pendientes menores)
+> **Sesión 15 (pendiente):** Aplicar los 52 hallazgos de la auditoría completa — ver sección **🔍 PENDIENTES AUDITORÍA SESIÓN 15** abajo.
 > **Versión app:** 2.2.0 | **Service Worker:** v2.3.8 | **Branch:** fresh-start → master
 
 ---
@@ -454,6 +455,96 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | 🥉 | Fila de totales sticky en tablas | Medio | Medio |
 | ⭐ | Clases utilitarias anti-deriva de tokens | Estructural | Medio |
 | ⭐ | Micro-pulido (empty states, alertas, sombras, aria) | Medio | Bajo |
+
+---
+
+## 🔍 PENDIENTES AUDITORÍA — Sesión 15 (3 junio 2026)
+
+> Auditoría end-to-end. **52 hallazgos** verificados en código real (grep/diff), con ubicación exacta.
+> Atacar en el orden de prioridad indicado. Documento completo: `AUDITORIA-2026-06.md`.
+> Severidad: 🔴 alta · 🟡 media · 🟢 baja.
+
+### 🥇 Prioridad INMEDIATA (bugs visibles en producción)
+
+| # | Sev | Hallazgo | Archivo / línea |
+|---|-----|----------|-----------------|
+| A1 | 🔴 | **7 iconos invisibles**: `fa-barcode` (¡botón "Escanear" vacío!), `fa-calendar-alt`, `fa-expand-alt`, `fa-play-circle`, `fa-question-circle`, `fa-shopping-cart`, `fa-telegram` — no están en diccionario de `icons.js` y Font Awesome NO se carga. | `src/icons.ts` (dicc.) |
+| A8 | 🔴 | **~15 diálogos nativos `confirm/prompt/alert`** — bloquean hilo, ignoran dark mode, rompen look premium. Ya existe `showConfirm()`. | `inventory-1.ts:721,725,1129,1332` `inventory-2.ts:619` `inventory-4.ts:770,808` `inventory-5.ts:195,1148,1344,1346,1384` `dashboard.ts:1192` `backup.ts:126` `pedidos-3.ts:1309` |
+| A2 | 🟡 | **135 de 250 `<button>` sin `type`** → submit/recarga accidental en formularios. | `index.html` (global) |
+| A6 | 🟡 | **Realtime de products no invalida `productMap` ni `_invStockCache`** → lookups O(1) obsoletos tras cambio remoto. | `src/db.ts:331-334` |
+
+### 🥈 Prioridad ALTA
+
+| # | Sev | Hallazgo | Archivo / línea |
+|---|-----|----------|-----------------|
+| A3 | 🟡 | **31 `catch {}` vacíos** → errores silenciados, imposible depurar. | `balance.ts:731,758` `config.ts:584,813` `dashboard.ts:440,441` `config-init.ts:19,26,37` `backup.ts:220` (+23 más) |
+| A5 | 🟡 | **9 `target="_blank"` sin `rel="noopener noreferrer"`** → tabnabbing. | `balance.ts`, `clientes.ts`, `inventory-1.ts`, `pedidos-1.ts` |
+| B11 | 🟡 | **21 `<img>` sin `alt`** (20 dinámicos en innerHTML + 1 estático). | `src/*.ts` varios, `index.html` |
+| B12 | 🟡 | **Botones solo-ícono sin `aria-label`** (editar/duplicar/eliminar en tablas). | renders inventario/pedidos/clientes |
+| C19 | 🟡 | **Modales sin focus-trap ni `aria-modal="true"`/`role="dialog"`**. | sistema de modales (`ui-extras.ts`) |
+| D24 | 🟡 | **`icons.js`: MutationObserver escanea todo el DOM** (`querySelectorAll`) en cada batch de mutaciones. | `src/icons.ts:8,11` |
+| F40 | 🔴 | **Sin tests automatizados** — lógica de dinero (`calcSaldoPendiente`, márgenes, rollback) sin red de regresión. | proyecto |
+
+### 🥉 Prioridad MEDIA (deuda estructural / UX)
+
+| # | Sev | Hallazgo | Archivo / línea |
+|---|-----|----------|-----------------|
+| C14 | 🟡 | **CSP con `unsafe-inline`** (neutralizada por 264 onclick + 413 style inline). | `index.html:5` |
+| C15 | 🟡 | **413 estilos inline + 264 `onclick` inline** en `index.html`. | `index.html` |
+| C16 | 🟡 | **Inventario**: `<thead>` estático de 11 cols muerto en DOM (dualContainer lo oculta). | `inventory-5.ts:227`, `index.html:906` |
+| C17 | 🟡 | **Inventario**: 4 botones de sección con gradientes distintos (re-introducen competencia de color). | `inventory-5.ts:791,817,842,866` |
+| C21 | 🟡 | **Gráficas Chart.js sin alternativa textual** (Reportes/Balance/Dashboard). | `reportes.ts`, `balance.ts`, `dashboard.ts` |
+| D27 | 🟡 | **`renderInventoryTable` reconstruye todo el dualContainer con innerHTML** en cada cambio. | `inventory-5.ts:895` |
+| D28 | 🟡 | **`calcularDisponibilidadDesdeMP`/`calcularProducibles` se llaman por fila** en cada render → O(n×m). | `inventory-5.ts:455,530` |
+| E34 | 🟢 | **`console.log` en producción** (`db.ts` ×7 + logs realtime). | `src/db.ts`, realtime |
+| F35 | 🟡 | **`tsconfig strict:false` + errores `tsc`** sin red de tipos. | `tsconfig.json`, `whatsapp.ts`, varios |
+| F39 | 🟡 | **`window.*` como bus de estado global** sin encapsulación. | global |
+| G42 | 🟡 | **SW cachea por nombre** → depende del bump manual de `CACHE_NAME`. | `sw.js:1` |
+| G44 | 🟡 | **localStorage fallback sin manejar `QuotaExceededError`**. | `src/db.ts` / persistencia |
+| H51 | 🟡 | **Sin indicador global persistente "guardando…/guardado"**. | global |
+| H52 | 🟡 | **Sin aviso "cambios sin guardar"** al cerrar modales de edición con datos. | sistema de modales |
+
+### ⭐ Prioridad BAJA (pulido incremental)
+
+| # | Hallazgo | Archivo / línea |
+|---|----------|-----------------|
+| A4 | **75 `parseInt()` sin radix** → usar `parseInt(x, 10)` o `Number()`. | múltiples `src/*.ts` |
+| A7 | RT: INSERT con array vacío hace query completa en vez de insertar payload. | `src/db.ts:255-260` |
+| B9 | Cambiar categoría en lote por `prompt()` con IDs en texto. | `inventory-5.ts:1384` |
+| B10 | Merma con 2 `prompt()` sin validación numérica. | `inventory-1.ts:721,725` |
+| B13 | Sin `<noscript>`. | `index.html` |
+| C18 | Falta skeleton en kanban y al cambiar mes en Balance. | `pedidos-*`, `balance.ts` |
+| C20 | Sin "skip to content" ni `role="main"`. | `index.html` |
+| C22 | Filtros tag/proveedor como `<select>` vs tipo ya en segmented. | `index.html:890,899` |
+| C23 | Buscadores inconsistentes (overlay vs inline, distintos debounces). | varios |
+| D25 | Sin bundler: 30 scripts separados. | build |
+| D26 | Archivos monolíticos (`inventory-2.ts` 1896 líneas, etc.). | `src/*.ts` |
+| D29 | `_mkInvSummaryRow` recorre `window.products` completo. | `inventory-5.ts` (S14) |
+| F36 | Patrón `(getElementById('x')\|\|{}).value` repetido cientos de veces. | global |
+| F37 | Lógica de filtro de búsqueda duplicada (inv/clientes/historial). | varios |
+| F38 | Patrón fecha `_fechaHoy() ?? toISOString().split` repetido ~20 veces. | varios |
+| F41 | Comentarios históricos de bugs embebidos como ruido. | varios |
+| G43 | Toast `SW_UPDATED` efímero → usuario puede quedarse en versión vieja. | `sw.js`, `init.ts` |
+| H45 | Toggle "Mostrar SKU/Proveedor" fuera del patrón de toolbar. | `inventory-5.ts:255` |
+| H46 | Kanban: sin colapsar columnas vacías. | `pedidos-1.ts` |
+| H47 | Clientes: orden de columna activo no persiste entre renders. | `clientes.ts` |
+| H48 | Balance: conceptos por `datalist` sin categorías con color. | `balance.ts` |
+| H49 | Reportes: sin "vs periodo anterior" en KPIs (solo en gráfica). | `reportes.ts` |
+| H50 | Dashboard: widget de clima sin fallback visible. | `dashboard.ts` |
+
+### Notas para la sesión 15
+
+```
+// ESTRATEGIA RECOMENDADA:
+// 1. Atacar A1 (iconos), A8 (dialogs→showConfirm), A2 (button type), A6 (productMap RT)
+//    → un solo commit: son ediciones pequeñas, alto impacto visible.
+// 2. Lote accesibilidad: A5 (noopener), B11 (alt), B12 (aria-label), C19 (focus-trap).
+// 3. Lote perf: A3 (catch warn), D24 (icons scan), D28 (calcular por fila cachear).
+// 4. H51+H52 (estado de guardado / cambios sin guardar) — UX real que los usuarios notan.
+//
+// DOCUMENTACIÓN EN AUDITORIA-2026-06.md (en raíz del proyecto)
+// con ubicación exacta (archivo:línea) para cada hallazgo.
+```
 
 ---
 
