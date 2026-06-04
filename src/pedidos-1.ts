@@ -1359,7 +1359,7 @@ function renderTablaPedidos() {
                 </div>
                 <div class="flex gap-1 mt-1 flex-wrap">
                     ${_wa ? `<button onclick="abrirWhatsAppPedido('${p.id}')" title="WhatsApp: ${_et(_wa)}" style="color:#fff;background:#25D366;border:none;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;cursor:pointer;letter-spacing:.02em;">WA</button>` : ''}
-                    ${_fb ? `<a href="${_fbUrl}" target="_blank" title="Facebook: ${_et(_fb)}" style="color:#fff;background:#1877F2;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;text-decoration:none;display:inline-block;letter-spacing:.02em;">FB</a>` : ''}
+                    ${_fb ? `<a href="${_fbUrl}" target="_blank" rel="noopener noreferrer" title="Facebook: ${_et(_fb)}" style="color:#fff;background:#1877F2;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;text-decoration:none;display:inline-block;letter-spacing:.02em;">FB</a>` : ''}
                 </div>
             </td>
             <td class="px-4 py-3 text-xs text-gray-500 max-w-[160px]">

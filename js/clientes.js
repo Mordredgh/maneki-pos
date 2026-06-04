@@ -19,7 +19,7 @@ function _validEmail(t){return!t||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)}const _es
                 <span style="margin-left:auto;font-size:1.4rem;font-weight:800;color:${d.color}">${e.length}</span>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;min-height:20px">${i}${m}</div>
-        </div>`}).join("");t.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:4px 0">${l}</div>`}window.renderRFMPanel=renderRFMPanel,window._rfmVerSegmento=function(t){const a=_calcRFMScores();if(!a)return;const n=_RFM_SEGMENTS.find(e=>e.key===t);if(!n)return;const c=Object.entries(a).filter(([,e])=>e.segment===t),l=document.getElementById("rfmDetallePanel");if(!l)return;if(!c.length){l.innerHTML='<p style="padding:12px;color:#9ca3af;font-size:.85rem">Sin clientes en este segmento</p>',l.style.display="";return}const d=c.sort(([,e],[,i])=>i.monto-e.monto).map(([e,i])=>{const m=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"),r=(window.clients||[]).find(s=>(s.name||"").toLowerCase().trim()===e.toLowerCase().trim()),p=r&&(r.phone||r.telefono)||"",u=p?`https://wa.me/52${p.replace(/\D/g,"")}`:"",o=u?`<a href="${u}" target="_blank" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:8px;background:#dcfce7;color:#15803d;font-size:.72rem;font-weight:700;text-decoration:none;" title="Abrir WhatsApp">\u{1F4F1} WA</a>`:'<span style="font-size:.7rem;color:#d1d5db;padding:3px 6px;">Sin tel.</span>';return`<tr style="border-bottom:1px solid #f3f4f6">
+        </div>`}).join("");t.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:4px 0">${l}</div>`}window.renderRFMPanel=renderRFMPanel,window._rfmVerSegmento=function(t){const a=_calcRFMScores();if(!a)return;const n=_RFM_SEGMENTS.find(e=>e.key===t);if(!n)return;const c=Object.entries(a).filter(([,e])=>e.segment===t),l=document.getElementById("rfmDetallePanel");if(!l)return;if(!c.length){l.innerHTML='<p style="padding:12px;color:#9ca3af;font-size:.85rem">Sin clientes en este segmento</p>',l.style.display="";return}const d=c.sort(([,e],[,i])=>i.monto-e.monto).map(([e,i])=>{const m=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"),r=(window.clients||[]).find(s=>(s.name||"").toLowerCase().trim()===e.toLowerCase().trim()),p=r&&(r.phone||r.telefono)||"",u=p?`https://wa.me/52${p.replace(/\D/g,"")}`:"",o=u?`<a href="${u}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:8px;background:#dcfce7;color:#15803d;font-size:.72rem;font-weight:700;text-decoration:none;" title="Abrir WhatsApp">\u{1F4F1} WA</a>`:'<span style="font-size:.7rem;color:#d1d5db;padding:3px 6px;">Sin tel.</span>';return`<tr style="border-bottom:1px solid #f3f4f6">
                 <td style="padding:7px 10px;font-size:.8rem;font-weight:600;color:#374151">${m(e)}</td>
                 <td style="padding:7px 10px;font-size:.8rem;color:#6b7280;text-align:center">${i.frecuencia}</td>
                 <td style="padding:7px 10px;font-size:.8rem;font-weight:700;color:#059669;text-align:right">$${i.monto.toLocaleString("es-MX",{maximumFractionDigits:0})}</td>
@@ -92,10 +92,10 @@ function _validEmail(t){return!t||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)}const _es
                     </td>
                     <td class="px-6 py-4 text-gray-600">
     ${o.phone?`<div style="display:flex;flex-direction:column;gap:4px">
-        <a href="https://wa.me/521${_esc(o.phone).replace(/\D/g,"")}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(o.phone)}</a>
+        <a href="https://wa.me/521${_esc(o.phone).replace(/\D/g,"")}" target="_blank" rel="noopener noreferrer" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(o.phone)}</a>
         ${S}
     </div>`:""}
-${o.facebook?`<a href="${_esc(o.facebook).startsWith("http")?_esc(o.facebook):"https://"+_esc(o.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(o.facebook)}</a>`:""}
+${o.facebook?`<a href="${_esc(o.facebook).startsWith("http")?_esc(o.facebook):"https://"+_esc(o.facebook)}" target="_blank" rel="noopener noreferrer" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(o.facebook)}</a>`:""}
 ${!o.phone&&!o.facebook?"\u2014":""}
 </td>
 <td class="px-6 py-4 text-gray-600 text-sm">${o.email?_esc(o.email):"\u2014"}</td>
@@ -138,10 +138,10 @@ Se eliminar\xE1 permanentemente "${_esc(n)}". Esta acci\xF3n no se puede deshace
                         </td>
                         <td class="px-6 py-4 text-gray-600">
     ${e.phone?`<div style="display:flex;flex-direction:column;gap:2px">
-        <a href="https://wa.me/521${_esc(e.phone).replace(/\D/g,"")}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(e.phone)}</a>
+        <a href="https://wa.me/521${_esc(e.phone).replace(/\D/g,"")}" target="_blank" rel="noopener noreferrer" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(e.phone)}</a>
         ${u}
     </div>`:""}
-${e.facebook?`<a href="${_esc(e.facebook).startsWith("http")?_esc(e.facebook):"https://"+_esc(e.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(e.facebook)}</a>`:""}
+${e.facebook?`<a href="${_esc(e.facebook).startsWith("http")?_esc(e.facebook):"https://"+_esc(e.facebook)}" target="_blank" rel="noopener noreferrer" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(e.facebook)}</a>`:""}
 ${!e.phone&&!e.facebook?"\u2014":""}
 </td>
                         <td class="px-6 py-4 text-gray-600 text-sm">${e.email?_esc(e.email):"\u2014"}</td>

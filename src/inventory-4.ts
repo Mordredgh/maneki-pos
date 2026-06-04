@@ -752,7 +752,7 @@ function aplicarMargen(margen) {
 window.aplicarMargen = aplicarMargen;
 
 // ── Cambiar tipo: materia prima ↔ producto terminado ───────────────────────
-function cambiarTipoProducto(id) {
+async function cambiarTipoProducto(id) {
     const p = (window.products||[]).find(x => String(x.id) === String(id));
     if (!p) return;
     const esMat = (p.tipo||'producto') === 'materia_prima';
@@ -767,7 +767,7 @@ function cambiarTipoProducto(id) {
         );
         if (pedidosConEsteProducto.length > 0) {
             const folios = pedidosConEsteProducto.map(ped => ped.folio||ped.id).join(', ');
-            const forzar = confirm(`⚠️ "${p.name}" está en ${pedidosConEsteProducto.length} pedido(s) activo(s):\n${folios}\n\nConvertirlo a Materia Prima puede romper esos pedidos. ¿Continuar de todas formas?`);
+            const forzar = await showConfirm(`⚠️ "${p.name}" está en ${pedidosConEsteProducto.length} pedido(s) activo(s):\n${folios}\n\nConvertirlo a Materia Prima puede romper esos pedidos. ¿Continuar de todas formas?`);
             if (!forzar) return;
         }
     }
@@ -794,7 +794,7 @@ function cambiarTipoProducto(id) {
 window.cambiarTipoProducto = cambiarTipoProducto;
 
 // ── Eliminar ───────────────────────────────────────────────────────────────
-function deleteProduct(id) {
+async function deleteProduct(id) {
     const p = (window.products||[]).find(x => String(x.id) === String(id));
     if (!p) return;
 
@@ -805,7 +805,7 @@ function deleteProduct(id) {
     );
     if (pedidosConEsteProducto.length > 0) {
         const folios = pedidosConEsteProducto.map(p => p.folio||p.id).join(', ');
-        const forzar = confirm(`⚠️ Este producto está en ${pedidosConEsteProducto.length} pedido(s) activo(s):\n${folios}\n\nEliminar puede romper esos pedidos. ¿Continuar de todas formas?`);
+        const forzar = await showConfirm(`⚠️ Este producto está en ${pedidosConEsteProducto.length} pedido(s) activo(s):\n${folios}\n\nEliminar puede romper esos pedidos. ¿Continuar de todas formas?`);
         if (!forzar) return;
     }
 

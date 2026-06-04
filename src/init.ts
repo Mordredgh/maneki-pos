@@ -13,6 +13,16 @@
                 if (toastFn) {
                     toastFn('🐱 App actualizada — recarga para aplicar cambios', 'ok');
                 }
+                // G43: Banner persistente de actualización (además del toast efímero)
+                let banner = document.getElementById('swUpdateBanner') as HTMLElement | null;
+                if (!banner) {
+                    banner = document.createElement('div');
+                    banner.id = 'swUpdateBanner';
+                    banner.style.cssText = 'display:none;position:fixed;bottom:0;left:0;right:0;background:#7c3aed;color:#fff;padding:12px 16px;text-align:center;z-index:9999;font-size:14px;';
+                    banner.innerHTML = '🚀 Nueva versión disponible — <button onclick="window.location.reload()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:4px 12px;border-radius:4px;cursor:pointer;margin-left:8px;">Actualizar ahora</button>';
+                    document.body.appendChild(banner);
+                }
+                banner.style.display = 'block';
             }
         });
     }

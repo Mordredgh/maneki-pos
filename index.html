@@ -119,14 +119,26 @@ input:focus, select:focus, textarea:focus, button:focus {
 </head>
 <body class="bg-gray-50">
 
+<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:text-purple-700 focus:px-4 focus:py-2 focus:rounded focus:shadow" style="position:absolute;left:-9999px;top:0;">Ir al contenido principal</a>
+
+<noscript>
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;display:flex;align-items:center;justify-content:center;font-family:sans-serif;z-index:99999;">
+    <div style="text-align:center;padding:32px;">
+      <h1 style="font-size:24px;color:#7c3aed;margin-bottom:12px;">Maneki POS</h1>
+      <p style="color:#666;">Esta aplicación requiere JavaScript para funcionar.</p>
+      <p style="color:#666;">Por favor activa JavaScript en tu navegador.</p>
+    </div>
+  </div>
+</noscript>
+
 <!-- Mobile Topbar -->
 <div id="mobileTopbar" style="display:none" class="fixed top-0 left-0 right-0 z-[198] flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
   <!-- UX16/17: min 44px tap target, aria-label, transición en hamburguesa -->
-  <button id="hamburgerBtn" onclick="(typeof toggleSidebar==='function'?toggleSidebar():void 0)"
+  <button type="button" id="hamburgerBtn" onclick="(typeof toggleSidebar==='function'?toggleSidebar():void 0)"
     aria-label="Abrir menú"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:22px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;transition:transform .2s;">☰</button>
   <img src="logo.png" alt="Maneki Store" style="height:32px;object-fit:contain;" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<span style=\'font-family:Cormorant Garamond,serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;\'>Maneki Store</span>')">
-  <button onclick="typeof _abrirBusquedaOverlay === 'function' && _abrirBusquedaOverlay()"
+  <button type="button" onclick="typeof _abrirBusquedaOverlay === 'function' && _abrirBusquedaOverlay()"
     aria-label="Buscar"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:18px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">🔍</button>
 </div>
@@ -150,57 +162,57 @@ input:focus, select:focus, textarea:focus, button:focus {
     <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(197,151,59,.5);margin-top:3px;">Regalos Personalizados</p>
 </div>
 
-                <button id="closeSidebar" class="md:hidden text-gray-600" aria-label="Cerrar menú">
+                <button type="button" id="closeSidebar" class="md:hidden text-gray-600" aria-label="Cerrar menú">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
 
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="showSection('dashboard')" data-section="dashboard" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium">
+            <button type="button" onclick="showSection('dashboard')" data-section="dashboard" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium">
                 <i class="fas fa-home w-5"></i>
                 <span>Dashboard</span>
             </button>
 
-<button onclick="showSection('pedidos')" data-section="pedidos" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+<button type="button" onclick="showSection('pedidos')" data-section="pedidos" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
     <i class="fas fa-clipboard-list w-5"></i>
     <span class="flex-1">Pedidos por Encargo</span>
     <span id="sidebarBadgePedidos" class="sidebar-badge" style="display:none;"></span>
 </button>
-            <button onclick="showSection('quotes')" data-section="quotes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" onclick="showSection('quotes')" data-section="quotes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-file-invoice w-5"></i>
                 <span>Cotizaciones</span>
             </button>
-            <button onclick="showSection('inventory')" data-section="inventory" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" onclick="showSection('inventory')" data-section="inventory" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-boxes w-5"></i>
                 <span class="flex-1">Inventario</span>
                 <span id="sidebarBadgeInventory" class="sidebar-badge" style="display:none;"></span>
             </button>
-            <button onclick="showSection('balance')" data-section="balance" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" onclick="showSection('balance')" data-section="balance" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-balance-scale w-5"></i>
                 <span>Balance</span>
             </button>
-            <button onclick="showSection('clientes')" data-section="clientes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" onclick="showSection('clientes')" data-section="clientes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-users w-5"></i>
                 <span>Clientes</span>
             </button>
-            <button onclick="showSection('categorias')" data-section="categorias" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" onclick="showSection('categorias')" data-section="categorias" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-tags w-5"></i>
                 <span>Categorías</span>
             </button>
-            <button onclick="showSection('analisis')" data-section="analisis" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" onclick="showSection('analisis')" data-section="analisis" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-trophy w-5"></i>
                 <span>Análisis de Productos</span>
             </button>
-            <button onclick="showSection('reportes')" data-section="reportes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" onclick="showSection('reportes')" data-section="reportes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-chart-line w-5"></i>
                 <span>Reportes</span>
             </button>
-            <button onclick="showSection('equipos')" data-section="equipos" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" onclick="showSection('equipos')" data-section="equipos" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-tools w-5"></i>
                 <span>Equipos / ROI</span>
             </button>
-        <button onclick="showSection('configuracion')" data-section="configuracion" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+        <button type="button" onclick="showSection('configuracion')" data-section="configuracion" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
     <i class="fas fa-cog w-5"></i>
     <span>Configuración</span>
 </button>
@@ -208,7 +220,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div class="border-t flex-shrink-0" style="padding:10px 12px;border-color:rgba(197,151,59,0.12);">
             <div class="flex gap-2 mb-1">
-              <button onclick="abrirModalBackup()" class="flex-1 px-2 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200 transition-all flex items-center justify-center gap-1">
+              <button type="button" onclick="abrirModalBackup()" class="flex-1 px-2 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200 transition-all flex items-center justify-center gap-1">
                   <i class="fas fa-database"></i><span>Backup</span>
               </button>
             </div>
@@ -230,12 +242,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
                 <!-- UX6: botón de atajos de teclado visible -->
-                <button onclick="if(typeof _createShortcutsOverlay==='function'){_createShortcutsOverlay();document.getElementById('mk-shortcuts-overlay').classList.add('visible');}"
+                <button type="button" onclick="if(typeof _createShortcutsOverlay==='function'){_createShortcutsOverlay();document.getElementById('mk-shortcuts-overlay').classList.add('visible');}"
                     title="Atajos de teclado (también presiona ?)"
                     aria-label="Ver atajos de teclado"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors text-xs font-bold border border-gray-200"
                     style="flex-shrink:0;">?</button>
-                <button onclick="toggleDarkMode()" id="darkModeBtn"
+                <button type="button" onclick="toggleDarkMode()" id="darkModeBtn"
                         title="Modo oscuro"
                         class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-110"
                         style="background: #F3F4F6;">
@@ -245,7 +257,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
     </aside>
 
-    <button id="openSidebar" class="md:hidden fixed top-4 left-4 z-40 p-3 rounded-xl" aria-expanded="false" aria-controls="sidebar" style="display:none !important;">
+    <button type="button" id="openSidebar" class="md:hidden fixed top-4 left-4 z-40 p-3 rounded-xl" aria-expanded="false" aria-controls="sidebar" style="display:none !important;">
         <i class="fas fa-bars text-gray-700"></i>
     </button>
 
@@ -284,7 +296,7 @@ input:focus, select:focus, textarea:focus, button:focus {
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">⌘K</span>
         <div id="globalSearchResults" class="hidden absolute top-11 left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto" style="box-shadow:0 24px 64px rgba(21,4,40,0.15),0 8px 24px rgba(124,58,237,0.08);border-radius:20px;border:1px solid rgba(197,151,59,0.12);"></div>
       </div>
-      <button onclick="refrescarPagina()" id="btnRefrescar"
+      <button type="button" onclick="refrescarPagina()" id="btnRefrescar"
         title="Refrescar datos"
         style="
           flex-shrink:0;width:36px;height:36px;border-radius:11px;
@@ -304,7 +316,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       </button>
     </div>
 
-    <main class="md:ml-64 min-h-screen">
+    <main id="main-content" role="main" class="md:ml-64 min-h-screen">
 
 <!-- EXTRACTABLE: dashboard-section (redesign v2) -->
 <section id="dashboard-section" class="animate-fade-in" style="padding:0;overflow-x:hidden;">
@@ -326,11 +338,11 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
     </div>
     <div class="flex items-center gap-2 flex-wrap justify-end" style="position:relative;z-index:1;">
-      <button onclick="togglePrivacidad()" id="privacyToggleBtn" class="mk-dash-hero-btn" title="Ocultar montos">
+      <button type="button" onclick="togglePrivacidad()" id="privacyToggleBtn" class="mk-dash-hero-btn" title="Ocultar montos">
         <i class="fas fa-eye" id="privacyIcon"></i>
         <span id="privacyLabel" class="hidden sm:inline">Privacidad</span>
       </button>
-      <button onclick="mostrarResumenDia()" class="mk-btn mk-btn-gold" style="padding:8px 18px;">
+      <button type="button" onclick="mostrarResumenDia()" class="mk-btn mk-btn-gold" style="padding:8px 18px;">
         <i class="fas fa-chart-bar"></i>
         <span class="hidden sm:inline">Resumen</span>
       </button>
@@ -354,7 +366,7 @@ input:focus, select:focus, textarea:focus, button:focus {
               <p id="alertaSubtitulo" style="font-size:.78rem;color:#b91c1c;font-weight:600;margin:0;">—</p>
             </div>
           </div>
-          <button onclick="cerrarAlertaEntregas()" style="background:rgba(153,27,27,0.08);border:none;color:#9ca3af;font-size:.85rem;cursor:pointer;padding:5px 9px;border-radius:8px;" title="Cerrar">✕</button>
+          <button type="button" onclick="cerrarAlertaEntregas()" style="background:rgba(153,27,27,0.08);border:none;color:#9ca3af;font-size:.85rem;cursor:pointer;padding:5px 9px;border-radius:8px;" title="Cerrar">✕</button>
         </div>
         <div id="alertaEntregasLista" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
@@ -466,7 +478,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);">
           <div class="mk-chart-title">
             <span>⏰ Entregas próximas</span>
-            <button onclick="showSection('pedidos')" style="font-size:.7rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;">Ver →</button>
+            <button type="button" onclick="showSection('pedidos')" style="font-size:.7rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;">Ver →</button>
           </div>
           <div id="dashUpcomingDeliveries"><p class="text-gray-400 text-xs text-center py-4">Sin entregas próximas 🎉</p></div>
         </div>
@@ -491,7 +503,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div class="mk-card mk-chart-area">
         <div class="mk-chart-title" style="display:flex;justify-content:space-between;align-items:center;">
           <span>📊 Comparativa semanal</span>
-          <button onclick="generarResumenSemanalWA()" title="Copiar resumen para WhatsApp"
+          <button type="button" onclick="generarResumenSemanalWA()" title="Copiar resumen para WhatsApp"
             style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:.7rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
             📋 WA
           </button>
@@ -547,7 +559,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <input type="text" id="notaInput" placeholder="Escribe una nota... (Enter)"
                class="mk-note-input" onkeydown="if(event.key==='Enter') agregarNota()">
-        <button onclick="agregarNota()" class="mk-btn mk-btn-gold" style="padding:8px 14px;"><i class="fas fa-plus"></i></button>
+        <button type="button" onclick="agregarNota()" class="mk-btn mk-btn-gold" style="padding:8px 14px;"><i class="fas fa-plus"></i></button>
       </div>
       <div id="notasList" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;">
         <p class="text-gray-400 text-xs text-center py-4">Sin notas ✏️</p>
@@ -628,7 +640,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div style="flex:1;">
                     <p style="font-size:.72rem;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.08em;">🚨 Entregas pendientes hoy</p>
                 </div>
-                <button onclick="showSection('pedidos')" style="font-size:.68rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;margin-left:auto;">Ver todos →</button>
+                <button type="button" onclick="showSection('pedidos')" style="font-size:.68rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;margin-left:auto;">Ver todos →</button>
             </div>
             <div id="mornUrgentList">
                 <p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:12px 0;">✅ Sin entregas urgentes para hoy</p>
@@ -638,18 +650,18 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div style="margin-bottom:14px;animation:fadeUp 0.4s 0.5s ease both;opacity:0;">
             <p style="font-size:.68rem;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Acceso rápido</p>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-                <button onclick="showSection('pedidos')" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;" onmouseover="this.style.borderColor='#C9933A';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(201,147,58,.2)'" onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='';this.style.boxShadow=''">
+                <button type="button" onclick="showSection('pedidos')" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;" onmouseover="this.style.borderColor='#C9933A';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(201,147,58,.2)'" onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='';this.style.boxShadow=''">
                     <div style="font-size:1.4rem;margin-bottom:6px;">📋</div>
                     <p style="font-size:.72rem;font-weight:700;color:#374151;">Pedidos</p>
                 </button>
-                <button onclick="showSection('clientes')" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;" onmouseover="this.style.borderColor='#FF6B9D';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(255,107,157,.2)'" onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='';this.style.boxShadow=''">
+                <button type="button" onclick="showSection('clientes')" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;" onmouseover="this.style.borderColor='#FF6B9D';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(255,107,157,.2)'" onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='';this.style.boxShadow=''">
                     <div style="font-size:1.4rem;margin-bottom:6px;">👥</div>
                     <p style="font-size:.72rem;font-weight:700;color:#374151;">Clientes</p>
                 </button>
             </div>
         </div>
 
-        <button onclick="showSection('dashboard')" style="width:100%;background:linear-gradient(135deg,#C9933A 0%,#E8B84B 100%);color:#3A2000;font-weight:700;font-size:.9rem;padding:.85rem;border-radius:18px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(201,147,58,.3);transition:all .2s ease;font-family:inherit;animation:fadeUp 0.4s 0.58s ease both;opacity:0;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(201,147,58,.42)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(201,147,58,.3)'">
+        <button type="button" onclick="showSection('dashboard')" style="width:100%;background:linear-gradient(135deg,#C9933A 0%,#E8B84B 100%);color:#3A2000;font-weight:700;font-size:.9rem;padding:.85rem;border-radius:18px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(201,147,58,.3);transition:all .2s ease;font-family:inherit;animation:fadeUp 0.4s 0.58s ease both;opacity:0;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(201,147,58,.42)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(201,147,58,.3)'">
             <i class="fas fa-chart-line mr-2"></i>Ver Dashboard completo
         </button>
 
@@ -663,7 +675,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="mk-section-header"><div class="mk-sh-icon">&#128203;</div><div class="mk-sh-text"><h2>Cotizaciones</h2><p>Genera presupuestos para tus clientes</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2" id="quotesHeaderButtons">
-                        <button onclick="openQuoteModal()"
+                        <button type="button" onclick="openQuoteModal()"
                                 class="btn-primary px-6 py-3 rounded-xl text-white font-semibold">
                             <i class="fas fa-plus mr-2"></i>
                             Nueva Cotización
@@ -672,12 +684,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div class="flex gap-1 bg-gray-100 rounded-2xl p-1 mb-6 w-fit">
-                    <button id="tabQuoteProductos" onclick="switchQuoteTab('productos')"
+                    <button type="button" id="tabQuoteProductos" onclick="switchQuoteTab('productos')"
                         class="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all"
                         style="background:#C5A572;color:white;">
                         <i class="fas fa-tag mr-1"></i> Cotización de Productos
                     </button>
-                    <button id="tabQuoteEnvios" onclick="switchQuoteTab('envios')"
+                    <button type="button" id="tabQuoteEnvios" onclick="switchQuoteTab('envios')"
                         class="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all text-gray-500">
                         <i class="fas fa-motorcycle mr-1"></i> Cotización de Envíos
                     </button>
@@ -720,7 +732,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                         <div class="flex gap-2">
                                             <input type="text" id="envioDestinoDireccion" placeholder="Escribe colonia, calle o dirección..."
                                                 class="flex-1 px-4 py-3 border border-gray-200 rounded-xl outline-none text-sm focus:ring-2 focus:ring-amber-300">
-                                            <button onclick="buscarDestinoCotizador()" class="px-4 py-3 rounded-xl text-white text-sm font-semibold flex-shrink-0" style="background:#C5A572">
+                                            <button type="button" onclick="buscarDestinoCotizador()" class="px-4 py-3 rounded-xl text-white text-sm font-semibold flex-shrink-0" style="background:#C5A572">
                                                 <i class="fas fa-search"></i>
                                             </button>
                                         </div>
@@ -741,7 +753,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                             <p class="text-sm text-gray-500 mb-1">Tarifa estimada</p>
                                             <p class="text-4xl font-black" style="color:#C5A572" id="envioPrecioLabel">$0</p>
                                         </div>
-                                        <button onclick="copiarCotizacionEnvio()" class="mt-3 w-full py-2 rounded-xl border border-amber-300 text-amber-700 text-sm font-semibold hover:bg-amber-100 transition-all">
+                                        <button type="button" onclick="copiarCotizacionEnvio()" class="mt-3 w-full py-2 rounded-xl border border-amber-300 text-amber-700 text-sm font-semibold hover:bg-amber-100 transition-all">
                                             <i class="fas fa-copy mr-1"></i> Copiar para WhatsApp
                                         </button>
                                     </div>
@@ -755,7 +767,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-lg font-bold text-gray-800">⚙️ Mis Tarifas por Anillo</h3>
-                                    <button onclick="abrirConfigAnillos()" class="text-xs px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold">
+                                    <button type="button" onclick="abrirConfigAnillos()" class="text-xs px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold">
                                         <i class="fas fa-sliders-h mr-1"></i> Configurar en mapa
                                     </button>
                                 </div>
@@ -768,7 +780,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" style="min-height:80px;">
                             <div class="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="font-bold text-gray-700 text-sm">🗺️ Mapa de cobertura</h3>
-                                <button onclick="abrirConfigAnillos()" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#C5A572">
+                                <button type="button" onclick="abrirConfigAnillos()" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#C5A572">
                                     <i class="fas fa-edit mr-1"></i> Editar anillos
                                 </button>
                             </div>
@@ -788,27 +800,27 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                         <!-- ── + Agregar ▾ ── -->
                         <div style="position:relative;">
-                            <button onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                            <button type="button" onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
                                 class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
                                 <i class="fas fa-plus"></i> Agregar <span style="font-size:.7rem;opacity:.8;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
-                                <button onclick="openPtModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">📦 Producto Terminado</button>
-                                <button onclick="openVariableProductModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🎨 Producto Variable</button>
-                                <button onclick="openMpModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🏭 Materia Prima</button>
-                                <button onclick="openSvcModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">⚙️ Servicio</button>
+                                <button type="button" onclick="openPtModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">📦 Producto Terminado</button>
+                                <button type="button" onclick="openVariableProductModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🎨 Producto Variable</button>
+                                <button type="button" onclick="openMpModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🏭 Materia Prima</button>
+                                <button type="button" onclick="openSvcModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">⚙️ Servicio</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
                                 <label class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold cursor-pointer">
                                     📥 Importar CSV
                                     <input type="file" id="invCsvImportInput" accept=".csv" style="display:none;" onchange="importarInventarioCSV(this)">
                                 </label>
-                                <button onclick="descargarTemplateCSV();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📋 Descargar template CSV</button>
+                                <button type="button" onclick="descargarTemplateCSV();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📋 Descargar template CSV</button>
                             </div>
                         </div>
 
                         <!-- ── Lista de compras (siempre visible) ── -->
-                        <button onclick="mostrarListaCompras()"
+                        <button type="button" onclick="mostrarListaCompras()"
                                 class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background:linear-gradient(135deg,#f59e0b,#d97706)">
                             <i class="fas fa-shopping-cart"></i> Lista de compras
@@ -816,33 +828,33 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                         <!-- ── Reportes ▾ ── -->
                         <div style="position:relative;">
-                            <button onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                            <button type="button" onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
                                 class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background:linear-gradient(135deg,#f59e0b,#92400e);">
                                 <i class="fas fa-chart-bar"></i> Reportes <span style="font-size:.7rem;opacity:.8;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:180px;padding:6px;">
-                                <button onclick="abrirReporteRentabilidad();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-chart-bar"></i> Rentabilidad</button>
-                                <button onclick="manekiExportar('inventario');document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportar Excel</button>
-                                <button onclick="imprimirInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-print"></i> Imprimir</button>
+                                <button type="button" onclick="abrirReporteRentabilidad();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-chart-bar"></i> Rentabilidad</button>
+                                <button type="button" onclick="manekiExportar('inventario');document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+                                <button type="button" onclick="imprimirInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-print"></i> Imprimir</button>
                             </div>
                         </div>
 
                         <!-- ── Herramientas ▾ ── -->
                         <div style="position:relative;">
-                            <button onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                            <button type="button" onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
                                 class="px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
                                 style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;">
                                 <i class="fas fa-cog"></i> Herramientas <span style="font-size:.7rem;opacity:.7;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
-                                <button onclick="toggleMovimientosInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history"></i> Movimientos de stock</button>
+                                <button type="button" onclick="toggleMovimientosInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history"></i> Movimientos de stock</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
-                                <button onclick="guardarSnapshotInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2">📸 Guardar snapshot</button>
-                                <button onclick="verSnapshotsInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📅 Ver snapshots</button>
+                                <button type="button" onclick="guardarSnapshotInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2">📸 Guardar snapshot</button>
+                                <button type="button" onclick="verSnapshotsInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📅 Ver snapshots</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
-                                <button onclick="abrirBulkEditPrecios();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2">💲 Actualizar precios en masa</button>
-                                <button onclick="imprimirEtiquetasBatch();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 rounded-lg text-gray-700 flex items-center gap-2">🏷️ Imprimir etiquetas (todas)</button>
+                                <button type="button" onclick="abrirBulkEditPrecios();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2">💲 Actualizar precios en masa</button>
+                                <button type="button" onclick="imprimirEtiquetasBatch();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 rounded-lg text-gray-700 flex items-center gap-2">🏷️ Imprimir etiquetas (todas)</button>
                             </div>
                         </div>
 
@@ -864,7 +876,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <option value="entrada">Entradas</option>
                                 <option value="salida">Salidas</option>
                             </select>
-                            <button onclick="limpiarMovimientosInventario()" class="px-3 py-2 rounded-xl text-sm text-red-500 border border-red-200 hover:bg-red-50">🗑️ Limpiar</button>
+                            <button type="button" onclick="limpiarMovimientosInventario()" class="px-3 py-2 rounded-xl text-sm text-red-500 border border-red-200 hover:bg-red-50">🗑️ Limpiar</button>
                         </div>
                     </div>
                     <div id="movimientosLista" class="space-y-2 max-h-96 overflow-y-auto"></div>
@@ -877,7 +889,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       oninput="(function(v){clearTimeout(window._invSearchT);window._invSearchT=setTimeout(function(){renderInventoryTable();},160);})(this.value)"
       class="pl-9 pr-4 py-2 w-full border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
   </div>
-  <button onclick="window._abrirQRScanner()" title="Escanear código de barras / QR"
+  <button type="button" onclick="window._abrirQRScanner()" title="Escanear código de barras / QR"
       class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-amber-50 hover:border-amber-300 transition-colors shrink-0">
       <i class="fas fa-barcode"></i><span class="hidden sm:inline">Escanear</span>
   </button>
@@ -938,9 +950,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <p class="text-sm text-gray-400">Tu dinero de un vistazo</p>
                     </div>
                     <div class="flex items-center gap-1 bg-white rounded-xl border border-gray-200 px-1 py-1">
-                        <button onclick="cambiarMesBalance(-1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">‹</button>
+                        <button type="button" onclick="cambiarMesBalance(-1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">‹</button>
                         <span id="balanceMesLabel" class="text-sm font-semibold text-gray-700 min-w-28 text-center px-2"></span>
-                        <button onclick="cambiarMesBalance(1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">›</button>
+                        <button type="button" onclick="cambiarMesBalance(1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">›</button>
                     </div>
                 </div>
 
@@ -998,7 +1010,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Ingresos</h3>
-                            <button onclick="openIncomeModal()" class="w-8 h-8 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" onclick="openIncomeModal()" class="w-8 h-8 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 flex items-center justify-center text-lg transition-colors">+</button>
                         </div>
                         <input type="text" id="buscarIngresos" placeholder="Buscar ingreso..." oninput="(function(v){clearTimeout(window._incT);window._incT=setTimeout(function(){renderIncomeList()},160)})(this.value)"
                             class="w-full mb-3 px-3 py-2 bg-gray-50 border-0 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-200">
@@ -1009,8 +1021,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Egresos</h3>
                             <div class="flex gap-1.5">
-                                <button onclick="toggleRecurrentesPanel()" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center text-sm transition-colors" title="Recurrentes">↺</button>
-                                <button onclick="openExpenseModal()" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center text-lg transition-colors">+</button>
+                                <button type="button" onclick="toggleRecurrentesPanel()" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center text-sm transition-colors" title="Recurrentes">↺</button>
+                                <button type="button" onclick="openExpenseModal()" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center text-lg transition-colors">+</button>
                             </div>
                         </div>
                         <input type="text" id="buscarEgresos" placeholder="Buscar egreso..." oninput="(function(v){clearTimeout(window._expT);window._expT=setTimeout(function(){renderExpenseList()},160)})(this.value)"
@@ -1029,7 +1041,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Cuentas por Cobrar</h3>
-                            <button onclick="openReceivableModal()" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" onclick="openReceivableModal()" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center text-lg transition-colors">+</button>
                         </div>
 
                         <div id="cxcResumen" class="flex gap-2 mb-3 flex-wrap"></div>
@@ -1050,7 +1062,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Cuentas por Pagar</h3>
-                            <button onclick="openPayableModal()" class="w-8 h-8 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" onclick="openPayableModal()" class="w-8 h-8 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center text-lg transition-colors">+</button>
                         </div>
                         <div class="space-y-2 max-h-80 overflow-y-auto" id="payablesList"></div>
                     </div>
@@ -1063,12 +1075,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="mk-section-header"><div class="mk-sh-icon">&#128150;</div><div class="mk-sh-text"><h2>Clientes</h2><p>Tus clientes m&#225;s especiales</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2">
-                        <button onclick="manekiExportar('clientes')"
+                        <button type="button" onclick="manekiExportar('clientes')"
                                 class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background: linear-gradient(135deg,#10B981,#059669)">
                             <i class="fas fa-file-excel"></i> Exportar Excel
                         </button>
-                        <button onclick="openAddClientModal()"
+                        <button type="button" onclick="openAddClientModal()"
                                 class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
                             <i class="fas fa-user-plus"></i> Agregar Cliente
                         </button>
@@ -1155,7 +1167,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="mk-section-header"><div class="mk-sh-icon">&#127991;&#65039;</div><div class="mk-sh-text"><h2>Categor&#237;as</h2><p>Organiza tus productos</p></div></div>
                         <p class="text-gray-600 mt-1">Administra las categorías de tus productos</p>
                     </div>
-                    <button onclick="openAddCategoryModal()"
+                    <button type="button" onclick="openAddCategoryModal()"
                             class="btn-primary px-6 py-3 rounded-xl text-white font-semibold">
                         <i class="fas fa-plus mr-2"></i>
                         Nueva Categoría
@@ -1177,7 +1189,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <h2 class="text-2xl font-bold text-gray-800">Análisis de Productos</h2>
                         <p class="text-sm text-gray-400">Descubre qué productos generan más valor</p>
                     </div>
-                    <button onclick="exportarAnalisisCSV()" data-tip="Descarga un archivo .csv con el ranking completo de productos para abrirlo en Excel"
+                    <button type="button" onclick="exportarAnalisisCSV()" data-tip="Descarga un archivo .csv con el ranking completo de productos para abrirlo en Excel"
                             class="px-4 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
                         Exportar CSV
                     </button>
@@ -1187,11 +1199,11 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="bg-white rounded-xl border border-gray-100 p-4 mb-6">
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="flex gap-1.5 flex-wrap">
-                            <button onclick="setAnalisisPeriodo('mes')" id="btnPeriodoMes" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 text-amber-700 bg-amber-50">Este mes</button>
-                            <button onclick="setAnalisisPeriodo('30')" id="btnPeriodo30" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">30 días</button>
-                            <button onclick="setAnalisisPeriodo('90')" id="btnPeriodo90" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">90 días</button>
-                            <button onclick="setAnalisisPeriodo('todo')" id="btnPeriodoTodo" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">Todo</button>
-                            <button onclick="setAnalisisPeriodo('custom')" id="btnPeriodoCustom" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">Rango</button>
+                            <button type="button" onclick="setAnalisisPeriodo('mes')" id="btnPeriodoMes" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 text-amber-700 bg-amber-50">Este mes</button>
+                            <button type="button" onclick="setAnalisisPeriodo('30')" id="btnPeriodo30" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">30 días</button>
+                            <button type="button" onclick="setAnalisisPeriodo('90')" id="btnPeriodo90" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">90 días</button>
+                            <button type="button" onclick="setAnalisisPeriodo('todo')" id="btnPeriodoTodo" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">Todo</button>
+                            <button type="button" onclick="setAnalisisPeriodo('custom')" id="btnPeriodoCustom" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">Rango</button>
                         </div>
                         <div id="analisisCustomFechas" class="hidden flex gap-2 items-center">
                             <input type="date" id="analisisDesde" onchange="renderAnalisis()" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
@@ -1354,7 +1366,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 animate-fade-in">
         <div class="flex justify-between items-center mb-5">
             <h2 class="text-xl font-bold text-gray-800">📊 Resumen del Día</h2>
-            <button onclick="closeModal('resumenDiaModal')" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            <button type="button" onclick="closeModal('resumenDiaModal')" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
         </div>
         <div id="resumenDiaContent"></div>
     </div>
@@ -1369,7 +1381,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <h2 class="text-2xl font-bold text-gray-800">Reportes</h2>
                         <p class="text-sm text-gray-400 mt-1">Estadisticas detalladas de tu negocio</p>
                     </div>
-                    <button onclick="descargarReporteVentas()" class="px-4 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">Descargar CSV</button>
+                    <button type="button" onclick="descargarReporteVentas()" class="px-4 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">Descargar CSV</button>
                 </div>
 
                 <!-- Resumen del mes -->
@@ -1410,8 +1422,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex gap-2 mb-3">
-                            <button onclick="switchCategoryTab('inventario')" id="tabCatInventario" class="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Inventario</button>
-                            <button onclick="switchCategoryTab('ventas')" id="tabCatVentas" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white text-gray-500 border border-gray-200">Ventas</button>
+                            <button type="button" onclick="switchCategoryTab('inventario')" id="tabCatInventario" class="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Inventario</button>
+                            <button type="button" onclick="switchCategoryTab('ventas')" id="tabCatVentas" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white text-gray-500 border border-gray-200">Ventas</button>
                         </div>
                         <h3 class="text-base font-bold text-gray-800 mb-3" id="categoryChartTitle">Inventario por Categoria</h3>
                         <div style="height:280px;position:relative;"><canvas id="categoryChart"></canvas></div>
@@ -1431,7 +1443,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-gray-800">Top clientes</h3>
-                            <button onclick="renderTopClientes()" class="text-xs text-gray-400 hover:text-amber-600">&#8634;</button>
+                            <button type="button" onclick="renderTopClientes()" class="text-xs text-gray-400 hover:text-amber-600">&#8634;</button>
                         </div>
                         <div id="topClientesWidget" class="space-y-1"></div>
                     </div>
@@ -1457,14 +1469,14 @@ input:focus, select:focus, textarea:focus, button:focus {
                             <h3 class="text-base font-bold text-gray-800">Historial de ventas</h3>
                             <div class="flex items-center gap-2">
                                 <span id="salesHistoryCount" class="text-xs text-gray-400"></span>
-                                <button onclick="manekiExportar('ventas')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition-colors">Excel</button>
+                                <button type="button" onclick="manekiExportar('ventas')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition-colors">Excel</button>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <input type="date" id="reporteFechaDesde" onchange="salesHistoryPage=1; renderSalesHistory()" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
                             <span class="text-xs text-gray-300">&mdash;</span>
                             <input type="date" id="reporteFechaHasta" onchange="salesHistoryPage=1; renderSalesHistory()" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
-                            <button onclick="limpiarFiltroFechas()" class="px-2 py-1.5 text-xs text-gray-400 hover:text-gray-600">Limpiar</button>
+                            <button type="button" onclick="limpiarFiltroFechas()" class="px-2 py-1.5 text-xs text-gray-400 hover:text-gray-600">Limpiar</button>
                             <span id="reporteRangoTotal" class="text-xs text-gray-400"></span>
                             <div class="ml-auto relative">
                                 <input type="text" id="salesSearchInput" placeholder="Buscar..." oninput="salesHistoryPage=1; renderSalesHistory()" class="pl-3 pr-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none w-48">
@@ -1487,9 +1499,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                         </table>
                     </div>
                     <div id="salesHistoryPagination" class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
-                        <button onclick="salesHistoryPage--; renderSalesHistory()" id="btnSalesPrev" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1">&#8249; Anterior</button>
+                        <button type="button" onclick="salesHistoryPage--; renderSalesHistory()" id="btnSalesPrev" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1">&#8249; Anterior</button>
                         <span id="salesPageInfo" class="text-xs text-gray-400"></span>
-                        <button onclick="salesHistoryPage++; renderSalesHistory()" id="btnSalesNext" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1">Siguiente &#8250;</button>
+                        <button type="button" onclick="salesHistoryPage++; renderSalesHistory()" id="btnSalesNext" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1">Siguiente &#8250;</button>
                     </div>
                 </div>
 
@@ -1504,8 +1516,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <p class="text-gray-500 text-sm mt-1">Lleva control de cuánto has recuperado de cada equipo</p>
             </div>
             <div class="flex gap-2 flex-wrap">
-                <button onclick="abrirRoiManualModal()" class="px-5 py-3 rounded-xl border-2 border-amber-300 bg-amber-50 text-amber-700 font-semibold text-sm hover:bg-amber-100 transition-colors"><i class="fas fa-hand-holding-usd mr-2"></i>ROI Manual</button>
-                <button onclick="openEquipoModal()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold"><i class="fas fa-plus mr-2"></i>Agregar Equipo</button>
+                <button type="button" onclick="abrirRoiManualModal()" class="px-5 py-3 rounded-xl border-2 border-amber-300 bg-amber-50 text-amber-700 font-semibold text-sm hover:bg-amber-100 transition-colors"><i class="fas fa-hand-holding-usd mr-2"></i>ROI Manual</button>
+                <button type="button" onclick="openEquipoModal()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold"><i class="fas fa-plus mr-2"></i>Agregar Equipo</button>
             </div>
         </div>
 
@@ -1539,7 +1551,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="flex items-center gap-2 ml-auto">
                     <input type="number" id="roiPorcentajeGlobal" min="1" max="100" value="10" class="w-20 border-2 border-gray-200 rounded-xl px-3 py-2 text-center font-bold text-lg focus:border-amber-400 focus:outline-none" onchange="saveRoiConfig()">
                     <span class="font-bold text-gray-600 text-lg">%</span>
-                    <button onclick="saveRoiConfig()" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#C5A572;">Guardar</button>
+                    <button type="button" onclick="saveRoiConfig()" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#C5A572;">Guardar</button>
                 </div>
             </div>
 
@@ -1548,7 +1560,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
                     <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
                     <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
-                    <button onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5A572;">+ Agregar equipo</button>
+                    <button type="button" onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5A572;">+ Agregar equipo</button>
                 </div>
             </div>
         </div>
@@ -1558,7 +1570,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold text-gray-700">📊 Avance ROI por Equipo</h3>
-                    <button onclick="renderGraficaROI()" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold">🔄 Actualizar</button>
+                    <button type="button" onclick="renderGraficaROI()" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold">🔄 Actualizar</button>
                 </div>
                 <canvas id="roiBarChart" height="100"></canvas>
             </div>
@@ -1604,34 +1616,34 @@ input:focus, select:focus, textarea:focus, button:focus {
         <!-- Fila 2: acciones / vista -->
         <div class="flex flex-wrap items-center gap-2 mb-6">
             <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
-                <button id="btnVistaKanban" onclick="setVistaPedidos('kanban')"
+                <button type="button" id="btnVistaKanban" onclick="setVistaPedidos('kanban')"
                     class="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
                     style="background:#C5A572; color:white;">
                     <i class="fas fa-columns mr-1"></i> Kanban
                 </button>
-                <button id="btnVistaTabla" onclick="setVistaPedidos('tabla')"
+                <button type="button" id="btnVistaTabla" onclick="setVistaPedidos('tabla')"
                     class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
                     <i class="fas fa-table mr-1"></i> Tabla
                 </button>
-                <button id="btnVistaCalendario" onclick="setVistaPedidos('calendario')"
+                <button type="button" id="btnVistaCalendario" onclick="setVistaPedidos('calendario')"
                     class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
                     <i class="fas fa-calendar-alt mr-1"></i> Calendario
                 </button>
             </div>
-            <button onclick="toggleListaProduccion()" id="btnListaProduccion"
+            <button type="button" onclick="toggleListaProduccion()" id="btnListaProduccion"
                     class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                     style="background: linear-gradient(135deg,#9B7BC4,#C4A8E0)">
                 <i class="fas fa-hammer"></i> Lista de Producción
             </button>
-            <button onclick="manekiExportar('pedidos')"
+            <button type="button" onclick="manekiExportar('pedidos')"
                     class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                     style="background: linear-gradient(135deg,#10B981,#059669)">
                 <i class="fas fa-file-excel"></i> Exportar Excel
             </button>
-            <button onclick="openPedidoModal()" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
+            <button type="button" onclick="openPedidoModal()" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
                 <i class="fas fa-plus"></i> Nuevo Pedido
             </button>
-            <button id="btnKanbanFocus" onclick="toggleKanbanFocus()"
+            <button type="button" id="btnKanbanFocus" onclick="toggleKanbanFocus()"
                     class="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-sm text-gray-500 flex items-center gap-1"
                     title="Modo focus (ocultar sidebar)">
                 <i class="fas fa-expand-alt"></i>
@@ -1655,7 +1667,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <p id="alertaCobroSubtitulo" class="text-xs text-red-500"></p>
                     </div>
                 </div>
-                <button onclick="document.getElementById('alertaCobro').classList.add('hidden')"
+                <button type="button" onclick="document.getElementById('alertaCobro').classList.add('hidden')"
                     class="text-red-300 hover:text-red-500 text-lg leading-none">✕</button>
             </div>
             <div id="alertaCobroLista" class="flex flex-col gap-2"></div>
@@ -1666,7 +1678,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <input type="text" id="kanbanBuscar" placeholder="Buscar por folio, cliente o teléfono..."
                     oninput="(function(){clearTimeout(window._pedT);window._pedT=setTimeout(renderPedidosTable,160)})()"
                     class="w-full sm:w-80 px-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2">
-                <button onclick="verificarEntregasProximas()" title="Ver entregas próximas y vencidas"
+                <button type="button" onclick="verificarEntregasProximas()" title="Ver entregas próximas y vencidas"
                     class="px-4 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                     style="background:linear-gradient(135deg,#f59e0b,#d97706)">
                     🔔 Entregas
@@ -1763,23 +1775,23 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div id="vistaTabla" class="hidden">
             <div class="flex flex-wrap gap-2 mb-4">
-                <button onclick="filterPedidos('todos',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 cursor-pointer" style="border-color:#C5A572;background:#FFF9F0;color:#C5A572;">Todos</button>
-                <button onclick="filterPedidos('confirmado',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">✅ Confirmado</button>
-                <button onclick="filterPedidos('pago',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">💰 Pago</button>
-                <button onclick="filterPedidos('produccion',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🔧 Producción</button>
-                <button onclick="filterPedidos('envio',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">📦 Envío</button>
-                <button onclick="filterPedidos('salida',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🚚 Salió</button>
-                <button onclick="filterPedidos('retirar',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🏪 Retirar</button>
+                <button type="button" onclick="filterPedidos('todos',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 cursor-pointer" style="border-color:#C5A572;background:#FFF9F0;color:#C5A572;">Todos</button>
+                <button type="button" onclick="filterPedidos('confirmado',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">✅ Confirmado</button>
+                <button type="button" onclick="filterPedidos('pago',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">💰 Pago</button>
+                <button type="button" onclick="filterPedidos('produccion',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🔧 Producción</button>
+                <button type="button" onclick="filterPedidos('envio',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">📦 Envío</button>
+                <button type="button" onclick="filterPedidos('salida',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🚚 Salió</button>
+                <button type="button" onclick="filterPedidos('retirar',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🏪 Retirar</button>
                 <input type="date" id="pedidoFechaDesde" onchange="renderPedidosTable()"
                     class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none"
                     title="Fecha de entrega desde">
                 <input type="date" id="pedidoFechaHasta" onchange="renderPedidosTable()"
                     class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none"
                     title="Fecha de entrega hasta">
-                <button onclick="document.getElementById('pedidoFechaDesde').value='';document.getElementById('pedidoFechaHasta').value='';renderPedidosTable()"
+                <button type="button" onclick="document.getElementById('pedidoFechaDesde').value='';document.getElementById('pedidoFechaHasta').value='';renderPedidosTable()"
                     class="px-3 py-2 rounded-xl text-sm text-gray-500 border border-gray-200 hover:bg-gray-50"
                     title="Limpiar fechas">✕ Fechas</button>
-                <button onclick="window._guardarFiltroActual?.()" title="Guardar esta combinación de filtros" class="text-xs px-2 py-1 border border-gray-200 rounded text-gray-500 hover:border-amber-300 hover:text-amber-600 transition-colors">💾 Guardar</button>
+                <button type="button" onclick="window._guardarFiltroActual?.()" title="Guardar esta combinación de filtros" class="text-xs px-2 py-1 border border-gray-200 rounded text-gray-500 hover:border-amber-300 hover:text-amber-600 transition-colors">💾 Guardar</button>
                 <select id="filtrosGuardadosSelect" onchange="window._cargarFiltroGuardado?.(this.value); this.value=''" class="text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 max-w-[140px]">
                   <option value="">📁 Mis filtros...</option>
                 </select>
@@ -1813,16 +1825,16 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <p style="font-size:.72rem;color:#9ca3af;margin-top:2px;" id="produccionFechaLabel">Pedidos activos ordenados por fecha de entrega</p>
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button onclick="imprimirListaProduccion()" style="padding:7px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fas fa-print"></i> Imprimir</button>
-                        <button onclick="toggleListaProduccion()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#6b7280;cursor:pointer;font-size:1rem;" aria-label="Cerrar">✕</button>
+                        <button type="button" onclick="imprimirListaProduccion()" style="padding:7px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fas fa-print"></i> Imprimir</button>
+                        <button type="button" onclick="toggleListaProduccion()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#6b7280;cursor:pointer;font-size:1rem;" aria-label="Cerrar">✕</button>
                     </div>
                 </div>
                 <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;display:flex;gap:6px;flex-wrap:wrap;">
-                    <button onclick="filtrarProduccion('todos',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #9B7BC4;background:#EDE5F8;color:#6B4A8E;cursor:pointer;">Todos</button>
-                    <button onclick="filtrarProduccion('hoy',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔴 Hoy</button>
-                    <button onclick="filtrarProduccion('manana',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🟠 Mañana</button>
-                    <button onclick="filtrarProduccion('semana',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">📅 Semana</button>
-                    <button onclick="filtrarProduccion('produccion',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔧 Producción</button>
+                    <button type="button" onclick="filtrarProduccion('todos',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #9B7BC4;background:#EDE5F8;color:#6B4A8E;cursor:pointer;">Todos</button>
+                    <button type="button" onclick="filtrarProduccion('hoy',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔴 Hoy</button>
+                    <button type="button" onclick="filtrarProduccion('manana',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🟠 Mañana</button>
+                    <button type="button" onclick="filtrarProduccion('semana',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">📅 Semana</button>
+                    <button type="button" onclick="filtrarProduccion('produccion',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔧 Producción</button>
                 </div>
                 <div id="listaProduccionContent" style="flex:1;overflow-y:auto;padding:16px 20px;" class="print-area space-y-3"></div>
             </div>
@@ -2038,7 +2050,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
 
-                <button onclick="saveStoreConfig()"
+                <button type="button" onclick="saveStoreConfig()"
                         class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg">
                     <i class="fas fa-save mr-2"></i>
                     Guardar Configuración
@@ -2050,7 +2062,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <i class="fas fa-question-circle mr-2"></i>Tutorial de bienvenida
                     </p>
                     <p class="text-xs mb-3" style="color:#3b82f6;">¿Quieres ver el tour de introducción otra vez?</p>
-                    <button onclick="if(confirm('¿Reiniciar el tutorial? La página se recargará.')){localStorage.removeItem('mk_onboarding_done');window.location.reload();}"
+                    <button type="button" onclick="if(confirm('¿Reiniciar el tutorial? La página se recargará.')){localStorage.removeItem('mk_onboarding_done');window.location.reload();}"
                             class="px-4 py-2 rounded-xl text-white text-sm font-bold"
                             style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
                         <i class="fas fa-play-circle mr-2"></i>Ver tutorial de nuevo
@@ -2084,7 +2096,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                   <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
                     <p class="text-sm font-bold text-red-700 mb-1"><i class="fas fa-trash mr-2"></i>Borrar todos los datos</p>
                     <p class="text-xs text-red-500 mb-3">Esta acción eliminará todos los productos, ventas, pedidos y clientes. No se puede deshacer. Haz un backup antes.</p>
-                    <button onclick="confirmarResetTotal()"
+                    <button type="button" onclick="confirmarResetTotal()"
                             class="w-full px-4 py-2.5 rounded-xl text-white text-sm font-bold"
                             style="background:linear-gradient(135deg,#ef4444,#dc2626)">
                       <i class="fas fa-trash mr-2"></i>Borrar todos los datos permanentemente
@@ -2117,7 +2129,7 @@ input:focus, select:focus, textarea:focus, button:focus {
               <p class="text-xs text-gray-500">Navega rápido por Maneki Store</p>
             </div>
           </div>
-          <button onclick="closeModal('atajosModal')" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+          <button type="button" onclick="closeModal('atajosModal')" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-6 space-y-3">
           <div class="grid grid-cols-2 gap-3 text-sm">
@@ -2159,11 +2171,11 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-fade-in overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
           <h3 class="text-lg font-bold text-gray-800">📅 Resumen Mensual</h3>
-          <button onclick="closeModal('resumenMensualModal')" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+          <button type="button" onclick="closeModal('resumenMensualModal')" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-6" id="resumenMensualContent"></div>
         <div class="px-6 pb-5">
-          <button onclick="closeModal('resumenMensualModal')"
+          <button type="button" onclick="closeModal('resumenMensualModal')"
                   class="w-full py-3 rounded-xl text-white font-bold"
                   style="background:linear-gradient(135deg,#C5A572,#B8965F)">
             Cerrar
@@ -2177,7 +2189,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 animate-fade-in" style="margin-left:auto;margin-right:auto;">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Nuevo Producto</h3>
-                <button onclick="closeAddProductModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+                <button type="button" onclick="closeAddProductModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -2336,7 +2348,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800" id="clientModalTitle">Nuevo Cliente</h3>
-            <button onclick="closeAddClientModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+            <button type="button" onclick="closeAddClientModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -2414,7 +2426,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800">✏️ Editar Categoría</h3>
-            <button onclick="closeEditCategoryModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+            <button type="button" onclick="closeEditCategoryModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -2457,8 +2469,8 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
         <div class="flex gap-3 mt-6">
-            <button onclick="closeEditCategoryModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button onclick="saveEditCategory()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Guardar cambios</button>
+            <button type="button" onclick="closeEditCategoryModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="button" onclick="saveEditCategory()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Guardar cambios</button>
         </div>
     </div>
 </div>
@@ -2467,7 +2479,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Nueva Categoría</h3>
-                <button onclick="closeAddCategoryModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+                <button type="button" onclick="closeAddCategoryModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -2538,7 +2550,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-sm text-gray-500" id="historyClientEmail">—</p>
                 </div>
             </div>
-            <button onclick="closeClientHistoryModal()" class="text-gray-400 hover:text-gray-600 mt-1" aria-label="Cerrar">
+            <button type="button" onclick="closeClientHistoryModal()" class="text-gray-400 hover:text-gray-600 mt-1" aria-label="Cerrar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -2580,12 +2592,12 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="flex border-b border-gray-100 px-6">
-            <button onclick="switchHistoryTab('ventas')" id="tabVentas"
+            <button type="button" onclick="switchHistoryTab('ventas')" id="tabVentas"
                 class="history-tab px-4 py-3 text-sm font-semibold border-b-2 mr-4 transition-all"
                 style="border-color: #C5A572; color: #C5A572;">
                 <i class="fas fa-receipt mr-1"></i> Ventas POS
             </button>
-            <button onclick="switchHistoryTab('pedidos')" id="tabPedidos"
+            <button type="button" onclick="switchHistoryTab('pedidos')" id="tabPedidos"
                 class="history-tab px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 mr-4 transition-all">
                 <i class="fas fa-clipboard-list mr-1"></i> Pedidos
             </button>
@@ -2616,7 +2628,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <h3 class="text-xl font-bold text-gray-800">Cancelar Pedido</h3>
                 <p class="text-sm text-gray-500 mt-1" id="cancelPedidoFolio">—</p>
             </div>
-            <button onclick="closeCancelPedidoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+            <button type="button" onclick="closeCancelPedidoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -2641,11 +2653,11 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="flex gap-3">
-            <button onclick="closeCancelPedidoModal()"
+            <button type="button" onclick="closeCancelPedidoModal()"
                     class="flex-1 py-3 rounded-xl font-semibold border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">
                 Volver
             </button>
-            <button onclick="confirmarCancelPedido()"
+            <button type="button" onclick="confirmarCancelPedido()"
                     class="flex-1 py-3 rounded-xl font-semibold text-white btn-danger">
                 <i class="fas fa-times-circle mr-2"></i>
                 Cancelar Pedido
@@ -2658,7 +2670,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800" id="transactionModalTitle">Nueva Transacción</h3>
-                <button onclick="closeTransactionModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+                <button type="button" onclick="closeTransactionModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -2719,7 +2731,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-gray-800">💰 Registrar Pago</h3>
-            <button onclick="cerrarAbonoPedido()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" onclick="cerrarAbonoPedido()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div id="abonoPedidoInfo" class="bg-gray-50 rounded-xl p-4 mb-4 space-y-2 text-sm"></div>
         <input type="hidden" id="abonoPedidoId">
@@ -2740,7 +2752,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Nota (opcional)</label>
                 <input type="text" id="abonoPedidoNota" placeholder="Ej: segunda parcialidad" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none">
             </div>
-            <button onclick="confirmarAbonoPedido()" class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg"><i class="fas fa-check mr-2"></i>Confirmar Pago</button>
+            <button type="button" onclick="confirmarAbonoPedido()" class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg"><i class="fas fa-check mr-2"></i>Confirmar Pago</button>
         </div>
     </div>
 </div>
@@ -2749,7 +2761,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 animate-fade-in flex flex-col" style="margin:auto;">
         <div class="flex justify-between items-center px-8 pt-8 pb-4 flex-shrink-0">
             <h3 class="text-2xl font-bold text-gray-800" id="pedidoModalTitle">Nuevo Pedido</h3>
-            <button onclick="closePedidoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" onclick="closePedidoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="overflow-y-auto flex-1 px-8">
         <!-- UX-3: Barra de pasos visual -->
@@ -2799,7 +2811,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
   <div id="pedidoProductoSelRow" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 mb-2">
     <div class="flex items-center gap-3">
-      <img id="pedidoProductoSelImg" src="" class="w-12 h-12 rounded-lg object-cover bg-gray-100" style="display:none" onerror="this.style.display='none'">
+      <img id="pedidoProductoSelImg" src="" alt="Imagen del producto seleccionado" class="w-12 h-12 rounded-lg object-cover bg-gray-100" style="display:none" onerror="this.style.display='none'">
       <div class="flex-1">
         <div id="pedidoProductoSelNombre" class="font-semibold text-sm text-gray-800"></div>
         <div id="pedidoProductoSelPrecio" class="text-xs text-amber-700"></div>
@@ -2905,7 +2917,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="px-8 py-4 border-t border-gray-100 flex-shrink-0">
-            <button onclick="document.getElementById('pedidoForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))" class="w-full py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2" style="background:#C5A572;">
+            <button type="button" onclick="document.getElementById('pedidoForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))" class="w-full py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2" style="background:#C5A572;">
                 <i class="fas fa-save"></i> <span id="pedidoSubmitBtn">Guardar Pedido</span>
             </button>
         </div>
@@ -2917,7 +2929,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 animate-fade-in">
         <div class="flex justify-between items-center mb-1">
             <h3 class="text-lg font-bold text-gray-800">&#128247; Fotos de referencia</h3>
-            <button onclick="closeModal('fotoReferenciaModal')" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-lg"></i></button>
+            <button type="button" onclick="closeModal('fotoReferenciaModal')" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-lg"></i></button>
         </div>
         <p id="fotoRefFolio" class="text-xs font-bold mb-4" style="color:#C5A572;">—</p>
         <div id="fotoRefContent"></div>
@@ -2930,7 +2942,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in" style="max-height:85vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-2">
             <h3 class="text-xl font-bold text-gray-800">🛒 Lista de compras</h3>
-            <button onclick="closeModal('listaComprasModal')" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" onclick="closeModal('listaComprasModal')" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <p class="text-xs text-gray-400 mb-5">Materiales necesarios para completar los pedidos activos (no iniciados aún).</p>
         <div id="listaComprasContent"></div>
@@ -2941,19 +2953,19 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800">Cambiar Estado del Pedido</h3>
-            <button onclick="closePedidoStatusModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" onclick="closePedidoStatusModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <input type="hidden" id="pedidoStatusId">
         <p class="text-sm text-gray-500 mb-4">Pedido: <span id="pedidoStatusFolio" class="font-bold" style="color:#C5A572;"></span></p>
         <div class="space-y-2">
-            <button onclick="setPedidoStatus('confirmado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-yellow-300 cursor-pointer text-left bg-white"><span class="text-2xl">✅</span><p class="font-semibold">Confirmado</p></button>
-            <button onclick="setPedidoStatus('pago')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-green-300 cursor-pointer text-left bg-white"><span class="text-2xl">💰</span><p class="font-semibold">Pago</p></button>
-            <button onclick="setPedidoStatus('produccion')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-blue-300 cursor-pointer text-left bg-white"><span class="text-2xl">🔧</span><p class="font-semibold">En Producción</p></button>
-            <button onclick="setPedidoStatus('envio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 cursor-pointer text-left bg-white"><span class="text-2xl">📦</span><p class="font-semibold">En Envío</p></button>
-            <button onclick="setPedidoStatus('salida')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-orange-300 cursor-pointer text-left bg-white"><span class="text-2xl">🚚</span><p class="font-semibold">Salió a Entregar</p></button>
-            <button onclick="setPedidoStatus('retirar')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-teal-300 cursor-pointer text-left bg-white"><span class="text-2xl">🏪</span><p class="font-semibold">Listo para Retirar</p></button>
-            <button onclick="setPedidoStatus('finalizado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-emerald-300 bg-emerald-50 cursor-pointer text-left"><span class="text-2xl">🎉</span><p class="font-semibold text-emerald-700">Finalizado → pasa a Historial</p></button>
-            <button onclick="setPedidoStatus('cancelado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-red-200 bg-red-50 cursor-pointer text-left"><span class="text-2xl">❌</span><p class="font-semibold text-red-700">Cancelar pedido</p></button>
+            <button type="button" onclick="setPedidoStatus('confirmado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-yellow-300 cursor-pointer text-left bg-white"><span class="text-2xl">✅</span><p class="font-semibold">Confirmado</p></button>
+            <button type="button" onclick="setPedidoStatus('pago')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-green-300 cursor-pointer text-left bg-white"><span class="text-2xl">💰</span><p class="font-semibold">Pago</p></button>
+            <button type="button" onclick="setPedidoStatus('produccion')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-blue-300 cursor-pointer text-left bg-white"><span class="text-2xl">🔧</span><p class="font-semibold">En Producción</p></button>
+            <button type="button" onclick="setPedidoStatus('envio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 cursor-pointer text-left bg-white"><span class="text-2xl">📦</span><p class="font-semibold">En Envío</p></button>
+            <button type="button" onclick="setPedidoStatus('salida')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-orange-300 cursor-pointer text-left bg-white"><span class="text-2xl">🚚</span><p class="font-semibold">Salió a Entregar</p></button>
+            <button type="button" onclick="setPedidoStatus('retirar')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-teal-300 cursor-pointer text-left bg-white"><span class="text-2xl">🏪</span><p class="font-semibold">Listo para Retirar</p></button>
+            <button type="button" onclick="setPedidoStatus('finalizado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-emerald-300 bg-emerald-50 cursor-pointer text-left"><span class="text-2xl">🎉</span><p class="font-semibold text-emerald-700">Finalizado → pasa a Historial</p></button>
+            <button type="button" onclick="setPedidoStatus('cancelado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-red-200 bg-red-50 cursor-pointer text-left"><span class="text-2xl">❌</span><p class="font-semibold text-red-700">Cancelar pedido</p></button>
         </div>
     </div>
 </div>
@@ -2971,7 +2983,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-sm text-gray-400" id="detalleSaleTipo"></p>
                 </div>
             </div>
-            <button onclick="cerrarDetalleSale()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">×</button>
+            <button type="button" onclick="cerrarDetalleSale()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">×</button>
         </div>
 
         <div class="p-6 space-y-5">
@@ -3060,7 +3072,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-xs text-green-100" id="waClienteNombre">—</p>
                 </div>
             </div>
-            <button onclick="cerrarWhatsAppModal()" class="text-white opacity-70 hover:opacity-100 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            <button type="button" onclick="cerrarWhatsAppModal()" class="text-white opacity-70 hover:opacity-100 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
 
         <div class="p-6">
@@ -3077,36 +3089,36 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="mb-3">
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Plantilla</label>
                 <div class="flex gap-2 flex-wrap">
-                    <button onclick="aplicarPlantillaWA('confirmacion')" id="btnTplConfirmacion"
+                    <button type="button" onclick="aplicarPlantillaWA('confirmacion')" id="btnTplConfirmacion"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
                         style="border-color:#25D366;background:#f0fdf4;color:#16a34a;">
                         ✅ Confirmación
                     </button>
-                    <button onclick="aplicarPlantillaWA('recordatorio')" id="btnTplRecordatorio"
+                    <button type="button" onclick="aplicarPlantillaWA('recordatorio')" id="btnTplRecordatorio"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-yellow-400">
                         🔔 Recordatorio
                     </button>
-                    <button onclick="aplicarPlantillaWA('entrega')" id="btnTplEntrega"
+                    <button type="button" onclick="aplicarPlantillaWA('entrega')" id="btnTplEntrega"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-blue-400">
                         📦 Listo para entregar
                     </button>
-                    <button onclick="aplicarPlantillaWA('cobro')" id="btnTplCobro"
+                    <button type="button" onclick="aplicarPlantillaWA('cobro')" id="btnTplCobro"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-red-400">
                         💳 Cobro pendiente
                     </button>
-                    <button onclick="aplicarPlantillaWA('produccion')" id="btnTplProduccion"
+                    <button type="button" onclick="aplicarPlantillaWA('produccion')" id="btnTplProduccion"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-orange-400">
                         🔨 En producción
                     </button>
-                    <button onclick="aplicarPlantillaWA('pagoRecibido')" id="btnTplPagoRecibido"
+                    <button type="button" onclick="aplicarPlantillaWA('pagoRecibido')" id="btnTplPagoRecibido"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-green-400">
                         💵 Pago recibido
                     </button>
-                    <button onclick="aplicarPlantillaWA('seguimiento')" id="btnTplSeguimiento"
+                    <button type="button" onclick="aplicarPlantillaWA('seguimiento')" id="btnTplSeguimiento"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-purple-400">
                         📊 Seguimiento
                     </button>
-                    <button onclick="aplicarPlantillaWA('gracias')" id="btnTplGracias"
+                    <button type="button" onclick="aplicarPlantillaWA('gracias')" id="btnTplGracias"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-pink-400">
                         🙏 Agradecimiento
                     </button>
@@ -3116,7 +3128,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="mb-4">
                 <div class="flex justify-between items-center mb-1">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Mensaje <span class="normal-case font-normal text-gray-400">(editable)</span></label>
-                    <button onclick="copiarMensajeWA()" id="btnCopiarWA"
+                    <button type="button" onclick="copiarMensajeWA()" id="btnCopiarWA"
                         class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">
                         <i class="fas fa-copy"></i> Copiar
                     </button>
@@ -3127,11 +3139,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
 
             <div class="flex gap-3">
-                <button onclick="cerrarWhatsAppModal()"
+                <button type="button" onclick="cerrarWhatsAppModal()"
                     class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all">
                     Cancelar
                 </button>
-                <button onclick="enviarWhatsApp()"
+                <button type="button" onclick="enviarWhatsApp()"
                     class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90"
                     style="background:#25D366;">
                     <i class="fab fa-whatsapp"></i> Abrir en WhatsApp
@@ -3154,7 +3166,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-xs text-gray-500">Exporta o importa todos los datos de la tienda</p>
                 </div>
             </div>
-            <button onclick="cerrarBackupModal()" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            <button type="button" onclick="cerrarBackupModal()" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
 
         <div class="p-6 space-y-5">
@@ -3186,10 +3198,10 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="bg-blue-50 rounded-lg p-2 mb-3 text-xs text-blue-700 text-center border border-blue-100">
                     💾 <span id="bkAutoBackup">—</span> &nbsp;·&nbsp; Auto-backup cada 2 horas
                 </div>
-                <button onclick="exportarBackupJSON()" class="w-full py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2" style="background:#4CAF50;">
+                <button type="button" onclick="exportarBackupJSON()" class="w-full py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2" style="background:#4CAF50;">
                     <i class="fas fa-download"></i> Descargar Backup JSON
                 </button>
-                <button onclick="exportarBackupComprimido()" class="w-full py-2 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 mt-2" style="background:#7C3AED;">
+                <button type="button" onclick="exportarBackupComprimido()" class="w-full py-2 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 mt-2" style="background:#7C3AED;">
                     📦 Backup Comprimido (.gz) — más ligero
                 </button>
             </div>
@@ -3217,7 +3229,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p id="dropZoneFileName" class="text-xs text-green-600 font-semibold mt-2 hidden"></p>
                 </div>
                 <input type="file" id="backupFileInput" accept=".json,.json.gz,.gz" class="hidden" onchange="cargarArchivoBackup(event)">
-                <button onclick="restaurarBackup()" id="btnRestaurar" disabled
+                <button type="button" onclick="restaurarBackup()" id="btnRestaurar" disabled
                     class="w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
                     style="background:#E5E7EB; color:#9CA3AF; cursor:not-allowed;">
                     <i class="fas fa-upload"></i> Restaurar Datos
@@ -3240,7 +3252,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-sm text-gray-500 mt-1">Producto: <span id="ajustarStockNombre" class="font-semibold text-gray-700"></span></p>
             <p class="text-sm text-gray-500">Stock actual: <span id="ajustarStockActual" class="font-semibold text-gray-700"></span></p>
           </div>
-          <button onclick="closeAjustarStockModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button type="button" onclick="closeAjustarStockModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
         </div>
         <div class="space-y-3">
           <div>
@@ -3262,11 +3274,11 @@ input:focus, select:focus, textarea:focus, button:focus {
           </div>
         </div>
         <div class="flex gap-3 mt-5">
-          <button onclick="closeAjustarStockModal()"
+          <button type="button" onclick="closeAjustarStockModal()"
             class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold text-sm">
             Cancelar
           </button>
-          <button onclick="confirmarAjusteStock()"
+          <button type="button" onclick="confirmarAjusteStock()"
             class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold text-sm btn-primary">
             Aplicar Ajuste
           </button>
@@ -3278,7 +3290,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800" id="equipoModalTitle">Agregar Equipo</h3>
-            <button onclick="closeEquipoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" onclick="closeEquipoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <input type="hidden" id="equipoEditId">
         <div class="space-y-4">
@@ -3314,8 +3326,8 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
         <div class="flex gap-3 mt-6">
-            <button onclick="closeEquipoModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button onclick="saveEquipo()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Guardar</button>
+            <button type="button" onclick="closeEquipoModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="button" onclick="saveEquipo()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Guardar</button>
         </div>
     </div>
 </div>
@@ -3324,7 +3336,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-2">
             <h3 class="text-2xl font-bold text-gray-800">🔧 ¿Qué equipos usaste?</h3>
-            <button onclick="cerrarRoiEquiposModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" onclick="cerrarRoiEquiposModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <p class="text-sm text-gray-500 mb-1">Pedido: <span id="roiPedidoFolio" class="font-bold text-amber-600"></span></p>
         <p class="text-sm text-gray-500 mb-5">Ganancia estimada: <span id="roiGananciaEstimada" class="font-bold text-green-600"></span></p>
@@ -3350,8 +3362,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="flex gap-3">
-            <button onclick="cerrarRoiEquiposModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Omitir</button>
-            <button onclick="confirmarRoiEquipos()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Registrar ROI</button>
+            <button type="button" onclick="cerrarRoiEquiposModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Omitir</button>
+            <button type="button" onclick="confirmarRoiEquipos()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Registrar ROI</button>
         </div>
     </div>
 </div>
@@ -3361,7 +3373,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold text-gray-800">⚖️ Registrar ROI manual</h3>
-            <button onclick="cerrarRoiManualModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" onclick="cerrarRoiManualModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="space-y-4">
             <div>
@@ -3382,8 +3394,8 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
         <div class="flex gap-3 mt-6">
-            <button onclick="cerrarRoiManualModal()" class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button onclick="confirmarRoiManual()" class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold" style="background:#C5A572;">Registrar</button>
+            <button type="button" onclick="cerrarRoiManualModal()" class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="button" onclick="confirmarRoiManual()" class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold" style="background:#C5A572;">Registrar</button>
         </div>
     </div>
 </div>
@@ -3393,7 +3405,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl w-full mx-4 animate-fade-in" style="max-width:400px">
         <div class="flex justify-between items-center p-5 border-b border-gray-100">
             <h3 class="font-bold text-gray-800 text-base">📷 Escanear código</h3>
-            <button onclick="window._cerrarQRScanner()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+            <button type="button" onclick="window._cerrarQRScanner()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
         </div>
         <div class="p-5">
             <video id="qrVideo" autoplay muted playsinline class="w-full rounded-xl bg-black" style="height:220px;object-fit:cover;display:block"></video>
@@ -3404,7 +3416,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <input type="text" id="qrManualInput" placeholder="SKU, código o nombre..."
                         class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2"
                         onkeydown="if(event.key==='Enter')window._qrManualBuscar()">
-                    <button onclick="window._qrManualBuscar()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">Buscar</button>
+                    <button type="button" onclick="window._qrManualBuscar()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">Buscar</button>
                 </div>
             </div>
         </div>
@@ -3423,11 +3435,11 @@ input:focus, select:focus, textarea:focus, button:focus {
           </div>
         </div>
         <div class="flex gap-3">
-          <button onclick="confirmModalResolve(false)"
+          <button type="button" onclick="confirmModalResolve(false)"
             class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold text-sm">
             Cancelar
           </button>
-          <button onclick="confirmModalResolve(true)"
+          <button type="button" onclick="confirmModalResolve(true)"
             class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold text-sm bg-red-500 hover:bg-red-600">
             Confirmar
           </button>
@@ -3443,7 +3455,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <h3 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin:0">🗺️ Configurar Anillos de Envío</h3>
                 <p style="font-size:0.78rem;color:#9CA3AF;margin:4px 0 0">Arrastra los anillos en el mapa o ajusta los km y tarifas</p>
             </div>
-            <button onclick="cerrarConfigAnillos()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#9CA3AF;padding:4px">✕</button>
+            <button type="button" onclick="cerrarConfigAnillos()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#9CA3AF;padding:4px">✕</button>
         </div>
 
         <div id="anillosGridLayout" style="display:grid;grid-template-columns:1fr 320px;flex:1;min-height:0;">
@@ -3458,7 +3470,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div style="padding:20px;border-left:1px solid #F3F4F6;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:480px;">
                 <div style="font-size:0.8rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;">Anillos de cobertura</div>
                 <div id="anillosLista" style="display:flex;flex-direction:column;gap:8px;"></div>
-                <button onclick="agregarAnillo()" style="margin-top:4px;padding:10px;border:2px dashed #C5A572;border-radius:12px;background:#FFF9F0;color:#C5A572;font-weight:700;font-size:0.8rem;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#FEF3C7'" onmouseout="this.style.background='#FFF9F0'">
+                <button type="button" onclick="agregarAnillo()" style="margin-top:4px;padding:10px;border:2px dashed #C5A572;border-radius:12px;background:#FFF9F0;color:#C5A572;font-weight:700;font-size:0.8rem;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#FEF3C7'" onmouseout="this.style.background='#FFF9F0'">
                     + Agregar anillo
                 </button>
                 <div style="background:#F9FAFB;border-radius:12px;padding:12px;font-size:0.75rem;color:#6B7280;">
@@ -3469,8 +3481,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div style="padding:16px 28px;border-top:1px solid #F3F4F6;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;">
-            <button onclick="cerrarConfigAnillos()" style="padding:10px 20px;border:2px solid #E5E7EB;border-radius:12px;background:white;color:#6B7280;font-weight:600;cursor:pointer;font-size:0.9rem;">Cancelar</button>
-            <button onclick="guardarAnillos()" style="padding:10px 24px;border-radius:12px;background:linear-gradient(135deg,#C5A572,#B8965F);color:white;font-weight:700;cursor:pointer;font-size:0.9rem;border:none;">
+            <button type="button" onclick="cerrarConfigAnillos()" style="padding:10px 20px;border:2px solid #E5E7EB;border-radius:12px;background:white;color:#6B7280;font-weight:600;cursor:pointer;font-size:0.9rem;">Cancelar</button>
+            <button type="button" onclick="guardarAnillos()" style="padding:10px 24px;border-radius:12px;background:linear-gradient(135deg,#C5A572,#B8965F);color:white;font-weight:700;cursor:pointer;font-size:0.9rem;border:none;">
                 <i class="fas fa-save" style="margin-right:6px;"></i>Guardar configuración
             </button>
         </div>
@@ -3505,7 +3517,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   <script src="js/init.js"></script>
 
   <!-- FAB Nuevo Pedido -->
-  <button id="fabNuevoPedido"
+  <button type="button" id="fabNuevoPedido"
       onclick="showSection('pedidos'); setTimeout(() => openPedidoModal(), 300);"
       title="Nuevo Pedido (acceso rápido)"
       style="position:fixed;bottom:80px;right:24px;z-index:9000;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#C5A572,#a8864f);color:white;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(197,165,114,0.4);font-size:24px;display:flex;align-items:center;justify-content:center;transition:transform 0.2s,box-shadow 0.2s;"
@@ -3517,19 +3529,19 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <!-- Mobile Bottom Navigation -->
 <nav id="mobileBottomNav" style="display:none; height:60px; padding-bottom: env(safe-area-inset-bottom, 0px);" class="fixed bottom-0 left-0 right-0 z-[198] flex items-center justify-around bg-white border-t border-gray-200 shadow-lg">
-  <button onclick="showSection('dashboard');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" onclick="showSection('dashboard');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">🏠</span><span>Inicio</span>
   </button>
-  <button onclick="showSection('pedidos');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" onclick="showSection('pedidos');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">📦</span><span>Pedidos</span>
   </button>
-  <button onclick="showSection('inventory');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" onclick="showSection('inventory');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">🏷️</span><span>Inventario</span>
   </button>
-  <button onclick="showSection('balance');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" onclick="showSection('balance');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">💰</span><span>Balance</span>
   </button>
-  <button onclick="(typeof toggleSidebar==='function'?toggleSidebar():void 0)" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" onclick="(typeof toggleSidebar==='function'?toggleSidebar():void 0)" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">☰</span><span>Más</span>
   </button>
 </nav>

@@ -161,7 +161,7 @@ window._rfmVerSegmento = function(segKey: string) {
             const tel = cli ? (cli.phone||cli.telefono||'') : '';
             const waHref = tel ? `https://wa.me/52${tel.replace(/\D/g,'')}` : '';
             const waBtn = waHref
-                ? `<a href="${waHref}" target="_blank" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:8px;background:#dcfce7;color:#15803d;font-size:.72rem;font-weight:700;text-decoration:none;" title="Abrir WhatsApp">📱 WA</a>`
+                ? `<a href="${waHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:8px;background:#dcfce7;color:#15803d;font-size:.72rem;font-weight:700;text-decoration:none;" title="Abrir WhatsApp">📱 WA</a>`
                 : `<span style="font-size:.7rem;color:#d1d5db;padding:3px 6px;">Sin tel.</span>`;
             return `<tr style="border-bottom:1px solid #f3f4f6">
                 <td style="padding:7px 10px;font-size:.8rem;font-weight:600;color:#374151">${_e(nombre)}</td>
@@ -568,10 +568,10 @@ function _renderFiltrosActividad() {
                     </td>
                     <td class="px-6 py-4 text-gray-600">
     ${client.phone ? `<div style="display:flex;flex-direction:column;gap:4px">
-        <a href="https://wa.me/521${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
+        <a href="https://wa.me/521${_esc(client.phone).replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
         ${waBtn}
     </div>` : ''}
-${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(client.facebook) : 'https://'+_esc(client.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ''}
+${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(client.facebook) : 'https://'+_esc(client.facebook)}" target="_blank" rel="noopener noreferrer" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ''}
 ${!client.phone && !client.facebook ? '—' : ''}
 </td>
 <td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : '—'}</td>
@@ -811,10 +811,10 @@ function closeAddClientModal() {
                         </td>
                         <td class="px-6 py-4 text-gray-600">
     ${client.phone ? `<div style="display:flex;flex-direction:column;gap:2px">
-        <a href="https://wa.me/521${_esc(client.phone).replace(/\D/g,'')}" target="_blank" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
+        <a href="https://wa.me/521${_esc(client.phone).replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" class="text-sm flex items-center gap-1 text-green-600 hover:text-green-800"><i class="fab fa-whatsapp"></i>${_esc(client.phone)}</a>
         ${waBtn}
     </div>` : ''}
-${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(client.facebook) : 'https://'+_esc(client.facebook)}" target="_blank" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ''}
+${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(client.facebook) : 'https://'+_esc(client.facebook)}" target="_blank" rel="noopener noreferrer" class="text-xs flex items-center gap-1 text-blue-500 hover:text-blue-700 mt-1"><i class="fab fa-facebook-messenger"></i>${_esc(client.facebook)}</a>` : ''}
 ${!client.phone && !client.facebook ? '—' : ''}
 </td>
                         <td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : '—'}</td>

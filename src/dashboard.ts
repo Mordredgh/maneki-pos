@@ -1189,7 +1189,12 @@ function generarResumenSemanalWA() {
             manekiToastExport('📋 Resumen copiado — pégalo en WhatsApp', 'ok');
         });
     } else {
-        prompt('Copia este texto para WhatsApp:', texto);
+        // A8: mostrar en modal en vez de prompt nativo
+        if (typeof showConfirm === 'function') {
+            showConfirm(`📋 Copia este resumen:\n\n${texto.substring(0, 300)}...`, 'Resumen WA generado');
+        } else {
+            manekiToastExport('Copia el resumen desde la consola', 'info');
+        }
     }
     return texto;
 }
@@ -1290,7 +1295,11 @@ async function renderWidgetClima() {
         _climaCache = { data, ts: Date.now() };
         _renderClimaHTML(card, data);
     } catch(e) {
-        card.innerHTML = '';
+        // H50: fallback visible cuando falla la API del clima
+        card.innerHTML = `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:1.1rem;">🌤</span>
+            <span style="font-size:.72rem;color:#9ca3af;">Clima no disponible</span>
+        </div>`;
     }
 }
 

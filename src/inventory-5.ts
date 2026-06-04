@@ -157,7 +157,7 @@ function bulkPrecioPreview() {
 }
 window.bulkPrecioPreview = bulkPrecioPreview;
 
-function bulkPrecioAplicar() {
+async function bulkPrecioAplicar() {
     const afectados = _bulkPrecioGetAfectados();
     if (!afectados.length) { manekiToastExport('Sin productos que actualizar', 'warn'); return; }
     // UX2: asegurar que la vista previa esté actualizada antes de confirmar
@@ -192,7 +192,7 @@ function bulkPrecioAplicar() {
             manekiToastExport(`✅ Precios actualizados en ${afectados.length} producto(s)`, 'ok');
         });
     } else {
-        if (!confirm(`¿Aplicar ${signo}${pct}% a ${afectados.length} producto(s)? Ver preview arriba.`)) return;
+        if (!await showConfirm(`¿Aplicar ${signo}${pct}% a ${afectados.length} producto(s)? Ver preview arriba.`)) return;
         afectados.forEach(({ p, campoKey, precioNuevo }) => {
             p[campoKey] = precioNuevo;
             p.updatedAt = new Date().toISOString();
@@ -790,7 +790,7 @@ function renderInventoryTable() {
             btnLabel: '+ Producto',
             btnOnclick: 'openAddProductModal()',
             btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
-            extraBtnHTML: `<button onclick="injectPackModal();openPackModal()" style="padding:7px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">🎁 Crear Pack</button><button onclick="abrirBulkPrecioModal()" style="padding:7px 16px;background:linear-gradient(135deg,#0369a1,#38bdf8);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">📊 Actualizar precios</button>`,
+            extraBtnHTML: `<button type="button" onclick="injectPackModal();openPackModal()" class="mk-toolbar-btn">🎁 Crear Pack</button><button type="button" onclick="abrirBulkPrecioModal()" class="mk-toolbar-btn">📊 Actualizar precios</button>`,
             products: pts,
             renderFila: renderFilaPT,
             headers: [
@@ -815,7 +815,7 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#f0f9ff,#e0f2fe)',
             btnLabel: '+ Producto Variable',
             btnOnclick: 'injectVariableProductModal();openVariableProductModal()',
-            btnColor: 'linear-gradient(135deg,#0284c7,#38bdf8)',
+            btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
             products: pvs,
             renderFila: renderFilaVariable,
             headers: [
@@ -840,7 +840,7 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#faf5ff,#f5f3ff)',
             btnLabel: '+ Materia Prima',
             btnOnclick: 'injectMpModal();openAddMateriaPrimaModal()',
-            btnColor: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+            btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
             products: mps,
             renderFila: renderFilaMP,
             headers: [
@@ -864,7 +864,7 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#f5f3ff,#ede9fe)',
             btnLabel: '+ Nuevo Servicio',
             btnOnclick: 'injectSvcModal();openServicioModal()',
-            btnColor: 'linear-gradient(135deg,#6d28d9,#8b5cf6)',
+            btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
             products: svcs,
             renderFila: renderFilaServicio,
             headers: [
@@ -1378,12 +1378,36 @@ function invBulkExportar() {
 }
 window.invBulkExportar = invBulkExportar;
 
-function invBulkCambiarCategoria() {
+async function invBulkCambiarCategoria() {
   const ids = invGetSelectedIds();
   if (!ids.length) return;
-  const catId = prompt(`Selecciona categoría (ingresa el ID o nombre):\n\n${(window.categories||[]).map(c=>`${c.id}: ${c.emoji||''} ${c.name}`).join('\n')}`);
+  // A8/B9: modal con select de categorías en vez de prompt con IDs en texto plano
+  const catId = await new Promise<string|null>(resolve => {
+      const prev = document.getElementById('mkBatchCatModal');
+      if (prev) prev.remove();
+      const cats = (window.categories || []) as any[];
+      const opts = cats.map(c => `<option value="${c.id}">${c.emoji||''} ${c.name}</option>`).join('');
+      const modal = document.createElement('div');
+      modal.id = 'mkBatchCatModal';
+      modal.className = 'mk-modal-overlay';
+      modal.innerHTML = `<div class="mk-modal-box" style="max-width:360px">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;">📁 Cambiar categoría en lote</h3>
+          <p style="font-size:.8rem;color:#6b7280;margin-bottom:10px;">${ids.length} producto(s) seleccionado(s)</p>
+          <select id="mkBatchCatSel" class="mk-input w-full mb-4">
+              <option value="">Seleccionar categoría...</option>
+              ${opts}
+          </select>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <button type="button" class="mk-toolbar-btn" onclick="document.getElementById('mkBatchCatModal').remove();window._mkBCR(null)">Cancelar</button>
+              <button type="button" class="mk-btn-primary" onclick="window._mkBCR((document.getElementById('mkBatchCatSel') as HTMLSelectElement).value||null)">Aplicar</button>
+          </div>
+      </div>`;
+      (window as any)._mkBCR = (v: string|null) => { modal.remove(); resolve(v); };
+      document.body.appendChild(modal);
+      setTimeout(() => (document.getElementById('mkBatchCatSel') as HTMLSelectElement)?.focus(), 50);
+  });
   if (!catId) return;
-  const cat = (window.categories||[]).find(c => String(c.id) === catId.trim() || c.name.toLowerCase().includes(catId.toLowerCase()));
+  const cat = (window.categories||[]).find((c: any) => String(c.id) === String(catId));
   if (!cat) { manekiToastExport('Categoría no encontrada', 'warn'); return; }
   (window.products||[]).forEach(p => { if (ids.includes(String(p.id))) p.category = cat.id; });
   saveProducts();

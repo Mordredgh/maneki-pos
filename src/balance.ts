@@ -637,7 +637,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                 const urgencia = rec.diasPendiente > 30 ? 'bg-red-50 border-red-200' : rec.diasPendiente > 14 ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200';
                 const diasLabel = rec.diasPendiente === 0 ? 'Hoy' : rec.diasPendiente > 0 ? `${rec.diasPendiente} días` : '—';
                 const diasColor = rec.diasPendiente > 30 ? 'text-red-600' : rec.diasPendiente > 14 ? 'text-orange-600' : 'text-blue-600';
-                const waLink = rec.phone ? `<a href="https://wa.me/52${rec.phone.replace(/\\D/g,'')}" target="_blank" class="p-1.5 rounded-lg hover:bg-green-100 transition-all" style="color:#25D366" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>` : '';
+                const waLink = rec.phone ? `<a href="https://wa.me/52${rec.phone.replace(/\\D/g,'')}" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-lg hover:bg-green-100 transition-all" style="color:#25D366" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>` : '';
                 return `
                 <div class="flex justify-between items-center p-3 rounded-xl border ${urgencia}">
                     <div class="flex-1 min-w-0">

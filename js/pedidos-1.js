@@ -121,7 +121,7 @@ let _pedidoFiltroActivo="todos",_pedidoVistaActual="kanban",_kanbanDragId=null,_
                 </div>
                 <div class="flex gap-1 mt-1 flex-wrap">
                     ${x?`<button onclick="abrirWhatsAppPedido('${s.id}')" title="WhatsApp: ${v(x)}" style="color:#fff;background:#25D366;border:none;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;cursor:pointer;letter-spacing:.02em;">WA</button>`:""}
-                    ${w?`<a href="${_}" target="_blank" title="Facebook: ${v(w)}" style="color:#fff;background:#1877F2;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;text-decoration:none;display:inline-block;letter-spacing:.02em;">FB</a>`:""}
+                    ${w?`<a href="${_}" target="_blank" rel="noopener noreferrer" title="Facebook: ${v(w)}" style="color:#fff;background:#1877F2;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;text-decoration:none;display:inline-block;letter-spacing:.02em;">FB</a>`:""}
                 </div>
             </td>
             <td class="px-4 py-3 text-xs text-gray-500 max-w-[160px]">

@@ -616,7 +616,7 @@ async function guardarProductoTerminado() {
                 return sum + ((comp.qty || 0) * ((_mp && _mp.cost) ? _mp.cost : (comp.costUnit || 0)));
             }, 0);
             if (_costoCalculado > 0) {
-                const _usarCosto = confirm(`El costo calculado basado en materias primas es $${_costoCalculado.toFixed(2)}. ¿Deseas usarlo como costo del producto?`);
+                const _usarCosto = await showConfirm(`El costo calculado basado en materias primas es $${_costoCalculado.toFixed(2)}. ¿Deseas usarlo como costo del producto?`);
                 if (_usarCosto) {
                     costoFinal = _costoCalculado;
                     const _costoInput = document.getElementById('ptCosto');

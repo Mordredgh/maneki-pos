@@ -276,7 +276,7 @@ function mostrarListaCompras(esRerender) {
                 const prod = (window.products || []).find(p => String(p.id) === String(r.id));
                 const provUrl = prod && prod.proveedorUrl ? prod.proveedorUrl.trim() : '';
                 const buyBtn = provUrl
-                    ? `<a href="${_esc(provUrl)}" target="_blank" style="display:inline-block;margin-top:3px;font-size:.65rem;padding:2px 6px;border-radius:999px;background:#dbeafe;color:#1d4ed8;text-decoration:none;font-weight:700;">🛒 Comprar</a>`
+                    ? `<a href="${_esc(provUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:3px;font-size:.65rem;padding:2px 6px;border-radius:999px;background:#dbeafe;color:#1d4ed8;text-decoration:none;font-weight:700;">🛒 Comprar</a>`
                     : '';
                 html += `<tr style="${rowStyle}border-bottom:1px solid #fde68a;">
                     <td style="padding:8px 8px;">
@@ -718,12 +718,32 @@ window.invInlineEditPrice = invInlineEditPrice;
 async function registrarMerma(id) {
     const p = (window.products||[]).find(x => String(x.id) === String(id));
     if (!p) { manekiToastExport('Producto no encontrado','err'); return; }
-    const cantStr = prompt(`¿Cuántas ${p.unidad||'pza'} de "${p.name}" se perdieron o dañaron?`, '1');
-    if (cantStr === null) return;
-    const cant = parseInt(cantStr);
+    // A8: modal en vez de prompt() nativo
+    const result = await new Promise<{cantidad:string,motivo:string}|null>(resolve => {
+        const prev = document.getElementById('mkMermaModal');
+        if (prev) prev.remove();
+        const modal = document.createElement('div');
+        modal.id = 'mkMermaModal';
+        modal.className = 'mk-modal-overlay';
+        modal.innerHTML = `<div class="mk-modal-box" style="max-width:380px">
+            <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;">📉 Registrar Merma</h3>
+            <label style="font-size:.8rem;color:#6b7280;">Cantidad (${p.unidad||'pza'})</label>
+            <input id="mkMermaCant" type="number" min="0.01" step="0.01" value="1" class="mk-input w-full mt-1 mb-3" placeholder="Ej: 2.5">
+            <label style="font-size:.8rem;color:#6b7280;">Motivo</label>
+            <input id="mkMermaMotivo" type="text" class="mk-input w-full mt-1 mb-4" value="Material dañado" placeholder="Ej: Material dañado">
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" class="mk-toolbar-btn" onclick="document.getElementById('mkMermaModal').remove();window._mkMermaResolve(null)">Cancelar</button>
+                <button type="button" class="mk-btn-primary" onclick="window._mkMermaResolve({cantidad:document.getElementById('mkMermaCant').value,motivo:document.getElementById('mkMermaMotivo').value})">Confirmar</button>
+            </div>
+        </div>`;
+        (window as any)._mkMermaResolve = (v: any) => { modal.remove(); resolve(v); };
+        document.body.appendChild(modal);
+        setTimeout(() => (document.getElementById('mkMermaCant') as HTMLInputElement)?.focus(), 50);
+    });
+    if (!result || !result.cantidad || parseFloat(result.cantidad) <= 0) return;
+    const cant = parseInt(result.cantidad, 10) || Math.round(parseFloat(result.cantidad));
     if (!cant || cant <= 0) { manekiToastExport('⚠️ Cantidad inválida','warn'); return; }
-    const motivo = prompt('¿Motivo de la merma?', 'Material dañado');
-    if (motivo === null) return;
+    const motivo = result.motivo || 'Sin especificar';
     const stAntes = getStockEfectivo(p);
     const stDespues = Math.max(0, stAntes - cant);
     p.stock = stDespues;
@@ -1118,7 +1138,7 @@ function descargarTemplateCSV() {
 window.descargarTemplateCSV = descargarTemplateCSV;
 
 // ── Snapshots de inventario ────────────────────────────────────────────────
-function guardarSnapshotInventario() {
+async function guardarSnapshotInventario() {
   if (!window.products || window.products.length === 0) {
     manekiToastExport('No hay productos para guardar snapshot', 'warn'); return;
   }
@@ -1126,7 +1146,7 @@ function guardarSnapshotInventario() {
   const fecha = _fechaHoy();
   const existeHoy = window.inventarioSnapshots.find(s => s.fecha === fecha);
   if (existeHoy) {
-    if (!confirm(`Ya hay un snapshot del ${fecha}. ¿Reemplazarlo?`)) return;
+    if (!await showConfirm(`Ya hay un snapshot del ${fecha}. ¿Reemplazarlo?`)) return;
     const idx = window.inventarioSnapshots.indexOf(existeHoy);
     window.inventarioSnapshots.splice(idx, 1);
   }

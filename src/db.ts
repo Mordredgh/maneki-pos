@@ -1,6 +1,8 @@
 // ============================================================
 // SUPABASE CONFIG
 // ============================================================
+// E34: Gate logs behind MK_DEBUG flag (default false in production)
+if (typeof (window as any).MK_DEBUG === 'undefined') (window as any).MK_DEBUG = false;
 // ── VARIABLES GLOBALES PARA PEDIDOS (declaradas antes de todo) ──
 var pedidos = [];
 var pedidosFinalizados = [];
@@ -187,7 +189,7 @@ function _setupRealtime() {
         .subscribe(status => {
             if (status === 'SUBSCRIBED') {
                 actualizarIndicadorConexion(true);
-                console.log('[Realtime] Canal store — Live Sync activo ✓');
+                if ((window as any).MK_DEBUG) console.log('[Realtime] Canal store — Live Sync activo ✓');
             } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                 console.warn('[Realtime] Canal store estado:', status);
             }
@@ -216,7 +218,7 @@ function _setupRealtime() {
                 _rtConsolidatedTimer = setTimeout(_flushRTPending, 600);
             })
             .subscribe(status => {
-                if (status === 'SUBSCRIBED') console.log('[Realtime] Canal ' + tabla + ' activo ✓');
+                if (status === 'SUBSCRIBED') { if ((window as any).MK_DEBUG) console.log('[Realtime] Canal ' + tabla + ' activo ✓'); }
                 else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') console.warn('[Realtime] Canal ' + tabla + ' estado:', status);
             });
         window._mkRTChannels.push(_chRel);
@@ -253,6 +255,17 @@ async function _applyRTRelacional(tabla, payload) {
         // P9: si tenemos _lastSyncAt, solo descargar el delta (updated_at > lastSync)
         const arr = window[key];
         if (!Array.isArray(arr) || arr.length === 0) {
+            // A7: Si el array está vacío y es INSERT, insertar directamente sin query completa
+            if (eventType === 'INSERT' && rowData) {
+                const transformed = _rtTransformarFila(tabla, rowData);
+                if (transformed) {
+                    if (!Array.isArray(window[key])) (window as any)[key] = [];
+                    (window[key] as any[]).push(transformed);
+                    await _applyRTDesktopConDatos(key, window[key] || []);
+                    if ((window as any).MK_DEBUG) console.log('[Realtime] ' + tabla + ' (INSERT fast-path) aplicado in-place');
+                }
+                return;
+            }
             const _lastSync = _lastSyncAt[tabla];
             let query = db.from(tabla).select('*').limit(2000);
             if (_lastSync) query = query.gt('updated_at', _lastSync);
@@ -297,7 +310,7 @@ async function _applyRTRelacional(tabla, payload) {
         }
 
         await _applyRTDesktopConDatos(key, window[key] || []);
-        console.log('[Realtime] ' + tabla + ' (' + eventType + ') aplicado in-place');
+        if ((window as any).MK_DEBUG) console.log('[Realtime] ' + tabla + ' (' + eventType + ') aplicado in-place');
     } catch(e) {
         console.warn('[Realtime] Error en _applyRTRelacional:', tabla, e);
     }
@@ -330,6 +343,11 @@ async function _applyRTDesktopConDatos(key, fresh) {
         if (typeof updateDashboard === 'function') updateDashboard();
     } else if (key === 'products') {
         _rtInPlace(window.products, fresh);
+        // A6: Reconstruir lookups tras actualización RT
+        if (window.products) {
+            (window as any).productMap = new Map((window.products as any[]).map((p: any) => [p.id, p]));
+        }
+        (window as any)._invStockCache = null;
         if (typeof renderInventoryTable === 'function') renderInventoryTable();
         if (typeof updateDashboard === 'function') updateDashboard();
     } else if (key === 'clients') {
@@ -589,8 +607,11 @@ async function sbSave(key, data) {
         try {
             localStorage.setItem('maneki_' + key, dataSnapshot);
         } catch (e: any) {
-            if (e.name === 'QuotaExceededError' || e.code === 22) {
-                console.warn('[Storage] localStorage lleno — no se pudo guardar caché de', key);
+            if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22)) {
+                console.warn('[Maneki] localStorage lleno — caché local no guardada:', e.message);
+                if (typeof (window as any).mkToast === 'function') {
+                    (window as any).mkToast('⚠️ Caché local llena — datos guardados en la nube', 'warning');
+                }
             } else {
                 console.warn('[Storage] localStorage falló:', key, e);
             }
@@ -730,7 +751,7 @@ async function _loadFromTable(key) {
         if (error || !data) return null;
         if (cfg.min > 0 && data.length < cfg.min) return null;
         const mapped = data.map(cfg.map);
-        console.log(`[DB] ✓ ${key} loaded from ${cfg.table} (${mapped.length} rows)`);
+        if ((window as any).MK_DEBUG) console.log(`[DB] ✓ ${key} loaded from ${cfg.table} (${mapped.length} rows)`);
         return mapped;
     } catch(e) {
         console.warn(`[DB] _loadFromTable(${key}) failed, falling back to store:`, e?.message);
@@ -772,9 +793,9 @@ async function _migrateToRelationalIfEmpty() {
             if (data && data.length > 0) continue;
             const localData = window[key];
             if (!Array.isArray(localData) || localData.length === 0) continue;
-            console.log(`[DB] Migrating ${localData.length} ${key} to ${cfg.table}...`);
+            if ((window as any).MK_DEBUG) console.log(`[DB] Migrating ${localData.length} ${key} to ${cfg.table}...`);
             if (saveFn) await saveFn();
-            console.log(`[DB] ✓ ${key} migrated to relational table`);
+            if ((window as any).MK_DEBUG) console.log(`[DB] ✓ ${key} migrated to relational table`);
         } catch(e) {
             console.warn(`[DB] Migration ${key} failed:`, e?.message);
         }
@@ -943,7 +964,7 @@ async function _migrarBase64AStorage(p) {
         p.imageUrl = urlData.publicUrl;
         p._base64Migrated = true; // MEJ-18: no re-intentar
         delete p._migrationFailed;
-        console.log(`✅ Imagen migrada a Storage: ${p.name} →`, urlData.publicUrl);
+        if ((window as any).MK_DEBUG) console.log(`✅ Imagen migrada a Storage: ${p.name} →`, urlData.publicUrl);
         return urlData.publicUrl;
     } catch(e) {
         console.warn(`No se pudo migrar imagen de "${p.name}" a Storage:`, e);

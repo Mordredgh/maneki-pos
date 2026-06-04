@@ -1211,7 +1211,7 @@ function checkAlertasCobro() {
             + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">'
             + '<span style="font-size:.78rem;font-weight:800;color:#dc2626;">$' + _saldoAlert.toFixed(2) + '</span>'
             + (tel
-                ? '<a href="' + waHref + '" target="_blank" style="display:flex;align-items:center;gap:3px;background:#25D366;color:#fff;border-radius:8px;padding:4px 8px;font-size:.7rem;font-weight:700;text-decoration:none;">\uD83D\uDCF2 Cobrar</a>'
+                ? '<a href="' + waHref + '" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:3px;background:#25D366;color:#fff;border-radius:8px;padding:4px 8px;font-size:.7rem;font-weight:700;text-decoration:none;">\uD83D\uDCF2 Cobrar</a>'
                 : '<button onclick="openPedidoModal(\'' + p.id + '\')" style="background:#e5e7eb;color:#374151;border-radius:8px;padding:4px 8px;font-size:.7rem;font-weight:700;border:none;cursor:pointer;">Ver</button>'
               )
             + '</div></div>';
@@ -1306,7 +1306,7 @@ function imprimirEtiquetaPedido(id) {
         + '</body></html>';
 
     const win = window.open('', '_blank', 'width=420,height=620');
-    if (!win) { alert('Activa las ventanas emergentes para imprimir la etiqueta.'); return; }
+    if (!win) { manekiToastExport('⚠️ Activa las ventanas emergentes para imprimir la etiqueta.', 'warn'); return; }
     win.document.write(html);
     win.document.close();
     win.onload = function() { setTimeout(function() { win.focus(); win.print(); }, 200); };

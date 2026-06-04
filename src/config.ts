@@ -581,7 +581,7 @@ function imprimirInventario() {
 
 // ============== INICIALIZACIÓN ==============
 document.addEventListener('DOMContentLoaded', function () {
-    try { showSection('bienvenida'); } catch (e) {}
+    try { showSection('bienvenida'); } catch (e) { console.warn('[config] showSection inicial falló:', e); }
     initApp();
 });
 
@@ -810,12 +810,12 @@ async function initApp() {
                 requestAnimationFrame(() => {
                     if (typeof initChart    === 'function') initChart();
                     if (typeof initReports  === 'function') initReports();
-                    try { showSection('bienvenida'); } catch (e) {}
+                    try { showSection('bienvenida'); } catch (e) { console.warn('[config] showSection frame3 falló:', e); }
                     // Activar Live Sync después de que todo esté listo
                     if (typeof _setupRealtime === 'function') _setupRealtime();
                     // Migrar datos locales a tablas relacionales si están vacías
                     if (typeof _migrateToRelationalIfEmpty === 'function') _migrateToRelationalIfEmpty();
-                    console.log('Maneki - Supabase OK + Realtime activo');
+                    if ((window as any).MK_DEBUG) console.log('Maneki - Supabase OK + Realtime activo');
                 });
             });
         });

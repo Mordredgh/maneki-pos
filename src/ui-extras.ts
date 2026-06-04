@@ -1755,3 +1755,29 @@ window.manekiUndoToast = manekiUndoToast;
     window.addEventListener('offline', _update);
     _update();
 })();
+
+// H51: Indicador global persistente de guardado/sincronización
+(window as any).mkSaveIndicator = function(state: 'saving' | 'saved' | 'error') {
+    let el = document.getElementById('mkSaveIndicator');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'mkSaveIndicator';
+        el.style.cssText = 'position:fixed;bottom:56px;right:16px;font-size:11px;padding:4px 10px;border-radius:20px;transition:opacity 0.4s;z-index:8888;pointer-events:none;opacity:0;white-space:nowrap;';
+        document.body.appendChild(el);
+    }
+    if (state === 'saving') {
+        el.textContent = '⟳ Guardando...';
+        el.style.background = '#fef9c3'; el.style.color = '#854d0e'; el.style.border = '1px solid #fde047';
+        el.style.opacity = '1';
+    } else if (state === 'saved') {
+        el.textContent = '✓ Guardado';
+        el.style.background = '#f0fdf4'; el.style.color = '#166534'; el.style.border = '1px solid #bbf7d0';
+        el.style.opacity = '1';
+        setTimeout(() => { if (el) el.style.opacity = '0'; }, 2000);
+    } else if (state === 'error') {
+        el.textContent = '✗ Error al guardar';
+        el.style.background = '#fef2f2'; el.style.color = '#991b1b'; el.style.border = '1px solid #fecaca';
+        el.style.opacity = '1';
+        setTimeout(() => { if (el) el.style.opacity = '0'; }, 4000);
+    }
+};
