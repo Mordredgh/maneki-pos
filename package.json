@@ -3,13 +3,18 @@
   "version": "2.2.0",
   "description": "Maneki Store POS — Web App (Coolify)",
   "scripts": {
-    "build:check": "npx tsc --noEmit"
+    "build": "node scripts/build.js",
+    "build:check": "npx tsc --noEmit",
+    "build:hash": "node scripts/hash-sw.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "author": "MordredGH",
   "license": "ISC",
   "devDependencies": {
     "esbuild": "^0.28.0",
     "tailwindcss": "^3.4.19",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   }
 }

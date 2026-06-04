@@ -15,21 +15,36 @@
         leafletJS:  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
     };
 
+    // ── Detectar si bundles existen (build de producción) ───────
+    var _useBundles = !!document.querySelector('script[src="js/core.bundle.js"]');
+
     // ── Grupos de scripts por sección ───────────────────────────
-    var _GRUPOS = {
+    var _GRUPOS = _useBundles ? {
+        inventario: ['js/inventario.bundle.js'],
+        pedidos:    [CDN.chartjs, 'js/pedidos.bundle.js'],
+        balance:    ['js/balance.bundle.js'],
+        reportes:   [CDN.chartjs, 'js/reportes.bundle.js'],
+        clientes:   ['js/clientes.bundle.js'],
+        envios:     [CDN.leafletCSS, CDN.leafletJS, 'js/envios.bundle.js'],
+        backup:     ['js/backup.bundle.js']
+    } : {
         inventario: [
             'js/categorias.js',
             'js/inventory-1.js',
-            'js/inventory-2.js',
+            'js/inventory-2-pt.js',
+            'js/inventory-2-pack.js',
+            'js/inventory-2-pv.js',
             'js/inventory-3.js',
             'js/inventory-4.js',
             'js/inventory-5.js'
         ],
         pedidos: [
             'js/whatsapp.js',
-            'js/balance.js',        // pedidos-3.js necesita eliminarPedidoFinalizado
-            CDN.chartjs,            // pedidos-2.js usa Chart para ROI
-            'js/pedidos-1.js',
+            'js/balance.js',
+            CDN.chartjs,
+            'js/pedidos-1-modal.js',
+            'js/pedidos-1-views.js',
+            'js/pedidos-1-extra.js',
             'js/pedidos-2.js',
             'js/pedidos-3.js'
         ],

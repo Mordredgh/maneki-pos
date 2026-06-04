@@ -2120,3 +2120,37 @@ body.dark .mk-alert-bar.has-alerts { background: rgba(245,158,11,0.14); color: #
 /* ── Op6 — MIGRAR SOMBRAS A TOKENS PREMIUM (tinte morado) ── */
 .shadow-sm:not(.mk-toast):not(.shortcut-key) { box-shadow: var(--sh-sm) !important; }
 .mk-card.shadow-sm, .stat-card.shadow-sm { box-shadow: var(--hi-top), var(--sh-md) !important; }
+
+/* ── CSP: Replace inline onfocus/onblur/onmouseover/onmouseout ── */
+#globalSearchInput:focus {
+  border-color: rgba(168,85,247,0.5) !important;
+  background: rgba(255,255,255,0.97) !important;
+  box-shadow: 0 0 0 3.5px rgba(168,85,247,0.13), inset 0 1px 2px rgba(21,4,40,0.03) !important;
+}
+body.dark #globalSearchInput:focus {
+  background: transparent !important;
+}
+#btnRefrescar:hover {
+  border-color: rgba(197,151,59,0.4) !important;
+  color: #C5973B !important;
+  transform: rotate(18deg);
+  background: rgba(253,246,220,0.8) !important;
+}
+#btnRefrescar:active {
+  transform: scale(0.9) rotate(18deg);
+}
+.mk-quick-access-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(201,147,58,0.2);
+}
+.mk-quick-access-btn.mk-qa-pedidos:hover { border-color: #C9933A !important; }
+.mk-quick-access-btn.mk-qa-clientes:hover { border-color: #FF6B9D !important; }
+.mk-dash-go-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(201,147,58,0.42) !important;
+}
+.mk-anillo-add:hover { background: #FEF3C7 !important; }
+#fabNuevoPedido:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(197,165,114,0.6) !important;
+}

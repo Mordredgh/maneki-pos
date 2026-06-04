@@ -1,4 +1,4 @@
-(function(){"use strict";const M=`
+"use strict";(function(){"use strict";const M=`
 /* == MODAL CONTENT \u2014 sin glassmorphism blur == */
 .modal > div {
     background: rgba(255,255,255,0.97) !important;

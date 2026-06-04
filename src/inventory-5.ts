@@ -235,6 +235,15 @@ function renderInventoryTable() {
     );
     (window as any)._invStockCache = _stockCache;
 
+    // D28: pre-cachear disponibilidad desde MP — evita O(n×m) find() por fila
+    const _pMap: Map<string, any> = window.productMap || new Map(allProducts.map(p => [String(p.id), p]));
+    const _dispCache: Map<string, any> = new Map();
+    for (const p of allProducts) {
+        if (p.mpComponentes && p.mpComponentes.length > 0) {
+            _dispCache.set(String(p.id), calcularDisponibilidadDesdeMP(p, _pMap, _stockCache));
+        }
+    }
+
     // Poblar filtro de proveedores cada vez que se renderiza
     if (typeof poblarFiltroProveedores === 'function') poblarFiltroProveedores();
 
@@ -451,8 +460,8 @@ function renderInventoryTable() {
         const cat = (window.categories||[]).find(c => c.id === product.category);
         const catName = cat ? cat.name : (product.category||'');
 
-        // Disponibilidad calculada desde MPs
-        const disp = calcularDisponibilidadDesdeMP(product);
+        // D28: usar caché pre-computada
+        const disp = _dispCache.get(pid) ?? null;
         let stockCell, badgeCell;
 
         if (disp !== null) {
@@ -584,8 +593,8 @@ function renderInventoryTable() {
             ? `<div><span class="font-semibold text-gray-800" style="font-size:.95rem;">$${_pvPrecioMin.toFixed(2)}</span><div style="font-size:10px;color:#9ca3af;">por pieza</div></div>`
             : '<span style="color:#9ca3af;font-size:.8rem;">—</span>';
 
-        // Disponible: piezas fabricables desde MP (misma lógica que PT)
-        const disp = calcularDisponibilidadDesdeMP(product);
+        // D28: usar caché pre-computada
+        const disp = _dispCache.get(String(product.id)) ?? null;
         let stockCell, badgeCell;
         if (disp !== null) {
             const piezas = disp.piezas;
@@ -781,8 +790,9 @@ function renderInventoryTable() {
         </div>
     </div>`;
 
-    const _allSectionsHTML =
-        buildSection({
+    // D27: render incremental — cada sección tiene su contenedor, solo se reescribe si cambió
+    const _sectionDefs = [
+        {
             id: 'pt',
             title: '📦 Productos Terminados',
             titleColor: '#C5973B',
@@ -807,8 +817,8 @@ function renderInventoryTable() {
                 {label:'Acciones'},
             ],
             emptyMsg: 'Sin productos terminados. Agrega uno con el botón +'
-        }) +
-        buildSection({
+        },
+        {
             id: 'pv',
             title: '🎯 Productos Variables (Stickers, Tarjetas...)',
             titleColor: '#0369a1',
@@ -832,8 +842,8 @@ function renderInventoryTable() {
                 {label:'Acciones'},
             ],
             emptyMsg: 'Sin productos variables. Agrega stickers, tarjetas u otros con precio por cantidad.'
-        }) +
-        buildSection({
+        },
+        {
             id: 'mp',
             title: '🏭 Materias Primas',
             titleColor: '#7c3aed',
@@ -856,8 +866,8 @@ function renderInventoryTable() {
                 {label:'Acciones'},
             ],
             emptyMsg: 'Sin materias primas. Agrega una con el botón +'
-        }) +
-        buildSection({
+        },
+        {
             id: 'svc',
             title: '⚙️ Servicios y Consumibles',
             titleColor: '#6d28d9',
@@ -877,11 +887,40 @@ function renderInventoryTable() {
                 {label:'Acciones'},
             ],
             emptyMsg: 'Sin servicios. Agrega el uso del láser, vinil por pieza, etc.'
-        });
+        }
+    ];
 
-    // N-UI-1: Empty state cuando la búsqueda no tiene resultados en ninguna sección
     const _searchActiveNow = (q || tagQ || provQ).length > 0;
-    if (_searchActiveNow && !_allSectionsHTML.trim()) {
+    let _anyVisible = false;
+
+    for (const secDef of _sectionDefs) {
+        const html = buildSection(secDef);
+        if (html) _anyVisible = true;
+
+        let secEl = document.getElementById(`invSec_${secDef.id}`);
+        if (!secEl) {
+            secEl = document.createElement('div');
+            secEl.id = `invSec_${secDef.id}`;
+            dualContainer.appendChild(secEl);
+        }
+
+        const secHash = secDef.products.length + '_' + secDef.products.reduce((s, p) => s + String(p.id), '') + '_' + (window[`_invPage_${secDef.id}`] || 1) + '_' + (window._invSortCol || '') + (window._invSortDir || '');
+        if ((secEl as any)._hash !== secHash) {
+            secEl.innerHTML = html;
+            (secEl as any)._hash = secHash;
+        }
+    }
+
+    // Limpiar contenedores sobrantes de secciones removidas
+    const validIds = new Set(_sectionDefs.map(s => `invSec_${s.id}`));
+    for (let i = dualContainer.children.length - 1; i >= 0; i--) {
+        const child = dualContainer.children[i] as HTMLElement;
+        if (child.id && child.id.startsWith('invSec_') && !validIds.has(child.id)) {
+            child.remove();
+        }
+    }
+
+    if (_searchActiveNow && !_anyVisible) {
         dualContainer.innerHTML = `
         <div style="padding:64px 24px;text-align:center;">
             <div style="font-size:3rem;margin-bottom:12px;">🔍</div>
@@ -892,8 +931,6 @@ function renderInventoryTable() {
                 Limpiar búsqueda
             </button>
         </div>`;
-    } else {
-        dualContainer.innerHTML = _allSectionsHTML;
     }
 }
 

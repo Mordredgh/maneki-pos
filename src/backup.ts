@@ -273,13 +273,7 @@ document.getElementById('backupModal').addEventListener('click', function(e) {
                     folioCounter: window._folioCounter || 0
                 }
             };
-            // Guardar en SQLite si está disponible, sino en localStorage
-            if (typeof sqliteStorage !== 'undefined' && sqliteStorage.set) {
-                await sqliteStorage.set('autoBackup', backup);
-                await sqliteStorage.set('autoBackupDate', new Date().toISOString());
-            } else {
-                try { localStorage.setItem('maneki_autoBackup', JSON.stringify(backup)); } catch(e) { /* localStorage lleno — silenciar */ }
-            }
+            try { localStorage.setItem('maneki_autoBackup', JSON.stringify(backup)); } catch(e) { /* localStorage lleno — silenciar */ }
             localStorage.setItem(LS_KEY, new Date().toISOString());
         } catch(e) {
             console.warn('[AutoBackup]', e);

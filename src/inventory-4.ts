@@ -851,25 +851,30 @@ async function deleteProduct(id) {
 window.deleteProduct = deleteProduct;
 
 // ── Helpers para calcular disponibilidad de PT desde sus MPs ─────────────────
-function calcularDisponibilidadDesdeMP(product) {
+function calcularDisponibilidadDesdeMP(product, pMap?: Map<string, any>, sCache?: Map<string, number>) {
     if (!product.mpComponentes || product.mpComponentes.length === 0) return null;
-    // Si todos los componentes son servicios, no hay MPs que limiten — tratar como sin MPs
+    const lookup = pMap || window.productMap;
+    const findProd = lookup
+        ? (id) => lookup.get(String(id))
+        : (id) => (window.products||[]).find(x => String(x.id) === String(id));
+    const getStock = sCache
+        ? (p) => sCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : parseInt(p.stock) || 0)
+        : (p) => typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : parseInt(p.stock) || 0;
     const tieneMpFisica = product.mpComponentes.some(c => {
-        const p = (window.products||[]).find(x => String(x.id) === String(c.id));
+        const p = findProd(c.id);
         return !p || p.tipo !== 'servicio';
     });
     if (!tieneMpFisica) return null;
     let minPiezas = Infinity;
     const detalle = [];
     for (const comp of product.mpComponentes) {
-        const mp = (window.products||[]).find(p => String(p.id) === String(comp.id));
-        if (mp && mp.tipo === 'servicio') continue; // servicios no limitan disponibilidad
+        const mp = findProd(comp.id);
+        if (mp && mp.tipo === 'servicio') continue;
         if (!mp) {
-            // Componente huérfano — MP fue eliminada
             product._tieneComponentesHuerfanos = true;
             continue;
         }
-        const stockMp = mp ? getStockEfectivo(mp) : 0;
+        const stockMp = getStock(mp);
         const qtyNecesaria = comp.qty || 1;
         const piezasPosibles = Math.floor(stockMp / qtyNecesaria);
         detalle.push({ nombre: comp.nombre || (mp ? mp.name : '?'), stock: stockMp, qty: qtyNecesaria, posibles: piezasPosibles });

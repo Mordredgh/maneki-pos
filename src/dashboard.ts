@@ -742,12 +742,6 @@ function actualizarSidebarBadges() {
         }
         badgePedidos._lastVal = activos;
 
-        // Sync tray badge with pedidos urgentes count
-        try {
-            if (ipcRenderer) {
-                ipcRenderer.send('update-tray-badge', { urgentes, total: activos });
-            }
-        } catch(e) {}
     }
 
     // Badge Inventario: productos con stock bajo o agotado

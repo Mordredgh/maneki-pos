@@ -1,4 +1,4 @@
-const CACHE_NAME = "maneki-v2.3.8";
+const CACHE_NAME = "maneki-79a9c4b18c";
 
 // P6: assets críticos (deben estar en caché para que la app arranque)
 const CRITICAL_ASSETS = [
@@ -10,38 +10,18 @@ const CRITICAL_ASSETS = [
   "/css/responsive.css",
   "/maneki-premium.css",
   "/logo.png",
-  "/js/icons.js",
-  "/js/config-init.js",
-  "/js/db.js",
-  "/js/config.js",
-  "/js/init.js",
-  "/js/design-system.js",
-  "/js/navigation.js",
+  "/js/core.bundle.js",
 ];
 
 // Assets secundarios: se intentan cachear pero no bloquean el install si fallan
 const SECONDARY_ASSETS = [
-  "/js/lazy-loader.js",
-  "/js/templates.js",
-  "/js/ui-extras.js",
-  "/js/dashboard.js",
-  "/js/app-data.js",
-  "/js/equipos.js",
-  "/js/pedidos-1.js",
-  "/js/pedidos-2.js",
-  "/js/pedidos-3.js",
-  "/js/inventory-1.js",
-  "/js/inventory-2.js",
-  "/js/inventory-3.js",
-  "/js/inventory-4.js",
-  "/js/inventory-5.js",
-  "/js/balance.js",
-  "/js/reportes.js",
-  "/js/clientes.js",
-  "/js/whatsapp.js",
-  "/js/backup.js",
-  "/js/envios.js",
-  "/js/categorias.js"
+  "/js/inventario.bundle.js",
+  "/js/pedidos.bundle.js",
+  "/js/balance.bundle.js",
+  "/js/reportes.bundle.js",
+  "/js/clientes.bundle.js",
+  "/js/envios.bundle.js",
+  "/js/backup.bundle.js"
 ];
 
 self.addEventListener("install", (e) => {

@@ -1,4 +1,4 @@
-function renderCategoriesGrid(){const t=document.getElementById("categoriesGrid");t.innerHTML=categories.map(e=>{const o=products.filter(n=>n.category===e.id).length,a=_esc(e.color||"#C5A572"),r=_esc(e.id);return`
+"use strict";function renderCategoriesGrid(){const t=document.getElementById("categoriesGrid");t.innerHTML=categories.map(e=>{const o=products.filter(n=>n.category===e.id).length,a=_esc(e.color||"#C5A572"),r=_esc(e.id);return`
                     <div class="category-card bg-white p-6 rounded-2xl shadow-sm border-2 transition-all hover:shadow-md" style="border-color: ${a}20; border-top: 4px solid ${a}">
                         <div class="flex items-start justify-between mb-4">
                             <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style="background: ${a}20">${_esc(e.emoji)}</div>

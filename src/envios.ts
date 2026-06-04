@@ -160,9 +160,7 @@ function _geocodeFetch(query, limit) {
     params.set('viewbox', '-100.7,26.0,-99.8,25.4');
     params.set('bounded', '0');
     const nominatimUrl = 'https://nominatim.openstreetmap.org/search?' + params.toString();
-    // En Electron no hay problema CORS; en browser local usamos proxy
-    const esElectron = (typeof ipcRenderer !== 'undefined' && ipcRenderer !== null);
-    const url = esElectron ? nominatimUrl : ('https://corsproxy.io/?' + encodeURIComponent(nominatimUrl));
+    const url = 'https://corsproxy.io/?' + encodeURIComponent(nominatimUrl);
     return fetch(url, { headers: { 'Accept': 'application/json' } });
 }
 

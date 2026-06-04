@@ -51,45 +51,7 @@ function deleteBalanceItem(type, id) {
     });
 }
 
-function editBalanceItem(type, id) {
-    const list = type === 'income' ? incomes : expenses;
-    const item = list.find(i => String(i.id) === String(id));
-    if (!item) return;
-
-    // Reutilizar el modal de transacción existente
-    const typeMap = {
-        income: 'income',
-        expense: 'expense'
-    };
-
-    document.getElementById('transactionType').value = typeMap[type];
-    document.getElementById('transactionModalTitle').textContent =
-        type === 'income' ? 'Editar Ingreso' : 'Editar Egreso';
-    document.getElementById('transactionConcept').value = item.concept || item.concepto || '';
-    document.getElementById('transactionAmount').value = item.amount || item.monto || 0;
-    document.getElementById('transactionDate').value = item.date || item.fecha || '';
-
-    const clientField = document.getElementById('clientFieldContainer');
-    const clientInput = document.getElementById('transactionClient');
-    if (clientField) clientField.classList.remove('hidden');
-    if (clientInput) clientInput.value = item.client || item.cliente || '';
-
-    // Guardar el id que estamos editando
-    const editModal = document.getElementById('transactionModal');
-    editModal.dataset.editId = id;
-    editModal.dataset.editType = type;
-    const submitBtn = document.getElementById('transactionSubmitBtn');
-    if (submitBtn) submitBtn.textContent = '💾 Actualizar';
-    openModal(editModal);
-}
-
-function closeTransactionModal() {
-    const modal = document.getElementById('transactionModal');
-    closeModal(modal);
-    modal.dataset.editId = '';
-    modal.dataset.editType = '';
-    document.getElementById('transactionForm').reset();
-}
+// editBalanceItem and closeTransactionModal are defined in balance.ts
         // ============== CANCELAR PEDIDO ==============
 
 let pedidoACancelar = null;

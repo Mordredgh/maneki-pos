@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; connect-src 'self' https://*.supabase.co https://api.telegram.org wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com https://api.open-meteo.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; worker-src 'self' blob:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; connect-src 'self' https://*.supabase.co https://api.telegram.org wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com https://api.open-meteo.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; worker-src 'self' blob:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Sistema de gestión para negocios de regalos personalizados. Dashboard, inventario, pedidos por encargo y reportes.">
     <meta name="theme-color" content="#C9933A">
@@ -134,16 +134,16 @@ input:focus, select:focus, textarea:focus, button:focus {
 <!-- Mobile Topbar -->
 <div id="mobileTopbar" style="display:none" class="fixed top-0 left-0 right-0 z-[198] flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
   <!-- UX16/17: min 44px tap target, aria-label, transición en hamburguesa -->
-  <button type="button" id="hamburgerBtn" onclick="(typeof toggleSidebar==='function'?toggleSidebar():void 0)"
+  <button type="button" id="hamburgerBtn" data-action="_mkToggleSidebar"
     aria-label="Abrir menú"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:22px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;transition:transform .2s;">☰</button>
   <img src="logo.png" alt="Maneki Store" style="height:32px;object-fit:contain;" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<span style=\'font-family:Cormorant Garamond,serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;\'>Maneki Store</span>')">
-  <button type="button" onclick="typeof _abrirBusquedaOverlay === 'function' && _abrirBusquedaOverlay()"
+  <button type="button" data-action="_abrirBusquedaOverlay"
     aria-label="Buscar"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:18px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">🔍</button>
 </div>
 <!-- Overlay para cerrar sidebar en mobile -->
-<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div id="sidebarOverlay" data-action="closeSidebar"></div>
 
     <aside id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 shadow-xl z-50 flex flex-col">
         <div class="p-3 border-b border-gray-200">
@@ -152,13 +152,13 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div id="sidebarLogoContainer"
      class="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
      style="background:transparent;"
-     onclick="showSection('bienvenida')" title="Inicio">
+     data-action="showSection" data-arg="bienvenida" title="Inicio">
     <img src="logo.png" alt="Maneki Store" style="width:44px;height:44px;object-fit:contain;border-radius:10px;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span style="font-size:30px;display:none">🐱</span>
 </div>
 
 <div>
     <h1 class="sidebar-store-name" style="font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:600;letter-spacing:-0.01em;background:linear-gradient(135deg,#F5D080,#E8B84B,#fff,#C5973B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer;line-height:1.1;"
-        onclick="showSection('bienvenida')">Maneki Store</h1>
+        data-action="showSection" data-arg="bienvenida">Maneki Store</h1>
     <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(197,151,59,.5);margin-top:3px;">Regalos Personalizados</p>
 </div>
 
@@ -169,50 +169,50 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button type="button" onclick="showSection('dashboard')" data-section="dashboard" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium">
+            <button type="button" data-action="showSection" data-arg="dashboard" data-section="dashboard" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium">
                 <i class="fas fa-home w-5"></i>
                 <span>Dashboard</span>
             </button>
 
-<button type="button" onclick="showSection('pedidos')" data-section="pedidos" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+<button type="button" data-action="showSection" data-arg="pedidos" data-section="pedidos" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
     <i class="fas fa-clipboard-list w-5"></i>
     <span class="flex-1">Pedidos por Encargo</span>
     <span id="sidebarBadgePedidos" class="sidebar-badge" style="display:none;"></span>
 </button>
-            <button type="button" onclick="showSection('quotes')" data-section="quotes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" data-action="showSection" data-arg="quotes" data-section="quotes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-file-invoice w-5"></i>
                 <span>Cotizaciones</span>
             </button>
-            <button type="button" onclick="showSection('inventory')" data-section="inventory" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" data-action="showSection" data-arg="inventory" data-section="inventory" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-boxes w-5"></i>
                 <span class="flex-1">Inventario</span>
                 <span id="sidebarBadgeInventory" class="sidebar-badge" style="display:none;"></span>
             </button>
-            <button type="button" onclick="showSection('balance')" data-section="balance" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" data-action="showSection" data-arg="balance" data-section="balance" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-balance-scale w-5"></i>
                 <span>Balance</span>
             </button>
-            <button type="button" onclick="showSection('clientes')" data-section="clientes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" data-action="showSection" data-arg="clientes" data-section="clientes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-users w-5"></i>
                 <span>Clientes</span>
             </button>
-            <button type="button" onclick="showSection('categorias')" data-section="categorias" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" data-action="showSection" data-arg="categorias" data-section="categorias" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-tags w-5"></i>
                 <span>Categorías</span>
             </button>
-            <button type="button" onclick="showSection('analisis')" data-section="analisis" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" data-action="showSection" data-arg="analisis" data-section="analisis" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-trophy w-5"></i>
                 <span>Análisis de Productos</span>
             </button>
-            <button type="button" onclick="showSection('reportes')" data-section="reportes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" data-action="showSection" data-arg="reportes" data-section="reportes" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-chart-line w-5"></i>
                 <span>Reportes</span>
             </button>
-            <button type="button" onclick="showSection('equipos')" data-section="equipos" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+            <button type="button" data-action="showSection" data-arg="equipos" data-section="equipos" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
                 <i class="fas fa-tools w-5"></i>
                 <span>Equipos / ROI</span>
             </button>
-        <button type="button" onclick="showSection('configuracion')" data-section="configuracion" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
+        <button type="button" data-action="showSection" data-arg="configuracion" data-section="configuracion" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-gray-700">
     <i class="fas fa-cog w-5"></i>
     <span>Configuración</span>
 </button>
@@ -220,7 +220,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div class="border-t flex-shrink-0" style="padding:10px 12px;border-color:rgba(197,151,59,0.12);">
             <div class="flex gap-2 mb-1">
-              <button type="button" onclick="abrirModalBackup()" class="flex-1 px-2 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200 transition-all flex items-center justify-center gap-1">
+              <button type="button" data-action="abrirModalBackup" class="flex-1 px-2 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200 transition-all flex items-center justify-center gap-1">
                   <i class="fas fa-database"></i><span>Backup</span>
               </button>
             </div>
@@ -232,7 +232,7 @@ input:focus, select:focus, textarea:focus, button:focus {
               </div>
             </div>
             <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2 cursor-pointer" onclick="showSection('configuracion')" title="Ir a Configuración" aria-label="Abrir configuración">
+                <div class="flex items-center gap-2 cursor-pointer" data-action="showSection" data-arg="configuracion" title="Ir a Configuración" aria-label="Abrir configuración">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(197,151,59,0.18) !important;">
                         <i class="fas fa-user text-sm" style="color: #C5A572 !important;"></i>
                     </div>
@@ -242,12 +242,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
                 <!-- UX6: botón de atajos de teclado visible -->
-                <button type="button" onclick="if(typeof _createShortcutsOverlay==='function'){_createShortcutsOverlay();document.getElementById('mk-shortcuts-overlay').classList.add('visible');}"
+                <button type="button" data-action="_mkShowShortcuts"
                     title="Atajos de teclado (también presiona ?)"
                     aria-label="Ver atajos de teclado"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors text-xs font-bold border border-gray-200"
                     style="flex-shrink:0;">?</button>
-                <button type="button" onclick="toggleDarkMode()" id="darkModeBtn"
+                <button type="button" data-action="toggleDarkMode" id="darkModeBtn"
                         title="Modo oscuro"
                         class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-110"
                         style="background: #F3F4F6;">
@@ -274,8 +274,8 @@ input:focus, select:focus, textarea:focus, button:focus {
           type="text"
           id="globalSearchInput"
           placeholder="Buscar productos, clientes, pedidos..."
-          oninput="_debouncedSearch(this.value)"
-          onblur="setTimeout(()=>cerrarBusquedaGlobal(),200)"
+          data-oninput="_debouncedSearch" data-pass-el="1"
+          data-onblur="_mkBlurBusquedaGlobal"
           autocomplete="off"
           style="
             width:100%;padding:8px 14px 8px 36px;
@@ -288,15 +288,15 @@ input:focus, select:focus, textarea:focus, button:focus {
             box-shadow:inset 0 1.5px 4px rgba(21,4,40,0.04);
             outline:none;
           "
-          onfocus="const _dk=document.body.classList.contains('dark');this.style.borderColor='rgba(168,85,247,0.5)';this.style.background=_dk?'transparent':'rgba(255,255,255,0.97)';this.style.boxShadow='0 0 0 3.5px rgba(168,85,247,0.13),inset 0 1px 2px rgba(21,4,40,0.03)'"
-          onblur="const _dk2=document.body.classList.contains('dark');this.style.borderColor='rgba(197,151,59,0.15)';this.style.background=_dk2?'transparent':'rgba(255,255,255,0.8)';this.style.boxShadow='inset 0 1.5px 4px rgba(21,4,40,0.04)'"
+
+
         />
         <span class="mk-kbd-hint" data-tip="Paleta de comandos"
-          onclick="mkOpenCommandPalette&&mkOpenCommandPalette()"
+          data-action="mkOpenCommandPalette"
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">⌘K</span>
         <div id="globalSearchResults" class="hidden absolute top-11 left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto" style="box-shadow:0 24px 64px rgba(21,4,40,0.15),0 8px 24px rgba(124,58,237,0.08);border-radius:20px;border:1px solid rgba(197,151,59,0.12);"></div>
       </div>
-      <button type="button" onclick="refrescarPagina()" id="btnRefrescar"
+      <button type="button" data-action="refrescarPagina" id="btnRefrescar"
         title="Refrescar datos"
         style="
           flex-shrink:0;width:36px;height:36px;border-radius:11px;
@@ -307,10 +307,8 @@ input:focus, select:focus, textarea:focus, button:focus {
           transition:all .18s cubic-bezier(0.22,1,0.36,1);
           font-size:0.82rem;
         "
-        onmouseover="this.style.borderColor='rgba(197,151,59,0.4)';this.style.color='#C5973B';this.style.transform='rotate(18deg)';this.style.background='rgba(253,246,220,0.8)'"
-        onmouseout="this.style.borderColor='rgba(197,151,59,0.15)';this.style.color='rgba(124,58,237,0.6)';this.style.transform='';this.style.background='rgba(255,255,255,0.7)'"
-        onmousedown="this.style.transform='scale(0.9) rotate(18deg)'"
-        onmouseup="this.style.transform='rotate(18deg)'"
+
+
         >
         <i class="fas fa-sync-alt" id="iconRefrescar"></i>
       </button>
@@ -338,11 +336,11 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
     </div>
     <div class="flex items-center gap-2 flex-wrap justify-end" style="position:relative;z-index:1;">
-      <button type="button" onclick="togglePrivacidad()" id="privacyToggleBtn" class="mk-dash-hero-btn" title="Ocultar montos">
+      <button type="button" data-action="togglePrivacidad" id="privacyToggleBtn" class="mk-dash-hero-btn" title="Ocultar montos">
         <i class="fas fa-eye" id="privacyIcon"></i>
         <span id="privacyLabel" class="hidden sm:inline">Privacidad</span>
       </button>
-      <button type="button" onclick="mostrarResumenDia()" class="mk-btn mk-btn-gold" style="padding:8px 18px;">
+      <button type="button" data-action="mostrarResumenDia" class="mk-btn mk-btn-gold" style="padding:8px 18px;">
         <i class="fas fa-chart-bar"></i>
         <span class="hidden sm:inline">Resumen</span>
       </button>
@@ -366,7 +364,7 @@ input:focus, select:focus, textarea:focus, button:focus {
               <p id="alertaSubtitulo" style="font-size:.78rem;color:#b91c1c;font-weight:600;margin:0;">—</p>
             </div>
           </div>
-          <button type="button" onclick="cerrarAlertaEntregas()" style="background:rgba(153,27,27,0.08);border:none;color:#9ca3af;font-size:.85rem;cursor:pointer;padding:5px 9px;border-radius:8px;" title="Cerrar">✕</button>
+          <button type="button" data-action="cerrarAlertaEntregas" style="background:rgba(153,27,27,0.08);border:none;color:#9ca3af;font-size:.85rem;cursor:pointer;padding:5px 9px;border-radius:8px;" title="Cerrar">✕</button>
         </div>
         <div id="alertaEntregasLista" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
@@ -397,7 +395,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <span style="font-size:.72rem;color:#9ca3af;">$</span>
             <input type="number" id="dashMonthGoal" value="5000" min="1" step="500"
                    style="width:76px;font-size:.82rem;padding:4px 8px;border-radius:8px;border:1.5px solid #fcd34d;text-align:right;background:rgba(255,255,255,.85);outline:none;font-family:inherit;"
-                   onchange="const _mv=Math.max(1,parseFloat(this.value)||5000);this.value=_mv;storeConfig.metaMensual=_mv;updateDashboard();sbSave('storeConfig',storeConfig);"
+                   data-change="_mkMetaMensualChange" data-pass-el="1"
                    title="Meta mensual de ventas (mínimo $1)">
           </div>
         </div>
@@ -431,7 +429,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
 
       <!-- Pedidos activos -->
-      <div class="mk-card mk-kpi mk-kpi-v2 kpi-purple clickable" style="padding:18px 20px;" onclick="showSection('pedidos')">
+      <div class="mk-card mk-kpi mk-kpi-v2 kpi-purple clickable" style="padding:18px 20px;" data-action="showSection" data-arg="pedidos">
         <div class="flex items-center justify-between mb-3">
           <p class="mk-kpi-label">Pedidos activos</p>
           <div class="mk-kpi-icon-sm" style="background:rgba(139,92,246,0.11);">
@@ -443,7 +441,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
 
       <!-- Me deben -->
-      <div class="mk-card mk-kpi mk-kpi-v2 kpi-rose clickable" style="padding:18px 20px;" onclick="showSection('balance')">
+      <div class="mk-card mk-kpi mk-kpi-v2 kpi-rose clickable" style="padding:18px 20px;" data-action="showSection" data-arg="balance">
         <div class="flex items-center justify-between mb-3">
           <p class="mk-kpi-label">Me deben</p>
           <div class="mk-kpi-icon-sm" style="background:rgba(244,63,94,0.11);">
@@ -478,7 +476,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);">
           <div class="mk-chart-title">
             <span>⏰ Entregas próximas</span>
-            <button type="button" onclick="showSection('pedidos')" style="font-size:.7rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;">Ver →</button>
+            <button type="button" data-action="showSection" data-arg="pedidos" style="font-size:.7rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;">Ver →</button>
           </div>
           <div id="dashUpcomingDeliveries"><p class="text-gray-400 text-xs text-center py-4">Sin entregas próximas 🎉</p></div>
         </div>
@@ -503,7 +501,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div class="mk-card mk-chart-area">
         <div class="mk-chart-title" style="display:flex;justify-content:space-between;align-items:center;">
           <span>📊 Comparativa semanal</span>
-          <button type="button" onclick="generarResumenSemanalWA()" title="Copiar resumen para WhatsApp"
+          <button type="button" data-action="generarResumenSemanalWA" title="Copiar resumen para WhatsApp"
             style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:.7rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
             📋 WA
           </button>
@@ -558,8 +556,8 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <input type="text" id="notaInput" placeholder="Escribe una nota... (Enter)"
-               class="mk-note-input" onkeydown="if(event.key==='Enter') agregarNota()">
-        <button type="button" onclick="agregarNota()" class="mk-btn mk-btn-gold" style="padding:8px 14px;"><i class="fas fa-plus"></i></button>
+               class="mk-note-input" data-onkeydown="agregarNota">
+        <button type="button" data-action="agregarNota" class="mk-btn mk-btn-gold" style="padding:8px 14px;"><i class="fas fa-plus"></i></button>
       </div>
       <div id="notasList" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;">
         <p class="text-gray-400 text-xs text-center py-4">Sin notas ✏️</p>
@@ -604,7 +602,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <p class="mk-kpi-sub" id="mornSalesSub" style="color:#b45309;font-size:.67rem;">cargando...</p>
             </div>
 
-            <div class="mk-card mk-kpi clickable" onclick="showSection('pedidos')" style="animation:fadeUp 0.4s 0.18s ease both;opacity:0;" id="mornUrgentCard">
+            <div class="mk-card mk-kpi clickable" data-action="showSection" data-arg="pedidos" style="animation:fadeUp 0.4s 0.18s ease both;opacity:0;" id="mornUrgentCard">
                 <div class="mk-kpi-blob" style="background:#ef4444;"></div>
                 <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 14px rgba(239,68,68,.4);">
                     <i class="fas fa-fire" style="color:white;"></i>
@@ -614,7 +612,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <p class="mk-kpi-sub" style="color:#b91c1c;font-size:.67rem;">ver pedidos →</p>
             </div>
 
-            <div class="mk-card mk-kpi clickable" onclick="showSection('inventory')" style="animation:fadeUp 0.4s 0.26s ease both;opacity:0;">
+            <div class="mk-card mk-kpi clickable" data-action="showSection" data-arg="inventory" style="animation:fadeUp 0.4s 0.26s ease both;opacity:0;">
                 <div class="mk-kpi-blob" style="background:#f59e0b;"></div>
                 <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 14px rgba(245,158,11,.4);">
                     <i class="fas fa-box-open" style="color:white;"></i>
@@ -624,7 +622,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <p class="mk-kpi-sub" style="color:#b45309;font-size:.67rem;">productos bajo mínimo</p>
             </div>
 
-            <div class="mk-card mk-kpi clickable" onclick="showSection('balance')" style="animation:fadeUp 0.4s 0.34s ease both;opacity:0;">
+            <div class="mk-card mk-kpi clickable" data-action="showSection" data-arg="balance" style="animation:fadeUp 0.4s 0.34s ease both;opacity:0;">
                 <div class="mk-kpi-blob" style="background:#FF6B9D;"></div>
                 <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#FF6B9D,#e11d74);box-shadow:0 4px 14px rgba(255,107,157,.4);">
                     <i class="fas fa-hand-holding-usd" style="color:white;"></i>
@@ -640,7 +638,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div style="flex:1;">
                     <p style="font-size:.72rem;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.08em;">🚨 Entregas pendientes hoy</p>
                 </div>
-                <button type="button" onclick="showSection('pedidos')" style="font-size:.68rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;margin-left:auto;">Ver todos →</button>
+                <button type="button" data-action="showSection" data-arg="pedidos" style="font-size:.68rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;margin-left:auto;">Ver todos →</button>
             </div>
             <div id="mornUrgentList">
                 <p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:12px 0;">✅ Sin entregas urgentes para hoy</p>
@@ -650,18 +648,18 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div style="margin-bottom:14px;animation:fadeUp 0.4s 0.5s ease both;opacity:0;">
             <p style="font-size:.68rem;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Acceso rápido</p>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-                <button type="button" onclick="showSection('pedidos')" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;" onmouseover="this.style.borderColor='#C9933A';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(201,147,58,.2)'" onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='';this.style.boxShadow=''">
+                <button type="button" data-action="showSection" data-arg="pedidos" class="mk-quick-access-btn mk-qa-pedidos" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;">
                     <div style="font-size:1.4rem;margin-bottom:6px;">📋</div>
                     <p style="font-size:.72rem;font-weight:700;color:#374151;">Pedidos</p>
                 </button>
-                <button type="button" onclick="showSection('clientes')" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;" onmouseover="this.style.borderColor='#FF6B9D';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(255,107,157,.2)'" onmouseout="this.style.borderColor='#e5e7eb';this.style.transform='';this.style.boxShadow=''">
+                <button type="button" data-action="showSection" data-arg="clientes" class="mk-quick-access-btn mk-qa-clientes" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;">
                     <div style="font-size:1.4rem;margin-bottom:6px;">👥</div>
                     <p style="font-size:.72rem;font-weight:700;color:#374151;">Clientes</p>
                 </button>
             </div>
         </div>
 
-        <button type="button" onclick="showSection('dashboard')" style="width:100%;background:linear-gradient(135deg,#C9933A 0%,#E8B84B 100%);color:#3A2000;font-weight:700;font-size:.9rem;padding:.85rem;border-radius:18px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(201,147,58,.3);transition:all .2s ease;font-family:inherit;animation:fadeUp 0.4s 0.58s ease both;opacity:0;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(201,147,58,.42)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(201,147,58,.3)'">
+        <button type="button" data-action="showSection" data-arg="dashboard" class="mk-dash-go-btn" style="width:100%;background:linear-gradient(135deg,#C9933A 0%,#E8B84B 100%);color:#3A2000;font-weight:700;font-size:.9rem;padding:.85rem;border-radius:18px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(201,147,58,.3);transition:all .2s ease;font-family:inherit;animation:fadeUp 0.4s 0.58s ease both;opacity:0;">
             <i class="fas fa-chart-line mr-2"></i>Ver Dashboard completo
         </button>
 
@@ -675,7 +673,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="mk-section-header"><div class="mk-sh-icon">&#128203;</div><div class="mk-sh-text"><h2>Cotizaciones</h2><p>Genera presupuestos para tus clientes</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2" id="quotesHeaderButtons">
-                        <button type="button" onclick="openQuoteModal()"
+                        <button type="button" data-action="openQuoteModal"
                                 class="btn-primary px-6 py-3 rounded-xl text-white font-semibold">
                             <i class="fas fa-plus mr-2"></i>
                             Nueva Cotización
@@ -684,12 +682,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div class="flex gap-1 bg-gray-100 rounded-2xl p-1 mb-6 w-fit">
-                    <button type="button" id="tabQuoteProductos" onclick="switchQuoteTab('productos')"
+                    <button type="button" id="tabQuoteProductos" data-action="switchQuoteTab" data-arg="productos"
                         class="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all"
                         style="background:#C5A572;color:white;">
                         <i class="fas fa-tag mr-1"></i> Cotización de Productos
                     </button>
-                    <button type="button" id="tabQuoteEnvios" onclick="switchQuoteTab('envios')"
+                    <button type="button" id="tabQuoteEnvios" data-action="switchQuoteTab" data-arg="envios"
                         class="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all text-gray-500">
                         <i class="fas fa-motorcycle mr-1"></i> Cotización de Envíos
                     </button>
@@ -732,7 +730,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                         <div class="flex gap-2">
                                             <input type="text" id="envioDestinoDireccion" placeholder="Escribe colonia, calle o dirección..."
                                                 class="flex-1 px-4 py-3 border border-gray-200 rounded-xl outline-none text-sm focus:ring-2 focus:ring-amber-300">
-                                            <button type="button" onclick="buscarDestinoCotizador()" class="px-4 py-3 rounded-xl text-white text-sm font-semibold flex-shrink-0" style="background:#C5A572">
+                                            <button type="button" data-action="buscarDestinoCotizador" class="px-4 py-3 rounded-xl text-white text-sm font-semibold flex-shrink-0" style="background:#C5A572">
                                                 <i class="fas fa-search"></i>
                                             </button>
                                         </div>
@@ -753,7 +751,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                             <p class="text-sm text-gray-500 mb-1">Tarifa estimada</p>
                                             <p class="text-4xl font-black" style="color:#C5A572" id="envioPrecioLabel">$0</p>
                                         </div>
-                                        <button type="button" onclick="copiarCotizacionEnvio()" class="mt-3 w-full py-2 rounded-xl border border-amber-300 text-amber-700 text-sm font-semibold hover:bg-amber-100 transition-all">
+                                        <button type="button" data-action="copiarCotizacionEnvio" class="mt-3 w-full py-2 rounded-xl border border-amber-300 text-amber-700 text-sm font-semibold hover:bg-amber-100 transition-all">
                                             <i class="fas fa-copy mr-1"></i> Copiar para WhatsApp
                                         </button>
                                     </div>
@@ -767,7 +765,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-lg font-bold text-gray-800">⚙️ Mis Tarifas por Anillo</h3>
-                                    <button type="button" onclick="abrirConfigAnillos()" class="text-xs px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold">
+                                    <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold">
                                         <i class="fas fa-sliders-h mr-1"></i> Configurar en mapa
                                     </button>
                                 </div>
@@ -780,7 +778,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" style="min-height:80px;">
                             <div class="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="font-bold text-gray-700 text-sm">🗺️ Mapa de cobertura</h3>
-                                <button type="button" onclick="abrirConfigAnillos()" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#C5A572">
+                                <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#C5A572">
                                     <i class="fas fa-edit mr-1"></i> Editar anillos
                                 </button>
                             </div>
@@ -800,27 +798,27 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                         <!-- ── + Agregar ▾ ── -->
                         <div style="position:relative;">
-                            <button type="button" onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before"
                                 class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
                                 <i class="fas fa-plus"></i> Agregar <span style="font-size:.7rem;opacity:.8;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
-                                <button type="button" onclick="openPtModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">📦 Producto Terminado</button>
-                                <button type="button" onclick="openVariableProductModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🎨 Producto Variable</button>
-                                <button type="button" onclick="openMpModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🏭 Materia Prima</button>
-                                <button type="button" onclick="openSvcModal();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">⚙️ Servicio</button>
+                                <button type="button" data-action="openPtModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">📦 Producto Terminado</button>
+                                <button type="button" data-action="openVariableProductModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🎨 Producto Variable</button>
+                                <button type="button" data-action="openMpModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🏭 Materia Prima</button>
+                                <button type="button" data-action="openSvcModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">⚙️ Servicio</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
                                 <label class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold cursor-pointer">
                                     📥 Importar CSV
-                                    <input type="file" id="invCsvImportInput" accept=".csv" style="display:none;" onchange="importarInventarioCSV(this)">
+                                    <input type="file" id="invCsvImportInput" accept=".csv" style="display:none;" data-change="importarInventarioCSV" data-pass-el="1">
                                 </label>
-                                <button type="button" onclick="descargarTemplateCSV();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📋 Descargar template CSV</button>
+                                <button type="button" data-action="descargarTemplateCSV" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📋 Descargar template CSV</button>
                             </div>
                         </div>
 
                         <!-- ── Lista de compras (siempre visible) ── -->
-                        <button type="button" onclick="mostrarListaCompras()"
+                        <button type="button" data-action="mostrarListaCompras"
                                 class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background:linear-gradient(135deg,#f59e0b,#d97706)">
                             <i class="fas fa-shopping-cart"></i> Lista de compras
@@ -828,33 +826,33 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                         <!-- ── Reportes ▾ ── -->
                         <div style="position:relative;">
-                            <button type="button" onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before"
                                 class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background:linear-gradient(135deg,#f59e0b,#92400e);">
                                 <i class="fas fa-chart-bar"></i> Reportes <span style="font-size:.7rem;opacity:.8;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:180px;padding:6px;">
-                                <button type="button" onclick="abrirReporteRentabilidad();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-chart-bar"></i> Rentabilidad</button>
-                                <button type="button" onclick="manekiExportar('inventario');document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportar Excel</button>
-                                <button type="button" onclick="imprimirInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-print"></i> Imprimir</button>
+                                <button type="button" data-action="abrirReporteRentabilidad" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-chart-bar"></i> Rentabilidad</button>
+                                <button type="button" data-action="manekiExportar" data-arg="inventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+                                <button type="button" data-action="imprimirInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-print"></i> Imprimir</button>
                             </div>
                         </div>
 
                         <!-- ── Herramientas ▾ ── -->
                         <div style="position:relative;">
-                            <button type="button" onclick="(function(btn){var m=btn.nextElementSibling;var open=m.style.display!=='block';document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';});if(open){m.style.display='block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);}})(this)"
+                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before"
                                 class="px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
                                 style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;">
                                 <i class="fas fa-cog"></i> Herramientas <span style="font-size:.7rem;opacity:.7;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
-                                <button type="button" onclick="toggleMovimientosInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history"></i> Movimientos de stock</button>
+                                <button type="button" data-action="toggleMovimientosInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history"></i> Movimientos de stock</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
-                                <button type="button" onclick="guardarSnapshotInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2">📸 Guardar snapshot</button>
-                                <button type="button" onclick="verSnapshotsInventario();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📅 Ver snapshots</button>
+                                <button type="button" data-action="guardarSnapshotInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2">📸 Guardar snapshot</button>
+                                <button type="button" data-action="verSnapshotsInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📅 Ver snapshots</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
-                                <button type="button" onclick="abrirBulkEditPrecios();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2">💲 Actualizar precios en masa</button>
-                                <button type="button" onclick="imprimirEtiquetasBatch();document.querySelectorAll('.inv-hdr-dd').forEach(function(d){d.style.display='none';})" class="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 rounded-lg text-gray-700 flex items-center gap-2">🏷️ Imprimir etiquetas (todas)</button>
+                                <button type="button" data-action="abrirBulkEditPrecios" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2">💲 Actualizar precios en masa</button>
+                                <button type="button" data-action="imprimirEtiquetasBatch" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 rounded-lg text-gray-700 flex items-center gap-2">🏷️ Imprimir etiquetas (todas)</button>
                             </div>
                         </div>
 
@@ -865,9 +863,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-gray-800 text-lg">📋 Historial de Movimientos</h3>
                         <div class="flex gap-2 flex-wrap">
-                            <input type="text" id="movBuscar" placeholder="Filtrar movimientos..." oninput="(function(){clearTimeout(window._movT);window._movT=setTimeout(renderMovimientos,160)})()"
+                            <input type="text" id="movBuscar" placeholder="Filtrar movimientos..." data-oninput="_mkDebounceMov"
                                 class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none">
-                            <select id="movTipoFilter" onchange="renderMovimientos()" class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none bg-white">
+                            <select id="movTipoFilter" data-change="renderMovimientos" class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none bg-white">
                                 <option value="">Todos los tipos</option>
                                 <option value="creacion">Creaciones</option>
                                 <option value="ajuste">Ajustes</option>
@@ -876,7 +874,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <option value="entrada">Entradas</option>
                                 <option value="salida">Salidas</option>
                             </select>
-                            <button type="button" onclick="limpiarMovimientosInventario()" class="px-3 py-2 rounded-xl text-sm text-red-500 border border-red-200 hover:bg-red-50">🗑️ Limpiar</button>
+                            <button type="button" data-action="limpiarMovimientosInventario" class="px-3 py-2 rounded-xl text-sm text-red-500 border border-red-200 hover:bg-red-50">🗑️ Limpiar</button>
                         </div>
                     </div>
                     <div id="movimientosLista" class="space-y-2 max-h-96 overflow-y-auto"></div>
@@ -886,20 +884,20 @@ input:focus, select:focus, textarea:focus, button:focus {
     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
     <input type="text" id="inventorySearch" placeholder="Buscar producto, SKU o código..."
       title="Busca por nombre, SKU o proveedor"
-      oninput="(function(v){clearTimeout(window._invSearchT);window._invSearchT=setTimeout(function(){renderInventoryTable();},160);})(this.value)"
+      data-oninput="_mkDebounceInv"
       class="pl-9 pr-4 py-2 w-full border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
   </div>
-  <button type="button" onclick="window._abrirQRScanner()" title="Escanear código de barras / QR"
+  <button type="button" data-action="_abrirQRScanner" title="Escanear código de barras / QR"
       class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-amber-50 hover:border-amber-300 transition-colors shrink-0">
       <i class="fas fa-barcode"></i><span class="hidden sm:inline">Escanear</span>
   </button>
-  <select id="inventoryTipoFilter" onchange="renderInventoryTable()"
+  <select id="inventoryTipoFilter" data-change="renderInventoryTable"
   class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
   <option value="">Todos los tipos</option>
   <option value="producto">📦 Productos Terminados</option>
   <option value="materia">🏭 Materia Prima</option>
 </select>
-  <select id="inventoryTagFilter" onchange="renderInventoryTable()"
+  <select id="inventoryTagFilter" data-change="renderInventoryTable"
     class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
     <option value="">🏷️ Todos los tags</option>
     <option value="Oferta">Oferta</option>
@@ -908,7 +906,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <option value="Agotado">Agotado</option>
     <option value="Favorito">Favorito</option>
   </select>
-  <select id="inventoryProveedorFilter" onchange="renderInventoryTable()"
+  <select id="inventoryProveedorFilter" data-change="renderInventoryTable"
     class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
     <option value="">🏪 Todos los proveedores</option>
   </select>
@@ -934,9 +932,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <p class="text-sm text-gray-400">Tu dinero de un vistazo</p>
                     </div>
                     <div class="flex items-center gap-1 bg-white rounded-xl border border-gray-200 px-1 py-1">
-                        <button type="button" onclick="cambiarMesBalance(-1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">‹</button>
+                        <button type="button" data-action="cambiarMesBalance" data-arg="-1" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">‹</button>
                         <span id="balanceMesLabel" class="text-sm font-semibold text-gray-700 min-w-28 text-center px-2"></span>
-                        <button type="button" onclick="cambiarMesBalance(1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">›</button>
+                        <button type="button" data-action="cambiarMesBalance" data-arg="1" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">›</button>
                     </div>
                 </div>
 
@@ -994,9 +992,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Ingresos</h3>
-                            <button type="button" onclick="openIncomeModal()" class="w-8 h-8 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" data-action="openIncomeModal" class="w-8 h-8 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 flex items-center justify-center text-lg transition-colors">+</button>
                         </div>
-                        <input type="text" id="buscarIngresos" placeholder="Buscar ingreso..." oninput="(function(v){clearTimeout(window._incT);window._incT=setTimeout(function(){renderIncomeList()},160)})(this.value)"
+                        <input type="text" id="buscarIngresos" placeholder="Buscar ingreso..." data-oninput="_mkDebounceInc"
                             class="w-full mb-3 px-3 py-2 bg-gray-50 border-0 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-200">
                         <div class="space-y-2 max-h-80 overflow-y-auto" id="incomeList"></div>
                     </div>
@@ -1005,11 +1003,11 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Egresos</h3>
                             <div class="flex gap-1.5">
-                                <button type="button" onclick="toggleRecurrentesPanel()" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center text-sm transition-colors" title="Recurrentes">↺</button>
-                                <button type="button" onclick="openExpenseModal()" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center text-lg transition-colors">+</button>
+                                <button type="button" data-action="toggleRecurrentesPanel" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center text-sm transition-colors" title="Recurrentes">↺</button>
+                                <button type="button" data-action="openExpenseModal" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center text-lg transition-colors">+</button>
                             </div>
                         </div>
-                        <input type="text" id="buscarEgresos" placeholder="Buscar egreso..." oninput="(function(v){clearTimeout(window._expT);window._expT=setTimeout(function(){renderExpenseList()},160)})(this.value)"
+                        <input type="text" id="buscarEgresos" placeholder="Buscar egreso..." data-oninput="_mkDebounceExp"
                             class="w-full mb-3 px-3 py-2 bg-gray-50 border-0 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-200">
                         <div id="recurrentesPanel" class="hidden mb-3 bg-amber-50 rounded-xl p-3 border border-amber-200">
                             <p class="text-xs font-semibold text-amber-700 mb-2">Gastos recurrentes</p>
@@ -1025,12 +1023,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Cuentas por Cobrar</h3>
-                            <button type="button" onclick="openReceivableModal()" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" data-action="openReceivableModal" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center text-lg transition-colors">+</button>
                         </div>
 
                         <div id="cxcResumen" class="flex gap-2 mb-3 flex-wrap"></div>
 
-                        <select id="cxcOrden" onchange="renderReceivablesList()" class="w-full mb-3 px-3 py-2 bg-gray-50 border-0 rounded-lg text-xs outline-none">
+                        <select id="cxcOrden" data-change="renderReceivablesList" class="w-full mb-3 px-3 py-2 bg-gray-50 border-0 rounded-lg text-xs outline-none">
                             <option value="dias">Más antiguos primero</option>
                             <option value="monto">Mayor monto primero</option>
                             <option value="cliente">Por cliente</option>
@@ -1046,7 +1044,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Cuentas por Pagar</h3>
-                            <button type="button" onclick="openPayableModal()" class="w-8 h-8 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" data-action="openPayableModal" class="w-8 h-8 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center text-lg transition-colors">+</button>
                         </div>
                         <div class="space-y-2 max-h-80 overflow-y-auto" id="payablesList"></div>
                     </div>
@@ -1059,12 +1057,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="mk-section-header"><div class="mk-sh-icon">&#128150;</div><div class="mk-sh-text"><h2>Clientes</h2><p>Tus clientes m&#225;s especiales</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="manekiExportar('clientes')"
+                        <button type="button" data-action="manekiExportar" data-arg="clientes"
                                 class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                                 style="background: linear-gradient(135deg,#10B981,#059669)">
                             <i class="fas fa-file-excel"></i> Exportar Excel
                         </button>
-                        <button type="button" onclick="openAddClientModal()"
+                        <button type="button" data-action="openAddClientModal"
                                 class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
                             <i class="fas fa-user-plus"></i> Agregar Cliente
                         </button>
@@ -1151,7 +1149,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="mk-section-header"><div class="mk-sh-icon">&#127991;&#65039;</div><div class="mk-sh-text"><h2>Categor&#237;as</h2><p>Organiza tus productos</p></div></div>
                         <p class="text-gray-600 mt-1">Administra las categorías de tus productos</p>
                     </div>
-                    <button type="button" onclick="openAddCategoryModal()"
+                    <button type="button" data-action="openAddCategoryModal"
                             class="btn-primary px-6 py-3 rounded-xl text-white font-semibold">
                         <i class="fas fa-plus mr-2"></i>
                         Nueva Categoría
@@ -1173,7 +1171,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <h2 class="text-2xl font-bold text-gray-800">Análisis de Productos</h2>
                         <p class="text-sm text-gray-400">Descubre qué productos generan más valor</p>
                     </div>
-                    <button type="button" onclick="exportarAnalisisCSV()" data-tip="Descarga un archivo .csv con el ranking completo de productos para abrirlo en Excel"
+                    <button type="button" data-action="exportarAnalisisCSV" data-tip="Descarga un archivo .csv con el ranking completo de productos para abrirlo en Excel"
                             class="px-4 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
                         Exportar CSV
                     </button>
@@ -1183,18 +1181,18 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="bg-white rounded-xl border border-gray-100 p-4 mb-6">
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="flex gap-1.5 flex-wrap">
-                            <button type="button" onclick="setAnalisisPeriodo('mes')" id="btnPeriodoMes" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 text-amber-700 bg-amber-50">Este mes</button>
-                            <button type="button" onclick="setAnalisisPeriodo('30')" id="btnPeriodo30" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">30 días</button>
-                            <button type="button" onclick="setAnalisisPeriodo('90')" id="btnPeriodo90" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">90 días</button>
-                            <button type="button" onclick="setAnalisisPeriodo('todo')" id="btnPeriodoTodo" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">Todo</button>
-                            <button type="button" onclick="setAnalisisPeriodo('custom')" id="btnPeriodoCustom" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">Rango</button>
+                            <button type="button" data-action="setAnalisisPeriodo" data-arg="mes" id="btnPeriodoMes" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-200 text-amber-700 bg-amber-50">Este mes</button>
+                            <button type="button" data-action="setAnalisisPeriodo" data-arg="30" id="btnPeriodo30" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">30 días</button>
+                            <button type="button" data-action="setAnalisisPeriodo" data-arg="90" id="btnPeriodo90" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">90 días</button>
+                            <button type="button" data-action="setAnalisisPeriodo" data-arg="todo" id="btnPeriodoTodo" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">Todo</button>
+                            <button type="button" data-action="setAnalisisPeriodo" data-arg="custom" id="btnPeriodoCustom" class="analisis-periodo-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 bg-white">Rango</button>
                         </div>
                         <div id="analisisCustomFechas" class="hidden flex gap-2 items-center">
-                            <input type="date" id="analisisDesde" onchange="renderAnalisis()" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
+                            <input type="date" id="analisisDesde" data-change="renderAnalisis" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
                             <span class="text-xs text-gray-300">—</span>
-                            <input type="date" id="analisisHasta" onchange="renderAnalisis()" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
+                            <input type="date" id="analisisHasta" data-change="renderAnalisis" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
                         </div>
-                        <select id="analisisOrden" onchange="renderAnalisis()" class="ml-auto px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none cursor-pointer">
+                        <select id="analisisOrden" data-change="renderAnalisis" class="ml-auto px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none cursor-pointer">
                             <option value="unidades">Por unidades</option>
                             <option value="revenue">Por ingresos</option>
                             <option value="margen">Por margen</option>
@@ -1350,7 +1348,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 animate-fade-in">
         <div class="flex justify-between items-center mb-5">
             <h2 class="text-xl font-bold text-gray-800">📊 Resumen del Día</h2>
-            <button type="button" onclick="closeModal('resumenDiaModal')" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            <button type="button" data-action="closeModal" data-arg="resumenDiaModal" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
         </div>
         <div id="resumenDiaContent"></div>
     </div>
@@ -1365,7 +1363,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <h2 class="text-2xl font-bold text-gray-800">Reportes</h2>
                         <p class="text-sm text-gray-400 mt-1">Estadisticas detalladas de tu negocio</p>
                     </div>
-                    <button type="button" onclick="descargarReporteVentas()" class="px-4 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">Descargar CSV</button>
+                    <button type="button" data-action="descargarReporteVentas" class="px-4 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">Descargar CSV</button>
                 </div>
 
                 <!-- Resumen del mes -->
@@ -1406,8 +1404,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex gap-2 mb-3">
-                            <button type="button" onclick="switchCategoryTab('inventario')" id="tabCatInventario" class="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Inventario</button>
-                            <button type="button" onclick="switchCategoryTab('ventas')" id="tabCatVentas" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white text-gray-500 border border-gray-200">Ventas</button>
+                            <button type="button" data-action="switchCategoryTab" data-arg="inventario" id="tabCatInventario" class="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Inventario</button>
+                            <button type="button" data-action="switchCategoryTab" data-arg="ventas" id="tabCatVentas" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white text-gray-500 border border-gray-200">Ventas</button>
                         </div>
                         <h3 class="text-base font-bold text-gray-800 mb-3" id="categoryChartTitle">Inventario por Categoria</h3>
                         <div style="height:280px;position:relative;"><canvas id="categoryChart"></canvas></div>
@@ -1427,7 +1425,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="bg-white rounded-2xl border border-gray-100 p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-gray-800">Top clientes</h3>
-                            <button type="button" onclick="renderTopClientes()" class="text-xs text-gray-400 hover:text-amber-600">&#8634;</button>
+                            <button type="button" data-action="renderTopClientes" class="text-xs text-gray-400 hover:text-amber-600">&#8634;</button>
                         </div>
                         <div id="topClientesWidget" class="space-y-1"></div>
                     </div>
@@ -1453,17 +1451,17 @@ input:focus, select:focus, textarea:focus, button:focus {
                             <h3 class="text-base font-bold text-gray-800">Historial de ventas</h3>
                             <div class="flex items-center gap-2">
                                 <span id="salesHistoryCount" class="text-xs text-gray-400"></span>
-                                <button type="button" onclick="manekiExportar('ventas')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition-colors">Excel</button>
+                                <button type="button" data-action="manekiExportar" data-arg="ventas" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition-colors">Excel</button>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <input type="date" id="reporteFechaDesde" onchange="salesHistoryPage=1; renderSalesHistory()" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
+                            <input type="date" id="reporteFechaDesde" data-change="_mkSalesReset" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
                             <span class="text-xs text-gray-300">&mdash;</span>
-                            <input type="date" id="reporteFechaHasta" onchange="salesHistoryPage=1; renderSalesHistory()" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
-                            <button type="button" onclick="limpiarFiltroFechas()" class="px-2 py-1.5 text-xs text-gray-400 hover:text-gray-600">Limpiar</button>
+                            <input type="date" id="reporteFechaHasta" data-change="_mkSalesReset" class="px-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none">
+                            <button type="button" data-action="limpiarFiltroFechas" class="px-2 py-1.5 text-xs text-gray-400 hover:text-gray-600">Limpiar</button>
                             <span id="reporteRangoTotal" class="text-xs text-gray-400"></span>
                             <div class="ml-auto relative">
-                                <input type="text" id="salesSearchInput" placeholder="Buscar..." oninput="salesHistoryPage=1; renderSalesHistory()" class="pl-3 pr-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none w-48">
+                                <input type="text" id="salesSearchInput" placeholder="Buscar..." data-oninput="_mkSalesReset" class="pl-3 pr-3 py-1.5 bg-gray-50 border-0 rounded-lg text-xs outline-none w-48">
                             </div>
                         </div>
                     </div>
@@ -1483,9 +1481,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                         </table>
                     </div>
                     <div id="salesHistoryPagination" class="flex items-center justify-between px-5 py-3 border-t border-gray-100">
-                        <button type="button" onclick="salesHistoryPage--; renderSalesHistory()" id="btnSalesPrev" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1">&#8249; Anterior</button>
+                        <button type="button" data-action="_mkSalesPagePrev" id="btnSalesPrev" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1">&#8249; Anterior</button>
                         <span id="salesPageInfo" class="text-xs text-gray-400"></span>
-                        <button type="button" onclick="salesHistoryPage++; renderSalesHistory()" id="btnSalesNext" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1">Siguiente &#8250;</button>
+                        <button type="button" data-action="_mkSalesPageNext" id="btnSalesNext" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1">Siguiente &#8250;</button>
                     </div>
                 </div>
 
@@ -1500,23 +1498,23 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <p class="text-gray-500 text-sm mt-1">Lleva control de cuánto has recuperado de cada equipo</p>
             </div>
             <div class="flex gap-2 flex-wrap">
-                <button type="button" onclick="abrirRoiManualModal()" class="px-5 py-3 rounded-xl border-2 border-amber-300 bg-amber-50 text-amber-700 font-semibold text-sm hover:bg-amber-100 transition-colors"><i class="fas fa-hand-holding-usd mr-2"></i>ROI Manual</button>
-                <button type="button" onclick="openEquipoModal()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold"><i class="fas fa-plus mr-2"></i>Agregar Equipo</button>
+                <button type="button" data-action="abrirRoiManualModal" class="px-5 py-3 rounded-xl border-2 border-amber-300 bg-amber-50 text-amber-700 font-semibold text-sm hover:bg-amber-100 transition-colors"><i class="fas fa-hand-holding-usd mr-2"></i>ROI Manual</button>
+                <button type="button" data-action="openEquipoModal" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold"><i class="fas fa-plus mr-2"></i>Agregar Equipo</button>
             </div>
         </div>
 
         <!-- Tabs de navegación -->
         <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
-            <button type="button" id="equipoTab-equipos" onclick="switchEquipoTab('equipos')"
+            <button type="button" id="equipoTab-equipos" data-action="switchEquipoTab" data-arg="equipos"
                 class="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
                 style="background:#C5A572;color:white;">
                 <i class="fas fa-tools mr-1"></i> Equipos
             </button>
-            <button type="button" id="equipoTab-roi" onclick="switchEquipoTab('roi')"
+            <button type="button" id="equipoTab-roi" data-action="switchEquipoTab" data-arg="roi"
                 class="px-5 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500 hover:text-gray-700">
                 <i class="fas fa-chart-bar mr-1"></i> Avance ROI
             </button>
-            <button type="button" id="equipoTab-historial" onclick="switchEquipoTab('historial')"
+            <button type="button" id="equipoTab-historial" data-action="switchEquipoTab" data-arg="historial"
                 class="px-5 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500 hover:text-gray-700">
                 <i class="fas fa-history mr-1"></i> Historial
             </button>
@@ -1533,9 +1531,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
                 <div class="flex items-center gap-2 ml-auto">
-                    <input type="number" id="roiPorcentajeGlobal" min="1" max="100" value="10" class="w-20 border-2 border-gray-200 rounded-xl px-3 py-2 text-center font-bold text-lg focus:border-amber-400 focus:outline-none" onchange="saveRoiConfig()">
+                    <input type="number" id="roiPorcentajeGlobal" min="1" max="100" value="10" class="w-20 border-2 border-gray-200 rounded-xl px-3 py-2 text-center font-bold text-lg focus:border-amber-400 focus:outline-none" data-change="saveRoiConfig">
                     <span class="font-bold text-gray-600 text-lg">%</span>
-                    <button type="button" onclick="saveRoiConfig()" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#C5A572;">Guardar</button>
+                    <button type="button" data-action="saveRoiConfig" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#C5A572;">Guardar</button>
                 </div>
             </div>
 
@@ -1544,7 +1542,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
                     <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
                     <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
-                    <button type="button" onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5A572;">+ Agregar equipo</button>
+                    <button type="button" data-action="openEquipoModal" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5A572;">+ Agregar equipo</button>
                 </div>
             </div>
         </div>
@@ -1554,7 +1552,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold text-gray-700">📊 Avance ROI por Equipo</h3>
-                    <button type="button" onclick="renderGraficaROI()" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold">🔄 Actualizar</button>
+                    <button type="button" data-action="renderGraficaROI" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold">🔄 Actualizar</button>
                 </div>
                 <canvas id="roiBarChart" height="100"></canvas>
             </div>
@@ -1600,34 +1598,34 @@ input:focus, select:focus, textarea:focus, button:focus {
         <!-- Fila 2: acciones / vista -->
         <div class="flex flex-wrap items-center gap-2 mb-6">
             <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
-                <button type="button" id="btnVistaKanban" onclick="setVistaPedidos('kanban')"
+                <button type="button" id="btnVistaKanban" data-action="setVistaPedidos" data-arg="kanban"
                     class="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
                     style="background:#C5A572; color:white;">
                     <i class="fas fa-columns mr-1"></i> Kanban
                 </button>
-                <button type="button" id="btnVistaTabla" onclick="setVistaPedidos('tabla')"
+                <button type="button" id="btnVistaTabla" data-action="setVistaPedidos" data-arg="tabla"
                     class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
                     <i class="fas fa-table mr-1"></i> Tabla
                 </button>
-                <button type="button" id="btnVistaCalendario" onclick="setVistaPedidos('calendario')"
+                <button type="button" id="btnVistaCalendario" data-action="setVistaPedidos" data-arg="calendario"
                     class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
                     <i class="fas fa-calendar-alt mr-1"></i> Calendario
                 </button>
             </div>
-            <button type="button" onclick="toggleListaProduccion()" id="btnListaProduccion"
+            <button type="button" data-action="toggleListaProduccion" id="btnListaProduccion"
                     class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                     style="background: linear-gradient(135deg,#9B7BC4,#C4A8E0)">
                 <i class="fas fa-hammer"></i> Lista de Producción
             </button>
-            <button type="button" onclick="manekiExportar('pedidos')"
+            <button type="button" data-action="manekiExportar" data-arg="pedidos"
                     class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                     style="background: linear-gradient(135deg,#10B981,#059669)">
                 <i class="fas fa-file-excel"></i> Exportar Excel
             </button>
-            <button type="button" onclick="openPedidoModal()" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
+            <button type="button" data-action="openPedidoModal" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
                 <i class="fas fa-plus"></i> Nuevo Pedido
             </button>
-            <button type="button" id="btnKanbanFocus" onclick="toggleKanbanFocus()"
+            <button type="button" id="btnKanbanFocus" data-action="toggleKanbanFocus"
                     class="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-sm text-gray-500 flex items-center gap-1"
                     title="Modo focus (ocultar sidebar)">
                 <i class="fas fa-expand-alt"></i>
@@ -1651,7 +1649,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <p id="alertaCobroSubtitulo" class="text-xs text-red-500"></p>
                     </div>
                 </div>
-                <button type="button" onclick="document.getElementById('alertaCobro').classList.add('hidden')"
+                <button type="button" data-action="_mkHideAlertaCobro"
                     class="text-red-300 hover:text-red-500 text-lg leading-none">✕</button>
             </div>
             <div id="alertaCobroLista" class="flex flex-col gap-2"></div>
@@ -1660,9 +1658,9 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div id="vistaKanban">
             <div class="mb-4 flex flex-wrap gap-2 items-center">
                 <input type="text" id="kanbanBuscar" placeholder="Buscar por folio, cliente o teléfono..."
-                    oninput="(function(){clearTimeout(window._pedT);window._pedT=setTimeout(renderPedidosTable,160)})()"
+                    data-oninput="_mkDebouncePed"
                     class="w-full sm:w-80 px-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2">
-                <button type="button" onclick="verificarEntregasProximas()" title="Ver entregas próximas y vencidas"
+                <button type="button" data-action="verificarEntregasProximas" title="Ver entregas próximas y vencidas"
                     class="px-4 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                     style="background:linear-gradient(135deg,#f59e0b,#d97706)">
                     🔔 Entregas
@@ -1759,24 +1757,24 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div id="vistaTabla" class="hidden">
             <div class="flex flex-wrap gap-2 mb-4">
-                <button type="button" onclick="filterPedidos('todos',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 cursor-pointer" style="border-color:#C5A572;background:#FFF9F0;color:#C5A572;">Todos</button>
-                <button type="button" onclick="filterPedidos('confirmado',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">✅ Confirmado</button>
-                <button type="button" onclick="filterPedidos('pago',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">💰 Pago</button>
-                <button type="button" onclick="filterPedidos('produccion',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🔧 Producción</button>
-                <button type="button" onclick="filterPedidos('envio',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">📦 Envío</button>
-                <button type="button" onclick="filterPedidos('salida',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🚚 Salió</button>
-                <button type="button" onclick="filterPedidos('retirar',this)" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🏪 Retirar</button>
-                <input type="date" id="pedidoFechaDesde" onchange="renderPedidosTable()"
+                <button type="button" data-action="filterPedidos" data-arg="todos" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 cursor-pointer" style="border-color:#C5A572;background:#FFF9F0;color:#C5A572;">Todos</button>
+                <button type="button" data-action="filterPedidos" data-arg="confirmado" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">✅ Confirmado</button>
+                <button type="button" data-action="filterPedidos" data-arg="pago" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">💰 Pago</button>
+                <button type="button" data-action="filterPedidos" data-arg="produccion" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🔧 Producción</button>
+                <button type="button" data-action="filterPedidos" data-arg="envio" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">📦 Envío</button>
+                <button type="button" data-action="filterPedidos" data-arg="salida" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🚚 Salió</button>
+                <button type="button" data-action="filterPedidos" data-arg="retirar" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🏪 Retirar</button>
+                <input type="date" id="pedidoFechaDesde" data-change="renderPedidosTable"
                     class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none"
                     title="Fecha de entrega desde">
-                <input type="date" id="pedidoFechaHasta" onchange="renderPedidosTable()"
+                <input type="date" id="pedidoFechaHasta" data-change="renderPedidosTable"
                     class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none"
                     title="Fecha de entrega hasta">
-                <button type="button" onclick="document.getElementById('pedidoFechaDesde').value='';document.getElementById('pedidoFechaHasta').value='';renderPedidosTable()"
+                <button type="button" data-action="_mkClearPedidoFechas"
                     class="px-3 py-2 rounded-xl text-sm text-gray-500 border border-gray-200 hover:bg-gray-50"
                     title="Limpiar fechas">✕ Fechas</button>
-                <button type="button" onclick="window._guardarFiltroActual?.()" title="Guardar esta combinación de filtros" class="text-xs px-2 py-1 border border-gray-200 rounded text-gray-500 hover:border-amber-300 hover:text-amber-600 transition-colors">💾 Guardar</button>
-                <select id="filtrosGuardadosSelect" onchange="window._cargarFiltroGuardado?.(this.value); this.value=''" class="text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 max-w-[140px]">
+                <button type="button" data-action="_mkGuardarFiltro" title="Guardar esta combinación de filtros" class="text-xs px-2 py-1 border border-gray-200 rounded text-gray-500 hover:border-amber-300 hover:text-amber-600 transition-colors">💾 Guardar</button>
+                <select id="filtrosGuardadosSelect" data-change="_mkCargarFiltro" class="text-xs border border-gray-200 rounded px-2 py-1 text-gray-500 max-w-[140px]">
                   <option value="">📁 Mis filtros...</option>
                 </select>
             </div>
@@ -1800,7 +1798,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <!-- Lista de Producción — drawer lateral fijo -->
-        <div id="listaProduccionPanel" style="display:none;position:fixed;inset:0;z-index:800;" onclick="if(event.target===this)toggleListaProduccion()">
+        <div id="listaProduccionPanel" style="display:none;position:fixed;inset:0;z-index:800;" data-backdrop="toggleListaProduccion">
             <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);" aria-hidden="true"></div>
             <div style="position:absolute;right:0;top:0;bottom:0;width:min(540px,100vw);background:#fff;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.18);">
                 <div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;background:#faf5ff;">
@@ -1809,16 +1807,16 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <p style="font-size:.72rem;color:#9ca3af;margin-top:2px;" id="produccionFechaLabel">Pedidos activos ordenados por fecha de entrega</p>
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button type="button" onclick="imprimirListaProduccion()" style="padding:7px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fas fa-print"></i> Imprimir</button>
-                        <button type="button" onclick="toggleListaProduccion()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#6b7280;cursor:pointer;font-size:1rem;" aria-label="Cerrar">✕</button>
+                        <button type="button" data-action="imprimirListaProduccion" style="padding:7px 14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fas fa-print"></i> Imprimir</button>
+                        <button type="button" data-action="toggleListaProduccion" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#6b7280;cursor:pointer;font-size:1rem;" aria-label="Cerrar">✕</button>
                     </div>
                 </div>
                 <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;display:flex;gap:6px;flex-wrap:wrap;">
-                    <button type="button" onclick="filtrarProduccion('todos',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #9B7BC4;background:#EDE5F8;color:#6B4A8E;cursor:pointer;">Todos</button>
-                    <button type="button" onclick="filtrarProduccion('hoy',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔴 Hoy</button>
-                    <button type="button" onclick="filtrarProduccion('manana',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🟠 Mañana</button>
-                    <button type="button" onclick="filtrarProduccion('semana',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">📅 Semana</button>
-                    <button type="button" onclick="filtrarProduccion('produccion',this)" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔧 Producción</button>
+                    <button type="button" data-action="filtrarProduccion" data-arg="todos" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #9B7BC4;background:#EDE5F8;color:#6B4A8E;cursor:pointer;">Todos</button>
+                    <button type="button" data-action="filtrarProduccion" data-arg="hoy" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔴 Hoy</button>
+                    <button type="button" data-action="filtrarProduccion" data-arg="manana" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🟠 Mañana</button>
+                    <button type="button" data-action="filtrarProduccion" data-arg="semana" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">📅 Semana</button>
+                    <button type="button" data-action="filtrarProduccion" data-arg="produccion" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔧 Producción</button>
                 </div>
                 <div id="listaProduccionContent" style="flex:1;overflow-y:auto;padding:16px 20px;" class="print-area space-y-3"></div>
             </div>
@@ -1828,9 +1826,9 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div id="historialHeader" class="flex justify-between items-center mb-4">
                 <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">📋 Historial de Pedidos Finalizados</h3>
                 <div id="historialControls" class="flex gap-2 items-center">
-                    <input type="text" id="histPedidoBuscar" placeholder="Buscar..." oninput="(function(){clearTimeout(window._hpT);window._hpT=setTimeout(renderHistorialPedidos,160)})()"
+                    <input type="text" id="histPedidoBuscar" placeholder="Buscar..." data-oninput="_mkDebounceHp"
                         class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none w-40">
-                    <select id="histPedidoMes" onchange="renderHistorialPedidos()"
+                    <select id="histPedidoMes" data-change="renderHistorialPedidos"
                         class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none">
                     </select>
                 </div>
@@ -1860,7 +1858,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <label class="block text-sm font-semibold text-gray-700 mb-3">Tema de colores</label>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="themeSelector">
 
-        <button type="button" onclick="selectTheme('dorado')" data-theme="dorado"
+        <button type="button" data-action="selectTheme" data-arg="dorado" data-theme="dorado"
              class="theme-option text-left rounded-xl p-4 border-2 border-yellow-400 bg-yellow-50 transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#C5A572;"></div>
@@ -1870,7 +1868,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-xs font-semibold text-gray-700">✨ Dorado (default)</p>
         </button>
 
-        <button type="button" onclick="selectTheme('rosas')" data-theme="rosas"
+        <button type="button" data-action="selectTheme" data-arg="rosas" data-theme="rosas"
              class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#E91E8C;"></div>
@@ -1880,7 +1878,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-xs font-semibold text-gray-700">🌸 Rosa intenso</p>
         </button>
 
-        <button type="button" onclick="selectTheme('morado')" data-theme="morado"
+        <button type="button" data-action="selectTheme" data-arg="morado" data-theme="morado"
              class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#7C3AED;"></div>
@@ -1890,7 +1888,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-xs font-semibold text-gray-700">💜 Violeta</p>
         </button>
 
-        <button type="button" onclick="selectTheme('verde')" data-theme="verde"
+        <button type="button" data-action="selectTheme" data-arg="verde" data-theme="verde"
              class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#059669;"></div>
@@ -1900,7 +1898,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-xs font-semibold text-gray-700">🌿 Esmeralda</p>
         </button>
 
-        <button type="button" onclick="selectTheme('azul')" data-theme="azul"
+        <button type="button" data-action="selectTheme" data-arg="azul" data-theme="azul"
              class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#2563EB;"></div>
@@ -1910,7 +1908,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-xs font-semibold text-gray-700">🔵 Azul océano</p>
         </button>
 
-        <button type="button" onclick="selectTheme('coral')" data-theme="coral"
+        <button type="button" data-action="selectTheme" data-arg="coral" data-theme="coral"
              class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
                 <div class="w-6 h-6 rounded-full" style="background:#F97316;"></div>
@@ -1939,7 +1937,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
                 <p class="text-sm font-semibold text-gray-700">Logo actual</p>
                 <p class="text-xs text-gray-400 mt-1">PNG o JPG, máx 500kb<br>Recomendado: fondo transparente</p>
-                <button type="button" onclick="removeLogo()"
+                <button type="button" data-action="removeLogo"
                         id="removeLogoBtn"
                         class="hidden text-xs text-red-400 hover:text-red-600 mt-1">
                     <i class="fas fa-trash mr-1"></i>Quitar logo
@@ -1954,7 +1952,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <p class="text-xs text-gray-400 mt-1">PNG recomendado con fondo transparente</p>
             </div>
             <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/webp"
-                   class="hidden" onchange="handleLogoUpload(this)">
+                   class="hidden" data-change="handleLogoUpload" data-pass-el="1">
         </label>
     </div>
 </div>
@@ -1964,7 +1962,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="flex gap-3 items-center">
                         <input type="text" id="configName" value="Maneki Store" required
                                class="flex-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
-                               oninput="updateStorePreview()">
+                               data-oninput="updateStorePreview">
                         <div id="storePreview" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 shrink-0" style="min-width:160px;max-width:220px;">
                             <span id="previewEmoji" class="text-2xl leading-none">🐱</span>
                             <div class="overflow-hidden">
@@ -1980,28 +1978,28 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Slogan / Descripción</label>
                     <input type="text" id="configSlogan" value="Regalos Personalizados"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
-                           oninput="updateStorePreview()">
+                           data-oninput="updateStorePreview">
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono / WhatsApp</label>
                     <input type="tel" id="configPhone" placeholder="Ej: 81 1234 5678"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
-                           autocomplete="tel" oninput="updateStorePreview()">
+                           autocomplete="tel" data-oninput="updateStorePreview">
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Facebook / Messenger</label>
                     <input type="text" id="configFacebook" placeholder="Ej: facebook.com/ManekiStore"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
-                           oninput="updateStorePreview()">
+                           data-oninput="updateStorePreview">
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                     <input type="email" id="configEmail" placeholder="Ej: maneki@correo.com"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
-                           autocomplete="email" oninput="updateStorePreview()">
+                           autocomplete="email" data-oninput="updateStorePreview">
                 </div>
 
                 <div>
@@ -2017,7 +2015,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Mensaje de cierre en tickets</label>
                     <input type="text" id="configFooter" value="¡Gracias por tu compra!"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
-                           oninput="updateStorePreview()">
+                           data-oninput="updateStorePreview">
                 </div>
 
                 <!-- Notificaciones Telegram para stock bajo -->
@@ -2034,7 +2032,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
 
-                <button type="button" onclick="saveStoreConfig()"
+                <button type="button" data-action="saveStoreConfig"
                         class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg">
                     <i class="fas fa-save mr-2"></i>
                     Guardar Configuración
@@ -2046,7 +2044,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <i class="fas fa-question-circle mr-2"></i>Tutorial de bienvenida
                     </p>
                     <p class="text-xs mb-3" style="color:#3b82f6;">¿Quieres ver el tour de introducción otra vez?</p>
-                    <button type="button" onclick="if(confirm('¿Reiniciar el tutorial? La página se recargará.')){localStorage.removeItem('mk_onboarding_done');window.location.reload();}"
+                    <button type="button" data-action="_mkResetTutorial"
                             class="px-4 py-2 rounded-xl text-white text-sm font-bold"
                             style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
                         <i class="fas fa-play-circle mr-2"></i>Ver tutorial de nuevo
@@ -2064,7 +2062,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                   <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
                     <p class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-lock mr-2 -dk" style="color:#C4A8E0;"></i>Cambiar PIN de acceso</p>
-                    <form onsubmit="cambiarPIN(); return false;" autocomplete="on" class="grid grid-cols-3 gap-2">
+                    <form data-prevent-submit data-submit-action="cambiarPIN" autocomplete="on" class="grid grid-cols-3 gap-2">
                       <input type="password" id="pinActual" name="pin-actual" maxlength="8" placeholder="PIN actual"
                              class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none text-center font-mono" autocomplete="current-password">
                       <input type="password" id="pinNuevo" name="pin-nuevo" maxlength="8" placeholder="PIN nuevo"
@@ -2080,7 +2078,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                   <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
                     <p class="text-sm font-bold text-red-700 mb-1"><i class="fas fa-trash mr-2"></i>Borrar todos los datos</p>
                     <p class="text-xs text-red-500 mb-3">Esta acción eliminará todos los productos, ventas, pedidos y clientes. No se puede deshacer. Haz un backup antes.</p>
-                    <button type="button" onclick="confirmarResetTotal()"
+                    <button type="button" data-action="confirmarResetTotal"
                             class="w-full px-4 py-2.5 rounded-xl text-white text-sm font-bold"
                             style="background:linear-gradient(135deg,#ef4444,#dc2626)">
                       <i class="fas fa-trash mr-2"></i>Borrar todos los datos permanentemente
@@ -2113,7 +2111,7 @@ input:focus, select:focus, textarea:focus, button:focus {
               <p class="text-xs text-gray-500">Navega rápido por Maneki Store</p>
             </div>
           </div>
-          <button type="button" onclick="closeModal('atajosModal')" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+          <button type="button" data-action="closeModal" data-arg="atajosModal" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-6 space-y-3">
           <div class="grid grid-cols-2 gap-3 text-sm">
@@ -2155,11 +2153,11 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-fade-in overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
           <h3 class="text-lg font-bold text-gray-800">📅 Resumen Mensual</h3>
-          <button type="button" onclick="closeModal('resumenMensualModal')" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+          <button type="button" data-action="closeModal" data-arg="resumenMensualModal" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-6" id="resumenMensualContent"></div>
         <div class="px-6 pb-5">
-          <button type="button" onclick="closeModal('resumenMensualModal')"
+          <button type="button" data-action="closeModal" data-arg="resumenMensualModal"
                   class="w-full py-3 rounded-xl text-white font-bold"
                   style="background:linear-gradient(135deg,#C5A572,#B8965F)">
             Cerrar
@@ -2173,18 +2171,18 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 animate-fade-in" style="margin-left:auto;margin-right:auto;">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Nuevo Producto</h3>
-                <button type="button" onclick="closeAddProductModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+                <button type="button" data-action="closeAddProductModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
 
-            <form id="addProductForm" onsubmit="return false;" class="space-y-4">
+            <form id="addProductForm" data-prevent-submit class="space-y-4">
                 <div class="flex gap-2 mb-2">
-  <button type="button" id="tipoBtnProducto" onclick="setTipoProducto('producto')"
+  <button type="button" id="tipoBtnProducto" data-action="setTipoProducto" data-arg="producto"
     class="flex-1 py-2 rounded-xl text-sm font-semibold border-2 border-amber-400 bg-amber-50 text-amber-800">
     📦 Producto Terminado
   </button>
-  <button type="button" id="tipoBtnMateria" onclick="setTipoProducto('materia')"
+  <button type="button" id="tipoBtnMateria" data-action="setTipoProducto" data-arg="materia"
     class="flex-1 py-2 rounded-xl text-sm font-semibold border-2 border-gray-200 text-gray-500">
     🏭 Materia Prima
   </button>
@@ -2208,15 +2206,15 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">🏷️ Tags / Etiquetas</label>
           <div class="flex flex-wrap gap-2 mb-2" id="tagsPredefinidos">
-            <button type="button" onclick="toggleTagPredefinido('Oferta')" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-yellow-100">Oferta</button>
-            <button type="button" onclick="toggleTagPredefinido('Nuevo')" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-blue-100">Nuevo</button>
-            <button type="button" onclick="toggleTagPredefinido('Destacado')" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600">Destacado</button>
-            <button type="button" onclick="toggleTagPredefinido('Agotado')" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-red-100">Agotado</button>
-            <button type="button" onclick="toggleTagPredefinido('Favorito')" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-pink-100">Favorito</button>
+            <button type="button" data-action="toggleTagPredefinido" data-arg="Oferta" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-yellow-100">Oferta</button>
+            <button type="button" data-action="toggleTagPredefinido" data-arg="Nuevo" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-blue-100">Nuevo</button>
+            <button type="button" data-action="toggleTagPredefinido" data-arg="Destacado" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600">Destacado</button>
+            <button type="button" data-action="toggleTagPredefinido" data-arg="Agotado" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-red-100">Agotado</button>
+            <button type="button" data-action="toggleTagPredefinido" data-arg="Favorito" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-pink-100">Favorito</button>
           </div>
           <div class="flex gap-2">
             <input type="text" id="tagCustomInput" placeholder="Agregar tag personalizado..." class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
-            <button type="button" onclick="agregarTagCustom()" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">+ Agregar</button>
+            <button type="button" data-action="agregarTagCustom" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">+ Agregar</button>
           </div>
           <div class="flex flex-wrap gap-1 mt-2" id="tagsSeleccionados"></div>
           <input type="hidden" id="productTags">
@@ -2243,7 +2241,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <input type="text" id="variantValue" placeholder="Ej: M, Rojo"
                                class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none">
                     </div>
-                    <button type="button" onclick="addVariant()"
+                    <button type="button" data-action="addVariant"
                             class="text-sm font-semibold" style="color: #E8B84B !important;">
                         <i class="fas fa-plus mr-1"></i> Agregar Variante
                     </button>
@@ -2259,13 +2257,13 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">💡 Margen de ganancia sugerido</label>
                     <div class="flex gap-2 flex-wrap">
-                        <button type="button" onclick="aplicarMargen(30)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">30%</button>
-                        <button type="button" onclick="aplicarMargen(50)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">50%</button>
-                        <button type="button" onclick="aplicarMargen(100)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">100%</button>
-                        <button type="button" onclick="aplicarMargen(150)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">150%</button>
+                        <button type="button" data-action="aplicarMargen" data-arg="30" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">30%</button>
+                        <button type="button" data-action="aplicarMargen" data-arg="50" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">50%</button>
+                        <button type="button" data-action="aplicarMargen" data-arg="100" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">100%</button>
+                        <button type="button" data-action="aplicarMargen" data-arg="150" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">150%</button>
                         <input type="number" id="margenCustom" placeholder="%" min="1" max="999"
                             class="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-xs outline-none">
-                        <button type="button" onclick="aplicarMargen(parseInt(document.getElementById('margenCustom').value))"
+                        <button type="button" data-action="_mkApplyCustomMargin"
                             class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200">Aplicar</button>
                     </div>
                     <p class="text-xs text-gray-400 mt-1" id="precioSugeridoLabel"></p>
@@ -2303,7 +2301,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <div>
           <div class="flex items-center gap-2 mb-2">
-            <input type="checkbox" id="productIsKit" onchange="toggleKitSection()">
+            <input type="checkbox" id="productIsKit" data-change="toggleKitSection">
             <label for="productIsKit" class="text-sm font-semibold text-gray-700">📦 Este producto es un Kit</label>
           </div>
           <div id="kitSection" class="hidden space-y-2 bg-gray-50 rounded-xl p-3">
@@ -2313,7 +2311,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <option value="">-- Seleccionar componente --</option>
               </select>
               <input type="number" id="kitComponentCantidad" value="1" min="1" class="w-16 px-2 py-2 border border-gray-200 rounded-xl text-sm">
-              <button type="button" onclick="agregarComponenteKit()" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">+ Agregar</button>
+              <button type="button" data-action="agregarComponenteKit" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">+ Agregar</button>
             </div>
             <div id="kitComponentesList" class="space-y-1"></div>
             <input type="hidden" id="productKitComponentes">
@@ -2332,12 +2330,12 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800" id="clientModalTitle">Nuevo Cliente</h3>
-            <button type="button" onclick="closeAddClientModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+            <button type="button" data-action="closeAddClientModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
-        <form id="addClientForm" class="space-y-4" onsubmit="return false;">
+        <form id="addClientForm" class="space-y-4" data-prevent-submit>
             <input type="hidden" id="editClientId">
 
             <div>
@@ -2379,12 +2377,12 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de cliente</label>
                 <div class="grid grid-cols-2 gap-3">
-                    <button type="button" onclick="selectClientType('regular')" id="btnClientRegular"
+                    <button type="button" data-action="selectClientType" data-arg="regular" id="btnClientRegular"
                             class="client-type-btn py-3 rounded-xl border-2 text-sm font-semibold transition-all"
                             style="border-color: #C5A572; background: #FFF9F0; color: #C5A572;">
                         👤 Regular
                     </button>
-                    <button type="button" onclick="selectClientType('vip')" id="btnClientVip"
+                    <button type="button" data-action="selectClientType" data-arg="vip" id="btnClientVip"
                             class="client-type-btn py-3 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-500 transition-all">
                         ⭐ VIP
                     </button>
@@ -2410,7 +2408,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800">✏️ Editar Categoría</h3>
-            <button type="button" onclick="closeEditCategoryModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+            <button type="button" data-action="closeEditCategoryModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -2434,27 +2432,27 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <input type="hidden" id="editCategoryEmoji" value="📦">
                 <input type="text" id="editEmojiSearch" placeholder="Buscar emoji..."
                        class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none text-sm mb-3"
-                       oninput="filterEditEmojis(this.value)">
+                       data-oninput="filterEditEmojis" data-pass-el="1">
                 <div id="editEmojiGrid" class="border border-gray-200 rounded-xl p-3 max-h-48 overflow-y-auto"></div>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">🎨 Color</label>
                 <div class="flex gap-2 flex-wrap" id="editColorPicker">
-                    <button type="button" onclick="selectEditColor('#C5A572')" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#C5A572" data-color="#C5A572"></button>
-                    <button type="button" onclick="selectEditColor('#10B981')" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></button>
-                    <button type="button" onclick="selectEditColor('#3B82F6')" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></button>
-                    <button type="button" onclick="selectEditColor('#8B5CF6')" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></button>
-                    <button type="button" onclick="selectEditColor('#EF4444')" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EF4444" data-color="#EF4444"></button>
-                    <button type="button" onclick="selectEditColor('#F59E0B')" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#F59E0B" data-color="#F59E0B"></button>
-                    <button type="button" onclick="selectEditColor('#EC4899')" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></button>
-                    <button type="button" onclick="selectEditColor('#06B6D4')" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#06B6D4" data-color="#06B6D4"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#C5A572" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#C5A572" data-color="#C5A572"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#10B981" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#3B82F6" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#8B5CF6" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#EF4444" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EF4444" data-color="#EF4444"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#F59E0B" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#F59E0B" data-color="#F59E0B"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#EC4899" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#06B6D4" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#06B6D4" data-color="#06B6D4"></button>
                 </div>
                 <input type="hidden" id="editCategoryColor" value="#C5A572">
             </div>
         </div>
         <div class="flex gap-3 mt-6">
-            <button type="button" onclick="closeEditCategoryModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" onclick="saveEditCategory()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Guardar cambios</button>
+            <button type="button" data-action="closeEditCategoryModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="button" data-action="saveEditCategory" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Guardar cambios</button>
         </div>
     </div>
 </div>
@@ -2463,12 +2461,12 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Nueva Categoría</h3>
-                <button type="button" onclick="closeAddCategoryModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+                <button type="button" data-action="closeAddCategoryModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
 
-            <form id="addCategoryForm" class="space-y-4" onsubmit="return false;">
+            <form id="addCategoryForm" class="space-y-4" data-prevent-submit>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la Categoría</label>
                     <input type="text" id="categoryName" required
@@ -2490,7 +2488,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
     <input type="text" id="emojiSearch" placeholder="Buscar emoji... (ej: regalo, caja, ropa)"
            class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none text-sm mb-3"
-           oninput="filterEmojis(this.value)">
+           data-oninput="filterEmojis" data-pass-el="1">
 
     <div id="emojiGrid" class="border border-gray-200 rounded-xl p-3 max-h-64 overflow-y-auto">
 
@@ -2500,14 +2498,14 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">🎨 Color de la categoría</label>
                     <div class="flex gap-2 flex-wrap" id="colorPicker">
-                        <button type="button" onclick="selectCategoryColor('#C5A572')" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#C5A572" data-color="#C5A572"></button>
-                        <button type="button" onclick="selectCategoryColor('#10B981')" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></button>
-                        <button type="button" onclick="selectCategoryColor('#3B82F6')" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></button>
-                        <button type="button" onclick="selectCategoryColor('#8B5CF6')" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></button>
-                        <button type="button" onclick="selectCategoryColor('#EF4444')" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EF4444" data-color="#EF4444"></button>
-                        <button type="button" onclick="selectCategoryColor('#F59E0B')" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#F59E0B" data-color="#F59E0B"></button>
-                        <button type="button" onclick="selectCategoryColor('#EC4899')" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></button>
-                        <button type="button" onclick="selectCategoryColor('#06B6D4')" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#06B6D4" data-color="#06B6D4"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#C5A572" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#C5A572" data-color="#C5A572"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#10B981" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#3B82F6" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#8B5CF6" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#EF4444" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EF4444" data-color="#EF4444"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#F59E0B" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#F59E0B" data-color="#F59E0B"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#EC4899" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#06B6D4" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#06B6D4" data-color="#06B6D4"></button>
                     </div>
                     <input type="hidden" id="categoryColor" value="#C5A572">
                 </div>
@@ -2534,7 +2532,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-sm text-gray-500" id="historyClientEmail">—</p>
                 </div>
             </div>
-            <button type="button" onclick="closeClientHistoryModal()" class="text-gray-400 hover:text-gray-600 mt-1" aria-label="Cerrar">
+            <button type="button" data-action="closeClientHistoryModal" class="text-gray-400 hover:text-gray-600 mt-1" aria-label="Cerrar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -2576,12 +2574,12 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="flex border-b border-gray-100 px-6">
-            <button type="button" onclick="switchHistoryTab('ventas')" id="tabVentas"
+            <button type="button" data-action="switchHistoryTab" data-arg="ventas" id="tabVentas"
                 class="history-tab px-4 py-3 text-sm font-semibold border-b-2 mr-4 transition-all"
                 style="border-color: #C5A572; color: #C5A572;">
                 <i class="fas fa-receipt mr-1"></i> Ventas POS
             </button>
-            <button type="button" onclick="switchHistoryTab('pedidos')" id="tabPedidos"
+            <button type="button" data-action="switchHistoryTab" data-arg="pedidos" id="tabPedidos"
                 class="history-tab px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 mr-4 transition-all">
                 <i class="fas fa-clipboard-list mr-1"></i> Pedidos
             </button>
@@ -2612,7 +2610,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <h3 class="text-xl font-bold text-gray-800">Cancelar Pedido</h3>
                 <p class="text-sm text-gray-500 mt-1" id="cancelPedidoFolio">—</p>
             </div>
-            <button type="button" onclick="closeCancelPedidoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+            <button type="button" data-action="closeCancelPedidoModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -2637,11 +2635,11 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="flex gap-3">
-            <button type="button" onclick="closeCancelPedidoModal()"
+            <button type="button" data-action="closeCancelPedidoModal"
                     class="flex-1 py-3 rounded-xl font-semibold border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">
                 Volver
             </button>
-            <button type="button" onclick="confirmarCancelPedido()"
+            <button type="button" data-action="confirmarCancelPedido"
                     class="flex-1 py-3 rounded-xl font-semibold text-white btn-danger">
                 <i class="fas fa-times-circle mr-2"></i>
                 Cancelar Pedido
@@ -2654,7 +2652,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800" id="transactionModalTitle">Nueva Transacción</h3>
-                <button type="button" onclick="closeTransactionModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+                <button type="button" data-action="closeTransactionModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -2697,7 +2695,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeTransactionModal()"
+                    <button type="button" data-action="closeTransactionModal"
                         class="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold text-sm">
                         Cancelar
                     </button>
@@ -2715,7 +2713,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-gray-800">💰 Registrar Pago</h3>
-            <button type="button" onclick="cerrarAbonoPedido()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" data-action="cerrarAbonoPedido" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div id="abonoPedidoInfo" class="bg-gray-50 rounded-xl p-4 mb-4 space-y-2 text-sm"></div>
         <input type="hidden" id="abonoPedidoId">
@@ -2727,16 +2725,16 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Método de Pago</label>
                 <div class="grid grid-cols-3 gap-2">
-                    <button type="button" onclick="selectAbonoPedidoMethod(this,'cash')" class="abono-ped-btn border-2 rounded-xl py-3 flex flex-col items-center" style="border-color:#C5A572;background:#FFF9F0;"><i class="fas fa-money-bill-wave text-green-600 text-xl mb-1"></i><p class="text-xs font-semibold">Efectivo</p></button>
-                    <button type="button" onclick="selectAbonoPedidoMethod(this,'card')" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-credit-card text-blue-600 text-xl mb-1"></i><p class="text-xs font-semibold">Tarjeta</p></button>
-                    <button type="button" onclick="selectAbonoPedidoMethod(this,'transfer')" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-exchange-alt  text-xl mb-1" style="color:#C4A8E0;"></i><p class="text-xs font-semibold">Transfer.</p></button>
+                    <button type="button" data-action="selectAbonoPedidoMethod" data-arg="cash" data-pass-el="before" class="abono-ped-btn border-2 rounded-xl py-3 flex flex-col items-center" style="border-color:#C5A572;background:#FFF9F0;"><i class="fas fa-money-bill-wave text-green-600 text-xl mb-1"></i><p class="text-xs font-semibold">Efectivo</p></button>
+                    <button type="button" data-action="selectAbonoPedidoMethod" data-arg="card" data-pass-el="before" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-credit-card text-blue-600 text-xl mb-1"></i><p class="text-xs font-semibold">Tarjeta</p></button>
+                    <button type="button" data-action="selectAbonoPedidoMethod" data-arg="transfer" data-pass-el="before" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-exchange-alt  text-xl mb-1" style="color:#C4A8E0;"></i><p class="text-xs font-semibold">Transfer.</p></button>
                 </div>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Nota (opcional)</label>
                 <input type="text" id="abonoPedidoNota" placeholder="Ej: segunda parcialidad" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none">
             </div>
-            <button type="button" onclick="confirmarAbonoPedido()" class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg"><i class="fas fa-check mr-2"></i>Confirmar Pago</button>
+            <button type="button" data-action="confirmarAbonoPedido" class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg"><i class="fas fa-check mr-2"></i>Confirmar Pago</button>
         </div>
     </div>
 </div>
@@ -2745,7 +2743,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 animate-fade-in flex flex-col" style="margin:auto;">
         <div class="flex justify-between items-center px-8 pt-8 pb-4 flex-shrink-0">
             <h3 class="text-2xl font-bold text-gray-800" id="pedidoModalTitle">Nuevo Pedido</h3>
-            <button type="button" onclick="closePedidoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" data-action="closePedidoModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="overflow-y-auto flex-1 px-8">
         <!-- UX-3: Barra de pasos visual -->
@@ -2787,7 +2785,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
   <div class="relative mb-2">
     <input type="text" id="pedidoBuscadorProducto" placeholder="🔍 Buscar producto..."
-      oninput="filtrarProductosPedido()"
+      data-oninput="filtrarProductosPedido"
       class="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none text-sm">
   </div>
 
@@ -2800,7 +2798,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div id="pedidoProductoSelNombre" class="font-semibold text-sm text-gray-800"></div>
         <div id="pedidoProductoSelPrecio" class="text-xs text-amber-700"></div>
       </div>
-      <button type="button" onclick="limpiarSeleccionProductoPedido()" class="text-gray-400 hover:text-red-400 text-lg">✕</button>
+      <button type="button" data-action="limpiarSeleccionProductoPedido" class="text-gray-400 hover:text-red-400 text-lg">✕</button>
     </div>
 
     <div id="pedidoVarianteRow" class="hidden mt-2">
@@ -2810,11 +2808,11 @@ input:focus, select:focus, textarea:focus, button:focus {
 
     <div class="flex gap-2 mt-2">
       <input type="number" id="pedidoProductoCantidad" placeholder="Cant." min="1" value="1"
-        oninput="_pvCantidadChange(this.value)"
+        data-oninput="_pvCantidadChange" data-pass-el="1"
         class="w-20 px-3 py-2 border border-gray-200 rounded-xl outline-none text-sm">
       <input type="number" id="pedidoProductoPrecio" placeholder="Precio $" step="0.01" min="0"
         class="w-28 px-3 py-2 border border-amber-300 rounded-xl outline-none text-sm font-semibold text-amber-800" style="background:#fffbeb">
-      <button type="button" onclick="agregarProductoPedido()"
+      <button type="button" data-action="agregarProductoPedido"
         class="flex-1 py-2 text-white rounded-xl font-semibold text-sm" style="background:#C5A572">
         + Agregar al pedido
       </button>
@@ -2832,7 +2830,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
     <input type="number" id="pedidoPrecioLibre" step="0.01" min="0" value="" placeholder="0.00"
            class="w-28 px-3 py-2 border-2 border-amber-400 rounded-lg outline-none text-sm font-bold text-gray-800 bg-white text-right"
-           oninput="calcPedidoTotal()">
+           data-oninput="calcPedidoTotal">
   </div>
 
   <!-- Sección de Empaques -->
@@ -2847,7 +2845,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       </select>
       <input type="number" id="pedidoEmpaquesCantidad" value="1" min="1"
              class="w-16 px-2 py-2 border border-blue-200 rounded-lg text-sm outline-none text-center">
-      <button type="button" onclick="agregarEmpaquePedido()"
+      <button type="button" data-action="agregarEmpaquePedido"
               class="px-3 py-2 rounded-lg text-sm font-bold text-white"
               style="background:#3b82f6;">+ Agregar</button>
     </div>
@@ -2860,7 +2858,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="bg-gray-50 rounded-xl p-4 space-y-3">
                 <div class="flex justify-between text-sm"><span class="text-gray-600">Total del pedido:</span><span class="font-bold text-lg" id="pedidoTotalDisplay">$0.00</span></div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Anticipo Recibido</label><input type="number" id="pedidoAnticipo" step="0.01" min="0" value="0" class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none" oninput="calcPedidoTotal()"></div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Anticipo Recibido</label><input type="number" id="pedidoAnticipo" step="0.01" min="0" value="0" class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none" data-oninput="calcPedidoTotal"></div>
                     <div><label class="block text-xs font-semibold text-gray-700 mb-1">Saldo Pendiente</label><input type="text" id="pedidoSaldo" readonly class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl font-bold text-red-600"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -2879,11 +2877,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-1">Notas adicionales</label>
               <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
-                <button type="button" onclick="pedidoInsertarTemplate('🎁 Como regalo')" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">🎁 Regalo</button>
-                <button type="button" onclick="pedidoInsertarTemplate('💌 Incluir tarjeta con mensaje')" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">💌 Con tarjeta</button>
-                <button type="button" onclick="pedidoInsertarTemplate('⚡ URGENTE')" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #fca5a5;background:#fef2f2;cursor:pointer;color:#b91c1c;">⚡ Urgente</button>
-                <button type="button" onclick="pedidoInsertarTemplate('📱 Coordinar entrega por WhatsApp')" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">📱 WhatsApp</button>
-                <button type="button" onclick="pedidoInsertarTemplate('🏪 Recoger en tienda')" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">🏪 Recoger tienda</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="🎁 Como regalo" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">🎁 Regalo</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="💌 Incluir tarjeta con mensaje" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">💌 Con tarjeta</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="⚡ URGENTE" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #fca5a5;background:#fef2f2;cursor:pointer;color:#b91c1c;">⚡ Urgente</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="📱 Coordinar entrega por WhatsApp" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">📱 WhatsApp</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="🏪 Recoger en tienda" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">🏪 Recoger tienda</button>
               </div>
               <textarea id="pedidoNotas" rows="2" placeholder="Instrucciones especiales, colores, tamaños, etc." class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none"></textarea>
             </div>
@@ -2891,9 +2889,9 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Prioridad</label>
                 <div class="flex gap-2">
-                    <button type="button" onclick="setPedidoPrioridad('alta',this)" id="btnPrioAlta" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-gray-200 text-gray-500 hover:border-red-300">🔺 Alta</button>
-                    <button type="button" onclick="setPedidoPrioridad('normal',this)" id="btnPrioNormal" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-amber-300 bg-amber-50 text-amber-700">Normal</button>
-                    <button type="button" onclick="setPedidoPrioridad('baja',this)" id="btnPrioBaja" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-gray-200 text-gray-500 hover:border-gray-300">🔻 Baja</button>
+                    <button type="button" data-action="setPedidoPrioridad" data-arg="alta" data-pass-el="after" id="btnPrioAlta" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-gray-200 text-gray-500 hover:border-red-300">🔺 Alta</button>
+                    <button type="button" data-action="setPedidoPrioridad" data-arg="normal" data-pass-el="after" id="btnPrioNormal" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-amber-300 bg-amber-50 text-amber-700">Normal</button>
+                    <button type="button" data-action="setPedidoPrioridad" data-arg="baja" data-pass-el="after" id="btnPrioBaja" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-gray-200 text-gray-500 hover:border-gray-300">🔻 Baja</button>
                 </div>
                 <input type="hidden" id="pedidoPrioridad" value="normal">
             </div>
@@ -2901,7 +2899,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="px-8 py-4 border-t border-gray-100 flex-shrink-0">
-            <button type="button" onclick="document.getElementById('pedidoForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))" class="w-full py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2" style="background:#C5A572;">
+            <button type="button" data-action="_mkSubmitPedidoForm" class="w-full py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2" style="background:#C5A572;">
                 <i class="fas fa-save"></i> <span id="pedidoSubmitBtn">Guardar Pedido</span>
             </button>
         </div>
@@ -2913,11 +2911,11 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 animate-fade-in">
         <div class="flex justify-between items-center mb-1">
             <h3 class="text-lg font-bold text-gray-800">&#128247; Fotos de referencia</h3>
-            <button type="button" onclick="closeModal('fotoReferenciaModal')" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-lg"></i></button>
+            <button type="button" data-action="closeModal" data-arg="fotoReferenciaModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-lg"></i></button>
         </div>
         <p id="fotoRefFolio" class="text-xs font-bold mb-4" style="color:#C5A572;">—</p>
         <div id="fotoRefContent"></div>
-        <input type="file" id="fotoRefInput" accept="image/*" multiple class="hidden" onchange="subirFotoReferencia()">
+        <input type="file" id="fotoRefInput" accept="image/*" multiple class="hidden" data-change="subirFotoReferencia">
     </div>
 </div>
 
@@ -2926,7 +2924,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in" style="max-height:85vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-2">
             <h3 class="text-xl font-bold text-gray-800">🛒 Lista de compras</h3>
-            <button type="button" onclick="closeModal('listaComprasModal')" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" data-action="closeModal" data-arg="listaComprasModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <p class="text-xs text-gray-400 mb-5">Materiales necesarios para completar los pedidos activos (no iniciados aún).</p>
         <div id="listaComprasContent"></div>
@@ -2937,19 +2935,19 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800">Cambiar Estado del Pedido</h3>
-            <button type="button" onclick="closePedidoStatusModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" data-action="closePedidoStatusModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <input type="hidden" id="pedidoStatusId">
         <p class="text-sm text-gray-500 mb-4">Pedido: <span id="pedidoStatusFolio" class="font-bold" style="color:#C5A572;"></span></p>
         <div class="space-y-2">
-            <button type="button" onclick="setPedidoStatus('confirmado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-yellow-300 cursor-pointer text-left bg-white"><span class="text-2xl">✅</span><p class="font-semibold">Confirmado</p></button>
-            <button type="button" onclick="setPedidoStatus('pago')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-green-300 cursor-pointer text-left bg-white"><span class="text-2xl">💰</span><p class="font-semibold">Pago</p></button>
-            <button type="button" onclick="setPedidoStatus('produccion')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-blue-300 cursor-pointer text-left bg-white"><span class="text-2xl">🔧</span><p class="font-semibold">En Producción</p></button>
-            <button type="button" onclick="setPedidoStatus('envio')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 cursor-pointer text-left bg-white"><span class="text-2xl">📦</span><p class="font-semibold">En Envío</p></button>
-            <button type="button" onclick="setPedidoStatus('salida')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-orange-300 cursor-pointer text-left bg-white"><span class="text-2xl">🚚</span><p class="font-semibold">Salió a Entregar</p></button>
-            <button type="button" onclick="setPedidoStatus('retirar')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-teal-300 cursor-pointer text-left bg-white"><span class="text-2xl">🏪</span><p class="font-semibold">Listo para Retirar</p></button>
-            <button type="button" onclick="setPedidoStatus('finalizado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-emerald-300 bg-emerald-50 cursor-pointer text-left"><span class="text-2xl">🎉</span><p class="font-semibold text-emerald-700">Finalizado → pasa a Historial</p></button>
-            <button type="button" onclick="setPedidoStatus('cancelado')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-red-200 bg-red-50 cursor-pointer text-left"><span class="text-2xl">❌</span><p class="font-semibold text-red-700">Cancelar pedido</p></button>
+            <button type="button" data-action="setPedidoStatus" data-arg="confirmado" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-yellow-300 cursor-pointer text-left bg-white"><span class="text-2xl">✅</span><p class="font-semibold">Confirmado</p></button>
+            <button type="button" data-action="setPedidoStatus" data-arg="pago" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-green-300 cursor-pointer text-left bg-white"><span class="text-2xl">💰</span><p class="font-semibold">Pago</p></button>
+            <button type="button" data-action="setPedidoStatus" data-arg="produccion" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-blue-300 cursor-pointer text-left bg-white"><span class="text-2xl">🔧</span><p class="font-semibold">En Producción</p></button>
+            <button type="button" data-action="setPedidoStatus" data-arg="envio" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 cursor-pointer text-left bg-white"><span class="text-2xl">📦</span><p class="font-semibold">En Envío</p></button>
+            <button type="button" data-action="setPedidoStatus" data-arg="salida" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-orange-300 cursor-pointer text-left bg-white"><span class="text-2xl">🚚</span><p class="font-semibold">Salió a Entregar</p></button>
+            <button type="button" data-action="setPedidoStatus" data-arg="retirar" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-teal-300 cursor-pointer text-left bg-white"><span class="text-2xl">🏪</span><p class="font-semibold">Listo para Retirar</p></button>
+            <button type="button" data-action="setPedidoStatus" data-arg="finalizado" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-emerald-300 bg-emerald-50 cursor-pointer text-left"><span class="text-2xl">🎉</span><p class="font-semibold text-emerald-700">Finalizado → pasa a Historial</p></button>
+            <button type="button" data-action="setPedidoStatus" data-arg="cancelado" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-red-200 bg-red-50 cursor-pointer text-left"><span class="text-2xl">❌</span><p class="font-semibold text-red-700">Cancelar pedido</p></button>
         </div>
     </div>
 </div>
@@ -2967,7 +2965,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-sm text-gray-400" id="detalleSaleTipo"></p>
                 </div>
             </div>
-            <button type="button" onclick="cerrarDetalleSale()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">×</button>
+            <button type="button" data-action="cerrarDetalleSale" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">×</button>
         </div>
 
         <div class="p-6 space-y-5">
@@ -3056,7 +3054,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-xs text-green-100" id="waClienteNombre">—</p>
                 </div>
             </div>
-            <button type="button" onclick="cerrarWhatsAppModal()" class="text-white opacity-70 hover:opacity-100 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            <button type="button" data-action="cerrarWhatsAppModal" class="text-white opacity-70 hover:opacity-100 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
 
         <div class="p-6">
@@ -3073,36 +3071,36 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="mb-3">
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Plantilla</label>
                 <div class="flex gap-2 flex-wrap">
-                    <button type="button" onclick="aplicarPlantillaWA('confirmacion')" id="btnTplConfirmacion"
+                    <button type="button" data-action="aplicarPlantillaWA" data-arg="confirmacion" id="btnTplConfirmacion"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
                         style="border-color:#25D366;background:#f0fdf4;color:#16a34a;">
                         ✅ Confirmación
                     </button>
-                    <button type="button" onclick="aplicarPlantillaWA('recordatorio')" id="btnTplRecordatorio"
+                    <button type="button" data-action="aplicarPlantillaWA" data-arg="recordatorio" id="btnTplRecordatorio"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-yellow-400">
                         🔔 Recordatorio
                     </button>
-                    <button type="button" onclick="aplicarPlantillaWA('entrega')" id="btnTplEntrega"
+                    <button type="button" data-action="aplicarPlantillaWA" data-arg="entrega" id="btnTplEntrega"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-blue-400">
                         📦 Listo para entregar
                     </button>
-                    <button type="button" onclick="aplicarPlantillaWA('cobro')" id="btnTplCobro"
+                    <button type="button" data-action="aplicarPlantillaWA" data-arg="cobro" id="btnTplCobro"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-red-400">
                         💳 Cobro pendiente
                     </button>
-                    <button type="button" onclick="aplicarPlantillaWA('produccion')" id="btnTplProduccion"
+                    <button type="button" data-action="aplicarPlantillaWA" data-arg="produccion" id="btnTplProduccion"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-orange-400">
                         🔨 En producción
                     </button>
-                    <button type="button" onclick="aplicarPlantillaWA('pagoRecibido')" id="btnTplPagoRecibido"
+                    <button type="button" data-action="aplicarPlantillaWA" data-arg="pagoRecibido" id="btnTplPagoRecibido"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-green-400">
                         💵 Pago recibido
                     </button>
-                    <button type="button" onclick="aplicarPlantillaWA('seguimiento')" id="btnTplSeguimiento"
+                    <button type="button" data-action="aplicarPlantillaWA" data-arg="seguimiento" id="btnTplSeguimiento"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-purple-400">
                         📊 Seguimiento
                     </button>
-                    <button type="button" onclick="aplicarPlantillaWA('gracias')" id="btnTplGracias"
+                    <button type="button" data-action="aplicarPlantillaWA" data-arg="gracias" id="btnTplGracias"
                         class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-600 bg-white transition-all hover:border-pink-400">
                         🙏 Agradecimiento
                     </button>
@@ -3112,7 +3110,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="mb-4">
                 <div class="flex justify-between items-center mb-1">
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Mensaje <span class="normal-case font-normal text-gray-400">(editable)</span></label>
-                    <button type="button" onclick="copiarMensajeWA()" id="btnCopiarWA"
+                    <button type="button" data-action="copiarMensajeWA" id="btnCopiarWA"
                         class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">
                         <i class="fas fa-copy"></i> Copiar
                     </button>
@@ -3123,11 +3121,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
 
             <div class="flex gap-3">
-                <button type="button" onclick="cerrarWhatsAppModal()"
+                <button type="button" data-action="cerrarWhatsAppModal"
                     class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all">
                     Cancelar
                 </button>
-                <button type="button" onclick="enviarWhatsApp()"
+                <button type="button" data-action="enviarWhatsApp"
                     class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90"
                     style="background:#25D366;">
                     <i class="fab fa-whatsapp"></i> Abrir en WhatsApp
@@ -3137,7 +3135,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="backupModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this) cerrarBackupModal()">
+<div id="backupModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;" data-backdrop="cerrarBackupModal">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 animate-fade-in overflow-hidden">
 
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between" style="background:linear-gradient(135deg,#FFF9F0,#FFF);">
@@ -3150,7 +3148,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-xs text-gray-500">Exporta o importa todos los datos de la tienda</p>
                 </div>
             </div>
-            <button type="button" onclick="cerrarBackupModal()" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            <button type="button" data-action="cerrarBackupModal" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
 
         <div class="p-6 space-y-5">
@@ -3182,10 +3180,10 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="bg-blue-50 rounded-lg p-2 mb-3 text-xs text-blue-700 text-center border border-blue-100">
                     💾 <span id="bkAutoBackup">—</span> &nbsp;·&nbsp; Auto-backup cada 2 horas
                 </div>
-                <button type="button" onclick="exportarBackupJSON()" class="w-full py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2" style="background:#4CAF50;">
+                <button type="button" data-action="exportarBackupJSON" class="w-full py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2" style="background:#4CAF50;">
                     <i class="fas fa-download"></i> Descargar Backup JSON
                 </button>
-                <button type="button" onclick="exportarBackupComprimido()" class="w-full py-2 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 mt-2" style="background:#7C3AED;">
+                <button type="button" data-action="exportarBackupComprimido" class="w-full py-2 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 mt-2" style="background:#7C3AED;">
                     📦 Backup Comprimido (.gz) — más ligero
                 </button>
             </div>
@@ -3201,7 +3199,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
                 <div id="dropZone"
-                    onclick="document.getElementById('backupFileInput').click()"
+                    data-action="_mkClickInput" data-arg="backupFileInput"
                     ondragover="event.preventDefault(); this.style.borderColor='#C5A572';"
                     ondragleave="this.style.borderColor='#BFDBFE';"
                     ondrop="handleBackupDrop(event)"
@@ -3212,8 +3210,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-xs text-gray-400 mt-1">o haz clic para seleccionarlo</p>
                     <p id="dropZoneFileName" class="text-xs text-green-600 font-semibold mt-2 hidden"></p>
                 </div>
-                <input type="file" id="backupFileInput" accept=".json,.json.gz,.gz" class="hidden" onchange="cargarArchivoBackup(event)">
-                <button type="button" onclick="restaurarBackup()" id="btnRestaurar" disabled
+                <input type="file" id="backupFileInput" accept=".json,.json.gz,.gz" class="hidden" data-change="cargarArchivoBackup" data-pass-el="1">
+                <button type="button" data-action="restaurarBackup" id="btnRestaurar" disabled
                     class="w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
                     style="background:#E5E7EB; color:#9CA3AF; cursor:not-allowed;">
                     <i class="fas fa-upload"></i> Restaurar Datos
@@ -3236,7 +3234,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-sm text-gray-500 mt-1">Producto: <span id="ajustarStockNombre" class="font-semibold text-gray-700"></span></p>
             <p class="text-sm text-gray-500">Stock actual: <span id="ajustarStockActual" class="font-semibold text-gray-700"></span></p>
           </div>
-          <button type="button" onclick="closeAjustarStockModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button type="button" data-action="closeAjustarStockModal" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
         </div>
         <div class="space-y-3">
           <div>
@@ -3258,11 +3256,11 @@ input:focus, select:focus, textarea:focus, button:focus {
           </div>
         </div>
         <div class="flex gap-3 mt-5">
-          <button type="button" onclick="closeAjustarStockModal()"
+          <button type="button" data-action="closeAjustarStockModal"
             class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold text-sm">
             Cancelar
           </button>
-          <button type="button" onclick="confirmarAjusteStock()"
+          <button type="button" data-action="confirmarAjusteStock"
             class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold text-sm btn-primary">
             Aplicar Ajuste
           </button>
@@ -3274,7 +3272,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800" id="equipoModalTitle">Agregar Equipo</h3>
-            <button type="button" onclick="closeEquipoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" data-action="closeEquipoModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <input type="hidden" id="equipoEditId">
         <div class="space-y-4">
@@ -3292,7 +3290,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <input type="hidden" id="equipoEmoji" value="🔧">
                 <input type="text" id="equipoEmojiSearch" placeholder="Buscar... (ej: impresora, laser)"
                        class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none mb-2"
-                       oninput="filterEquipoEmojis(this.value)">
+                       data-oninput="filterEquipoEmojis" data-pass-el="1">
                 <div id="equipoEmojiGrid" class="border border-gray-200 rounded-xl p-2 max-h-44 overflow-y-auto">
 
                 </div>
@@ -3310,8 +3308,8 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
         <div class="flex gap-3 mt-6">
-            <button type="button" onclick="closeEquipoModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" onclick="saveEquipo()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Guardar</button>
+            <button type="button" data-action="closeEquipoModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="button" data-action="saveEquipo" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Guardar</button>
         </div>
     </div>
 </div>
@@ -3320,7 +3318,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-2">
             <h3 class="text-2xl font-bold text-gray-800">🔧 ¿Qué equipos usaste?</h3>
-            <button type="button" onclick="cerrarRoiEquiposModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" data-action="cerrarRoiEquiposModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <p class="text-sm text-gray-500 mb-1">Pedido: <span id="roiPedidoFolio" class="font-bold text-amber-600"></span></p>
         <p class="text-sm text-gray-500 mb-5">Ganancia estimada: <span id="roiGananciaEstimada" class="font-bold text-green-600"></span></p>
@@ -3346,8 +3344,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="flex gap-3">
-            <button type="button" onclick="cerrarRoiEquiposModal()" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Omitir</button>
-            <button type="button" onclick="confirmarRoiEquipos()" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Registrar ROI</button>
+            <button type="button" data-action="cerrarRoiEquiposModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Omitir</button>
+            <button type="button" data-action="confirmarRoiEquipos" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5A572;">Registrar ROI</button>
         </div>
     </div>
 </div>
@@ -3357,7 +3355,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold text-gray-800">⚖️ Registrar ROI manual</h3>
-            <button type="button" onclick="cerrarRoiManualModal()" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
+            <button type="button" data-action="cerrarRoiManualModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="space-y-4">
             <div>
@@ -3366,7 +3364,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Ganancia total ($) *</label>
-                <input type="number" id="roiManualGanancia" min="0" step="1" placeholder="0.00" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm" oninput="calcRoiManual()">
+                <input type="number" id="roiManualGanancia" min="0" step="1" placeholder="0.00" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm" data-oninput="calcRoiManual">
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Equipos utilizados</label>
@@ -3378,18 +3376,18 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
         <div class="flex gap-3 mt-6">
-            <button type="button" onclick="cerrarRoiManualModal()" class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" onclick="confirmarRoiManual()" class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold" style="background:#C5A572;">Registrar</button>
+            <button type="button" data-action="cerrarRoiManualModal" class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="button" data-action="confirmarRoiManual" class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold" style="background:#C5A572;">Registrar</button>
         </div>
     </div>
 </div>
 
 <!-- N3: Modal escáner QR/Barcode -->
-<div id="qrScannerModal" class="modal" onclick="if(event.target===this)window._cerrarQRScanner()">
+<div id="qrScannerModal" class="modal" data-backdrop="_cerrarQRScanner">
     <div class="bg-white rounded-2xl shadow-2xl w-full mx-4 animate-fade-in" style="max-width:400px">
         <div class="flex justify-between items-center p-5 border-b border-gray-100">
             <h3 class="font-bold text-gray-800 text-base">📷 Escanear código</h3>
-            <button type="button" onclick="window._cerrarQRScanner()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+            <button type="button" data-action="_cerrarQRScanner" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
         </div>
         <div class="p-5">
             <video id="qrVideo" autoplay muted playsinline class="w-full rounded-xl bg-black" style="height:220px;object-fit:cover;display:block"></video>
@@ -3399,8 +3397,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="flex gap-2">
                     <input type="text" id="qrManualInput" placeholder="SKU, código o nombre..."
                         class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2"
-                        onkeydown="if(event.key==='Enter')window._qrManualBuscar()">
-                    <button type="button" onclick="window._qrManualBuscar()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">Buscar</button>
+                        data-onkeydown="_qrManualBuscar">
+                    <button type="button" data-action="_qrManualBuscar" class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">Buscar</button>
                 </div>
             </div>
         </div>
@@ -3419,11 +3417,11 @@ input:focus, select:focus, textarea:focus, button:focus {
           </div>
         </div>
         <div class="flex gap-3">
-          <button type="button" onclick="confirmModalResolve(false)"
+          <button type="button" data-action="confirmModalResolve" data-arg="false"
             class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold text-sm">
             Cancelar
           </button>
-          <button type="button" onclick="confirmModalResolve(true)"
+          <button type="button" data-action="confirmModalResolve" data-arg="true"
             class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold text-sm bg-red-500 hover:bg-red-600">
             Confirmar
           </button>
@@ -3431,7 +3429,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
     </div>
 
-<div id="configAnillosModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;" onclick="if(event.target===this) cerrarConfigAnillos()">
+<div id="configAnillosModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;" data-backdrop="cerrarConfigAnillos">
     <div style="background:white;border-radius:24px;max-width:960px;width:calc(100vw - 32px);max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.25);display:flex;flex-direction:column;">
 
         <div style="padding:24px 28px 16px;border-bottom:1px solid #F3F4F6;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
@@ -3439,7 +3437,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <h3 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin:0">🗺️ Configurar Anillos de Envío</h3>
                 <p style="font-size:0.78rem;color:#9CA3AF;margin:4px 0 0">Arrastra los anillos en el mapa o ajusta los km y tarifas</p>
             </div>
-            <button type="button" onclick="cerrarConfigAnillos()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#9CA3AF;padding:4px">✕</button>
+            <button type="button" data-action="cerrarConfigAnillos" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#9CA3AF;padding:4px">✕</button>
         </div>
 
         <div id="anillosGridLayout" style="display:grid;grid-template-columns:1fr 320px;flex:1;min-height:0;">
@@ -3454,7 +3452,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div style="padding:20px;border-left:1px solid #F3F4F6;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:480px;">
                 <div style="font-size:0.8rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;">Anillos de cobertura</div>
                 <div id="anillosLista" style="display:flex;flex-direction:column;gap:8px;"></div>
-                <button type="button" onclick="agregarAnillo()" style="margin-top:4px;padding:10px;border:2px dashed #C5A572;border-radius:12px;background:#FFF9F0;color:#C5A572;font-weight:700;font-size:0.8rem;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#FEF3C7'" onmouseout="this.style.background='#FFF9F0'">
+                <button type="button" data-action="agregarAnillo" class="mk-anillo-add" style="margin-top:4px;padding:10px;border:2px dashed #C5A572;border-radius:12px;background:#FFF9F0;color:#C5A572;font-weight:700;font-size:0.8rem;cursor:pointer;transition:all 0.2s;">
                     + Agregar anillo
                 </button>
                 <div style="background:#F9FAFB;border-radius:12px;padding:12px;font-size:0.75rem;color:#6B7280;">
@@ -3465,8 +3463,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div style="padding:16px 28px;border-top:1px solid #F3F4F6;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;">
-            <button type="button" onclick="cerrarConfigAnillos()" style="padding:10px 20px;border:2px solid #E5E7EB;border-radius:12px;background:white;color:#6B7280;font-weight:600;cursor:pointer;font-size:0.9rem;">Cancelar</button>
-            <button type="button" onclick="guardarAnillos()" style="padding:10px 24px;border-radius:12px;background:linear-gradient(135deg,#C5A572,#B8965F);color:white;font-weight:700;cursor:pointer;font-size:0.9rem;border:none;">
+            <button type="button" data-action="cerrarConfigAnillos" style="padding:10px 20px;border:2px solid #E5E7EB;border-radius:12px;background:white;color:#6B7280;font-weight:600;cursor:pointer;font-size:0.9rem;">Cancelar</button>
+            <button type="button" data-action="guardarAnillos" style="padding:10px 24px;border-radius:12px;background:linear-gradient(135deg,#C5A572,#B8965F);color:white;font-weight:700;cursor:pointer;font-size:0.9rem;border:none;">
                 <i class="fas fa-save" style="margin-right:6px;"></i>Guardar configuración
             </button>
         </div>
@@ -3479,53 +3477,35 @@ input:focus, select:focus, textarea:focus, button:focus {
        Los módulos de sección se cargan bajo demanda vía lazy-loader.js
   ═══════════════════════════════════════════════ -->
 
-  <!-- 1. Base: Supabase, SQLite, sync, offline -->
-  <script src="js/db.js"></script>
-
-  <!-- 2. Datos globales, variables, temas, emojis -->
-  <script src="js/app-data.js"></script>
-
-  <!-- 3. Core siempre necesario -->
-  <script src="js/equipos.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/ui-extras.js"></script>
-  <script src="js/navigation.js"></script>
-
-  <!-- 4. Cargador diferido — descarga secciones bajo demanda -->
-  <script src="js/lazy-loader.js"></script>
-
-  <!-- 5. Sistema visual y arranque final -->
-  <script src="js/design-system.js"></script>
-  <script src="js/templates.js"></script>
-  <script src="js/init.js"></script>
+  <!-- D25: Core bundle (12 scripts → 1 request) -->
+  <script src="js/core.bundle.js"></script>
 
   <!-- FAB Nuevo Pedido -->
   <button type="button" id="fabNuevoPedido"
-      onclick="showSection('pedidos'); setTimeout(() => openPedidoModal(), 300);"
+      data-action="_mkNewPedido"
       title="Nuevo Pedido (acceso rápido)"
       style="position:fixed;bottom:80px;right:24px;z-index:9000;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#C5A572,#a8864f);color:white;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(197,165,114,0.4);font-size:24px;display:flex;align-items:center;justify-content:center;transition:transform 0.2s,box-shadow 0.2s;"
-      onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 20px rgba(197,165,114,0.6)';"
-      onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 16px rgba(197,165,114,0.4)';"
+
+
       aria-label="Crear nuevo pedido">
       ✚
   </button>
 
 <!-- Mobile Bottom Navigation -->
 <nav id="mobileBottomNav" style="display:none; height:60px; padding-bottom: env(safe-area-inset-bottom, 0px);" class="fixed bottom-0 left-0 right-0 z-[198] flex items-center justify-around bg-white border-t border-gray-200 shadow-lg">
-  <button type="button" onclick="showSection('dashboard');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" data-action="_mkNavSidebar" data-arg="dashboard" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">🏠</span><span>Inicio</span>
   </button>
-  <button type="button" onclick="showSection('pedidos');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" data-action="_mkNavSidebar" data-arg="pedidos" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">📦</span><span>Pedidos</span>
   </button>
-  <button type="button" onclick="showSection('inventory');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" data-action="_mkNavSidebar" data-arg="inventory" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">🏷️</span><span>Inventario</span>
   </button>
-  <button type="button" onclick="showSection('balance');closeSidebar()" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" data-action="_mkNavSidebar" data-arg="balance" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">💰</span><span>Balance</span>
   </button>
-  <button type="button" onclick="(typeof toggleSidebar==='function'?toggleSidebar():void 0)" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
+  <button type="button" data-action="_mkToggleSidebar" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
     <span style="font-size:20px;">☰</span><span>Más</span>
   </button>
 </nav>

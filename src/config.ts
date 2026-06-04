@@ -174,7 +174,7 @@ function switchHistoryTab(tab) {
 }
 
 // ============== STORE CONFIG ==============
-let storeConfig = {
+let storeConfig: ManekiStoreConfig = {
     emoji:    '🐱',
     name:     'Maneki Store',
     slogan:   'Regalos Personalizados',
@@ -862,3 +862,32 @@ window.MK.navigate = function(section) {
     if (typeof showSection === 'function') showSection(section);
 };
 window.MK.version = '2.2.0';
+
+// ── MK.state — unified view of all module state ────────────────────────────
+// Getter/setter facade: MK.state.X reads/writes window.X.
+// Existing window.* references keep working — this adds a single debugging
+// surface: JSON.stringify(MK.state) to snapshot, console.table(MK.state).
+window.MK.state = {};
+const _mkStateKeys = [
+    // Inventory modals
+    '_ptVariants','_ptMpComponentes','_mpVariantes','_mpTagsActuales',
+    '_packComponentes','_packMpDirectos','_pvMpComponentes','_pvTablaPreciosVariable',
+    'edicionProductoId','currentProductImageFile','currentProductImage',
+    'currentVariants','modoEdicion',
+    // Inventory table
+    '_invSortCol','_invSortDir','_invStockCache','_invPageSize',
+    // Pedidos
+    'pedidoProductosSeleccionados','pedidoEmpaquesSeleccionados',
+    '_folioCounter','_folioCounterReady',
+    '_kanbanExpandidos','_kanbanTouchAbort',
+    // System
+    '_mk4','_errorLog','_entregasCheckInterval','_mkRTSetupDone',
+    '_autoBackupInterval','_ajustarStockId',
+];
+for (const k of _mkStateKeys) {
+    Object.defineProperty(window.MK.state, k, {
+        get()  { return window[k]; },
+        set(v) { window[k] = v; },
+        enumerable: true, configurable: true
+    });
+}
