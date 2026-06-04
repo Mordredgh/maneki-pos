@@ -479,11 +479,28 @@ function actualizarBannerOffline(n) {
 }
 
 // ── MODAL CLOSE — animación de salida universal ──────────────────
-function closeModal(idOrEl) {
+// H52: marcar un input/textarea/select como "dirty" cuando el usuario escribe
+document.addEventListener('input', (e: Event) => {
+    const el = e.target as HTMLElement;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT')) {
+        const modal = el.closest('.modal');
+        if (modal) (modal as any)._mkDirty = true;
+    }
+}, true);
+
+async function closeModal(idOrEl) {
     const modal = typeof idOrEl === 'string'
         ? document.getElementById(idOrEl)
         : idOrEl;
     if (!modal) return;
+    // H52: advertir si hay cambios sin guardar
+    if ((modal as any)._mkDirty) {
+        const ok = await (typeof (window as any).showConfirm === 'function'
+            ? (window as any).showConfirm('¿Cerrar sin guardar? Los cambios se perderán.')
+            : Promise.resolve(true));
+        if (!ok) return;
+        (modal as any)._mkDirty = false;
+    }
     if (!modal.classList.contains('active')) {
         modal.style.display = '';
         return;
@@ -494,10 +511,17 @@ function closeModal(idOrEl) {
     setTimeout(() => {
         modal.classList.remove('closing');
         modal.style.display = '';
+        if (modal) (modal as any)._mkDirty = false;
         // FIX #11: si no quedan modales abiertos, aplicar updates RT diferidos
         if (!document.querySelector('.modal.active')) _flushRTDeferred();
     }, duration);
 }
+
+// Limpiar flag dirty cuando el modal guarda exitosamente
+(window as any)._mkModalSaved = function(idOrEl: any) {
+    const modal = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+    if (modal) (modal as any)._mkDirty = false;
+};
 window.closeModal = closeModal;
 
 function openModal(idOrEl) {
@@ -508,6 +532,19 @@ function openModal(idOrEl) {
     modal.style.display = '';
     modal.classList.remove('closing');
     modal.classList.add('active');
+    // C19: accesibilidad — marcar como dialog y aplicar focus-trap
+    if (!modal.hasAttribute('role')) modal.setAttribute('role', 'dialog');
+    if (!modal.hasAttribute('aria-modal')) modal.setAttribute('aria-modal', 'true');
+    // Aplicar focus-trap si está disponible (definido en ui-extras.ts)
+    if (typeof (window as any)._mkTrapFocus === 'function') {
+        requestAnimationFrame(() => (window as any)._mkTrapFocus(modal));
+    } else {
+        // Fallback: mover foco al primer elemento interactivo
+        requestAnimationFrame(() => {
+            const first = modal.querySelector<HTMLElement>('button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+            if (first) first.focus();
+        });
+    }
 }
 window.openModal = openModal;
 

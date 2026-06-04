@@ -913,29 +913,13 @@ input:focus, select:focus, textarea:focus, button:focus {
     <option value="">🏪 Todos los proveedores</option>
   </select>
 </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table id="invTableEl" class="w-full">
-                            <thead class="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Imagen</th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 sortable-th" onclick="sortInventory('name')">Producto<span class="sort-icon"></span></th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 sortable-th" onclick="sortInventory('sku')">SKU<span class="sort-icon"></span></th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 sortable-th" onclick="sortInventory('category')">Categoría<span class="sort-icon"></span></th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Variantes</th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 sortable-th" onclick="sortInventory('price')">Precio<span class="sort-icon"></span></th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Proveedor</th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 sortable-th" onclick="sortInventory('stock')">Stock<span class="sort-icon"></span></th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Estado</th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 sortable-th" onclick="sortInventory('margin')">Margen<span class="sort-icon"></span></th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventoryTable" class="divide-y divide-gray-200">
-
-                            </tbody>
-                        </table>
-                    </div>
+                <!-- C16: tabla wrapper conservada por paginación (.overflow-x-auto).
+                     thead original removido — renderInventoryTable() en inventory-5.ts
+                     oculta esta tabla y construye su propio dualContainer. -->
+                <div class="overflow-x-auto">
+                    <table id="invTableEl" class="w-full">
+                        <tbody id="inventoryTable" class="divide-y divide-gray-200"></tbody>
+                    </table>
                 </div>
             </div>
         </section>

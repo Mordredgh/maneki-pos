@@ -484,7 +484,7 @@ function busquedaGlobal(query) {
     html += `<div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wide border-b">📦 Productos</div>`;
     prods.slice(0,4).forEach(p => {
       const img = p.imageUrl
-        ? `<img src="${p.imageUrl}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`
+        ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`
         : `<span class="text-lg flex-shrink-0">${p.image||'📦'}</span>`;
       html += `<div class="px-4 py-2 hover:bg-amber-50 cursor-pointer flex items-center gap-3"
           data-id="${p.id.replace(/"/g,'')}"
@@ -1755,6 +1755,33 @@ window.manekiUndoToast = manekiUndoToast;
     window.addEventListener('offline', _update);
     _update();
 })();
+
+// C19: Focus-trap para accesibilidad en modales
+(window as any)._mkTrapFocus = function(modal: HTMLElement) {
+    const focusables = Array.from(modal.querySelectorAll<HTMLElement>(
+        'button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+    )).filter(el => el.offsetParent !== null);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    first.focus();
+    function handler(e: KeyboardEvent) {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey) {
+            if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+            if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+    }
+    (modal as any)._focusTrapHandler = handler;
+    modal.addEventListener('keydown', handler);
+};
+(window as any)._mkReleaseFocus = function(modal: HTMLElement) {
+    if ((modal as any)._focusTrapHandler) {
+        modal.removeEventListener('keydown', (modal as any)._focusTrapHandler);
+        delete (modal as any)._focusTrapHandler;
+    }
+};
 
 // H51: Indicador global persistente de guardado/sincronización
 (window as any).mkSaveIndicator = function(state: 'saving' | 'saved' | 'error') {

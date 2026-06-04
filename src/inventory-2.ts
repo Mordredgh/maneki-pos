@@ -397,7 +397,7 @@ function filtrarMpSelector() {
         const yaAgregado = (window._ptMpComponentes||[]).some(c=>String(c.id)===String(p.id));
         const esSvc = p.tipo === 'servicio';
         const imgH = p.imageUrl
-            ? `<img src="${p.imageUrl}" style="width:32px;height:32px;object-fit:cover;border-radius:6px;">`
+            ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" style="width:32px;height:32px;object-fit:cover;border-radius:6px;">`
             : `<span style="font-size:1.4rem;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">${p.image||(esSvc?'⚙️':'🏭')}</span>`;
         const infoExtra = esSvc
             ? `<div style="font-size:.72rem;color:#6d28d9;font-weight:600;">⚙️ Servicio · $${Number(p.cost||0).toFixed(2)}/uso</div>`
@@ -477,7 +477,7 @@ function renderPtMpList() {
     }
     el.innerHTML = comps.map((c,i) => {
         const imgH = c.imageUrl
-            ? `<img src="${c.imageUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;flex-shrink:0;">`
+            ? `<img src="${c.imageUrl}" alt="${_esc(c.nombre||c.name||'')}" style="width:36px;height:36px;object-fit:cover;border-radius:8px;flex-shrink:0;">`
             : `<span style="font-size:1.4rem;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${c.imagen||'🏭'}</span>`;
         const subtotal = (c.qty*c.costUnit).toFixed(2);
         return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;">
@@ -1042,7 +1042,7 @@ function packFiltrarPT() {
     }
     res.innerHTML = pts.map(p => {
         const img = p.imageUrl
-            ? `<img src="${p.imageUrl}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">`
+            ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">`
             : `<span style="font-size:1.2rem;">${p.image || '📦'}</span>`;
         return `<div onclick="packSeleccionarPT('${String(p.id)}')"
             style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;"
@@ -1111,7 +1111,7 @@ function packRenderComponentes() {
     lista.innerHTML = comps.map(c => {
         const pt = (window.products || []).find(p => String(p.id) === String(c.productoId));
         const img = pt?.imageUrl
-            ? `<img src="${pt.imageUrl}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;">`
+            ? `<img src="${pt.imageUrl}" alt="${_esc(pt?.name||'')}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;">`
             : `<span style="font-size:1.3rem;">${pt?.image || '📦'}</span>`;
         return `
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:12px;background:#fff;">
@@ -1177,7 +1177,7 @@ function packFiltrarMP() {
     }
     res.innerHTML = mps.map(p => {
         const img = p.imageUrl
-            ? `<img src="${p.imageUrl}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">`
+            ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">`
             : `<span style="font-size:1.2rem;">${p.image || '🏭'}</span>`;
         const tipoBadge = p.tipo === 'servicio'
             ? `<span style="font-size:10px;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:99px;">Servicio</span>`
@@ -1249,7 +1249,7 @@ function packRenderMpDirectos() {
     }
     lista.innerHTML = mps.map(m => {
         const img = m.imageUrl
-            ? `<img src="${m.imageUrl}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;">`
+            ? `<img src="${m.imageUrl}" alt="${_esc(m.name||m.nombre||'')}" style="width:34px;height:34px;object-fit:cover;border-radius:8px;">`
             : `<span style="font-size:1.3rem;">${m.imagen || '🏭'}</span>`;
         return `
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #e9d5ff;border-radius:12px;background:#faf5ff;">

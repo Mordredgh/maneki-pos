@@ -934,7 +934,14 @@ function toggleKanbanFocus() {
 window.toggleKanbanFocus = toggleKanbanFocus;
 
 function renderKanbanBoard() {
+    // C18: skeleton mientras carga el kanban por primera vez
     const cols = ['confirmado','pago','produccion','envio','salida','retirar'];
+    cols.forEach(col => {
+        const el = document.getElementById('kCol-' + col);
+        if (el && !el.children.length && typeof (window as any)._mkSkeletonRows === 'function') {
+            el.innerHTML = `<div class="mk-table-skeleton" style="height:80px;margin:8px;border-radius:8px;opacity:0.5;"></div>`;
+        }
+    });
     const buscar = (document.getElementById('kanbanBuscar') || {}).value || '';
     const q = buscar.toLowerCase().trim();
     const hoy = new Date(); hoy.setHours(0,0,0,0);
@@ -1010,6 +1017,17 @@ function renderKanbanBoard() {
             return html;
         }
 
+        // H46: colapsar columnas vacías (sin pedidos y sin filtro activo)
+        const colWrapper = el.closest('[data-kanban-col]') || el.parentElement;
+        if (colWrapper) {
+            const isEmpty = items.length === 0 && !q && _kanbanUrgenciaFiltro === 'todos';
+            colWrapper.style.transition = 'max-width 0.25s ease, opacity 0.25s ease';
+            colWrapper.style.maxWidth = isEmpty ? '48px' : '';
+            colWrapper.style.opacity = isEmpty ? '0.45' : '';
+            colWrapper.style.overflow = isEmpty ? 'hidden' : '';
+            const header = colWrapper.querySelector('[class*="kanban-header"],[class*="col-header"],h3,h4');
+            if (header) (header as HTMLElement).title = isEmpty ? 'Sin pedidos — click para expandir' : '';
+        }
         el.innerHTML = items.length === 0
             ? `<div style="text-align:center;padding:24px 10px;color:#d1d5db;">
                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style="margin:0 auto 8px;display:block;">
@@ -1717,7 +1735,7 @@ function abrirFotoReferencia(id) {
         let grid = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px;">';
         urls.forEach((url, i) => {
             grid += `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#f3f4f6;cursor:pointer;" onclick="window.open('${url}','_blank')">
-                <img src="${url}" style="width:100%;height:100%;object-fit:cover;">
+                <img src="${url}" alt="Foto de referencia ${i+1}" style="width:100%;height:100%;object-fit:cover;">
                 <button onclick="event.stopPropagation();eliminarFotoReferencia('${id}',${i})" style="position:absolute;top:3px;right:3px;background:rgba(220,38,38,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;">✕</button>
                 <button onclick="event.stopPropagation();descargarFotoReferencia('${id}',${i})" style="position:absolute;bottom:3px;right:3px;background:rgba(59,130,246,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;">⬇</button>
             </div>`;

@@ -765,9 +765,33 @@ function updateMonthlyStats(ventasCache?: any[]) {
         return total + saleCost;
     }, 0);
     const monthlyProfit = monthlySales - monthlyCosts;
+    // H49: calcular mes anterior para mostrar delta %
+    const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const prevYear  = currentMonth === 0 ? currentYear - 1 : currentYear;
+    const prevMesStr = `${prevYear}-${String(prevMonth+1).padStart(2,'0')}`;
+    const _prevV = (ventasCache || _getAllVentas()).filter(function(s) {
+        if (!s.date || s.type === 'abono' || s.type === 'anticipo') return false;
+        if (s.method === 'Cancelado' || s.metodo === 'cancelado') return false;
+        return s.date && String(s.date).startsWith(prevMesStr);
+    });
+    const prevSales  = _prevV.reduce(function(sum,s){ return sum + Number(s.total||0); }, 0);
+    const prevProfit = prevSales - _prevV.reduce(function(total, sale) {
+        var items = sale.items || sale.products || sale.productos || [];
+        return total + items.reduce(function(s, item) {
+            return s + (Number(item.costoAlVender ?? item.cost ?? item.costo ?? 0) * Number(item.quantity || item.cantidad || 1));
+        }, 0);
+    }, 0);
+    function _deltaHTML(actual: number, anterior: number): string {
+        if (anterior === 0) return '';
+        const pct = ((actual - anterior) / anterior * 100);
+        const sign = pct >= 0 ? '▲' : '▼';
+        const color = pct >= 0 ? '#059669' : '#dc2626';
+        return ` <span style="font-size:.65rem;font-weight:700;color:${color}">${sign} ${Math.abs(pct).toFixed(1)}%</span>`;
+    }
+
     const el = id => document.getElementById(id);
-    if (el('monthlySales'))     el('monthlySales').textContent     = `$${monthlySales.toFixed(2)}`;
-    if (el('monthlyProfit'))    el('monthlyProfit').textContent    = `$${monthlyProfit.toFixed(2)}`;
+    if (el('monthlySales'))     el('monthlySales').innerHTML     = `$${monthlySales.toFixed(2)}${_deltaHTML(monthlySales, prevSales)}`;
+    if (el('monthlyProfit'))    el('monthlyProfit').innerHTML    = `$${monthlyProfit.toFixed(2)}${_deltaHTML(monthlyProfit, prevProfit)}`;
     if (el('monthlyUnitsSold')) el('monthlyUnitsSold').textContent = `${monthlyUnits} unidades`;
 }
 
@@ -868,8 +892,9 @@ function switchCategoryTab(mode) {
 }
 
 function initCategoryChart() {
-    const canvas = document.getElementById('categoryChart');
+    const canvas = document.getElementById('categoryChart') as HTMLCanvasElement | null;
     if (!canvas) return;
+    canvas.setAttribute('role','img'); canvas.setAttribute('aria-label','Gráfica de ventas por categoría');
     const ctx = canvas.getContext('2d');
     if (typeof categoryChart !== 'undefined' && categoryChart) { categoryChart.destroy(); categoryChart = null; }
 
@@ -1123,7 +1148,9 @@ function initChart() {
     });
     const labels = last7Days.map(d => ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][new Date(d + 'T12:00:00').getDay()]);
     const data   = last7Days.map(d => salesByDay[d]);
-    const ctx    = document.getElementById('salesChart')?.getContext('2d');
+    const salesCanvas = document.getElementById('salesChart') as HTMLCanvasElement | null;
+    if (salesCanvas) { salesCanvas.setAttribute('role','img'); salesCanvas.setAttribute('aria-label','Gráfica de ventas de los últimos 7 días'); }
+    const ctx = salesCanvas?.getContext('2d');
     if (!ctx) return;
     if (typeof salesWeekChart !== 'undefined' && salesWeekChart) { salesWeekChart.destroy(); salesWeekChart = null; }
     salesWeekChart = new Chart(ctx, {

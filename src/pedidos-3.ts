@@ -460,7 +460,7 @@ async function exportarPedidoPDF(id) {
     div.style.cssText = 'width:480px;font-family:Segoe UI,system-ui,sans-serif;background:#fff;';
     div.innerHTML = `
         <div style="background:linear-gradient(135deg,#1a0533,#2d0a4e);padding:28px 24px;text-align:center;color:white;border-radius:12px 12px 0 0;">
-            ${logoBase64?`<img src="${logoBase64}" style="height:52px;margin-bottom:8px;">`:''}
+            ${logoBase64?`<img src="${logoBase64}" alt="${_e(storeName)}" style="height:52px;margin-bottom:8px;">`:''}
             <div style="font-size:20px;font-weight:800;color:#E8B84B;">${_e(storeName)}</div>
             ${storePhone?`<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;">${_e(storePhone)}</div>`:''}
         </div>
@@ -565,7 +565,7 @@ function filtrarProductosPedido() {
 
     grid.innerHTML = productos.map(p => {
         const img = p.imageUrl
-            ? `<img src="${p.imageUrl}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">`
+            ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">`
             : `<span class="text-2xl w-10 h-10 flex items-center justify-center flex-shrink-0">${p.image || '📦'}</span>`;
         const esMp  = p.tipo === 'materia_prima';
         const esSvc = p.tipo === 'servicio';
@@ -974,7 +974,7 @@ function generarTicketPedido(id) {
         : '<tr><td colspan="4" style="color:#6b7280;font-style:italic;">'+_e(p.concepto||'Sin detalle')+'</td></tr>';
 
     const logoHtml = cfg.logoMode === 'image' && cfg.logo
-        ? '<img src="'+cfg.logo+'" style="width:60px;height:60px;object-fit:contain;border-radius:10px;">'
+        ? '<img src="'+cfg.logo+'" alt="'+_e(cfg.name||'Logo')+'" style="width:60px;height:60px;object-fit:contain;border-radius:10px;">'
         : _e(cfg.emoji||'🐱');
 
     const html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Ticket '+_e(p.folio||'')+'</title><style>'
@@ -1072,7 +1072,7 @@ function _mostrarGaleriaPtEnPedido(prod) {
     // SEC-2: data-foto-url escapado con _esc, sin onclick inline con URL del usuario
     galDiv.innerHTML = '<div style="font-size:.72rem;color:#92400e;font-weight:700;margin-bottom:6px;">🖼️ Fotos del producto ('+urls.length+')</div>'
         + '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">'
-        + urls.map(url => '<img src="'+_e(url)+'" data-foto-url="'+_e(url)+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb;flex-shrink:0;cursor:pointer;" title="Ver foto completa">').join('')
+        + urls.map((url,i) => '<img src="'+_e(url)+'" alt="Foto producto '+(i+1)+'" data-foto-url="'+_e(url)+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb;flex-shrink:0;cursor:pointer;" title="Ver foto completa">').join('')
         + '</div>';
 }
 window._mostrarGaleriaPtEnPedido = _mostrarGaleriaPtEnPedido;

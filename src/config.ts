@@ -366,7 +366,7 @@ function updateStorePreview() {
     const pe = document.getElementById('previewEmoji');
     if (!pe) return; // sección config no activada aún
     if (storeConfig.logoMode === 'image' && typeof storeLogo !== 'undefined' && storeLogo) {
-        pe.innerHTML = `<img src="${typeof _validateImgUrl==='function'?_validateImgUrl(storeLogo):storeLogo}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
+        pe.innerHTML = `<img src="${typeof _validateImgUrl==='function'?_validateImgUrl(storeLogo):storeLogo}" alt="Logo de la tienda" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
     } else {
         pe.textContent = (document.getElementById('configEmoji')||{}).value || '🐱';
     }

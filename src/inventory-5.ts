@@ -351,7 +351,7 @@ function renderInventoryTable() {
         const pid     = String(product.id);
         const stockEf = _stockCache.get(pid) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : parseInt(product.stock) || 0);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
+            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'🏭'}</span>`;
         let badge;
         if      (stockEf === 0)                    badge = '<span class="badge-danger">Agotado</span>';
@@ -391,18 +391,18 @@ function renderInventoryTable() {
             <td class="px-4 py-3">${badge}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                    <button onclick="editProduct('${pid}')" title="Editar"
+                    <button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
-                    <button onclick="ajustarStock('${pid}')" title="Ajustar stock"
+                    <button type="button" onclick="ajustarStock('${pid}')" title="Ajustar stock" aria-label="Ajustar stock"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📦</button>
-                    <button onclick="duplicarProducto('${pid}')" title="Duplicar"
+                    <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
-                    <button onclick="registrarMerma('${pid}')" title="Registrar merma/pérdida"
+                    <button type="button" onclick="registrarMerma('${pid}')" title="Registrar merma/pérdida" aria-label="Registrar merma"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.25);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📉</button>
-                    ${product.proveedorUrl ? `<button onclick="window.open(this.dataset.url,'_blank')" data-url="${_esc(product.proveedorUrl)}" title="Abrir proveedor" style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🔗</button>` : ''}
-                    <button onclick="cambiarTipoProducto('${pid}')" title="Convertir a Producto Terminado"
+                    ${product.proveedorUrl ? `<button type="button" onclick="window.open(this.dataset.url,'_blank')" data-url="${_esc(product.proveedorUrl)}" title="Abrir proveedor" aria-label="Abrir proveedor" style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🔗</button>` : ''}
+                    <button type="button" onclick="cambiarTipoProducto('${pid}')" title="Convertir a Producto Terminado" aria-label="Convertir tipo de producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→📦</button>
-                    <button onclick="deleteProduct('${pid}')" title="Eliminar"
+                    <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
             </td>
@@ -446,7 +446,7 @@ function renderInventoryTable() {
     function renderFilaPT(product, ri) {
         const pid     = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
+            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'📦'}</span>`;
         const cat = (window.categories||[]).find(c => c.id === product.category);
         const catName = cat ? cat.name : (product.category||'');
@@ -540,18 +540,18 @@ function renderInventoryTable() {
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     ${product.tipo === 'pack'
-                        ? `<button onclick="openPackModal('${pid}')" title="Editar Pack"
+                        ? `<button type="button" onclick="openPackModal('${pid}')" title="Editar Pack" aria-label="Editar pack"
                             style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>`
-                        : `<button onclick="editProduct('${pid}')" title="Editar"
+                        : `<button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar producto"
                             style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>`
                     }
-                    <button onclick="duplicarProducto('${pid}')" title="Duplicar"
+                    <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
-                    ${product.tipo !== 'pack' ? `<button onclick="cambiarTipoProducto('${pid}')" title="Convertir a Materia Prima"
+                    ${product.tipo !== 'pack' ? `<button type="button" onclick="cambiarTipoProducto('${pid}')" title="Convertir a Materia Prima" aria-label="Convertir tipo de producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ''}
-                    ${product.movimientos && product.movimientos.length ? `<button onclick="verMovimientosProducto('${pid}')" title="Ver movimientos de stock (${product.movimientos.length})"
+                    ${product.movimientos && product.movimientos.length ? `<button type="button" onclick="verMovimientosProducto('${pid}')" title="Ver movimientos de stock (${product.movimientos.length})" aria-label="Ver movimientos de stock"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>` : ''}
-                    <button onclick="deleteProduct('${pid}')" title="Eliminar"
+                    <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
             </td>
@@ -562,7 +562,7 @@ function renderInventoryTable() {
     function renderFilaVariable(product, ri) {
         const pid = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
+            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'🎯'}</span>`;
 
         // Tabla de precios como pills
@@ -644,11 +644,11 @@ function renderInventoryTable() {
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                    <button onclick="editProduct('${pid}')" title="Editar"
+                    <button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar servicio"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
-                    <button onclick="duplicarProducto('${pid}')" title="Duplicar"
+                    <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar servicio"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
-                    <button onclick="deleteProduct('${pid}')" title="Eliminar"
+                    <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar servicio"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
             </td>

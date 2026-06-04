@@ -196,8 +196,10 @@ window._rfmVerSegmento = function(segKey: string) {
 };
 
 // ── NTH-10: Ordenamiento de tabla de clientes ────────────────────────────────
-let _clientesSortCol = 'name';
-let _clientesSortDir = 'asc';
+// H47: persistir ordenamiento en localStorage entre renders
+const _cliSortSaved = JSON.parse(localStorage.getItem('mk_clientes_sort') || 'null');
+let _clientesSortCol = _cliSortSaved?.col || 'name';
+let _clientesSortDir = _cliSortSaved?.dir || 'asc';
 
 function sortClientes(col) {
     if (_clientesSortCol === col) {
@@ -206,6 +208,8 @@ function sortClientes(col) {
         _clientesSortCol = col;
         _clientesSortDir = col === 'totalPurchases' ? 'desc' : 'asc';
     }
+    // H47: guardar preferencia
+    try { localStorage.setItem('mk_clientes_sort', JSON.stringify({col: _clientesSortCol, dir: _clientesSortDir})); } catch(e) {}
     renderClientsTable();
 }
 window.sortClientes = sortClientes;
