@@ -5,6 +5,7 @@
     // El SW hace postMessage({ type:'SW_UPDATED', version }) al activarse.
     // El toast informa al usuario sin forzar una recarga automática.
     if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function(){});
         navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data?.type === 'SW_UPDATED') {
                 const toastFn = typeof (window as any).manekiToastExport === 'function'

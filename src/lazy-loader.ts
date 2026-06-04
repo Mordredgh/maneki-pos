@@ -21,7 +21,7 @@
     // ── Grupos de scripts por sección ───────────────────────────
     var _GRUPOS = _useBundles ? {
         inventario: ['js/inventario.bundle.js'],
-        pedidos:    [CDN.chartjs, 'js/pedidos.bundle.js'],
+        pedidos:    ['js/balance.bundle.js', CDN.chartjs, 'js/pedidos.bundle.js'],
         balance:    ['js/balance.bundle.js'],
         reportes:   [CDN.chartjs, 'js/reportes.bundle.js'],
         clientes:   ['js/clientes.bundle.js'],

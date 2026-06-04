@@ -454,11 +454,13 @@ function eliminarTag(tag) {
 }
 
 // ── PARCHE: ampliar closeAddProductModal con limpieza de tags ──
-document.addEventListener('DOMContentLoaded', function () {
-    const _origClose = typeof closeAddProductModal === 'function'
-        ? closeAddProductModal
-        : function () {};
-
+// inventory-1 is lazy-loaded, so we patch once the function exists.
+(function _patchCloseAdd() {
+    if (typeof closeAddProductModal !== 'function') {
+        setTimeout(_patchCloseAdd, 500);
+        return;
+    }
+    var _origClose = closeAddProductModal;
     closeAddProductModal = function () {
         _tagsActuales = [];
         renderTagsSeleccionados([]);
@@ -468,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function () {
         _kitComponentes = [];
         _origClose();
     };
-});
+})();
 
 // ============== TIPO DE PRODUCTO ==============
 function setTipoProducto(tipo) {

@@ -35,7 +35,7 @@ const BUNDLES = {
     'inventory-2-pv.js', 'inventory-3.js', 'inventory-4.js', 'inventory-5.js'
   ],
   'pedidos.bundle.js': [
-    'whatsapp.js', 'balance.js', 'pedidos-1-modal.js', 'pedidos-1-views.js',
+    'whatsapp.js', 'pedidos-1-modal.js', 'pedidos-1-views.js',
     'pedidos-1-extra.js', 'pedidos-2.js', 'pedidos-3.js'
   ],
   'balance.bundle.js': ['balance.js'],

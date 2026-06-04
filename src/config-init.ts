@@ -1,11 +1,18 @@
-// BUG-NEW-12 FIX: config-init.js leía solo de localStorage para mostrar logo/nombre en sidebar.
-// Si el usuario migró a SQLite (flujo normal), localStorage está vacío y el logo nunca aparece.
-// Solución: leer primero localStorage (síncrono, para el splash inicial), luego cuando SQLite
-// esté disponible via ipcRenderer, actualizar el sidebar con los datos más frescos.
+// config-init.js — runs synchronously in <head> before anything else.
+// 1) showSection stub (queues calls until navigation.ts loads)
+// 2) Sidebar logo/name from localStorage cache
 
 (function() {
-    // ── Paso 1: aplicar desde localStorage inmediatamente (síncrono) ──
-    function _aplicarConfigSidebar(cfg) {
+    // ── showSection stub: prevents ReferenceError before modules load ──
+    var _queue: string[] = [];
+    (window as any).showSection = function(name: string) {
+        _queue.push(name);
+    };
+    (window as any)._showSectionQueue = _queue;
+    (window as any)._showSectionStub  = true;
+
+    // ── Sidebar config from localStorage (síncrono, for splash) ──
+    function _aplicarConfigSidebar(cfg: any) {
         if (!cfg) return;
         try {
             if (cfg.logo) {
@@ -19,30 +26,8 @@
         } catch(e) {}
     }
 
-    // Intento síncrono desde localStorage
     try {
         var raw = localStorage.getItem('maneki_storeConfig');
         if (raw) _aplicarConfigSidebar(JSON.parse(raw));
     } catch(e) {}
-
-    // ── Paso 2: actualizar desde SQLite cuando esté disponible (asíncrono) ──
-    // SQLite es la fuente de verdad; puede tener un logo más reciente que localStorage.
-    function _intentarSQLite() {
-        try {
-            var ipc = require('electron').ipcRenderer;
-            ipc.invoke('sqlite-load', { key: 'storeConfig' }).then(function(result) {
-                if (result && result.ok && result.value) {
-                    _aplicarConfigSidebar(result.value);
-                }
-            }).catch(function() {});
-        } catch(e) {
-            // Fuera de Electron o ipcRenderer no disponible aún — reintentar
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(_intentarSQLite, 500);
-                });
-            }
-        }
-    }
-    _intentarSQLite();
 })();

@@ -49,17 +49,7 @@
   <script src="js/icons.js" defer></script>
   <script src="js/config-init.js"></script>
 
-  <!-- ── Stub showSection: evita ReferenceError antes de que carguen los módulos ── -->
-  <script>
-    (function(){
-      var _queue = [];
-      window.showSection = function(name){
-        _queue.push(name);
-      };
-      window._showSectionQueue = _queue;
-      window._showSectionStub  = true;
-    })();
-  </script>
+  <!-- showSection stub now in config-init.js -->
 
   <!-- ── Focus ring con color de marca Maneki ── -->
   <style>
@@ -137,7 +127,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   <button type="button" id="hamburgerBtn" data-action="_mkToggleSidebar"
     aria-label="Abrir menú"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:22px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;transition:transform .2s;">☰</button>
-  <img src="logo.png" alt="Maneki Store" style="height:32px;object-fit:contain;" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<span style=\'font-family:Cormorant Garamond,serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;\'>Maneki Store</span>')">
+  <img src="logo.png" alt="Maneki Store" style="height:32px;object-fit:contain;" data-error-fallback="hide" data-error-html="<span style='font-family:Cormorant Garamond,serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;'>Maneki Store</span>">
   <button type="button" data-action="_abrirBusquedaOverlay"
     aria-label="Buscar"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:18px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">🔍</button>
@@ -153,7 +143,7 @@ input:focus, select:focus, textarea:focus, button:focus {
      class="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
      style="background:transparent;"
      data-action="showSection" data-arg="bienvenida" title="Inicio">
-    <img src="logo.png" alt="Maneki Store" style="width:44px;height:44px;object-fit:contain;border-radius:10px;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span style="font-size:30px;display:none">🐱</span>
+    <img src="logo.png" alt="Maneki Store" style="width:44px;height:44px;object-fit:contain;border-radius:10px;" data-error-fallback="sibling"><span style="font-size:30px;display:none">🐱</span>
 </div>
 
 <div>
@@ -2793,7 +2783,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
   <div id="pedidoProductoSelRow" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 mb-2">
     <div class="flex items-center gap-3">
-      <img id="pedidoProductoSelImg" src="" alt="Imagen del producto seleccionado" class="w-12 h-12 rounded-lg object-cover bg-gray-100" style="display:none" onerror="this.style.display='none'">
+      <img id="pedidoProductoSelImg" src="" alt="Imagen del producto seleccionado" class="w-12 h-12 rounded-lg object-cover bg-gray-100" style="display:none" data-error-fallback="hide">
       <div class="flex-1">
         <div id="pedidoProductoSelNombre" class="font-semibold text-sm text-gray-800"></div>
         <div id="pedidoProductoSelPrecio" class="text-xs text-amber-700"></div>
@@ -3509,52 +3499,6 @@ input:focus, select:focus, textarea:focus, button:focus {
     <span style="font-size:20px;">☰</span><span>Más</span>
   </button>
 </nav>
-<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(function(){})</script>
-<script>
-// N-UI-10: Filtros guardados en pedidos
-(function() {
-    const FK = 'mk_filtros_guardados';
-    function _getFiltros() { try { return JSON.parse(localStorage.getItem(FK)||'[]'); } catch(e){ return []; } }
-    function _guardarFiltroActual() {
-        var nombre = prompt('Nombre para este filtro:');
-        if (!nombre || !nombre.trim()) return;
-        var filtros = {
-            buscar: (document.getElementById('pedidoBuscar')||{}).value || (document.getElementById('tablaBuscarInput')||{}).value || '',
-            pago: (document.getElementById('filtroPago')||{}).value || (document.getElementById('filtroStatusPago')||{}).value || '',
-            urgencia: (document.getElementById('filtroUrgencia')||{}).value || '',
-            desde: (document.getElementById('pedidoFechaDesde')||{}).value || '',
-            hasta: (document.getElementById('pedidoFechaHasta')||{}).value || ''
-        };
-        var guardados = _getFiltros();
-        guardados.push({ nombre: nombre.trim(), filtros: filtros });
-        localStorage.setItem(FK, JSON.stringify(guardados));
-        _actualizarSelectFiltros();
-    }
-    function _cargarFiltroGuardado(nombre) {
-        if (!nombre) return;
-        var guardados = _getFiltros();
-        var f = guardados.find(function(g){ return g.nombre === nombre; });
-        if (!f) return;
-        function set(id, val) { var el = document.getElementById(id); if(el) el.value = val; }
-        set('pedidoBuscar', f.filtros.buscar); set('tablaBuscarInput', f.filtros.buscar);
-        set('filtroPago', f.filtros.pago); set('filtroStatusPago', f.filtros.pago);
-        set('filtroUrgencia', f.filtros.urgencia);
-        set('pedidoFechaDesde', f.filtros.desde);
-        set('pedidoFechaHasta', f.filtros.hasta);
-        (window.renderTablaPedidos || window.filtrarPedidos || window.renderPedidosTable || window.renderKanbanBoard || function(){})();
-    }
-    function _actualizarSelectFiltros() {
-        var sel = document.getElementById('filtrosGuardadosSelect');
-        if (!sel) return;
-        var guardados = _getFiltros();
-        sel.innerHTML = '<option value="">📁 Mis filtros...</option>' +
-            guardados.map(function(g){ return '<option value="' + g.nombre.replace(/"/g,'&quot;') + '">' + g.nombre + '</option>'; }).join('');
-    }
-    window._guardarFiltroActual = _guardarFiltroActual;
-    window._cargarFiltroGuardado = _cargarFiltroGuardado;
-    window._actualizarSelectFiltros = _actualizarSelectFiltros;
-    document.addEventListener('DOMContentLoaded', _actualizarSelectFiltros);
-})();
-</script>
+<!-- SW register + filtros guardados now in init.js / csp-delegate.js -->
 </body>
 </html>

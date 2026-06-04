@@ -258,4 +258,66 @@
         setTimeout(function () { cerrarBusquedaGlobal(); }, 200);
     };
 
+    // ── Image error delegation ──────────────────────────────────
+    document.addEventListener('error', function (e) {
+        var el = e.target as HTMLElement;
+        if (el.tagName !== 'IMG') return;
+        var fallback = el.dataset.errorFallback;
+        if (fallback === 'hide') {
+            el.style.display = 'none';
+            if (el.dataset.errorHtml) {
+                el.insertAdjacentHTML('afterend', el.dataset.errorHtml);
+            }
+        } else if (fallback === 'sibling') {
+            el.style.display = 'none';
+            var next = el.nextElementSibling as HTMLElement;
+            if (next) next.style.display = 'inline';
+        }
+    }, true);
+
+    // ── Filtros guardados en pedidos (was inline <script>) ──────
+    (function () {
+        var FK = 'mk_filtros_guardados';
+        function _getFiltros() { try { return JSON.parse(localStorage.getItem(FK) || '[]'); } catch (e) { return []; } }
+        function _guardarFiltroActual() {
+            var nombre = prompt('Nombre para este filtro:');
+            if (!nombre || !nombre.trim()) return;
+            var filtros = {
+                buscar: (document.getElementById('pedidoBuscar') || {}).value || (document.getElementById('tablaBuscarInput') || {}).value || '',
+                pago: (document.getElementById('filtroPago') || {}).value || (document.getElementById('filtroStatusPago') || {}).value || '',
+                urgencia: (document.getElementById('filtroUrgencia') || {}).value || '',
+                desde: (document.getElementById('pedidoFechaDesde') || {}).value || '',
+                hasta: (document.getElementById('pedidoFechaHasta') || {}).value || ''
+            };
+            var guardados = _getFiltros();
+            guardados.push({ nombre: nombre.trim(), filtros: filtros });
+            localStorage.setItem(FK, JSON.stringify(guardados));
+            _actualizarSelectFiltros();
+        }
+        function _cargarFiltroGuardado(nombre: string) {
+            if (!nombre) return;
+            var guardados = _getFiltros();
+            var f = guardados.find(function (g: any) { return g.nombre === nombre; });
+            if (!f) return;
+            function set(id: string, val: string) { var el = document.getElementById(id); if (el) el.value = val; }
+            set('pedidoBuscar', f.filtros.buscar); set('tablaBuscarInput', f.filtros.buscar);
+            set('filtroPago', f.filtros.pago); set('filtroStatusPago', f.filtros.pago);
+            set('filtroUrgencia', f.filtros.urgencia);
+            set('pedidoFechaDesde', f.filtros.desde);
+            set('pedidoFechaHasta', f.filtros.hasta);
+            ((window as any).renderTablaPedidos || (window as any).filtrarPedidos || (window as any).renderPedidosTable || (window as any).renderKanbanBoard || function () { })();
+        }
+        function _actualizarSelectFiltros() {
+            var sel = document.getElementById('filtrosGuardadosSelect');
+            if (!sel) return;
+            var guardados = _getFiltros();
+            sel.innerHTML = '<option value="">📁 Mis filtros...</option>' +
+                guardados.map(function (g: any) { return '<option value="' + g.nombre.replace(/"/g, '&quot;') + '">' + g.nombre + '</option>'; }).join('');
+        }
+        (window as any)._guardarFiltroActual = _guardarFiltroActual;
+        (window as any)._cargarFiltroGuardado = _cargarFiltroGuardado;
+        (window as any)._actualizarSelectFiltros = _actualizarSelectFiltros;
+        document.addEventListener('DOMContentLoaded', _actualizarSelectFiltros);
+    })();
+
 })();
