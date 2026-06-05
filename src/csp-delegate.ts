@@ -125,7 +125,7 @@
 
     // ── showSection + closeSidebar combo ──────────────────────────
     (window as any)._mkNavSidebar = function (section: string) {
-        showSection(section);
+        if (typeof (window as any).showSection === 'function') (window as any).showSection(section);
         if (typeof (window as any).closeSidebar === 'function') (window as any).closeSidebar();
     };
 
@@ -142,8 +142,8 @@
 
     // ── showSection + openPedidoModal combo ──────────────────────
     (window as any)._mkNewPedido = function () {
-        showSection('pedidos');
-        setTimeout(function () { openPedidoModal(); }, 300);
+        if (typeof (window as any).showSection === 'function') (window as any).showSection('pedidos');
+        setTimeout(function () { if (typeof openPedidoModal === 'function') openPedidoModal(); }, 300);
     };
 
     // ── Trigger pedido form submit ───────────────────────────────

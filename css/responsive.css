@@ -26,9 +26,10 @@
 
   #sidebarOverlay {
     display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45); z-index: 199;
+    background: rgba(0,0,0,0.45); z-index: 49;
   }
   #sidebarOverlay.visible { display: block; }
+  #sidebar { z-index: 50; }
 
   /* Contenido principal: ancho total */
   .main-content, #mainContent, main, .ml-64 {
