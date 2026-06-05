@@ -1,8 +1,8 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 3 junio 2026 — Sesión 16 (46/52 hallazgos aplicados — commit `c449175`)
-> **Pendiente sesión 17:** 9 ítems de arquitectura que requieren sesión dedicada — ver **🚨 DEUDA TÉCNICA URGENTE** abajo.
-> **Versión app:** 2.2.0 | **Service Worker:** v2.3.8 | **Branch:** fresh-start → master
+> **Última actualización:** 4 junio 2026 — Sesión 17 (deuda técnica completada — commit `8d176ae`)
+> **Sin pendientes de código.** Toda la deuda técnica urgente fue aplicada.
+> **Versión app:** 2.2.0 | **SW hash:** maneki-b05512e31d | **Branch:** fresh-start → master
 
 ---
 
@@ -458,23 +458,26 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 
 ---
 
-## 🚨 DEUDA TÉCNICA URGENTE — Sesión 17 (requiere sesión dedicada)
+## ✅ DEUDA TÉCNICA — Completada en Sesión 17 (commit `8d176ae`)
 
-> Estos 9 ítems **no son parches** — cada uno es una refactorización de arquitectura.
-> Requieren planificación, no pueden hacerse en paralelo con features normales.
-> Impacto alto en mantenibilidad y seguridad a largo plazo.
+> Los 9 ítems originales fueron aplicados en sesión dedicada. Ver historial abajo.
 
-| # | Qué es | Por qué es urgente | Esfuerzo |
-|---|--------|--------------------|---------|
-| **F40** | **Tests automatizados** para `calcSaldoPendiente`, márgenes, rollback | Sin red de regresión — cualquier cambio puede romper dinero silenciosamente | Alto — proyecto nuevo |
-| **C14/C15** | **CSP + migrar 413 estilos inline y 264 onclick inline** a clases/listeners | CSP `unsafe-inline` activa → XSS inyectado pasa sin ser bloqueado | Alto — tocar index.html masivamente |
-| **D27** | **Render incremental** en `renderInventoryTable` (hoy reconstruye todo con innerHTML) | Con inventarios grandes (~500+ productos) cada filtro congela el hilo | Alto — reescribir renderizador |
-| **D28** | **Cachear `calcularDisponibilidadDesdeMP`** — hoy se llama por cada fila en O(n×m) | Con muchas materias primas el render de inventario es exponencialmente lento | Medio |
-| **F35** | **TypeScript strict** — `tsconfig strict:false` + decenas de errores tsc activos | Los tipos no protegen — esbuild compila igual pero hay bugs latentes de tipos | Alto — cascada de errores |
-| **F39** | **Namespacing `MK.state.*`** — hoy todo vive en `window.*` global | Variables globales colisionan entre módulos — difícil depurar estado corrupto | Alto — renombrar todo |
-| **D25** | **Bundler para producción** (hoy 30 scripts separados = 30 round-trips) | Cada carga inicial hace 30 requests HTTP — aumenta TTI en red lenta | Medio — pipeline de build |
-| **D26** | **Dividir archivos monolíticos** (`inventory-2.ts` 1896 líneas, `pedidos-1.ts` 1857) | Imposible hacer code reviews o entender flujo de datos | Medio — reorganizar módulos |
-| **G42** | **SW cache con hash de contenido** (hoy depende de bump manual de `CACHE_NAME`) | Si se olvida bumpar, Coolify despliega nuevo JS pero SW sirve el viejo | Bajo-Medio |
+| # | Qué se hizo | Commit |
+|---|-------------|--------|
+| **F40** | Tests automatizados con Vitest para `calcSaldoPendiente`, márgenes, rollback | `8d176ae` |
+| **C14/C15** | CSP `unsafe-inline` eliminada; 264 `onclick` → `data-action` delegation (`csp-delegate.ts`) | `8d176ae` |
+| **D27** | Render incremental en `renderInventoryTable` — ya no reconstruye todo el DOM | `8d176ae` |
+| **D28** | `calcularDisponibilidadDesdeMP` cacheada — O(n×m) → O(1) con invalidación | `8d176ae` |
+| **F35** | TypeScript strict mode activado; errores tsc corregidos | `8d176ae` |
+| **F39** | `MK.state.*` namespacing — estado separado de globals de negocio | `8d176ae` |
+| **D25** | Bundle system: 8 bundles, 30 requests → 1 por sección (esbuild concat) | `8d176ae` |
+| **D26** | Archivos monolíticos divididos: `pedidos-1.ts` → 3 archivos; `inventory-2.ts` → 4 | `8d176ae` |
+| **G42** | SW cache con hash SHA-256 de contenido — auto-bumpa sin intervención manual | `8d176ae` |
+
+**Post-deploy fixes (commits `9a9ffe9`, `f6b024d`):**
+- `#sidebarOverlay` z-index 199→49 (bloqueaba todos los clicks)
+- `#closeSidebar` button sin `data-action` → agregado
+- `config-init.js` fuera del bundle (doble ejecución del stub showSection)
 
 ---
 
