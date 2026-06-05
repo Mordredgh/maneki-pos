@@ -26,7 +26,7 @@ console.log(`Compiled: ${tsFiles.length - errors}/${tsFiles.length} files${error
 // ── Step 2: Bundle groups (concat in order) ─────────────────────────────────
 const BUNDLES = {
   'core.bundle.js': [
-    'icons.js', 'config-init.js', 'db.js', 'app-data.js', 'equipos.js',
+    'icons.js', 'db.js', 'app-data.js', 'equipos.js',
     'config.js', 'dashboard.js', 'ui-extras.js', 'navigation.js',
     'lazy-loader.js', 'design-system.js', 'templates.js', 'csp-delegate.js', 'init.js'
   ],
