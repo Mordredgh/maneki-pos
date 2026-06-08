@@ -366,10 +366,14 @@ function eliminarPedidoFinalizado(id) {
     showConfirm(`El pedido ${pedido.folio || id} será eliminado del historial de ventas.`, '⚠️ Eliminar pedido').then(ok => {
         if (!ok) return;
         // FIX #13: filtrar por id (único) en vez de folio (puede repetirse)
-        pedidosFinalizados = pedidosFinalizados.filter(p => String(p.id) !== String(id));
+        const _idElim = String(id);
+        pedidosFinalizados = pedidosFinalizados.filter(p => String(p.id) !== _idElim);
         savePedidosFinalizados();
-        salesHistory = salesHistory.filter(s => String(s.id) !== String(id));
+        salesHistory = salesHistory.filter(s => String(s.id) !== _idElim);
         saveSalesHistory();
+        // FIX-ELIM: upsert no elimina — borrar de orders_finalizados y sales_history
+        if (typeof (window as any).deletePedidoFinalizado === 'function') (window as any).deletePedidoFinalizado(_idElim);
+        if (typeof (window as any).deleteSalesHistoryEntry === 'function') (window as any).deleteSalesHistoryEntry(_idElim);
         if (typeof _allVentasCache !== 'undefined') _allVentasCache = null;
         renderHistorialPedidos();
         renderSalesHistory();

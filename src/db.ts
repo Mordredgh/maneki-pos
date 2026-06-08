@@ -723,7 +723,13 @@ const _RELATIONAL_TABLES = {
         ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase
     })},
     categories: { table: 'categories', min: 1, map: row => ({ ...row }) },
-    pedidos: { table: 'orders', min: 1, orderBy: 'updated_at', limit: 2000, map: row => ({
+    pedidos: { table: 'orders', min: 1, orderBy: 'updated_at', limit: 2000,
+        // FIX: excluir pedidos con status finalizado/completado/entregado al cargar.
+        // Esos rows deben vivir en orders_finalizados. Sin este filtro, un pedido
+        // que no pudo borrarse de orders (deletePedidoActivo falló o bundle viejo)
+        // reaparecía en el kanban al recargar la página.
+        filter: (q: any) => q.not('status', 'in', '("finalizado","completado","entregado")'),
+        map: row => ({
         id: row.id, folio: row.folio, cliente: row.cliente, telefono: row.telefono,
         redes: row.redes, fecha: row.fecha, entrega: row.entrega, concepto: row.concepto,
         cantidad: row.cantidad || 1, costo: row.costo || 0, anticipo: row.anticipo || 0,
@@ -782,6 +788,7 @@ async function _loadFromTable(key) {
     if (!cfg || !db) return null;
     try {
         let query = db.from(cfg.table).select('*');
+        if ((cfg as any).filter) query = (cfg as any).filter(query);
         if (cfg.orderBy) query = query.order(cfg.orderBy, { ascending: false });
         if (cfg.limit) query = query.limit(cfg.limit);
         const { data, error } = await _withTimeout(query, 10000);
@@ -801,6 +808,7 @@ async function _loadMoreFromTable(key, offset, pageSize) {
     if (!cfg || !db) return [];
     try {
         let query = db.from(cfg.table).select('*');
+        if ((cfg as any).filter) query = (cfg as any).filter(query);
         if (cfg.orderBy) query = query.order(cfg.orderBy, { ascending: false });
         query = query.range(offset, offset + pageSize - 1);
         const { data, error } = await _withTimeout(query, 10000);
@@ -1250,3 +1258,40 @@ function savePedidosFinalizados() {
         }
     })();
 }
+
+// ── deletePedidoActivo — borra de public.orders al finalizar/cancelar-mover ──
+// upsert no elimina filas; sin este DELETE el pedido reaparece al recargar.
+async function deletePedidoActivo(id: string): Promise<void> {
+    try {
+        const { error } = await db.from('orders').delete().eq('id', String(id));
+        if (error) console.error('deletePedidoActivo error:', error);
+    } catch(e) { console.error('deletePedidoActivo excepción:', e); }
+}
+(window as any).deletePedidoActivo = deletePedidoActivo;
+
+// ── deletePedidoFinalizado — borra de public.orders_finalizados al reactivar ──
+async function deletePedidoFinalizado(id: string): Promise<void> {
+    try {
+        const { error } = await db.from('orders_finalizados').delete().eq('id', String(id));
+        if (error) console.error('deletePedidoFinalizado error:', error);
+    } catch(e) { console.error('deletePedidoFinalizado excepción:', e); }
+}
+(window as any).deletePedidoFinalizado = deletePedidoFinalizado;
+
+// ── deleteClientFromDB — borra de public.clients al eliminar cliente ──
+async function deleteClientFromDB(id: string): Promise<void> {
+    try {
+        const { error } = await db.from('clients').delete().eq('id', String(id));
+        if (error) console.error('deleteClientFromDB error:', error);
+    } catch(e) { console.error('deleteClientFromDB excepción:', e); }
+}
+(window as any).deleteClientFromDB = deleteClientFromDB;
+
+// ── deleteSalesHistoryEntry — borra de public.sales_history al eliminar entrada ──
+async function deleteSalesHistoryEntry(id: string): Promise<void> {
+    try {
+        const { error } = await db.from('sales_history').delete().eq('id', String(id));
+        if (error) console.error('deleteSalesHistoryEntry error:', error);
+    } catch(e) { console.error('deleteSalesHistoryEntry excepción:', e); }
+}
+(window as any).deleteSalesHistoryEntry = deleteSalesHistoryEntry;

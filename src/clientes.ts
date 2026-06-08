@@ -752,8 +752,11 @@ function closeAddClientModal() {
 
             showConfirm(_msgConfirm, _titleConfirm).then(ok => {
                 if (!ok) return;
-                clients = clients.filter(c => String(c.id) !== String(id));
+                const _idClienteEliminado = String(id);
+                clients = clients.filter(c => String(c.id) !== _idClienteEliminado);
                 saveClients();
+                // FIX-CLI-DELETE: upsert no elimina — borrar de clients para que no reaparezca
+                if (typeof (window as any).deleteClientFromDB === 'function') (window as any).deleteClientFromDB(_idClienteEliminado);
                 renderClientsTable();
                 // BUG-CLI-03 FIX: actualizar dashboard al eliminar cliente
                 if (typeof updateDashboard === 'function') updateDashboard();
