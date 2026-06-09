@@ -441,7 +441,7 @@ function setPedidoStatus(status) {
             ? '⚠️ Este pedido tiene total $0.00. ¿Deseas finalizarlo de todas formas sin precio registrado?'
             : '¿Marcar como finalizado? El pedido pasará al historial.';
         const _confirTitle = _totalActual === 0 ? '⚠️ Pedido sin precio' : '🎉 Finalizar';
-        showConfirm(_confirMsg, _confirTitle).then(ok => {
+        showConfirm(_confirMsg, _confirTitle).then(async ok => {
             if (!ok) return;
             if (!window.pedidosFinalizados) window.pedidosFinalizados = [];
             const p = {
@@ -466,7 +466,8 @@ function setPedidoStatus(status) {
 
             // Descontar inventario (PT + MP) si no se hizo al pasar a producción
             if ((p.productosInventario || []).length > 0 && !p.inventarioDescontado) {
-                const _nDescont = _descontarInventarioPedido(p);
+                // FIX-ASYNC: _descontarInventarioPedido es async — await para leer el conteo real
+                const _nDescont = await _descontarInventarioPedido(p);
                 if (_nDescont > 0) {
                     p.inventarioDescontado = true;
                     p._inventarioYaFinalizado = true;
@@ -478,16 +479,20 @@ function setPedidoStatus(status) {
                 if (_nEmp > 0) p.empaquesDescontados = true;
             }
 
+            const _idFinalizado = String(p.id);
             window.pedidosFinalizados.push(p);
             window.pedidos.splice(idx, 1);
             savePedidos();
             savePedidosFinalizados();
+            // FIX-HISTORIAL: upsert no elimina — borrar de orders para que no reaparezca al recargar
+            if (typeof (window as any).deletePedidoActivo === 'function') (window as any).deletePedidoActivo(_idFinalizado);
 
             // ── FIX: Registrar pedido finalizado en salesHistory para Reportes y Balance ──
             // Solo registrar lo que RESTABA por cobrar. Los anticipos/abonos anteriores
             // ya están en salesHistory como type:'anticipo' o type:'abono'.
             if (!window.salesHistory) window.salesHistory = [];
-            const yaRegistrado = window.salesHistory.some(s => s.folio === p.folio && s.type === 'pedido');
+            // type='venta' = formato antiguo (pre-migración relacional) — cuenta como registrado
+            const yaRegistrado = window.salesHistory.some(s => s.folio === p.folio && (s.type === 'pedido' || s.type === 'venta'));
             if (!yaRegistrado && Number(p.total || 0) > 0) {
                 const _saldoFinal = typeof calcSaldoPendiente === 'function'
                     ? calcSaldoPendiente(p)
@@ -564,6 +569,9 @@ function setPedidoStatus(status) {
             const aplicarCancelacion = (esMerma) => {
                 // Snapshot para undo
                 const statusAnterior = pedido.status;
+                // FIX-UNDO-CANCEL: capturar flags ANTES de que cancelar los modifique (pedido es referencia)
+                const _invDescAntes = pedido.inventarioDescontado === true;
+                const _empDescAntes = pedido.empaquesDescontados === true;
                 const folioLabel = pedido.folio || pedido.id;
                 if (typeof window.mkPushUndo === 'function') {
                     window.mkPushUndo(`Cancelar pedido ${folioLabel}`, () => {
@@ -571,6 +579,16 @@ function setPedidoStatus(status) {
                         if (p && p.status === 'cancelado') {
                             p.status = statusAnterior;
                             delete p.fechaCancelado;
+                            // FIX-UNDO-CANCEL: re-descontar inventario si fue devuelto al cancelar
+                            // para que el pedido quede consistente al volver a activo
+                            if (_invDescAntes && typeof _descontarInventarioPedido === 'function') {
+                                _descontarInventarioPedido(p).catch((e: any) => console.error('[Undo cancel] Error re-descontando:', e));
+                                p.inventarioDescontado = true;
+                            }
+                            if (_empDescAntes && typeof _descontarEmpaquesInventario === 'function') {
+                                _descontarEmpaquesInventario(p);
+                                p.empaquesDescontados = true;
+                            }
                             if (typeof savePedidos === 'function') savePedidos();
                             if (typeof renderPedidosTable === 'function') renderPedidosTable();
                         }
@@ -1012,6 +1030,7 @@ function _aplicarCambioLote() {
     const _fecha = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
     let cambiados = 0;
     let finalizados = 0;
+    const _idsFinalizadosLote: string[] = [];
 
     _kanbanSeleccionados.forEach(id => {
         const idx = (window.pedidos || []).findIndex(p => String(p.id) === String(id));
@@ -1035,14 +1054,12 @@ function _aplicarCambioLote() {
                 fechaFinalizado: _fecha
             };
             // Descontar inventario si no se hizo antes
-            if ((pedidoFin.productosInventario || []).length > 0 && !pedidoFin.inventarioDescontado) {
-                try {
-                    const n = _descontarInventarioPedido(pedidoFin);
-                    if (n > 0) {
-                        pedidoFin.inventarioDescontado = true;
-                        pedidoFin._inventarioYaFinalizado = true;
-                    }
-                } catch(e) { console.error('[Lote] Error al descontar inventario:', e); }
+            // FIX-ASYNC: _descontarInventarioPedido es async; el descuento en memoria
+            // ocurre antes del primer await, así que disparar + marcar flag inmediatamente es correcto
+            if ((pedidoFin.productosInventario || []).filter((i: any) => i.id && i.id !== 'libre').length > 0 && !pedidoFin.inventarioDescontado) {
+                _descontarInventarioPedido(pedidoFin).catch((e: any) => console.error('[Lote] Error al descontar inventario:', e));
+                pedidoFin.inventarioDescontado = true;
+                pedidoFin._inventarioYaFinalizado = true;
             }
             // Descontar empaques si no se hicieron antes
             if ((pedidoFin.empaques || []).length > 0 && !pedidoFin.empaquesDescontados) {
@@ -1051,22 +1068,29 @@ function _aplicarCambioLote() {
             }
             window.pedidosFinalizados.push(pedidoFin);
             // Registrar en salesHistory igual que el flujo individual
-            if (typeof window.salesHistory !== 'undefined' && pedidoFin.total) {
-                window.salesHistory.push({
-                    id: pedidoFin.id, type: 'pedido', folio: pedidoFin.folio,
-                    date: _fecha, customer: pedidoFin.cliente,
-                    concept: pedidoFin.concepto || 'Pedido finalizado',
-                    total: Number(pedidoFin.total), method: 'Pedido',
-                    products: pedidoFin.productosInventario || []
-                });
-                if (typeof saveSalesHistory === 'function') saveSalesHistory();
-                if (typeof window._invalidarCacheVentas === 'function') window._invalidarCacheVentas();
+            // FIX-LOTE-TOTAL: usar calcSaldoPendiente igual que el flujo individual (no pedidoFin.total)
+            // para no doble-contar anticipos/abonos ya registrados en salesHistory
+            if (typeof window.salesHistory !== 'undefined' && Number(pedidoFin.total) > 0) {
+                const _yaRegLote = window.salesHistory.some((s: any) => s.folio === pedidoFin.folio && (s.type === 'pedido' || s.type === 'venta'));
+                const _saldoLote = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(pedidoFin) : Number(pedidoFin.total);
+                if (!_yaRegLote && _saldoLote > 0) {
+                    window.salesHistory.push({
+                        id: pedidoFin.id, type: 'pedido', folio: pedidoFin.folio,
+                        date: _fecha, customer: pedidoFin.cliente,
+                        concept: pedidoFin.concepto || 'Pedido finalizado',
+                        total: _saldoLote, method: 'Pedido',
+                        products: pedidoFin.productosInventario || []
+                    });
+                    if (typeof saveSalesHistory === 'function') saveSalesHistory();
+                    if (typeof window._invalidarCacheVentas === 'function') window._invalidarCacheVentas();
+                }
             }
             // Actualizar totalPurchases del cliente
             if (pedidoFin.cliente && typeof window.clients !== 'undefined') {
                 const _cl = (window.clients||[]).find(c => (c.name||'').toLowerCase().trim() === (pedidoFin.cliente||'').toLowerCase().trim());
                 if (_cl) { _cl.totalPurchases = (_cl.totalPurchases||0) + Number(pedidoFin.total||0); if (typeof saveClients==='function') saveClients(); }
             }
+            _idsFinalizadosLote.push(String(p.id));
             window.pedidos.splice(idx, 1);
             finalizados++;
         } else {
@@ -1090,6 +1114,10 @@ function _aplicarCambioLote() {
         if (finalizados > 0) {
             savePedidosFinalizados();
             renderHistorialPedidos();
+            // FIX-HISTORIAL: borrar de orders los pedidos finalizados en lote
+            if (typeof (window as any).deletePedidoActivo === 'function') {
+                _idsFinalizadosLote.forEach(id => (window as any).deletePedidoActivo(id));
+            }
         }
         _kanbanSeleccionados.clear();
         _actualizarBarraLote();
@@ -1159,10 +1187,13 @@ function reactivarPedido(id) {
         });
 
         if (fuente === 'finalizados') {
+            const _idReactivado = String(p.id);
             window.pedidosFinalizados.splice(idx, 1);
             window.pedidos.push(reactivado);
             savePedidos();
             savePedidosFinalizados();
+            // FIX-HISTORIAL: borrar de orders_finalizados para que no reaparezca en historial
+            if (typeof (window as any).deletePedidoFinalizado === 'function') (window as any).deletePedidoFinalizado(_idReactivado);
         } else {
             // Cancelado en window.pedidos — solo cambiar el status
             window.pedidos[idx] = reactivado;
