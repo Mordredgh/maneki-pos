@@ -466,13 +466,13 @@ ${h.substring(0,300)}...`,"Resumen WA generado"):manekiToastExport("Copia el res
                 </div>
             </div>
         </div>`}window.renderWidgetClima=renderWidgetClima;function renderHeatmapPedidos(){const e=document.getElementById("dashHeatmapWidget");if(!e)return;const i=["Dom","Lun","Mar","Mi\xE9","Jue","Vie","S\xE1b"],r=["6\u20139","9\u201312","12\u201315","15\u201318","18\u201321","21+"],f=Array.from({length:7},()=>new Array(6).fill(0));[...(window.pedidos||[]).map(n=>n.fechaCreacion||n.fecha),...(window.pedidosFinalizados||[]).map(n=>n.fechaCreacion||n.fechaFinalizado||n.fecha),...(window.salesHistory||[]).map(n=>n.createdAt||(n.date?n.date+"T12:00:00":null))].filter(Boolean).forEach(n=>{try{const d=new Date(n);if(isNaN(d.getTime()))return;const g=d.getDay(),h=d.getHours(),p=h<6?5:h<9?0:h<12?1:h<15?2:h<18?3:h<21?4:5;f[g][p]++}catch{}});const s=Math.max(...f.flat(),1),o=n=>{const d=n/s;return d===0?"#f9fafb":d<.25?"rgba(197,151,59,0.12)":d<.5?"rgba(197,151,59,0.32)":d<.75?"rgba(197,151,59,0.58)":"rgba(197,151,59,0.85)"},c=n=>n/s>.5?"#5c3a00":"#6b7280";e.innerHTML=`
-        <div style="display:grid;grid-template-columns:44px repeat(6,1fr);gap:3px;font-size:.62rem;">
+        <div style="display:grid;grid-template-columns:36px repeat(6,minmax(0,1fr));gap:2px;font-size:.62rem;max-width:520px;">
             <div></div>
-            ${r.map(n=>`<div style="text-align:center;color:#9ca3af;font-weight:700;padding-bottom:4px;">${n}</div>`).join("")}
+            ${r.map(n=>`<div style="text-align:center;color:#9ca3af;font-weight:700;padding-bottom:2px;">${n}</div>`).join("")}
             ${i.map((n,d)=>`
                 <div style="color:#6b7280;font-weight:700;display:flex;align-items:center;">${n}</div>
                 ${f[d].map((g,h)=>`
-                    <div title="${g} registros" style="aspect-ratio:1;border-radius:5px;background:${o(g)};display:flex;align-items:center;justify-content:center;color:${c(g)};font-weight:${g>0?"700":"400"}">
+                    <div title="${g} registros" style="height:26px;border-radius:4px;background:${o(g)};display:flex;align-items:center;justify-content:center;color:${c(g)};font-weight:${g>0?"700":"400"}">
                         ${g>0?g:""}
                     </div>
                 `).join("")}

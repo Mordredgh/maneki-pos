@@ -1393,14 +1393,16 @@ function renderHeatmapPedidos(): void {
     };
     const fg = (v: number) => v / maxVal > 0.5 ? '#5c3a00' : '#6b7280';
 
+    // FIX-UI: altura fija en vez de aspect-ratio:1 — en pantallas anchas los
+    // cuadros crecían enormes y el heatmap dominaba el dashboard
     el.innerHTML = `
-        <div style="display:grid;grid-template-columns:44px repeat(6,1fr);gap:3px;font-size:.62rem;">
+        <div style="display:grid;grid-template-columns:36px repeat(6,minmax(0,1fr));gap:2px;font-size:.62rem;max-width:520px;">
             <div></div>
-            ${bloques.map(b => `<div style="text-align:center;color:#9ca3af;font-weight:700;padding-bottom:4px;">${b}</div>`).join('')}
+            ${bloques.map(b => `<div style="text-align:center;color:#9ca3af;font-weight:700;padding-bottom:2px;">${b}</div>`).join('')}
             ${dias.map((dia, d) => `
                 <div style="color:#6b7280;font-weight:700;display:flex;align-items:center;">${dia}</div>
                 ${grid[d].map((v, b) => `
-                    <div title="${v} registros" style="aspect-ratio:1;border-radius:5px;background:${bg(v)};display:flex;align-items:center;justify-content:center;color:${fg(v)};font-weight:${v>0?'700':'400'}">
+                    <div title="${v} registros" style="height:26px;border-radius:4px;background:${bg(v)};display:flex;align-items:center;justify-content:center;color:${fg(v)};font-weight:${v>0?'700':'400'}">
                         ${v > 0 ? v : ''}
                     </div>
                 `).join('')}
