@@ -1,8 +1,8 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 4 junio 2026 — Sesión 17 (deuda técnica completada — commit `8d176ae`)
+> **Última actualización:** 10 junio 2026 — Sesión 18 (integridad de datos + auditoría de bugs — commit `88f592a`)
 > **Sin pendientes de código.** Toda la deuda técnica urgente fue aplicada.
-> **Versión app:** 2.2.0 | **SW hash:** maneki-b05512e31d | **Branch:** fresh-start → master
+> **Versión app:** 2.2.0 | **SW hash:** maneki-3db3620882 | **Branch:** fresh-start → master
 
 ---
 
@@ -455,6 +455,64 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | 🥉 | Fila de totales sticky en tablas | Medio | Medio |
 | ⭐ | Clases utilitarias anti-deriva de tokens | Estructural | Medio |
 | ⭐ | Micro-pulido (empty states, alertas, sombras, aria) | Medio | Bajo |
+
+---
+
+## ✅ Sesión 18 (10 junio 2026) — Integridad de datos + auditoría profunda de bugs
+
+> Sesión dedicada a corregir el patrón "upsert no elimina" en Supabase y a una
+> auditoría multi-ángulo (7 agentes) sobre todo el programa. 7 commits desplegados.
+
+### Bugs críticos de integridad de datos (patrón: upsert sin DELETE)
+
+| Commit | Bug | Fix |
+|--------|-----|-----|
+| `e651dcf` | **Pedidos finalizados reaparecían al recargar** — `savePedidos()` usa upsert, que nunca borra la fila de `orders` | Nuevas funciones `deletePedidoActivo(id)` / `deletePedidoFinalizado(id)` en db.ts; llamadas tras finalizar (individual + lote) y reactivar |
+| `635a3d9` | **Seguían reapareciendo (PE-0061)** — causa raíz: `_loadFromTable` cargaba TODO de `orders` sin filtro de status | Propiedad `filter` en `_RELATIONAL_TABLES.pedidos`: excluye `finalizado/completado/entregado` al cargar (también en `_loadMoreFromTable`) |
+| `ae40409` | **Reportes inflados ~$23,411** — entradas legacy `type='venta'` en salesHistory se contaban ADEMÁS del mismo pedido vía `pfComoVentas` | Paso 1b en `_getAllVentas()`: marca entradas `type='venta'` cuyo folio existe en pedidosFinalizados como legacy → se excluyen de shFiltrado |
+| `ac97da0` | **deleteClient y eliminarPedidoFinalizado dejaban filas huérfanas** en `clients`, `orders_finalizados` y `sales_history` | Nuevas `deleteClientFromDB(id)` / `deleteSalesHistoryEntry(id)` en db.ts; llamadas tras los saves correspondientes |
+
+### Bugs de flujo finalización/cancelación (commit `96085b1`)
+
+| # | Bug | Impacto |
+|---|-----|---------|
+| 1 | `_descontarInventarioPedido` (async) sin `await` al finalizar individual — `Promise > 0` es false → `inventarioDescontado` nunca se marcaba | **Doble descuento de stock** en siguiente transición |
+| 2 | Mismo bug en `_aplicarCambioLote` (finalizar en lote) | Igual; fix: fire+flag inmediato (descuento en memoria ocurre antes del primer await) |
+| 3 | Lote registraba `pedidoFin.total` en salesHistory en vez de `calcSaldoPendiente` | **Anticipos contados doble** en reportes; agregado guard `yaRegistrado` |
+| 4 | Undo de cancelar no restauraba `inventarioDescontado`/`empaquesDescontados` | Cancelar→Undo→producción = doble descuento; ahora captura flags antes y re-descuenta en undo |
+
+### Otros fixes de la sesión
+
+| Commit | Fix |
+|--------|-----|
+| `f6b024d` | `#closeSidebar` sin `data-action` (muerto tras migración CSP) + `config-init.js` removido de core.bundle (doble ejecución) |
+| `d0f3cb2` | Changelog v2.2.0 con novedades reales (estaba congelado en 2.1.0) |
+| `d8ff32d` | **Workflow de Netlify eliminado** (`.github/workflows/deploy.yml`) — fallaba en cada push por secrets expirados; el deploy real es Coolify |
+| `88f592a` | **Heatmap de actividad compacto** — `aspect-ratio:1` hacía cuadros gigantes en pantallas anchas; ahora altura fija 26px + max-width 520px |
+
+### Auditorías realizadas (resultado: limpio)
+
+- **Supabase:** 0 pedidos fantasma, 0 IDs duplicados cross-table, 0 productos corruptos, 0 pedidos con productos eliminados
+- **Código:** productos (`deleteProduct`/`invBulkEliminar`) ya tenían DELETE explícito; CxC/CxP/recurrentes usan `sbSave` full-replace (seguro); ingresos/gastos no tienen flujo de borrado individual
+
+### ⚠️ Convenciones nuevas (Sesión 18)
+
+```javascript
+// PATRÓN UPSERT-DELETE: los save* relacionales (savePedidos, savePedidosFinalizados,
+// saveClients, saveSalesHistory) usan upsert — NUNCA borran filas.
+// Al quitar un elemento de un array hay que llamar el delete explícito:
+//   deletePedidoActivo(id)       → orders
+//   deletePedidoFinalizado(id)   → orders_finalizados
+//   deleteClientFromDB(id)       → clients
+//   deleteSalesHistoryEntry(id)  → sales_history
+// Las tablas key/value vía sbSave() NO necesitan esto (reemplazo completo del JSON).
+
+// FILTRO DE CARGA: _RELATIONAL_TABLES.pedidos tiene filter() que excluye
+// status finalizado/completado/entregado — 'cancelado' SÍ se carga (historial).
+
+// _descontarInventarioPedido es ASYNC — siempre await (o fire+flag consciente
+// de que el descuento en memoria ocurre antes del primer await interno).
+```
 
 ---
 
