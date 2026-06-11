@@ -22,8 +22,8 @@
     var _GRUPOS = _useBundles ? {
         inventario: ['js/inventario.bundle.js'],
         pedidos:    ['js/balance.bundle.js', 'js/pedidos.bundle.js'],
-        balance:    [CDN.chartjs, 'js/balance.bundle.js'],
-        reportes:   [CDN.chartjs, 'js/reportes.bundle.js'],
+        balance:    ['js/balance.bundle.js'],
+        reportes:   ['js/reportes.bundle.js'],
         clientes:   ['js/clientes.bundle.js'],
         envios:     [CDN.leafletCSS, CDN.leafletJS, 'js/envios.bundle.js'],
         backup:     ['js/backup.bundle.js']
@@ -47,8 +47,8 @@
             'js/pedidos-2.js',
             'js/pedidos-3.js'
         ],
-        balance:  [CDN.chartjs, 'js/balance.js'],
-        reportes: [CDN.chartjs, 'js/reportes.js'],
+        balance:  ['js/balance.js'],
+        reportes: ['js/reportes.js'],
         clientes: ['js/clientes.js'],
         envios:   [CDN.leafletCSS, CDN.leafletJS, 'js/envios.js'],
         backup:   ['js/backup.js']
@@ -185,13 +185,19 @@
         return !grupo || _cargados.has(grupo);
     };
 
+    // ── Garantizar Chart.js bajo demanda (balance y reportes) ───────
+    // Expuesto para que design-system.ts lo llame antes de renderizar gráficas.
+    // Siempre retorna la misma promise si ya está en vuelo o cargado.
+    window._mkEnsureChartJs = function () {
+        return _cargarScript(CDN.chartjs);
+    };
+
     // ── Prefetch agresivo — todos los grupos en paralelo a 300ms ──
-    // El navegador maneja hasta 6 conexiones paralelas por dominio.
-    // Con esto, para cuando el usuario navega a cualquier sección,
-    // los scripts ya están descargados o casi terminan.
+    // Chart.js arranca inmediatamente (sin esperar 300ms) porque
+    // balance y reportes lo necesitan pero no lo tienen en su grupo.
     window.addEventListener('load', function () {
+        _cargarScript(CDN.chartjs);   // inicia YA — no bloqueará ningún bundle
         setTimeout(function () {
-            _cargarScript(CDN.chartjs);   // sparkline dashboard — lo antes posible
             _cargarGrupo('pedidos');
             _cargarGrupo('inventario');
             _cargarGrupo('balance');

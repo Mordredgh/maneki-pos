@@ -583,20 +583,24 @@ function _sectionSpinner(name, show) {
 function _lazyLoad(name) {
     if (_lazySections.has(name)) return;
     _lazySections.add(name);
-    const _render = () => {
-        if (name==='analisis'  && window.renderAnalisis)      window.renderAnalisis();
-        if (name==='reportes'  && window.renderSalesHistory)  window.renderSalesHistory();
-        if (name==='clientes'  && window.renderClientsTable)  window.renderClientsTable();
-        if (name==='balance'   && window.renderBalance)       window.renderBalance();
-        if (name==='quotes'    && window.renderQuotesTable)   window.renderQuotesTable();
+    const _render = async () => {
+        // balance y reportes usan Chart.js — garantizar que esté cargado antes de renderizar
+        if ((name==='balance' || name==='reportes' || name==='analisis') && (window as any)._mkEnsureChartJs) {
+            await (window as any)._mkEnsureChartJs();
+        }
+        if (name==='analisis'  && (window as any).renderAnalisis)       (window as any).renderAnalisis();
+        if (name==='reportes'  && (window as any).renderSalesHistory)   (window as any).renderSalesHistory();
+        if (name==='clientes'  && (window as any).renderClientsTable)   (window as any).renderClientsTable();
+        if (name==='balance'   && (window as any).renderBalance)        (window as any).renderBalance();
+        if (name==='quotes'    && (window as any).renderQuotesTable)    (window as any).renderQuotesTable();
         if (name==='inventory' || name==='inventario' || name==='categorias') {
-            if (window.updateCategorySelects) window.updateCategorySelects();
-            if (window.renderInventoryTable)  window.renderInventoryTable();
+            if ((window as any).updateCategorySelects) (window as any).updateCategorySelects();
+            if ((window as any).renderInventoryTable)  (window as any).renderInventoryTable();
         }
         if (name==='pedidos') {
-            if (window.renderPedidosTable)    window.renderPedidosTable();
-            if (window.renderKanbanBoard)     window.renderKanbanBoard();
-            if (window.renderHistorialPedidos) window.renderHistorialPedidos();
+            if ((window as any).renderPedidosTable)     (window as any).renderPedidosTable();
+            if ((window as any).renderKanbanBoard)      (window as any).renderKanbanBoard();
+            if ((window as any).renderHistorialPedidos) (window as any).renderHistorialPedidos();
         }
     };
     if (!window._mkLazyLoad || window._mkGrupoListo(name)) {
