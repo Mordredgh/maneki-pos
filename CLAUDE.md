@@ -1,8 +1,8 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 10 junio 2026 — Sesión 18 (integridad de datos + auditoría de bugs — commit `88f592a`)
-> **Sin pendientes de código.** Toda la deuda técnica urgente fue aplicada.
-> **Versión app:** 2.2.0 | **SW hash:** maneki-3db3620882 | **Branch:** fresh-start → master
+> **Última actualización:** 11 junio 2026 — Sesión 19 (auditoría ultracode completa — commit `b5679be`)
+> **Sin pendientes de código.** 16 bugs corregidos + 18 features/nice-to-have aplicados.
+> **Versión app:** 2.2.0 | **SW hash:** maneki-a3be635281 | **Branch:** fresh-start → master
 
 ---
 
