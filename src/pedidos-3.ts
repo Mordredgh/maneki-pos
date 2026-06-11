@@ -383,11 +383,13 @@ function duplicarPedido(id) {
         fechaUltimoEstado: new Date().toISOString(),
         fechaPedido: hoy,
         entrega: '',
-        productosInventario: JSON.parse(JSON.stringify(original.productosInventario || []))
+        productosInventario: JSON.parse(JSON.stringify(original.productosInventario || [])),
+        empaques: original.empaques ? original.empaques.map(e => ({...e})) : [],
+        empaquesDescontados: false,
+        inventarioDescontado: false,
+        _inventarioYaFinalizado: false
     };
-    copia.inventarioDescontado = false;
     delete copia.fechaFinalizado;
-    delete copia._inventarioYaFinalizado;
     delete copia.fechaCancelado;
     copia.referenciasUrls = [];
     copia.referenciasPaths = [];

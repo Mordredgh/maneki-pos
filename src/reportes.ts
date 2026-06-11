@@ -24,11 +24,23 @@ function _getAllVentas() {
     var foliosEnSH = {};
     sh.filter(function(s){ return s.type === 'pedido'; }).forEach(function(s){ if(s.folio) foliosEnSH[s.folio] = true; });
 
+    // 1b. FIX DOBLE CONTEO: entradas con type='venta' (formato previo a la migración relacional)
+    //     que corresponden a pedidosFinalizados se excluyen de shFiltrado; el total correcto
+    //     llega a través de pfComoVentas usando orders_finalizados como fuente de verdad.
+    //     Sin este fix, _getAllVentas() sumaba ~$23k duplicados en reportes.
+    var idsLegacyPedido = {};
+    sh.forEach(function(s) {
+        if (s.type !== 'venta' || !s.folio) return;
+        if (pf.some(function(p) { return p.folio === s.folio; })) {
+            idsLegacyPedido[s.id] = true;  // excluir de shFiltrado
+            foliosEnSH[s.folio] = true;    // pfComoVentas lo incluirá una sola vez con total correcto
+        }
+    });
+
     // 2. BUG-FIX: entradas legacy en salesHistory sin type (aparecen como "POS") que en
     //    realidad son cobros de pedidos — se detectan porque su concept contiene un folio PE-XXXX
     //    o porque fueron creadas desde confirmarAbonoPedido (tienen note con folio).
     //    Las marcamos para no mostrarlas como POS duplicado.
-    var idsLegacyPedido = {};
     sh.forEach(function(s) {
         if (s.type && s.type !== '') return; // ya tiene type, no es legacy
         // Si el concept o note contiene un folio PE- o el customer coincide con un pedido finalizado

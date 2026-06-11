@@ -911,3 +911,131 @@ function _mkCliRenderInfo() {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 })();
+
+// ══════════════════════════════════════════════════════════════
+// Feature 4: Fusionar clientes duplicados
+// ══════════════════════════════════════════════════════════════
+function abrirFusionarClientes() {
+    // Inyectar modal si no existe
+    if (!document.getElementById('fusionarClientesModal')) {
+        const div = document.createElement('div');
+        div.id = 'fusionarClientesModal';
+        div.className = 'fixed inset-0 z-50 hidden items-center justify-center';
+        div.style.background = 'rgba(0,0,0,0.5)';
+        div.innerHTML = `
+            <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+                <h3 class="text-base font-bold text-gray-800 mb-4">🔀 Fusionar clientes duplicados</h3>
+                <p class="text-xs text-gray-500 mb-3">Los pedidos del cliente a fusionar se moverán al cliente principal.</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-gray-500">Cliente principal (se preserva)</label>
+                        <select id="fusionClientePrincipal" class="w-full border rounded-xl px-3 py-2 text-sm mt-1"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">Cliente a fusionar (desaparece)</label>
+                        <select id="fusionClienteAFusionar" class="w-full border rounded-xl px-3 py-2 text-sm mt-1"></select>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="closeModal('fusionarClientesModal')" class="flex-1 btn-secondary py-2 rounded-xl text-sm">Cancelar</button>
+                    <button onclick="_ejecutarFusion()" class="flex-1 btn-primary py-2 rounded-xl text-sm">Fusionar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(div);
+    }
+    // Poblar selects con clientes ordenados
+    const clientesOrdenados = ((window as any).clients || []).slice().sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+    const options = clientesOrdenados.map((c: any) => `<option value="${_esc(String(c.id))}">${_esc(c.name)}</option>`).join('');
+    const selPrincipal = document.getElementById('fusionClientePrincipal') as HTMLSelectElement | null;
+    const selFusionar = document.getElementById('fusionClienteAFusionar') as HTMLSelectElement | null;
+    if (selPrincipal) selPrincipal.innerHTML = options;
+    if (selFusionar) selFusionar.innerHTML = options;
+    // Seleccionar segundo por defecto en "a fusionar" para evitar misma selección obvia
+    if (selFusionar && clientesOrdenados.length > 1) selFusionar.selectedIndex = 1;
+    openModal('fusionarClientesModal');
+}
+
+function _ejecutarFusion() {
+    const selP = document.getElementById('fusionClientePrincipal') as HTMLSelectElement | null;
+    const selF = document.getElementById('fusionClienteAFusionar') as HTMLSelectElement | null;
+    if (!selP || !selF) return;
+    const principalId = selP.value;
+    const fusionarId = selF.value;
+    if (principalId === fusionarId) {
+        if (typeof (window as any).manekiToastExport === 'function') (window as any).manekiToastExport('Selecciona dos clientes diferentes', 'warn');
+        return;
+    }
+
+    const _clients: any[] = (window as any).clients || [];
+    const principal = _clients.find((c: any) => String(c.id) === String(principalId));
+    const aFusionar = _clients.find((c: any) => String(c.id) === String(fusionarId));
+    if (!principal || !aFusionar) return;
+
+    const _showC = (window as any).showConfirm;
+    const _confirm = typeof _showC === 'function'
+        ? _showC(`¿Fusionar "${_esc(aFusionar.name)}" → "${_esc(principal.name)}"?\n\nSus pedidos e historial se moverán al cliente principal. Esta acción no se puede deshacer.`, '🔀 Fusionar clientes')
+        : Promise.resolve(window.confirm(`¿Fusionar "${aFusionar.name}" en "${principal.name}"?`));
+
+    _confirm.then((ok: boolean) => {
+        if (!ok) return;
+        const nombreFusion = (aFusionar.name || '').toLowerCase().trim();
+
+        // Actualizar pedidos activos
+        ((window as any).pedidos || []).forEach((p: any) => {
+            if ((p.cliente || '').toLowerCase().trim() === nombreFusion || String(p.clienteId) === String(fusionarId)) {
+                p.cliente = principal.name;
+                p.clienteId = principal.id;
+            }
+        });
+        // Actualizar pedidos finalizados
+        ((window as any).pedidosFinalizados || []).forEach((p: any) => {
+            if ((p.cliente || '').toLowerCase().trim() === nombreFusion) p.cliente = principal.name;
+        });
+        // Actualizar historial de ventas
+        ((window as any).salesHistory || []).forEach((s: any) => {
+            if ((s.customer || '').toLowerCase().trim() === nombreFusion) s.customer = principal.name;
+        });
+        // Copiar datos faltantes del fusionado al principal
+        if (!principal.phone && aFusionar.phone) principal.phone = aFusionar.phone;
+        if (!principal.email && aFusionar.email) principal.email = aFusionar.email;
+        if (!principal.notas && aFusionar.notas) principal.notas = aFusionar.notas;
+
+        // Eliminar cliente fusionado
+        (window as any).clients = _clients.filter((c: any) => String(c.id) !== String(fusionarId));
+
+        // Guardar todo
+        if (typeof (window as any).saveClients === 'function') (window as any).saveClients();
+        if (typeof (window as any).savePedidos === 'function') (window as any).savePedidos();
+        if (typeof (window as any).saveSalesHistory === 'function') (window as any).saveSalesHistory();
+        // Borrar del DB relacional (evita que reaparezca con upsert)
+        if (typeof (window as any).deleteClientFromDB === 'function') (window as any).deleteClientFromDB(String(fusionarId));
+
+        closeModal('fusionarClientesModal');
+        if (typeof (window as any).renderClientsTable === 'function') (window as any).renderClientsTable();
+        if (typeof (window as any).manekiToastExport === 'function') (window as any).manekiToastExport(`✅ "${aFusionar.name}" fusionado con "${principal.name}"`, 'ok');
+    });
+}
+window.abrirFusionarClientes = abrirFusionarClientes;
+window._ejecutarFusion = _ejecutarFusion;
+
+// Inyectar botón "🔀 Fusionar duplicados" en la toolbar de clientes
+(function _mkInjectFusionarBtn() {
+    const inject = () => {
+        if (document.getElementById('_mkBtnFusionarClientes')) return; // ya existe
+        const addBtn = document.getElementById('addClientBtn');
+        if (!addBtn) { setTimeout(inject, 800); return; }
+        const btn = document.createElement('button');
+        btn.id = '_mkBtnFusionarClientes';
+        btn.type = 'button';
+        btn.title = 'Fusionar clientes duplicados';
+        btn.textContent = '🔀 Fusionar duplicados';
+        btn.style.cssText = 'padding:6px 14px;border-radius:10px;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#374151;transition:border-color .15s;margin-left:8px;';
+        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#C5A572'; btn.style.color = '#C5A572'; });
+        btn.addEventListener('mouseleave', () => { btn.style.borderColor = '#d1d5db'; btn.style.color = '#374151'; });
+        btn.addEventListener('click', () => abrirFusionarClientes());
+        addBtn.insertAdjacentElement('afterend', btn);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inject);
+    else inject();
+})();

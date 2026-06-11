@@ -433,7 +433,18 @@ function _updateDashboardImpl() {
         }
     }
     if (ar) animarNumero(ar, 0, accountsReceivable, 700, '$', '');
-    if (ap) ap.textContent = activePedidos;
+    if (ap) {
+        ap.textContent = activePedidos;
+        // Feature: KPI pedidos activos clickeable — navega a pedidos
+        const apCard = ap.closest('[class*="card"], .rounded-xl, [style*="border-radius"]') as HTMLElement | null;
+        if (apCard && !apCard._mkKpiClick) {
+            apCard._mkKpiClick = true;
+            apCard.style.cursor = 'pointer';
+            apCard.classList.add('hover:shadow-md');
+            apCard.title = 'Ver pedidos activos';
+            apCard.addEventListener('click', () => { if (typeof showSection === 'function') showSection('pedidos'); });
+        }
+    }
     // Defer chart renders al siguiente frame — Chart.js llama getBoundingClientRect()
     // internamente al inicializar, lo que fuerza layout si hay escrituras DOM pendientes.
     requestAnimationFrame(() => {
@@ -621,6 +632,7 @@ function _updateDashboardImpl() {
     renderSyncIndicator();
     renderResumenDia();
     renderAccesosRapidos();
+    _renderWidgetTemporadas();
 }
 
 // NTH-08: Widget día más rentable de la semana ──────────────────────────────
@@ -819,7 +831,7 @@ function checkPedidosSinMovimiento() {
             <div class="text-right shrink-0">
                 <p class="text-sm font-bold text-gray-500">${p.diasSinMov}d sin cambios</p>
                 ${p.entrega ? `<p class="text-xs text-gray-400">Entrega: ${_esc(p.entrega)}</p>` : ''}
-                <button onclick="openPedidoStatusModal('${_esc(p.id)}')" style="font-size:.7rem;color:#6b7280;background:none;border:1px solid #d1d5db;border-radius:6px;padding:2px 8px;cursor:pointer;margin-top:4px;">Actualizar</button>
+                <button onclick="typeof openPedidoStatusModal==='function'?openPedidoStatusModal('${_esc(p.id)}'):window._mkLazyLoad('pedidos').then(()=>openPedidoStatusModal('${_esc(p.id)}'))" style="font-size:.7rem;color:#6b7280;background:none;border:1px solid #d1d5db;border-radius:6px;padding:2px 8px;cursor:pointer;margin-top:4px;">Actualizar</button>
             </div>
         </div>`).join('');
 }
@@ -938,11 +950,11 @@ function renderResumenDia() {
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;">
-                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
+                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;cursor:pointer;transition:box-shadow .15s;" class="hover:shadow-md" onclick="showSection('pedidos')" title="Ver pedidos">
                     <p style="font-size:1.4rem;font-weight:900;color:#C5A572;margin:0;">${nActivos}</p>
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">pedidos activos</p>
                 </div>
-                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
+                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;cursor:pointer;transition:box-shadow .15s;" class="hover:shadow-md" onclick="showSection('pedidos');typeof setPedidoFiltro==='function'&&setPedidoFiltro('entregado')" title="Ver entregas de hoy">
                     <p style="font-size:1.4rem;font-weight:900;color:#f97316;margin:0;">${nHoy}</p>
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">para entregar hoy</p>
                 </div>
@@ -1352,6 +1364,82 @@ function _renderClimaHTML(card: HTMLElement, data: any) {
         </div>`;
 }
 window.renderWidgetClima = renderWidgetClima;
+
+// ══════════════════════════════════════════════════════════════
+// Feature: Widget cuenta regresiva a temporadas
+// ══════════════════════════════════════════════════════════════
+function _renderWidgetTemporadas() {
+    const container = document.getElementById('widgetTemporadas');
+    if (!container) return;
+
+    const hoy = new Date();
+    const year = hoy.getFullYear();
+
+    const temporadas = [
+        { nombre: 'San Valentín',      emoji: '💝', mes: 1,  dia: 14 },
+        { nombre: 'Día de la Mujer',   emoji: '💐', mes: 2,  dia: 8  },
+        { nombre: 'Día de las Madres', emoji: '🌸', mes: 4,  dia: 10 },
+        { nombre: 'Día del Padre',     emoji: '👔', mes: 5,  dia: 15 },
+        { nombre: 'Día de Muertos',    emoji: '💀', mes: 9,  dia: 2  },
+        { nombre: 'Navidad',           emoji: '🎄', mes: 11, dia: 25 },
+        { nombre: 'Año Nuevo',         emoji: '🎆', mes: 11, dia: 31 },
+    ];
+
+    // Encontrar la próxima temporada
+    let proxima: any = null;
+    let diasRestantes = Infinity;
+
+    temporadas.forEach(t => {
+        let fecha = new Date(year, t.mes, t.dia);
+        if (fecha < hoy) fecha = new Date(year + 1, t.mes, t.dia);
+        const diff = Math.ceil((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+        if (diff < diasRestantes) {
+            diasRestantes = diff;
+            proxima = { ...t, fecha };
+        }
+    });
+
+    if (!proxima) return;
+
+    // Ventas del mismo mes el año pasado
+    const ventasAnoPasado = (window.salesHistory || []).filter((s: any) => {
+        if (!s.date) return false;
+        const [yr, mo] = s.date.split('-');
+        return Number(yr) === year - 1 && Number(mo) === proxima.mes + 1;
+    }).reduce((sum: number, s: any) => sum + (s.total || 0), 0);
+
+    const urgencia = diasRestantes <= 14 ? '#dc2626' : diasRestantes <= 30 ? '#d97706' : '#059669';
+
+    container.innerHTML = `
+        <div class="flex items-center gap-3 p-3 rounded-xl" style="background:#f9fafb;border:1px solid #e5e7eb">
+            <span style="font-size:1.8rem">${proxima.emoji}</span>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-gray-700">${proxima.nombre}</p>
+                <p class="text-xs text-gray-500">${proxima.fecha.toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</p>
+                ${ventasAnoPasado > 0 ? `<p class="text-xs text-gray-400">Año pasado: $${ventasAnoPasado.toLocaleString('es-MX')}</p>` : ''}
+            </div>
+            <div class="text-center">
+                <p class="text-lg font-bold" style="color:${urgencia}">${diasRestantes}</p>
+                <p class="text-xs text-gray-400">días</p>
+            </div>
+        </div>
+    `;
+}
+window._renderWidgetTemporadas = _renderWidgetTemporadas;
+
+// ══════════════════════════════════════════════════════════════
+// Feature: Semáforo de saturación en fechas de entrega
+// ══════════════════════════════════════════════════════════════
+function _getSaturacionFecha(fechaStr: string): string {
+    const count = (window.pedidos || []).filter((p: any) =>
+        p.entrega === fechaStr &&
+        !['entregado','completado','cancelado'].includes(p.status)
+    ).length;
+    if (count <= 2) return '#22c55e';
+    if (count <= 4) return '#f59e0b';
+    return '#ef4444';
+}
+window._getSaturacionFecha = _getSaturacionFecha;
 
 // ══════════════════════════════════════════════════════════════
 // N-VIZ-003: Heatmap de pedidos por día y hora

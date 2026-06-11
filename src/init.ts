@@ -576,17 +576,17 @@
     // #13 CHANGELOG — "¿Qué hay de nuevo?" al actualizar versión
     // ══════════════════════════════════════════════════════════════
     (function _changelog() {
-        const MK_VERSION = '2.1.0';
+        const MK_VERSION = '2.2.0';
         const KEY = 'mk_last_seen_version';
         const lastSeen = localStorage.getItem(KEY);
         if (lastSeen === MK_VERSION) return;
 
         const changes = [
-            { icon: '⌨️', text: 'Navegación rápida con teclas 1-9 para ir a cualquier sección' },
-            { icon: '📊', text: 'Sugerencia inteligente de reorden al ajustar stock (basada en velocidad de venta)' },
-            { icon: '📦', text: 'Backup comprimido (.gz) — reduce el tamaño hasta 80%' },
-            { icon: '⚡', text: 'Sync offline mejorado — sincroniza en lotes paralelos al reconectar' },
-            { icon: '📋', text: 'Este changelog — te avisaremos cada vez que haya novedades' }
+            { icon: '⚡', text: 'Carga más rápida — scripts agrupados en bundles, una sola petición al abrir la app' },
+            { icon: '📦', text: 'Inventario sin lag — búsqueda y filtros con render incremental, no congela la pantalla' },
+            { icon: '🔄', text: 'Actualización automática — el SW detecta cambios y muestra aviso para recargar' },
+            { icon: '🧮', text: 'Disponibilidad de materias primas con caché — abre pedidos al instante' },
+            { icon: '📱', text: 'Sidebar y botones corregidos en móvil — ya no se bloqueaban los clicks' }
         ];
 
         setTimeout(() => {

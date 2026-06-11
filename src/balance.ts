@@ -98,6 +98,9 @@ function renderBalanceMensual() {
     if (el('balMesNeto')) el('balMesNeto').style.color = _netoColor;
     if (el('balMesNetoSub')) { el('balMesNetoSub').textContent = neto >= 0 ? 'Mes positivo' : 'Mes negativo'; el('balMesNetoSub').style.color = _subColor; }
 
+    // FEATURE-2: Anticipos de pedidos activos cobrados en el mes
+    _renderAnticiposPedidosActivos(mesStr);
+
     // NTH-13: Gráfica de categorías de gastos
     _renderGraficaCategorias(gastosMes, mesStr);
     // NTH-14: Botón exportar balance (CSV mejorado)
@@ -130,6 +133,40 @@ function renderBalanceMensual() {
 
     // N-VIZ-002: Donut chart de gastos por categoría
     renderBalancePieChart();
+}
+
+// FEATURE-2: Anticipos cobrados en el mes de pedidos activos ──────────────
+function _renderAnticiposPedidosActivos(mesStr: string) {
+    let card = document.getElementById('balAnticiposActivosCard');
+    if (!card) {
+        const anchor = document.getElementById('balMesNetoBg');
+        if (!anchor) return;
+        card = document.createElement('div');
+        card.id = 'balAnticiposActivosCard';
+        anchor.parentElement.insertBefore(card, anchor.nextSibling);
+    }
+    const pedidosActivos = (window.pedidos || []).filter(p =>
+        !['finalizado','cancelado','entregado'].includes((p.status||'').toLowerCase())
+    );
+    let totalAnticipos = 0;
+    pedidosActivos.forEach(p => {
+        (p.pagos || []).forEach(pg => {
+            if ((pg.fecha || pg.date || '').startsWith(mesStr)) {
+                totalAnticipos += Number(pg.monto || pg.amount || 0);
+            }
+        });
+        // Compatibilidad legacy: anticipo sin pagos[]
+        if ((!p.pagos || p.pagos.length === 0) && p.anticipo && (p.fechaPedido || '').startsWith(mesStr)) {
+            totalAnticipos += Number(p.anticipo || 0);
+        }
+    });
+    if (totalAnticipos <= 0) { card.innerHTML = ''; card.style.display = 'none'; return; }
+    card.style.display = '';
+    card.className = 'bg-amber-50 rounded-xl p-3 border border-amber-200 mb-4';
+    card.innerHTML = `<p class="text-xs text-amber-700 font-semibold">
+        💰 Anticipos en pedidos activos: <span class="font-extrabold">$${totalAnticipos.toFixed(2)}</span>
+        <span class="font-normal text-amber-600 ml-1">(no incluidos en ingresos del mes)</span>
+    </p>`;
 }
 
 // NTH-13: Gráfica de categorías de gastos ─────────────────────────────────
@@ -557,8 +594,15 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     const etqFiltro = document.getElementById('filtroEtiquetaIngresos')?.value || '';
     _ensureEtiquetaFiltro('incomeList', 'filtroEtiquetaIngresos', 'renderIncomeList');
     const container = document.getElementById('incomeList');
-    let listaInc = q ? incomes.filter(i => _norm(i.concept).includes(q) || (i.date||'').includes(q)) : incomes;
+    // FEATURE-1: filtrar por mes activo
+    const _ahoraInc = new Date();
+    _ahoraInc.setMonth(_ahoraInc.getMonth() + _balanceMesOffset);
+    const _mesActivoInc = `${_ahoraInc.getFullYear()}-${String(_ahoraInc.getMonth()+1).padStart(2,'0')}`;
+    let listaInc = incomes.filter(i => (i.date||'').startsWith(_mesActivoInc));
+    if (q) listaInc = listaInc.filter(i => _norm(i.concept).includes(q) || (i.date||'').includes(q));
     if (etqFiltro) listaInc = listaInc.filter(i => (i.etiqueta||'') === etqFiltro);
+    // Badge informativo debajo del selector de mes
+    _renderMesBadge(_mesActivoInc, listaInc.length, null);
     container.innerHTML = listaInc.length === 0
         ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p></div>'
         : listaInc.slice().reverse().map(income => `
@@ -586,8 +630,15 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     const etqFiltro = document.getElementById('filtroEtiquetaEgresos')?.value || '';
     _ensureEtiquetaFiltro('expenseList', 'filtroEtiquetaEgresos', 'renderExpenseList');
     const container = document.getElementById('expenseList');
-    let listaExp = q ? expenses.filter(e => _norm(e.concept).includes(q) || (e.date||'').includes(q)) : expenses;
+    // FEATURE-1: filtrar por mes activo
+    const _ahoraExp = new Date();
+    _ahoraExp.setMonth(_ahoraExp.getMonth() + _balanceMesOffset);
+    const _mesActivoExp = `${_ahoraExp.getFullYear()}-${String(_ahoraExp.getMonth()+1).padStart(2,'0')}`;
+    let listaExp = expenses.filter(e => (e.date||'').startsWith(_mesActivoExp) && !e.fromPayable);
+    if (q) listaExp = listaExp.filter(e => _norm(e.concept).includes(q) || (e.date||'').includes(q));
     if (etqFiltro) listaExp = listaExp.filter(e => (e.etiqueta||'') === etqFiltro);
+    // Actualizar badge con conteo de egresos
+    _renderMesBadge(_mesActivoExp, null, listaExp.length);
     container.innerHTML = listaExp.length === 0
         ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p></div>'
         : listaExp.slice().reverse().map(expense => `
@@ -687,7 +738,8 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                 const diasColor = p.dias > 30 ? 'text-red-600' : p.dias > 14 ? 'text-orange-600' : 'text-gray-500';
                 const diasLabel = p.dias === 0 ? 'Hoy' : `${p.dias}d`;
                 const _safeId = String(p.id).replace(/'/g, '');
-                const waBtn = p.telefono ? `<button onclick="abrirWhatsAppPedido('${_safeId}')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>` : '';
+                // BUG-2 FIX: guards para funciones del bundle de pedidos
+                const waBtn = p.telefono ? `<button onclick="typeof abrirWhatsAppPedido==='function'?abrirWhatsAppPedido('${_safeId}'):manekiToastExport('Carga la sección de Pedidos primero','warn')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>` : '';
                 return `<div class="flex items-center gap-2 p-2 bg-blue-50 rounded-xl">
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-bold text-amber-600">${p.folio}</p>
@@ -696,7 +748,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                     <span class="text-xs font-bold text-red-600 whitespace-nowrap">$${Number(p._saldo).toFixed(2)}</span>
                     <span class="text-xs font-semibold ${diasColor} whitespace-nowrap">${diasLabel}</span>
                     ${waBtn}
-                    <button onclick="openAbonoPedido('${_safeId}')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs text-green-600"><i class="fas fa-dollar-sign"></i></button>
+                    <button onclick="typeof openAbonoPedido==='function'?openAbonoPedido('${_safeId}'):manekiToastExport('Carga la sección de Pedidos primero','warn')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs text-green-600"><i class="fas fa-dollar-sign"></i></button>
                 </div>`;
             }).join('');
         }
@@ -900,7 +952,42 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         window.renderCxCPedidos = renderCxCPedidos;
         window.renderBalanceMensual = renderBalanceMensual;
         window.cambiarMesBalance = cambiarMesBalance;
-        
+
+        // FEATURE-1: badge "Mostrando mes X — N ingresos · N egresos"
+        function _renderMesBadge(mesActivo: string, numIngresos: number|null, numEgresos: number|null) {
+            let badge = document.getElementById('balMesFiltradoBadge');
+            if (!badge) {
+                const labelEl = document.getElementById('balanceMesLabel');
+                if (!labelEl) return;
+                badge = document.createElement('p');
+                badge.id = 'balMesFiltradoBadge';
+                badge.style.cssText = 'font-size:.75rem;color:#6b7280;margin-top:2px;';
+                labelEl.parentElement.insertBefore(badge, labelEl.nextSibling);
+            }
+            // Acumular conteos (se llama dos veces: una para ingresos, otra para egresos)
+            const prev = (badge as any)._counts || { inc: null, exp: null };
+            if (numIngresos !== null) prev.inc = numIngresos;
+            if (numEgresos !== null) prev.exp = numEgresos;
+            (badge as any)._counts = prev;
+            const [anio, mes] = mesActivo.split('-');
+            const label = new Date(Number(anio), Number(mes)-1, 1)
+                .toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+            const incStr = prev.inc !== null ? `${prev.inc} ingreso${prev.inc !== 1 ? 's' : ''}` : '…';
+            const expStr = prev.exp !== null ? `${prev.exp} egreso${prev.exp !== 1 ? 's' : ''}` : '…';
+            badge.textContent = `Mostrando ${label} · ${incStr} · ${expStr}`;
+        }
+
+        // BUG-1 FIX: closeTransactionModal — faltaba completamente
+        function closeTransactionModal() {
+            closeModal('transactionModal');
+            const form = document.getElementById('transactionForm') as HTMLFormElement | null;
+            if (form) form.reset();
+            const modal = document.getElementById('transactionModal');
+            if (modal) { modal.dataset.editId = ''; modal.dataset.editType = ''; }
+        }
+        window.closeTransactionModal = closeTransactionModal;
+
+
         const _txForm = document.getElementById('transactionForm');
         if (_txForm && !_txForm._mkBound) {
             _txForm._mkBound = true;

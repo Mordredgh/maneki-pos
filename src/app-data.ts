@@ -41,10 +41,20 @@ function deleteBalanceItem(type, id) {
         if (!ok) return;
         if (type === 'income') {
             incomes = incomes.filter(i => String(i.id) !== String(id));
+            window.incomes = incomes;
             saveIncomes();
+            // DELETE explícito: saveIncomes usa upsert relacional y no borra filas
+            if (typeof db !== 'undefined' && db) {
+                db.from('incomes').delete().eq('id', id).catch(e => console.warn('[deleteBalanceItem] income delete:', e));
+            }
         } else if (type === 'expense') {
             expenses = expenses.filter(e => String(e.id) !== String(id));
+            window.expenses = expenses;
             saveExpenses();
+            // DELETE explícito: saveExpenses usa upsert relacional y no borra filas
+            if (typeof db !== 'undefined' && db) {
+                db.from('expenses').delete().eq('id', id).catch(e => console.warn('[deleteBalanceItem] expense delete:', e));
+            }
         }
         renderBalance();
         updateDashboard();
@@ -115,7 +125,7 @@ function confirmarCancelPedido() {
 
     const tieneProductos = pedido.productosInventario && pedido.productosInventario.length > 0;
     function _ejecutarCancelacion(regresarStock) {
-    if (regresarStock) {
+    if (regresarStock && pedido.inventarioDescontado === true) {
         pedido.productosInventario.forEach(function(item) {
             const prod = products.find(function(p) { return String(p.id) === String(item.id); });
             if (prod) prod.stock += item.quantity;

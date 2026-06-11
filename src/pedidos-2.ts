@@ -111,15 +111,28 @@ async function _descontarInventarioPedido(pedido) {
         }
         descontados++;
 
-        // Descontar MP de los componentes del PT × cantidad del pedido
-        if (Array.isArray(prod.mpComponentes) && prod.mpComponentes.length > 0) {
+        // BUG-5 FIX: calcular cuántas unidades hay que FABRICAR (vs sacar de vitrina ya producida).
+        // Si el PT tiene stock propio Y mpComponentes, primero se agota el stock ya fabricado;
+        // solo se descuenta MP para las unidades que excedan ese stock (a fabricar).
+        const _stockFabricadoAntes = (() => {
+            // Stock disponible del PT antes del descuento que ya hicimos arriba
+            if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+                return _rollback.find(r => String(r.id) === String(prod.id))?.stockBefore ?? 0;
+            }
+            return antesPT;
+        })();
+        const _cantidadAFabricar = Math.max(0, cantidad - _stockFabricadoAntes);
+
+        // Descontar MP de los componentes del PT × unidades a fabricar solamente
+        if (Array.isArray(prod.mpComponentes) && prod.mpComponentes.length > 0 && _cantidadAFabricar > 0) {
             for (const comp of prod.mpComponentes) {
                 const mp = prodMap.get(String(comp.id));
                 if (!mp || mp.tipo === 'servicio') continue;
                 const _rph = prod.rendimientoPorHoja || 1;
+                // BUG-5 FIX: usar _cantidadAFabricar (unidades sin stock en vitrina)
                 const cantMP = _rph > 0
-                    ? Math.ceil(cantidad / _rph) * (parseFloat(comp.qty) || 1)
-                    : (parseFloat(comp.qty) || 1) * cantidad;
+                    ? Math.ceil(_cantidadAFabricar / _rph) * (parseFloat(comp.qty) || 1)
+                    : (parseFloat(comp.qty) || 1) * _cantidadAFabricar;
                 const antesMP = mp.stock || 0;
                 // FIX 1: record rollback for MP before modifying (including variant snapshots)
                 _rollback.push({ id: mp.id, stockBefore: antesMP, variantsBefore: Array.isArray(mp.variants) && mp.variants.length > 0 ? mp.variants.map(v => ({...v})) : null });
@@ -653,11 +666,13 @@ function setPedidoStatus(status) {
             if (pedido.inventarioDescontado) {
                 manekiToastExport('⚠️ El inventario ya fue descontado para este pedido', 'warn');
             } else if ((pedido.productosInventario || []).length > 0) {
-                const n = _descontarInventarioPedido(pedido);
-                if (n > 0) {
-                    window.pedidos[idx].inventarioDescontado = true;
-                    manekiToastExport(`📦 ${n} material(es) descontado(s) del inventario.`, 'ok');
-                }
+                // BUG-1 FIX: _descontarInventarioPedido es async — fire+flag pattern.
+                // El descuento en memoria ocurre antes del primer await interno de la función,
+                // por lo que marcar inventarioDescontado=true de inmediato es correcto.
+                _descontarInventarioPedido(pedido).then((n: number) => {
+                    if (n > 0) manekiToastExport(`📦 ${n} material(es) descontado(s) del inventario.`, 'ok');
+                }).catch((e: any) => console.error('[Inv setPedidoStatus]', e));
+                window.pedidos[idx].inventarioDescontado = true;
             }
             // Descontar empaques del pedido
             if ((pedido.empaques || []).length > 0 && !pedido.empaquesDescontados) {
@@ -691,6 +706,10 @@ function setPedidoStatus(status) {
                     'info'
                 );
             }, 800);
+        }
+        // FEATURE-2: botón "Pedir reseña de Google" al entregar
+        if (status === 'entregado' || status === 'completado') {
+            _sugerirResenaGoogle(window.pedidos[idx]);
         }
     }
 }
@@ -909,19 +928,14 @@ async function kanbanDrop(event, newStatus) {
             if (pedido.inventarioDescontado) {
                 manekiToastExport('⚠️ El inventario ya fue descontado para este pedido', 'warn');
             } else if ((pedido.productosInventario || []).length > 0) {
-                try {
-                    const n = _descontarInventarioPedido(pedido);
-                    if (n > 0) {
-                        window.pedidos[idx].inventarioDescontado = true;
-                        manekiToastExport(`📦 ${n} material(es) descontado(s) del inventario.`, 'ok');
-                    }
-                } catch(e) {
-                    console.error('Error al descontar inventario en kanban drop:', e);
-                    manekiToastExport('⚠️ Error al descontar inventario. El pedido no fue movido.', 'err');
-                    if (typeof renderKanbanBoard === 'function') renderKanbanBoard();
-                    _kanbanDragId = null;
-                    return; // No cambiar status
-                }
+                // BUG-2 FIX: fire+flag — igual que setPedidoStatus
+                _descontarInventarioPedido(pedido).then((n: number) => {
+                    if (n > 0) manekiToastExport(`📦 ${n} material(es) descontado(s) del inventario.`, 'ok');
+                }).catch((e: any) => {
+                    console.error('[Inv kanbanDrop]', e);
+                    manekiToastExport('⚠️ Error al descontar inventario.', 'err');
+                });
+                window.pedidos[idx].inventarioDescontado = true;
             }
         }
         // R2-A3: bloquear arrastrar a "salida" si el pedido no tiene dirección de entrega
@@ -1095,12 +1109,11 @@ function _aplicarCambioLote() {
             finalizados++;
         } else {
             // Guard de negocio: descontar inventario al pasar a producción
+            // BUG-3 FIX: fire+flag — _descontarInventarioPedido es async
             if (nuevoStatus === 'produccion' && !p.inventarioDescontado) {
                 if ((p.productosInventario || []).length > 0) {
-                    try {
-                        const n = _descontarInventarioPedido(p);
-                        if (n > 0) p.inventarioDescontado = true;
-                    } catch(e) { console.error('[Lote] Error al descontar inventario:', e); }
+                    _descontarInventarioPedido(p).catch((e: any) => console.error('[Lote inv]', e));
+                    p.inventarioDescontado = true;
                 }
             }
             p.status = nuevoStatus;
@@ -1167,6 +1180,20 @@ function reactivarPedido(id) {
         if (!window.pedidos) window.pedidos = [];
 
         const _fecha = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+
+        // BUG-4 FIX: si el inventario ya fue descontado, devolverlo antes de resetear el flag.
+        // Al reactivar, el pedido vuelve a "confirmado" y al pasar a producción se descontará de nuevo.
+        if (p.inventarioDescontado || p._inventarioYaFinalizado) {
+            if (typeof _regresarInventarioCompleto === 'function') {
+                _regresarInventarioCompleto(p);
+            }
+        }
+        if (p.empaquesDescontados) {
+            if (typeof _regresarEmpaquesInventario === 'function') {
+                _regresarEmpaquesInventario(p);
+            }
+        }
+
         const reactivado = {
             ...p,
             status: 'confirmado',
@@ -1810,7 +1837,8 @@ window.editarPedidoFinalizado = editarPedidoFinalizado;
         // Solo descontar si es la primera finalización Y nunca se marcó como descontado antes
         const _esPrimeraFin = !_pFin.inventarioDescontado && !_pFin._inventarioYaFinalizado;
         if (_esPrimeraFin && _editFinItems.length > 0 && _editFinItems[0].id !== 'libre') {
-            _descontarInventarioPedido(_pFin);
+            // BUG-1 FIX: fire+flag para async call
+            _descontarInventarioPedido(_pFin).catch((e: any) => console.error('[Inv editarFinalizado]', e));
             window.pedidosFinalizados[idx].inventarioDescontado = true;
             window.pedidosFinalizados[idx]._inventarioYaFinalizado = true;
         }
@@ -1845,3 +1873,294 @@ window.editarPedidoFinalizado = editarPedidoFinalizado;
     (window as any)._histPage = 1;
     if (typeof (window as any).renderHistorialPedidos === 'function') (window as any).renderHistorialPedidos();
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FEATURE-2: Sugerencia de reseña de Google al entregar un pedido
+// ═══════════════════════════════════════════════════════════════════════════════
+function _sugerirResenaGoogle(pedido: any) {
+    if (!pedido) return;
+    const link = (window as any).storeConfig?.googleReviewLink || '';
+    if (!link) return; // No hay link configurado — no hacer nada
+    const nombre = pedido.cliente || 'cliente';
+    const concepto = pedido.concepto || 'tu pedido';
+    const tel = (pedido.telefono || pedido.whatsapp || '').replace(/\D/g, '');
+    const msg = encodeURIComponent(
+        `¡Hola ${nombre}! Fue un placer crear tu pedido. Si te gustó ${concepto}, ¿podrías dejarnos una reseña en Google? Nos ayuda muchísimo 🙏\n${link}`
+    );
+    const waUrl = tel ? `https://wa.me/${tel}?text=${msg}` : `https://wa.me/?text=${msg}`;
+    setTimeout(() => {
+        manekiToastExport(
+            `✨ <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="color:#C5A572;font-weight:700;text-decoration:underline;">¡Pide tu reseña a ${typeof _esc==='function'?_esc(nombre):nombre}! →</a>`,
+            'ok'
+        );
+    }, 1200);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FEATURE-1: Semáforo de materiales en kanban cards (post-render via MutationObserver)
+// ═══════════════════════════════════════════════════════════════════════════════
+function _calcSemaforoPedido(pedido: any): 'verde' | 'ambar' | 'rojo' {
+    const items = pedido.productosInventario || [];
+    if (!items.length) return 'verde';
+    let conStock = 0;
+    const total = items.length;
+    for (const item of items) {
+        if (item.id === 'libre') { conStock++; continue; }
+        const prod = (window.products || []).find((p: any) => String(p.id) === String(item.id));
+        if (!prod) continue;
+        if (prod.tipo === 'servicio') { conStock++; continue; }
+        const cantidad = item.quantity || item.cantidad || 1;
+        const stock = typeof getStockEfectivo === 'function' ? getStockEfectivo(prod) : (prod.stock || 0);
+        if (stock >= cantidad) conStock++;
+    }
+    if (total === 0) return 'verde';
+    if (conStock === total) return 'verde';
+    if (conStock === 0) return 'rojo';
+    return 'ambar';
+}
+
+function _inyectarSemaforosKanban() {
+    const cards = document.querySelectorAll('.kanban-card[data-id]');
+    cards.forEach(card => {
+        const id = (card as HTMLElement).dataset.id;
+        if (!id) return;
+        // Evitar duplicar
+        if (card.querySelector('._mk-semaforo')) return;
+        const pedido = (window.pedidos || []).find((p: any) => String(p.id) === String(id));
+        if (!pedido) return;
+        const color = _calcSemaforoPedido(pedido);
+        const colorMap: Record<string, string> = { verde: '#22c55e', ambar: '#f59e0b', rojo: '#ef4444' };
+        const dot = document.createElement('span');
+        dot.className = '_mk-semaforo';
+        dot.title = color === 'verde' ? 'Materiales completos' : color === 'ambar' ? 'Stock parcial' : 'Sin stock';
+        dot.style.cssText = `position:absolute;top:7px;left:7px;width:8px;height:8px;border-radius:50%;background:${colorMap[color]};display:inline-block;z-index:10;box-shadow:0 0 0 2px rgba(255,255,255,.8);`;
+        (card as HTMLElement).style.position = 'relative';
+        card.appendChild(dot);
+    });
+}
+
+// Observar cambios en el kanban para inyectar semáforos automáticamente
+(function _initSemaforoObserver() {
+    const _tryInject = () => {
+        const kanban = document.getElementById('vistaKanban');
+        if (!kanban) return;
+        _inyectarSemaforosKanban();
+        const obs = new MutationObserver(() => { _inyectarSemaforosKanban(); });
+        obs.observe(kanban, { childList: true, subtree: true });
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(_tryInject, 1500));
+    } else {
+        setTimeout(_tryInject, 1500);
+    }
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FEATURE-3: Checklist de producción por pedido
+// ═══════════════════════════════════════════════════════════════════════════════
+const _CHECKLIST_LABELS: Record<string, string> = {
+    disenio: '🎨 Diseño aprobado',
+    material: '📦 Material listo',
+    producido: '🔧 Producido',
+    empacado: '🎁 Empacado'
+};
+const _CHECKLIST_KEYS = ['disenio', 'material', 'producido', 'empacado'];
+
+function _renderChecklistBar(pedido: any): string {
+    const st = pedido.status || '';
+    if (!['produccion', 'listo', 'envio', 'salida', 'retirar'].includes(st)) return '';
+    const cl = pedido.checklist || {};
+    const dots = _CHECKLIST_KEYS.map(k =>
+        `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${cl[k] ? '#22c55e' : '#d1d5db'};margin:0 2px;"></span>`
+    ).join('');
+    return `<div class="_mk-checklist-bar" onclick="event.stopPropagation();abrirChecklistPedido('${pedido.id}')"
+        title="Checklist de producción — clic para editar"
+        style="cursor:pointer;display:flex;align-items:center;gap:4px;margin:4px 0 2px;padding:2px 4px;border-radius:6px;background:#f9fafb;border:1px solid #f3f4f6;width:fit-content;">
+        ${dots}
+        <span style="font-size:.68rem;color:#9ca3af;margin-left:2px;">${_CHECKLIST_KEYS.filter(k=>cl[k]).length}/${_CHECKLIST_KEYS.length}</span>
+    </div>`;
+}
+(window as any)._renderChecklistBar = _renderChecklistBar;
+
+function abrirChecklistPedido(id: string) {
+    const pedido = (window.pedidos || []).find((p: any) => String(p.id) === String(id));
+    if (!pedido) return;
+    if (!pedido.checklist) pedido.checklist = { disenio: false, material: false, producido: false, empacado: false };
+
+    let modal = document.getElementById('_mkChecklistModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = '_mkChecklistModal';
+        modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:20px 24px;min-width:280px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.2);" onclick="event.stopPropagation()">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                    <h3 style="font-size:.95rem;font-weight:700;color:#1f2937;margin:0;" id="_mkClTitle">Checklist</h3>
+                    <button onclick="cerrarChecklistPedido()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#6b7280;">✕</button>
+                </div>
+                <div id="_mkClItems" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>`;
+        modal.addEventListener('click', () => cerrarChecklistPedido());
+        document.body.appendChild(modal);
+    }
+
+    const title = modal.querySelector('#_mkClTitle') as HTMLElement;
+    if (title) title.textContent = `Checklist — ${pedido.folio || pedido.id}`;
+    const items = modal.querySelector('#_mkClItems') as HTMLElement;
+    if (items) {
+        items.innerHTML = _CHECKLIST_KEYS.map(k => `
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border-radius:10px;border:1.5px solid ${pedido.checklist[k]?'#22c55e':'#e5e7eb'};background:${pedido.checklist[k]?'#f0fdf4':'#fff'};transition:.15s;">
+                <input type="checkbox" ${pedido.checklist[k] ? 'checked' : ''}
+                    onchange="window._toggleChecklistItem('${id}','${k}',this.checked)"
+                    style="width:16px;height:16px;accent-color:#22c55e;cursor:pointer;">
+                <span style="font-size:.85rem;font-weight:600;color:#374151;">${_CHECKLIST_LABELS[k]}</span>
+            </label>`).join('');
+    }
+
+    modal.style.display = 'flex';
+    (window as any)._checklistPedidoId = id;
+}
+window.abrirChecklistPedido = abrirChecklistPedido;
+
+function cerrarChecklistPedido() {
+    const modal = document.getElementById('_mkChecklistModal');
+    if (modal) modal.style.display = 'none';
+}
+window.cerrarChecklistPedido = cerrarChecklistPedido;
+
+(window as any)._toggleChecklistItem = function(id: string, key: string, val: boolean) {
+    const pedido = (window.pedidos || []).find((p: any) => String(p.id) === String(id));
+    if (!pedido) return;
+    if (!pedido.checklist) pedido.checklist = {};
+    pedido.checklist[key] = val;
+    if (typeof savePedidos === 'function') savePedidos();
+    // Re-abrir para refrescar estilos
+    abrirChecklistPedido(id);
+    // Actualizar dot en la card si está visible
+    const bar = document.querySelector(`.kanban-card[data-id="${id}"] ._mk-checklist-bar`);
+    if (bar) {
+        bar.outerHTML = _renderChecklistBar(pedido);
+    }
+};
+
+// Inyectar barras de checklist en cards post-render
+function _inyectarChecklistBars() {
+    const cards = document.querySelectorAll('.kanban-card[data-id]');
+    cards.forEach(card => {
+        const id = (card as HTMLElement).dataset.id;
+        if (!id) return;
+        if (card.querySelector('._mk-checklist-bar')) return;
+        const pedido = (window.pedidos || []).find((p: any) => String(p.id) === String(id));
+        if (!pedido) return;
+        const bar = _renderChecklistBar(pedido);
+        if (!bar) return;
+        // Insertar después del nombre del cliente (p.font-semibold)
+        const nameEl = card.querySelector('p.font-semibold');
+        if (nameEl) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = bar;
+            nameEl.insertAdjacentElement('afterend', tmp.firstElementChild as Element);
+        }
+    });
+}
+
+(function _initChecklistObserver() {
+    const _tryInject = () => {
+        const kanban = document.getElementById('vistaKanban');
+        if (!kanban) return;
+        _inyectarChecklistBars();
+        const obs = new MutationObserver(() => { _inyectarChecklistBars(); });
+        obs.observe(kanban, { childList: true, subtree: true });
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(_tryInject, 1600));
+    } else {
+        setTimeout(_tryInject, 1600);
+    }
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FEATURE-4: Hoja de ruta del día
+// ═══════════════════════════════════════════════════════════════════════════════
+function abrirHojaRuta() {
+    let modal = document.getElementById('_mkHojaRutaModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = '_mkHojaRutaModal';
+        modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.5);align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0;';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:20px 22px;width:min(640px,96vw);box-shadow:0 12px 48px rgba(0,0,0,.25);margin:auto;" onclick="event.stopPropagation()">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                    <h3 style="font-size:1rem;font-weight:700;color:#1f2937;margin:0;">🗺️ Hoja de Ruta del Día</h3>
+                    <button onclick="cerrarHojaRuta()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#6b7280;">✕</button>
+                </div>
+                <div id="_mkHojaRutaContent"></div>
+            </div>`;
+        modal.addEventListener('click', cerrarHojaRuta);
+        document.body.appendChild(modal);
+    }
+    renderHojaRuta();
+    modal.style.display = 'flex';
+}
+window.abrirHojaRuta = abrirHojaRuta;
+
+function cerrarHojaRuta() {
+    const modal = document.getElementById('_mkHojaRutaModal');
+    if (modal) modal.style.display = 'none';
+}
+window.cerrarHojaRuta = cerrarHojaRuta;
+
+function renderHojaRuta() {
+    const el = document.getElementById('_mkHojaRutaContent');
+    if (!el) return;
+    const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const _e = typeof _esc === 'function' ? _esc : (s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    const pedidosHoy = (window.pedidos || [])
+        .filter((p: any) => p.entrega === hoy)
+        .sort((a: any, b: any) => {
+            const da = a.direccionEntrega || a.lugarEntrega || a.direccion || '';
+            const db = b.direccionEntrega || b.lugarEntrega || b.direccion || '';
+            return da.localeCompare(db);
+        });
+
+    if (pedidosHoy.length === 0) {
+        el.innerHTML = `<p style="text-align:center;color:#6b7280;padding:24px 0;font-size:.88rem;">No hay entregas programadas para hoy (${hoy}).</p>`;
+        return;
+    }
+
+    let totalCobrar = 0;
+    const rows = pedidosHoy.map((p: any) => {
+        const saldo = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - Number(p.anticipo||0));
+        totalCobrar += saldo;
+        const dir = p.direccionEntrega || p.lugarEntrega || p.direccion || '';
+        const mapsLink = dir
+            ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(dir)}" target="_blank" rel="noopener noreferrer" style="color:#C5A572;font-size:.75rem;font-weight:600;">📍 Ver en Maps</a>`
+            : '';
+        return `
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <div>
+                    <span style="font-size:.8rem;font-weight:700;color:#C5A572;">${_e(p.folio||'—')}</span>
+                    <span style="font-size:.82rem;font-weight:700;color:#1f2937;margin-left:6px;">${_e(p.cliente||'—')}</span>
+                    ${p.telefono ? `<a href="https://wa.me/${(_e(p.telefono)).replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" style="font-size:.75rem;color:#25D366;margin-left:6px;">📱 ${_e(p.telefono)}</a>` : ''}
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                    <span style="font-size:.9rem;font-weight:700;color:${saldo>0?'#dc2626':'#22c55e'};">$${saldo.toFixed(2)}</span>
+                    <br><span style="font-size:.7rem;color:#9ca3af;">${saldo>0?'Por cobrar':'Pagado'}</span>
+                </div>
+            </div>
+            <p style="font-size:.78rem;color:#374151;margin:4px 0 2px;"><b>Concepto:</b> ${_e(p.concepto||'—')}</p>
+            ${dir ? `<p style="font-size:.75rem;color:#6b7280;margin:2px 0;">${_e(dir)}</p>` : ''}
+            ${mapsLink ? `<div style="margin-top:4px;">${mapsLink}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    el.innerHTML = `
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:.82rem;font-weight:600;color:#92400e;">📅 ${hoy} — ${pedidosHoy.length} entrega${pedidosHoy.length!==1?'s':''}</span>
+            <span style="font-size:.95rem;font-weight:700;color:#dc2626;">Total a cobrar: $${totalCobrar.toFixed(2)}</span>
+        </div>
+        ${rows}`;
+}
+window.renderHojaRuta = renderHojaRuta;

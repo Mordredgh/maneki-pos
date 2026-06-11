@@ -81,7 +81,7 @@ function renderListaProduccion() {
             ? p.productosInventario.map(i => {
                 const _escProd = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
                 const varLabel = i.variante ? ` <span style="font-size:.7rem;color:#7c3aed;">(${_escProd((()=>{const p=i.variante.indexOf(':');if(p===-1)return i.variante;const t=i.variante.slice(0,p).trim(),val=i.variante.slice(p+1).trim();return t+': '+(typeof _mkColorDot==='function'?_mkColorDot(t,val):val);})())})</span>` : '';
-                return `<span class="inline-block px-2 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-xs mr-1 mb-1">${i.name || i.nombre}${varLabel} ×${i.quantity||1}</span>`;
+                return `<span class="inline-block px-2 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-xs mr-1 mb-1">${_escProd(i.name || i.nombre || '')}${varLabel} ×${i.quantity||1}</span>`;
               }).join('')
             : '';
         const ganancia = p.costoMateriales > 0 ? `<span class="text-xs text-green-600 font-semibold ml-2">💰 Ganancia: $${(p.total - p.costoMateriales).toFixed(2)}</span>` : '';
@@ -370,3 +370,321 @@ window._migrarAnticiposLegacy = _migrarAnticiposLegacy;
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(_migrarAnticiposLegacy, 4000); // después de que carguen los pedidos
 });
+
+// ══════════════════════════════════════════════════════════════
+// FEATURE 2: Módulo de Cotizaciones
+// Requiere: window.quotes, saveQuotes(), convertQuoteToPedido()
+// ══════════════════════════════════════════════════════════════
+
+// Estado local del modal de cotización
+let _quoteModalMode: 'new' | 'view' = 'new';
+let _quoteViewId: string | null = null;
+let _quoteProductos: any[] = [];
+
+function generarFolioCotizacion(): string {
+    const q = (window as any).quotes || [];
+    const maxNum = q.reduce((max: number, c: any) => {
+        const m = (c.folio || '').match(/COT-(\d+)/);
+        return m ? Math.max(max, parseInt(m[1])) : max;
+    }, 0);
+    return `COT-${String(maxNum + 1).padStart(3, '0')}`;
+}
+
+function renderQuotesTable() {
+    const tbody = document.getElementById('quotesTableBody');
+    if (!tbody) return;
+    const q: any[] = (window as any).quotes || [];
+    const _e = (window as any)._esc || ((s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    if (q.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Sin cotizaciones</td></tr>';
+        return;
+    }
+    tbody.innerHTML = q.slice().reverse().map((c: any) => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm font-mono">${_e(c.folio||'')}</td>
+            <td class="px-4 py-3 text-sm">${_e(c.customer||c.cliente||'')}</td>
+            <td class="px-4 py-3 text-sm">${_e(c.notes||c.concepto||'')}</td>
+            <td class="px-4 py-3 text-sm font-semibold">$${(c.total||0).toFixed(2)}</td>
+            <td class="px-4 py-3 text-sm">${c.date||c.fecha||''}</td>
+            <td class="px-4 py-3">
+                <div class="flex gap-1">
+                    <button type="button" onclick="viewQuote('${c.id}')" class="text-xs px-2 py-1 rounded-lg bg-blue-50 text-blue-700">Ver</button>
+                    ${!c.convertedToPedido ? `<button type="button" onclick="convertQuoteToPedido('${c.id}')" class="text-xs px-2 py-1 rounded-lg bg-green-50 text-green-700">→ Pedido</button>` : `<span class="text-xs text-gray-400">Convertida</span>`}
+                    <button type="button" onclick="deleteQuote('${c.id}')" class="text-xs px-2 py-1 rounded-lg bg-red-50 text-red-700">✕</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function _inyectarQuoteModal() {
+    if (document.getElementById('quoteModal')) return;
+    const div = document.createElement('div');
+    div.innerHTML = `<div id="quoteModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.5);">
+  <div class="bg-white rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl" style="max-height:90vh;overflow-y:auto;">
+    <h3 id="quoteModalTitle" class="text-lg font-bold text-gray-800 mb-4">Nueva Cotización</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Cliente</label>
+        <input id="quoteCliente" type="text" class="w-full border rounded-xl px-3 py-2 text-sm" placeholder="Nombre del cliente">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Notas / Concepto</label>
+        <textarea id="quoteNotas" rows="2" class="w-full border rounded-xl px-3 py-2 text-sm resize-none" placeholder="Descripción del trabajo o notas"></textarea>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-xs font-semibold text-gray-600">Productos / Servicios</label>
+          <button type="button" id="quoteAddProdBtn" onclick="addQuoteProduct()" class="text-xs px-3 py-1 rounded-lg font-semibold" style="background:#7c3aed;color:white;">+ Agregar</button>
+        </div>
+        <table class="w-full text-xs" style="border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f9fafb;">
+              <th class="px-2 py-1 text-left text-gray-500 font-semibold">Producto</th>
+              <th class="px-2 py-1 text-center text-gray-500 font-semibold">Cant.</th>
+              <th class="px-2 py-1 text-right text-gray-500 font-semibold">Precio</th>
+              <th class="px-2 py-1 text-right text-gray-500 font-semibold">Subtotal</th>
+              <th class="px-2 py-1"></th>
+            </tr>
+          </thead>
+          <tbody id="quoteProductosBody"></tbody>
+        </table>
+        <div class="flex justify-end mt-2 font-bold text-sm text-gray-800">
+          Total: <span id="quoteTotalDisplay" class="ml-2 text-amber-700">$0.00</span>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-5 flex-wrap">
+      <button type="button" onclick="closeQuoteModal()" class="flex-1 py-2 rounded-xl text-sm" style="background:#f3f4f6;color:#374151;">Cancelar</button>
+      <button type="button" id="quoteSaveBtn" onclick="_guardarCotizacion()" class="flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#7c3aed;color:white;">Guardar cotización</button>
+      <button type="button" id="quoteExportBtn" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#C5A572;color:white;" onclick="exportarCotizacionPNG(_quoteViewId)">Guardar PNG</button>
+    </div>
+  </div>
+</div>`;
+    document.body.appendChild(div.firstElementChild);
+}
+
+function _recalcQuoteTotal() {
+    let total = 0;
+    _quoteProductos.forEach(p => { total += (p.quantity || 1) * (p.price || 0); });
+    const el = document.getElementById('quoteTotalDisplay');
+    if (el) el.textContent = '$' + total.toFixed(2);
+}
+
+function _renderQuoteProductosBody(readOnly = false) {
+    const tbody = document.getElementById('quoteProductosBody');
+    if (!tbody) return;
+    const _e = (window as any)._esc || ((s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    if (_quoteProductos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-gray-400 text-xs">Sin productos — usa "+ Agregar"</td></tr>';
+        return;
+    }
+    tbody.innerHTML = _quoteProductos.map((p, i) => `
+        <tr style="border-bottom:1px solid #f3f4f6;">
+            <td class="px-2 py-1">${readOnly
+                ? `<span class="text-gray-800">${_e(p.name || '')}</span>`
+                : `<input type="text" value="${_e(p.name||'')}" oninput="_quoteProductos[${i}].name=this.value" class="w-full border rounded-lg px-1 py-0.5 text-xs" placeholder="Producto">`
+            }</td>
+            <td class="px-2 py-1 text-center">${readOnly
+                ? `<span>${p.quantity||1}</span>`
+                : `<input type="number" min="1" value="${p.quantity||1}" oninput="_quoteProductos[${i}].quantity=parseInt(this.value)||1;_recalcQuoteTotal()" class="w-14 border rounded-lg px-1 py-0.5 text-xs text-center">`
+            }</td>
+            <td class="px-2 py-1 text-right">${readOnly
+                ? `<span>$${(p.price||0).toFixed(2)}</span>`
+                : `<input type="number" min="0" step="0.01" value="${(p.price||0).toFixed(2)}" oninput="_quoteProductos[${i}].price=parseFloat(this.value)||0;_recalcQuoteTotal()" class="w-20 border rounded-lg px-1 py-0.5 text-xs text-right">`
+            }</td>
+            <td class="px-2 py-1 text-right font-semibold text-gray-700 text-xs">$${((p.quantity||1)*(p.price||0)).toFixed(2)}</td>
+            <td class="px-2 py-1 text-center">${readOnly ? '' : `<button type="button" onclick="_quoteProductos.splice(${i},1);_renderQuoteProductosBody(false);_recalcQuoteTotal();" class="text-red-400 hover:text-red-600 text-sm">✕</button>`}</td>
+        </tr>
+    `).join('');
+    _recalcQuoteTotal();
+}
+
+function addQuoteProduct() {
+    _quoteProductos.push({ name: '', quantity: 1, price: 0 });
+    _renderQuoteProductosBody(false);
+    _recalcQuoteTotal();
+}
+
+function openQuoteModal() {
+    _inyectarQuoteModal();
+    _quoteModalMode = 'new';
+    _quoteViewId = null;
+    _quoteProductos = [];
+    const titleEl = document.getElementById('quoteModalTitle');
+    if (titleEl) titleEl.textContent = 'Nueva Cotización';
+    const clienteEl = document.getElementById('quoteCliente') as HTMLInputElement|null;
+    if (clienteEl) clienteEl.value = '';
+    const notasEl = document.getElementById('quoteNotas') as HTMLTextAreaElement|null;
+    if (notasEl) notasEl.value = '';
+    const saveBtn = document.getElementById('quoteSaveBtn');
+    if (saveBtn) saveBtn.classList.remove('hidden');
+    const addBtn = document.getElementById('quoteAddProdBtn');
+    if (addBtn) addBtn.classList.remove('hidden');
+    const exportBtn = document.getElementById('quoteExportBtn');
+    if (exportBtn) exportBtn.classList.add('hidden');
+    _renderQuoteProductosBody(false);
+    openModal('quoteModal');
+}
+
+function closeQuoteModal() {
+    closeModal('quoteModal');
+}
+
+function viewQuote(id: string) {
+    _inyectarQuoteModal();
+    const q: any[] = (window as any).quotes || [];
+    const cot = q.find(x => String(x.id) === String(id));
+    if (!cot) return;
+    _quoteModalMode = 'view';
+    _quoteViewId = id;
+    _quoteProductos = (cot.products || []).map((p: any) => ({...p}));
+    const titleEl = document.getElementById('quoteModalTitle');
+    if (titleEl) titleEl.textContent = `Cotización ${cot.folio || ''} — Solo lectura`;
+    const clienteEl = document.getElementById('quoteCliente') as HTMLInputElement|null;
+    if (clienteEl) { clienteEl.value = cot.customer || cot.cliente || ''; clienteEl.readOnly = true; }
+    const notasEl = document.getElementById('quoteNotas') as HTMLTextAreaElement|null;
+    if (notasEl) { notasEl.value = cot.notes || cot.concepto || ''; notasEl.readOnly = true; }
+    const saveBtn = document.getElementById('quoteSaveBtn');
+    if (saveBtn) saveBtn.classList.add('hidden');
+    const addBtn = document.getElementById('quoteAddProdBtn');
+    if (addBtn) addBtn.classList.add('hidden');
+    const exportBtn = document.getElementById('quoteExportBtn');
+    if (exportBtn) exportBtn.classList.remove('hidden');
+    _renderQuoteProductosBody(true);
+    openModal('quoteModal');
+}
+
+function _guardarCotizacion() {
+    const clienteEl = document.getElementById('quoteCliente') as HTMLInputElement|null;
+    const notasEl = document.getElementById('quoteNotas') as HTMLTextAreaElement|null;
+    const cliente = clienteEl?.value.trim() || '';
+    const notas = notasEl?.value.trim() || '';
+    const total = _quoteProductos.reduce((s, p) => s + (p.quantity||1) * (p.price||0), 0);
+    const cot = {
+        id: typeof mkId === 'function' ? mkId() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2)),
+        folio: generarFolioCotizacion(),
+        customer: cliente,
+        cliente: cliente,
+        notes: notas,
+        concepto: notas,
+        products: _quoteProductos.map(p => ({...p})),
+        total,
+        date: typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0],
+        fecha: typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0],
+        convertedToPedido: false,
+    };
+    if (!(window as any).quotes) (window as any).quotes = [];
+    (window as any).quotes.push(cot);
+    if (typeof (window as any).saveQuotes === 'function') (window as any).saveQuotes();
+    renderQuotesTable();
+    closeQuoteModal();
+    if (typeof manekiToastExport === 'function') manekiToastExport(`✅ Cotización ${cot.folio} guardada.`, 'ok');
+}
+
+function deleteQuote(id: string) {
+    if (typeof showConfirm === 'function') {
+        showConfirm('¿Eliminar esta cotización? Esta acción no se puede deshacer.', '🗑 Eliminar').then((ok: boolean) => {
+            if (!ok) return;
+            (window as any).quotes = ((window as any).quotes || []).filter((c: any) => String(c.id) !== String(id));
+            if (typeof (window as any).saveQuotes === 'function') (window as any).saveQuotes();
+            renderQuotesTable();
+            if (typeof manekiToastExport === 'function') manekiToastExport('Cotización eliminada.', 'ok');
+        });
+    } else {
+        if (!confirm('¿Eliminar esta cotización?')) return;
+        (window as any).quotes = ((window as any).quotes || []).filter((c: any) => String(c.id) !== String(id));
+        if (typeof (window as any).saveQuotes === 'function') (window as any).saveQuotes();
+        renderQuotesTable();
+    }
+}
+
+async function exportarCotizacionPNG(quoteId: string) {
+    const q: any = ((window as any).quotes || []).find((x: any) => String(x.id) === String(quoteId));
+    if (!q) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = 600; canvas.height = 700;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 600, 700);
+
+    ctx.fillStyle = '#C5A572';
+    ctx.fillRect(0, 0, 600, 80);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 24px Arial';
+    ctx.fillText((window as any).storeConfig?.name || 'Maneki Store', 30, 40);
+    ctx.font = '14px Arial';
+    ctx.fillText('COTIZACIÓN', 30, 62);
+
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText(q.folio || 'COT-001', 30, 110);
+    ctx.font = '13px Arial';
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText(`Cliente: ${q.customer || q.cliente || '—'}`, 30, 135);
+    ctx.fillText(`Fecha: ${q.date || q.fecha || '—'}`, 30, 155);
+
+    let y = 190;
+    ctx.fillStyle = '#f3f4f6';
+    ctx.fillRect(20, y - 20, 560, 30);
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 13px Arial';
+    ctx.fillText('Producto', 30, y);
+    ctx.fillText('Cant.', 350, y);
+    ctx.fillText('Precio', 420, y);
+    ctx.fillText('Subtotal', 510, y);
+    y += 15;
+
+    ctx.font = '13px Arial';
+    (q.products || []).forEach((p: any) => {
+        y += 30;
+        if (y > 620) return;
+        ctx.fillStyle = '#1f2937';
+        ctx.fillText((p.name || '').substring(0, 30), 30, y);
+        ctx.fillText(String(p.quantity || 1), 360, y);
+        ctx.fillText(`$${(p.price || 0).toFixed(2)}`, 420, y);
+        ctx.fillText(`$${((p.quantity || 1) * (p.price || 0)).toFixed(2)}`, 510, y);
+        ctx.fillStyle = '#e5e7eb';
+        ctx.fillRect(20, y + 8, 560, 1);
+        ctx.fillStyle = '#1f2937';
+    });
+
+    y += 40;
+    ctx.fillStyle = '#C5A572';
+    ctx.fillRect(20, y, 560, 40);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText(`TOTAL: $${(q.total || 0).toFixed(2)}`, 30, y + 26);
+
+    if (q.notes) {
+        y += 55;
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px Arial';
+        ctx.fillText(`Notas: ${q.notes.substring(0, 80)}`, 30, y);
+    }
+
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '11px Arial';
+    ctx.fillText((window as any).storeConfig?.phone ? `📱 ${(window as any).storeConfig.phone}` : '', 30, 680);
+    ctx.fillText('Válida por 7 días', 450, 680);
+
+    const link = document.createElement('a');
+    link.download = `Cotizacion_${q.folio || 'COT'}_${q.customer || 'cliente'}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    if (typeof manekiToastExport === 'function') manekiToastExport('📄 Cotización exportada como imagen', 'ok');
+}
+
+window.renderQuotesTable = renderQuotesTable;
+window.openQuoteModal = openQuoteModal;
+window.closeQuoteModal = closeQuoteModal;
+window.viewQuote = viewQuote;
+window.deleteQuote = deleteQuote;
+window.addQuoteProduct = addQuoteProduct;
+window.exportarCotizacionPNG = exportarCotizacionPNG;
+window.generarFolioCotizacion = generarFolioCotizacion;
+(window as any)._recalcQuoteTotal = _recalcQuoteTotal;
+(window as any)._renderQuoteProductosBody = _renderQuoteProductosBody;
+(window as any)._quoteProductos = _quoteProductos;

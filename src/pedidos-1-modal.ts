@@ -603,6 +603,11 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
         if (idx !== -1) {
             const pActual = window.pedidos[idx];
 
+            // BUG-2 FIX: ajustar stock cuando el pedido ya tiene inventarioDescontado === true
+            if (pActual.inventarioDescontado === true) {
+                _ajustarStockDiferencia(pActual.productosInventario, window.pedidoProductosSeleccionados || []);
+            }
+
             // BUG-PED-01 + BUG-PED-007 FIX: sincronizar pagos[] cuando cambia el anticipo.
             // La lógica: el campo anticipo del formulario representa el TOTAL DESEADO de lo que
             // ya pagó el cliente. Ajustamos el pago tipo 'anticipo' en pagos[] para que
@@ -694,4 +699,191 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
     if (typeof checkAlertasEntregas === 'function') checkAlertasEntregas();
     if (typeof checkAlertasCobro === 'function') checkAlertasCobro();
 });
+
+// ── BUG-2: Ajustar stock cuando se edita un pedido que ya descontó inventario ──
+function _ajustarStockDiferencia(antesItems, despuesItems) {
+    const prodMap = new Map((window.products||[]).map(p => [String(p.id), p]));
+    const mapAntes = {};
+    (antesItems||[]).forEach(i => { mapAntes[String(i.id)] = (mapAntes[String(i.id)]||0) + (i.quantity||i.cantidad||1); });
+    const mapDespues = {};
+    (despuesItems||[]).forEach(i => { mapDespues[String(i.id)] = (mapDespues[String(i.id)]||0) + (i.quantity||i.cantidad||1); });
+    const todosIds = new Set([...Object.keys(mapAntes), ...Object.keys(mapDespues)]);
+    let cambios = 0;
+    todosIds.forEach(id => {
+        const cant_antes = mapAntes[id] || 0;
+        const cant_despues = mapDespues[id] || 0;
+        const diff = cant_despues - cant_antes;
+        if (diff === 0) return;
+        const prod = prodMap.get(id);
+        if (!prod || prod.tipo === 'servicio') return;
+        if (diff > 0) {
+            prod.stock = Math.max(0, (prod.stock||0) - diff);
+        } else {
+            prod.stock = (prod.stock||0) + Math.abs(diff);
+        }
+        cambios++;
+    });
+    if (cambios > 0) { saveProducts(); if (typeof renderInventoryTable === 'function') renderInventoryTable(); }
+    return cambios;
+}
+window._ajustarStockDiferencia = _ajustarStockDiferencia;
+
+// ══════════════════════════════════════════════════════════════
+// FEATURE 1: Parser de WhatsApp para pre-llenar pedido
+// ══════════════════════════════════════════════════════════════
+let _waDatosExtraidos: any = null;
+
+function abrirParserWA() {
+    // Inyectar modal si no existe
+    if (!document.getElementById('waParserModal')) {
+        const div = document.createElement('div');
+        div.innerHTML = `<div id="waParserModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.5);">
+  <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+    <h3 class="text-lg font-bold text-gray-800 mb-3">📱 Pegar mensaje de WhatsApp</h3>
+    <p class="text-sm text-gray-500 mb-3">Pega el mensaje y extraeremos los datos del pedido automáticamente.</p>
+    <textarea id="waParserInput" rows="8" class="w-full border rounded-xl p-3 text-sm resize-none" placeholder="Hola! Me llamo María García, mi teléfono es 8112345678. Quiero 2 tazas personalizadas con foto, para el 20 de junio. Doy anticipo de $200..."></textarea>
+    <div id="waParserPreview" class="hidden mt-3 bg-gray-50 rounded-xl p-3 text-sm"></div>
+    <div class="flex gap-2 mt-4">
+      <button type="button" onclick="closeModal('waParserModal')" class="flex-1 py-2 rounded-xl text-sm" style="background:#f3f4f6;color:#374151;">Cancelar</button>
+      <button type="button" onclick="_analizarWAMsg()" class="flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#7c3aed;color:white;">Analizar</button>
+      <button type="button" id="waParserApplyBtn" onclick="_aplicarDatosWA()" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#059669;color:white;">Usar datos</button>
+    </div>
+  </div>
+</div>`;
+        document.body.appendChild(div.firstElementChild);
+    }
+    // Limpiar estado previo
+    const input = document.getElementById('waParserInput') as HTMLTextAreaElement|null;
+    if (input) input.value = '';
+    const preview = document.getElementById('waParserPreview');
+    if (preview) { preview.innerHTML = ''; preview.classList.add('hidden'); }
+    const applyBtn = document.getElementById('waParserApplyBtn');
+    if (applyBtn) applyBtn.classList.add('hidden');
+    _waDatosExtraidos = null;
+    openModal('waParserModal');
+}
+
+function _analizarWAMsg() {
+    const input = document.getElementById('waParserInput') as HTMLTextAreaElement|null;
+    if (!input) return;
+    const texto = input.value.trim();
+    if (!texto) { if (typeof manekiToastExport === 'function') manekiToastExport('Pega un mensaje de WhatsApp primero', 'warn'); return; }
+
+    const _e = (window as any)._esc || ((s: string) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+
+    // Extraer nombre
+    let nombre = '';
+    const regexNombre = [
+        /me llamo\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*)/i,
+        /soy\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*)/i,
+        /mi nombre es\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*)/i,
+    ];
+    for (const rx of regexNombre) {
+        const m = texto.match(rx);
+        if (m) { nombre = m[1].trim(); break; }
+    }
+    if (!nombre) {
+        // Fallback: primera secuencia de palabras capitalizadas
+        const mCap = texto.match(/\b([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)/);
+        if (mCap) nombre = mCap[1].trim();
+    }
+
+    // Extraer teléfono
+    let telefono = '';
+    const mTel = texto.match(/(?:\+52\s*)?(?:\(?\d{2,3}\)?\s*[-.\s]?)?\d{4}[-.\s]?\d{4}/);
+    if (mTel) {
+        telefono = mTel[0].replace(/\D/g, '');
+        if (telefono.startsWith('52') && telefono.length === 12) telefono = telefono.slice(2);
+    }
+
+    // Extraer concepto/producto
+    let concepto = '';
+    const regexConcepto = [
+        /(?:quiero|necesito|pedido de|ordenar)\s+([^.,\n]+)/i,
+    ];
+    for (const rx of regexConcepto) {
+        const m = texto.match(rx);
+        if (m) { concepto = m[1].trim(); break; }
+    }
+
+    // Extraer fecha de entrega
+    let fechaEntrega = '';
+    const MESES_MAP: Record<string, string> = {
+        enero:'01', febrero:'02', marzo:'03', abril:'04', mayo:'05', junio:'06',
+        julio:'07', agosto:'08', septiembre:'09', octubre:'10', noviembre:'11', diciembre:'12'
+    };
+    const mFecha1 = texto.match(/para el\s+(\d{1,2})\s+de\s+(\w+)/i);
+    if (mFecha1) {
+        const dia = mFecha1[1].padStart(2,'0');
+        const mes = MESES_MAP[mFecha1[2].toLowerCase()];
+        if (mes) {
+            const anio = new Date().getFullYear();
+            fechaEntrega = `${anio}-${mes}-${dia}`;
+        }
+    }
+    if (!fechaEntrega) {
+        const mFecha2 = texto.match(/para el\s+(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/i);
+        if (mFecha2) {
+            const anio = mFecha2[3] ? (mFecha2[3].length === 2 ? '20' + mFecha2[3] : mFecha2[3]) : String(new Date().getFullYear());
+            fechaEntrega = `${anio}-${mFecha2[2].padStart(2,'0')}-${mFecha2[1].padStart(2,'0')}`;
+        }
+    }
+
+    // Extraer anticipo/total
+    let anticipo = '';
+    const mMonto = texto.match(/\$\s*(\d[\d,]*(?:\.\d{1,2})?)/);
+    if (mMonto) anticipo = mMonto[1].replace(/,/g, '');
+
+    _waDatosExtraidos = { nombre, telefono, concepto, fechaEntrega, anticipo };
+
+    // Mostrar preview
+    const preview = document.getElementById('waParserPreview');
+    if (preview) {
+        const filas = [
+            ['👤 Nombre', nombre || '<span style="color:#9ca3af">No detectado</span>'],
+            ['📱 Teléfono', telefono || '<span style="color:#9ca3af">No detectado</span>'],
+            ['🛍️ Concepto', concepto || '<span style="color:#9ca3af">No detectado</span>'],
+            ['📅 Entrega', fechaEntrega || '<span style="color:#9ca3af">No detectado</span>'],
+            ['💵 Anticipo', anticipo ? '$' + anticipo : '<span style="color:#9ca3af">No detectado</span>'],
+        ];
+        preview.innerHTML = '<table style="width:100%;border-collapse:collapse;">'
+            + filas.map(([k, v]) => `<tr><td style="padding:3px 6px;font-weight:600;color:#374151;font-size:.8rem;white-space:nowrap;">${k}</td><td style="padding:3px 6px;color:#1f2937;font-size:.8rem;">${v}</td></tr>`).join('')
+            + '</table>';
+        preview.classList.remove('hidden');
+    }
+
+    const applyBtn = document.getElementById('waParserApplyBtn');
+    if (applyBtn) applyBtn.classList.remove('hidden');
+}
+
+function _aplicarDatosWA() {
+    if (!_waDatosExtraidos) return;
+    const { nombre, telefono, concepto, fechaEntrega, anticipo } = _waDatosExtraidos;
+
+    closeModal('waParserModal');
+
+    // Abrir modal de nuevo pedido si no está abierto
+    if (typeof openPedidoModal === 'function') openPedidoModal('');
+
+    // Pequeño delay para que el modal se renderice antes de rellenar
+    setTimeout(() => {
+        const clienteEl = document.getElementById('pedidoCliente') as HTMLInputElement|null;
+        const telefonoEl = document.getElementById('pedidoTelefono') as HTMLInputElement|null;
+        const conceptoEl = document.getElementById('pedidoConcepto') as HTMLInputElement|null;
+        const entregaEl = document.getElementById('pedidoEntrega') as HTMLInputElement|null;
+        const anticipoEl = document.getElementById('pedidoAnticipo') as HTMLInputElement|null;
+
+        if (clienteEl && nombre) { clienteEl.value = nombre; clienteEl.dispatchEvent(new Event('input')); }
+        if (telefonoEl && telefono) telefonoEl.value = telefono;
+        if (conceptoEl && concepto) conceptoEl.value = concepto;
+        if (entregaEl && fechaEntrega) entregaEl.value = fechaEntrega;
+        if (anticipoEl && anticipo) { anticipoEl.value = anticipo; if (typeof calcPedidoTotal === 'function') calcPedidoTotal(); }
+
+        if (typeof manekiToastExport === 'function') manekiToastExport('📱 Datos del mensaje pre-cargados.', 'ok');
+    }, 300);
+}
+
+window.abrirParserWA = abrirParserWA;
+window._analizarWAMsg = _analizarWAMsg;
+window._aplicarDatosWA = _aplicarDatosWA;
 

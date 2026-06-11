@@ -154,39 +154,64 @@ function _genId() {
 }
 
 // Si el producto tiene variantes, el stock es la suma de todas las variantes
+// BUG-1 FIX: si además tiene mpComponentes, sumar el fabricable desde MP al stock de variantes
 function getStockEfectivo(product) {
-    if (product.variants && product.variants.length > 0) {
-        return product.variants.reduce((sum, v) => sum + (parseInt(v.qty) || 0), 0);
+    const tieneVariantes = product.variants && product.variants.length > 0;
+    const tieneMP = product.mpComponentes && product.mpComponentes.length > 0;
+
+    // Calcular fabricable desde MP (reutilizable)
+    function _calcFabricableMP() {
+        const allServices = product.mpComponentes.every(c => {
+            const mp = (window.products||[]).find(x=>String(x.id)===String(c.id));
+            return mp && mp.tipo === 'servicio';
+        });
+        if (allServices) return 0;
+        let minPiezas = Infinity;
+        product.mpComponentes.forEach(c => {
+            const mp = (window.products||[]).find(x=>String(x.id)===String(c.id));
+            if (mp && mp.tipo !== 'servicio') {
+                const stockMp = parseFloat(mp.stock) || 0;
+                const qty = parseFloat(c.qty) || 1;
+                const rendimiento = parseFloat(c.rendimientoPorHoja) || 1;
+                const pzas = Math.floor((stockMp / qty) * rendimiento);
+                if (pzas < minPiezas) minPiezas = pzas;
+            }
+        });
+        return minPiezas === Infinity ? 0 : minPiezas;
     }
+
+    if (tieneVariantes) {
+        const stockVariantes = product.variants.reduce((sum, v) => sum + (parseInt(v.qty) || 0), 0);
+        if (tieneMP) {
+            // BUG-1 FIX: tiene variantes Y MP — stock real = variantes + fabricable desde MP
+            return stockVariantes + _calcFabricableMP();
+        }
+        return stockVariantes;
+    }
+
     // Si NO tiene variantes pero SÍ componentes, el stock es el mínimo posible a fabricar
-    if (product.mpComponentes && product.mpComponentes.length > 0) {
+    if (tieneMP) {
         const allServices = product.mpComponentes.every(c => {
             const mp = (window.products||[]).find(x=>String(x.id)===String(c.id));
             return mp && mp.tipo === 'servicio';
         });
         if (allServices) return parseInt(product.stock) || 0; // Si son puros servicios, usa el stock manual
-        
-        let minPiezas = Infinity;
-        product.mpComponentes.forEach(c => {
-            const mp = (window.products||[]).find(x=>String(x.id)===String(c.id));
-            if (mp && mp.tipo !== 'servicio') {
-                const stockMp = mp.stock || 0;
-                const qty = parseFloat(c.qty) || 1;
-                const pzas = Math.floor(stockMp / qty);
-                if (pzas < minPiezas) minPiezas = pzas;
-            }
-        });
-        
+
         // Sumamos el stock manual existente al que se puede fabricar
-        // para que si el usuario tiene stock ya hecho en tienda se tome en cuenta.
         const stockManual = parseInt(product.stock) || 0;
-        const stockFabricable = minPiezas === Infinity ? 0 : minPiezas;
+        const stockFabricable = _calcFabricableMP();
         return stockManual + stockFabricable;
     }
-    
+
     return parseInt(product.stock) || 0;
 }
 window.getStockEfectivo = getStockEfectivo;
+
+// BUG-2 FIX: normalizar variantes removiendo espacios alrededor de ':' para evitar mismatch 'Tipo:Valor' vs 'Tipo: Valor'
+function _normVariante(v) {
+    return (v||'').replace(/\s*:\s*/g, ':').trim().toLowerCase();
+}
+window._normVariante = _normVariante;
 
 // ── Lista de compras automática ──────────────────────────────────────────────
 function mostrarListaCompras(esRerender) {
@@ -222,9 +247,10 @@ function mostrarListaCompras(esRerender) {
         let disponible = 0;
         if (prod) {
             if (n.variante) {
+                // BUG-2 FIX: normalizar ambos lados para evitar mismatch por espacios alrededor de ':'
                 const variante = (prod.variants || []).find(v =>
-                    v.value === n.variante ||
-                    `${v.type}: ${v.value}` === n.variante
+                    _normVariante(v.value) === _normVariante(n.variante) ||
+                    _normVariante(`${v.type}:${v.value}`) === _normVariante(n.variante)
                 );
                 disponible = variante ? (variante.qty || 0) : getStockEfectivo(prod);
             } else {
@@ -741,25 +767,39 @@ async function registrarMerma(id) {
         setTimeout(() => (document.getElementById('mkMermaCant') as HTMLInputElement)?.focus(), 50);
     });
     if (!result || !result.cantidad || parseFloat(result.cantidad) <= 0) return;
-    const cant = parseInt(result.cantidad, 10) || Math.round(parseFloat(result.cantidad));
+    // BUG-3 FIX: usar parseFloat para soportar MP en unidades decimales (metros/litros/gramos)
+    const cant = parseFloat(result.cantidad);
     if (!cant || cant <= 0) { manekiToastExport('⚠️ Cantidad inválida','warn'); return; }
     const motivo = result.motivo || 'Sin especificar';
-    const stAntes = getStockEfectivo(p);
-    const stDespues = Math.max(0, stAntes - cant);
-    p.stock = stDespues;
+
+    // BUG-3 FIX: usar SOLO stock físico real (NO getStockEfectivo) para no mezclar con fabricable hipotético
     if (Array.isArray(p.variants) && p.variants.length) {
+        // Con variantes: descontar de la variante con más stock primero
+        const stAntes = p.variants.reduce((sum, v) => sum + (parseFloat(v.qty as any) || 0), 0);
+        // Ordenar variantes por qty desc para descontar de las más llenas primero
+        const sorted = [...p.variants].sort((a, b) => (parseFloat(b.qty as any)||0) - (parseFloat(a.qty as any)||0));
         let restante = cant;
-        for (const v of p.variants) {
+        for (const sv of sorted) {
             if (restante <= 0) break;
-            const q = parseInt(v.qty)||0;
+            const orig = p.variants.find(v => v.type === sv.type && v.value === sv.value);
+            if (!orig) continue;
+            const q = parseFloat(orig.qty as any) || 0;
             const rem = Math.min(q, restante);
-            v.qty = q - rem;
+            orig.qty = Math.max(0, q - rem) as any;
             restante -= rem;
         }
         if (typeof syncStockFromVariants === 'function') syncStockFromVariants(p);
+        const stDespues = p.variants.reduce((sum, v) => sum + (parseFloat(v.qty as any) || 0), 0);
+        registrarMovimiento({ productoId: p.id, productoNombre: p.name, tipo: 'merma',
+            cantidad: -cant, motivo: motivo||'Sin especificar', stockAntes: stAntes, stockDespues: stDespues });
+    } else {
+        // Sin variantes: descontar del stock físico directo
+        const stAntes = parseFloat(p.stock as any) || 0;
+        const stDespues = Math.max(0, stAntes - cant);
+        p.stock = stDespues;
+        registrarMovimiento({ productoId: p.id, productoNombre: p.name, tipo: 'merma',
+            cantidad: -cant, motivo: motivo||'Sin especificar', stockAntes: stAntes, stockDespues: stDespues });
     }
-    registrarMovimiento({ productoId: p.id, productoNombre: p.name, tipo: 'merma',
-        cantidad: -cant, motivo: motivo||'Sin especificar', stockAntes: stAntes, stockDespues: stDespues });
     saveProducts(); renderInventoryTable();
     if (typeof updateDashboard === 'function') updateDashboard();
     manekiToastExport(`📉 Merma: -${cant} ${p.unidad||'pza'} de "${p.name}"`, 'warn');
@@ -1410,6 +1450,264 @@ function imprimirEtiquetasBatch(ids?: string[]) {
     setTimeout(() => win.print(), 500);
 }
 window.imprimirEtiquetasBatch = imprimirEtiquetasBatch;
+
+// ══════════════════════════════════════════════════════════════════════════
+// FEATURE 1: Calculadora de precio sugerido
+// ══════════════════════════════════════════════════════════════════════════
+let _calcPrecioProdId: string|null = null;
+
+function _inyectarCalculadoraModal() {
+    if (document.getElementById('calculadoraPrecioModal')) return;
+    const div = document.createElement('div');
+    div.innerHTML = `<div id="calculadoraPrecioModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.5);">
+  <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+    <h3 class="text-base font-bold text-gray-800 mb-4">🧮 Calculadora de precio</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-gray-500">Costo de materiales ($)</label>
+        <input id="calcCostoMP" type="number" class="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="0.00" oninput="_calcPrecio()">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500">Horas de trabajo</label>
+        <input id="calcHoras" type="number" class="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="0" oninput="_calcPrecio()">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500">Tu tarifa por hora ($)</label>
+        <input id="calcTarifa" type="number" class="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="100" oninput="_calcPrecio()">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500">Margen de ganancia (%)</label>
+        <input id="calcMargen" type="number" class="w-full border rounded-xl px-3 py-2 text-sm mt-1" value="30" oninput="_calcPrecio()">
+      </div>
+    </div>
+    <div id="calcResultado" class="hidden mt-4 p-3 rounded-xl text-center" style="background:#f0fdf4;">
+      <p class="text-xs text-gray-500">Precio sugerido</p>
+      <p id="calcPrecioFinal" class="text-2xl font-bold" style="color:#059669;">$0.00</p>
+      <p id="calcDesglose" class="text-xs text-gray-400 mt-1"></p>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button onclick="closeModal('calculadoraPrecioModal')" class="flex-1 btn-secondary py-2 rounded-xl text-sm">Cerrar</button>
+      <button onclick="_aplicarPrecioCalculado()" id="calcAplicarBtn" class="hidden flex-1 btn-primary py-2 rounded-xl text-sm">Aplicar precio</button>
+    </div>
+  </div>
+</div>`;
+    document.body.appendChild(div.firstElementChild as HTMLElement);
+}
+
+function _calcPrecio() {
+    const costoMP = parseFloat((document.getElementById('calcCostoMP') as HTMLInputElement)?.value) || 0;
+    const horas   = parseFloat((document.getElementById('calcHoras')   as HTMLInputElement)?.value) || 0;
+    const tarifa  = parseFloat((document.getElementById('calcTarifa')  as HTMLInputElement)?.value) || 0;
+    const margen  = parseFloat((document.getElementById('calcMargen')  as HTMLInputElement)?.value) || 0;
+
+    const manoObra = horas * tarifa;
+    const baseCosto = costoMP + manoObra;
+    const precio = baseCosto * (1 + margen / 100);
+
+    const resultado  = document.getElementById('calcResultado');
+    const precioFinal = document.getElementById('calcPrecioFinal');
+    const desglose   = document.getElementById('calcDesglose');
+    const aplicarBtn = document.getElementById('calcAplicarBtn');
+
+    if (baseCosto <= 0) {
+        if (resultado) resultado.classList.add('hidden');
+        if (aplicarBtn) aplicarBtn.classList.add('hidden');
+        return;
+    }
+
+    const ganancia = precio - baseCosto;
+    if (resultado)  resultado.classList.remove('hidden');
+    if (precioFinal) precioFinal.textContent = `$${precio.toFixed(2)}`;
+    if (desglose) desglose.textContent = `Mat: $${costoMP.toFixed(2)} + M.O.: $${manoObra.toFixed(2)} + Ganancia: $${ganancia.toFixed(2)}`;
+    if (aplicarBtn && _calcPrecioProdId) aplicarBtn.classList.remove('hidden');
+}
+window._calcPrecio = _calcPrecio;
+
+function _aplicarPrecioCalculado() {
+    if (!_calcPrecioProdId) return;
+    const precioFinal = document.getElementById('calcPrecioFinal');
+    if (!precioFinal) return;
+    const precio = parseFloat(precioFinal.textContent?.replace('$', '') || '0');
+    if (!precio || precio <= 0) { manekiToastExport('Calcula un precio primero', 'warn'); return; }
+
+    // Intentar aplicar al campo de precio en el modal de edición de producto (PT modal)
+    const camposPrecio = ['ptPrice', 'productPrice', 'mpPrice'];
+    let aplicado = false;
+    for (const id of camposPrecio) {
+        const inp = document.getElementById(id) as HTMLInputElement;
+        if (inp) { inp.value = precio.toFixed(2); inp.dispatchEvent(new Event('input')); aplicado = true; break; }
+    }
+    if (!aplicado) {
+        // Si no hay modal abierto, aplicar directo al producto en memoria
+        const prod = (window.products||[]).find(p => String(p.id) === String(_calcPrecioProdId));
+        if (prod) { prod.price = precio; saveProducts(); renderInventoryTable(); }
+    }
+    closeModal('calculadoraPrecioModal');
+    manekiToastExport(`✅ Precio $${precio.toFixed(2)} aplicado`, 'ok');
+}
+window._aplicarPrecioCalculado = _aplicarPrecioCalculado;
+
+function abrirCalculadoraPrecio(prodId: string) {
+    _inyectarCalculadoraModal();
+    _calcPrecioProdId = prodId || null;
+    const prod = prodId ? (window.products||[]).find(p => String(p.id) === String(prodId)) : null;
+    // Pre-rellenar costo
+    const costoInp = document.getElementById('calcCostoMP') as HTMLInputElement;
+    if (costoInp && prod) costoInp.value = String(parseFloat(prod.costo || prod.cost || 0) || 0);
+    // Reset resultado
+    const resultado = document.getElementById('calcResultado');
+    if (resultado) resultado.classList.add('hidden');
+    const aplicarBtn = document.getElementById('calcAplicarBtn');
+    if (aplicarBtn) aplicarBtn.classList.add('hidden');
+    openModal('calculadoraPrecioModal');
+}
+window.abrirCalculadoraPrecio = abrirCalculadoraPrecio;
+
+// ══════════════════════════════════════════════════════════════════════════
+// FEATURE 2: Historial de costo de MP con alerta de aumento
+// ══════════════════════════════════════════════════════════════════════════
+// Se llama desde el flujo de guardar/actualizar un producto cuando cambia el costo.
+// prod: objeto de producto ya actualizado; costoAnterior: valor numérico anterior
+function _registrarCambioHistorialCosto(prod: any, costoAnterior: number) {
+    const costoNuevo = parseFloat(prod.costo || prod.cost || 0);
+    if (isNaN(costoNuevo)) return;
+    const costoViejoN = parseFloat(String(costoAnterior)) || 0;
+    if (costoNuevo === costoViejoN) return; // sin cambio
+
+    if (!prod.costoHistorial) prod.costoHistorial = [];
+    // Si no hay entradas y había costo anterior, registrar el punto de partida
+    if (prod.costoHistorial.length === 0 && costoViejoN > 0) {
+        prod.costoHistorial.push({ fecha: _fechaHoy(), valor: costoViejoN });
+    }
+    prod.costoHistorial.push({ fecha: _fechaHoy(), valor: costoNuevo });
+    // Limitar a 20 registros
+    if (prod.costoHistorial.length > 20) prod.costoHistorial = prod.costoHistorial.slice(-20);
+
+    // Alerta si el costo subió >10% respecto al penúltimo
+    const hist = prod.costoHistorial;
+    if (hist.length >= 2) {
+        const penultimo = hist[hist.length - 2].valor;
+        const ultimo    = hist[hist.length - 1].valor;
+        if (penultimo > 0 && ultimo > penultimo * 1.1) {
+            const pct = (((ultimo - penultimo) / penultimo) * 100).toFixed(1);
+            manekiToastExport(`⚠️ El costo de "${prod.name}" subió ${pct}% (de $${penultimo.toFixed(2)} a $${ultimo.toFixed(2)})`, 'warn');
+        }
+    }
+}
+window._registrarCambioHistorialCosto = _registrarCambioHistorialCosto;
+
+// ══════════════════════════════════════════════════════════════════════════
+// FEATURE 3: Cerrar ciclo de compras — registrarCompraRecibida
+// ══════════════════════════════════════════════════════════════════════════
+let _compraProdId: string|null = null;
+
+function _inyectarRegistrarCompraModal() {
+    if (document.getElementById('registrarCompraModal')) return;
+    const div = document.createElement('div');
+    div.innerHTML = `<div id="registrarCompraModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.5);">
+  <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+    <h3 class="text-base font-bold text-gray-800 mb-4">📦 Registrar compra recibida</h3>
+    <input id="compraProductoNombre" class="w-full border rounded-xl px-3 py-2 text-sm mb-3 bg-gray-50" readonly>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-gray-500">Cantidad recibida</label>
+        <input id="compraCantidad" type="number" class="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="1" min="0.01" step="0.01">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500">Costo unitario ($) — deja vacío si no cambia</label>
+        <input id="compraCosto" type="number" class="w-full border rounded-xl px-3 py-2 text-sm mt-1" placeholder="0.00" step="0.01">
+      </div>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button onclick="closeModal('registrarCompraModal')" class="flex-1 btn-secondary py-2 rounded-xl text-sm">Cancelar</button>
+      <button onclick="_confirmarCompra()" class="flex-1 btn-primary py-2 rounded-xl text-sm">Registrar</button>
+    </div>
+  </div>
+</div>`;
+    document.body.appendChild(div.firstElementChild as HTMLElement);
+}
+
+function registrarCompraRecibida(prodId: string, cantidad: number, costo: number) {
+    const prod = (window.products||[]).find(p => String(p.id) === String(prodId));
+    if (!prod) { manekiToastExport('Producto no encontrado', 'err'); return; }
+
+    const cantN = parseFloat(String(cantidad)) || 0;
+    if (cantN <= 0) { manekiToastExport('Cantidad inválida', 'warn'); return; }
+
+    // 1. Sumar cantidad al stock (o a variantes si aplica)
+    const costoAnterior = parseFloat(prod.costo || prod.cost || 0) || 0;
+    if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+        // Con variantes: añadir a la primera variante disponible (o la de mayor stock)
+        const sorted = [...prod.variants].sort((a, b) => (parseFloat(b.qty as any)||0) - (parseFloat(a.qty as any)||0));
+        const target = prod.variants.find(v => v.type === sorted[0].type && v.value === sorted[0].value);
+        if (target) target.qty = ((parseFloat(target.qty as any) || 0) + cantN) as any;
+        if (typeof syncStockFromVariants === 'function') syncStockFromVariants(prod);
+    } else {
+        prod.stock = (parseFloat(prod.stock as any) || 0) + cantN;
+    }
+
+    // 2. Actualizar costo si se especifica
+    let costoUnitario = costoAnterior;
+    if (costo && costo > 0) {
+        costoUnitario = costo;
+        // Actualizar tanto prod.costo como prod.cost para máxima compatibilidad
+        prod.costo = costo;
+        prod.cost  = costo;
+        // 3. Registrar en historial de costo
+        _registrarCambioHistorialCosto(prod, costoAnterior);
+    }
+
+    // 4. Crear entrada en window.expenses
+    if (!window.expenses) window.expenses = [];
+    const gastoTotal = cantN * costoUnitario;
+    if (gastoTotal > 0) {
+        window.expenses.push({
+            id: mkId(),
+            concepto: `Compra de MP: ${prod.name}`,
+            monto: gastoTotal,
+            fecha: _fechaHoy(),
+            categoria: 'Inventario',
+            nota: `${cantN} uds × $${costoUnitario.toFixed(2)}`
+        });
+        if (typeof saveExpenses === 'function') saveExpenses();
+    }
+
+    // 5. Guardar y re-renderizar
+    saveProducts();
+    renderInventoryTable();
+    if (typeof updateDashboard === 'function') updateDashboard();
+
+    // 6. Toast confirmación
+    const gastoStr = gastoTotal > 0 ? ` · Gasto de $${gastoTotal.toFixed(2)} en Balance` : '';
+    manekiToastExport(`✅ Compra registrada: +${cantN} unidades de ${prod.name}${gastoStr}`, 'ok');
+}
+window.registrarCompraRecibida = registrarCompraRecibida;
+
+function abrirRegistrarCompra(prodId: string) {
+    _inyectarRegistrarCompraModal();
+    _compraProdId = prodId || null;
+    const prod = prodId ? (window.products||[]).find(p => String(p.id) === String(prodId)) : null;
+    const nombreInp = document.getElementById('compraProductoNombre') as HTMLInputElement;
+    if (nombreInp && prod) nombreInp.value = prod.name || '';
+    const cantInp = document.getElementById('compraCantidad') as HTMLInputElement;
+    if (cantInp) cantInp.value = '';
+    const costoInp = document.getElementById('compraCosto') as HTMLInputElement;
+    if (costoInp && prod) costoInp.value = String(parseFloat(prod.costo || prod.cost || 0) || '');
+    openModal('registrarCompraModal');
+}
+window.abrirRegistrarCompra = abrirRegistrarCompra;
+
+function _confirmarCompra() {
+    if (!_compraProdId) return;
+    const cantInp  = document.getElementById('compraCantidad') as HTMLInputElement;
+    const costoInp = document.getElementById('compraCosto')    as HTMLInputElement;
+    const cantidad = parseFloat(cantInp?.value  || '0');
+    const costo    = parseFloat(costoInp?.value || '0');
+    if (!cantidad || cantidad <= 0) { manekiToastExport('Ingresa una cantidad válida', 'warn'); return; }
+    closeModal('registrarCompraModal');
+    registrarCompraRecibida(_compraProdId, cantidad, costo);
+}
+window._confirmarCompra = _confirmarCompra;
 
 // ── N3: Escáner QR/Barcode desde cámara ──────────────────────────────────────
 let _qrStream: MediaStream|null = null;

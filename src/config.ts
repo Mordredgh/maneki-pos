@@ -184,13 +184,15 @@ let storeConfig: ManekiStoreConfig = {
     address:  '',
     footer:   '¡Gracias por tu compra!',
     logo:     null,
-    logoMode: 'image'
+    logoMode: 'image',
+    googleReviewLink: '',
 };
 
 function saveStoreConfig() {
     const btn  = document.querySelector('button[onclick="saveStoreConfig()"]');
     const done = btnLoading(btn);
     storeConfig = {
+        ...storeConfig,   // preserva claves existentes (telegramBotToken, baseLat, baseLng, googleReviewLink, etc.)
         emoji:    document.getElementById('configEmoji').value,
         name:     document.getElementById('configName').value || 'Maneki Store',
         slogan:   document.getElementById('configSlogan').value,
@@ -207,6 +209,8 @@ function saveStoreConfig() {
         telegramChatId2: (document.getElementById('configTelegramChatId2') || {}).value?.trim() || storeConfig.telegramChatId2 || '',
         // Sync meta mensual — design-system.js la guarda en mk_monthly_goal; aquí la persistimos en storeConfig también
         metaMensual: parseFloat(localStorage.getItem('mk_monthly_goal') || '0') || storeConfig.metaMensual || 5000,
+        // Feature reseñas Google (módulo pedidos-2) — el input puede no existir en el HTML
+        googleReviewLink: (document.getElementById('configGoogleReviewLink') || {}).value?.trim() || storeConfig.googleReviewLink || '',
     };
     // R2-A1: advertir si no hay logo válido al guardar
     if (!storeConfig.logo) {
@@ -403,6 +407,7 @@ function loadStoreConfigUI() {
     if (goalEl) goalEl.value = metaMensual;
     _set('configTelegramChatId1', storeConfig.telegramChatId1);
     _set('configTelegramChatId2', storeConfig.telegramChatId2);
+    _set('configGoogleReviewLink', storeConfig.googleReviewLink);
     updateStorePreview();
 }
 
@@ -893,3 +898,27 @@ for (const k of _mkStateKeys) {
         enumerable: true, configurable: true
     });
 }
+
+// ── Helper: fecha legible "mié 15 jun" en lugar de "2026-06-15" ──────────────
+function _fmtFechaCorta(dateStr) {
+    if (!dateStr) return '—';
+    try {
+        // Agregar T00:00 para forzar interpretación local (no UTC)
+        const d = new Date(dateStr + (dateStr.length === 10 ? 'T00:00' : ''));
+        if (isNaN(d.getTime())) return dateStr;
+        const dias = ['dom','lun','mar','mié','jue','vie','sáb'];
+        const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        return `${dias[d.getDay()]} ${d.getDate()} ${meses[d.getMonth()]}`;
+    } catch { return dateStr; }
+}
+window._fmtFechaCorta = _fmtFechaCorta;
+
+// ── Helper: formato de dinero "$1,234" unificado en toda la app ───────────────
+function fmtMoney(amount) {
+    const n = Number(amount) || 0;
+    if (n === Math.floor(n)) {
+        return '$' + n.toLocaleString('es-MX');
+    }
+    return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+window.fmtMoney = fmtMoney;

@@ -538,6 +538,12 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div id="dashHeatmapWidget" style="margin-top:12px;overflow-x:auto;"></div>
     </div>
 
+    <!-- ── CUENTA REGRESIVA A TEMPORADAS ─────────────────── -->
+    <div class="mk-card" style="padding:16px 20px;">
+      <div class="mk-chart-title" style="color:#d97706;margin-bottom:10px;"><span>🗓️ Próxima temporada</span></div>
+      <div id="widgetTemporadas"></div>
+    </div>
+
     <!-- ── NOTAS RÁPIDAS ──────────────────────────────────── -->
     <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#fff8f9,#fdf2f8);">
       <div class="mk-chart-title" style="color:#9d174d;">
@@ -691,15 +697,13 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <tr>
                                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Folio</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Cliente</th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Fecha</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Concepto</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Total</th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Estado</th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Proveedor</th>
-                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Margen</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Fecha</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="quotesTable" class="divide-y divide-gray-200">
+                            <tbody id="quotesTableBody" class="divide-y divide-gray-200">
 
                             </tbody>
                         </table>
@@ -921,11 +925,19 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <h2 class="text-2xl font-bold text-gray-800">Balance</h2>
                         <p class="text-sm text-gray-400">Tu dinero de un vistazo</p>
                     </div>
+                    <div class="flex items-center gap-2">
+                    <button type="button" onclick="typeof abrirCorteCaja==='function'?abrirCorteCaja():manekiToastExport('Cargando...','warn')"
+                            class="px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
+                            style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;"
+                            title="Corte de caja del día">
+                        <i class="fas fa-cash-register"></i> <span class="hidden sm:inline">Corte de caja</span>
+                    </button>
                     <div class="flex items-center gap-1 bg-white rounded-xl border border-gray-200 px-1 py-1">
                         <button type="button" data-action="cambiarMesBalance" data-arg="-1" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">‹</button>
                         <span id="balanceMesLabel" class="text-sm font-semibold text-gray-700 min-w-28 text-center px-2"></span>
                         <button type="button" data-action="cambiarMesBalance" data-arg="1" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">›</button>
                     </div>
+                </div>
                 </div>
 
                 <!-- Neto del mes — héroe principal -->
@@ -1612,6 +1624,18 @@ input:focus, select:focus, textarea:focus, button:focus {
                     style="background: linear-gradient(135deg,#10B981,#059669)">
                 <i class="fas fa-file-excel"></i> Exportar Excel
             </button>
+            <button type="button" onclick="typeof abrirParserWA==='function'?abrirParserWA():manekiToastExport('Cargando...','warn')"
+                    class="px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
+                    style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;"
+                    title="Parsear mensaje de WhatsApp para pre-llenar pedido">
+                <i class="fab fa-whatsapp"></i> <span class="hidden sm:inline">Desde WA</span>
+            </button>
+            <button type="button" onclick="typeof abrirHojaRuta==='function'?abrirHojaRuta():manekiToastExport('Cargando...','warn')"
+                    class="px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
+                    style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;"
+                    title="Hoja de ruta del día — entregas de hoy">
+                <i class="fas fa-route"></i> <span class="hidden sm:inline">Ruta del día</span>
+            </button>
             <button type="button" data-action="openPedidoModal" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
                 <i class="fas fa-plus"></i> Nuevo Pedido
             </button>
@@ -2020,6 +2044,17 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <input type="text" id="configTelegramChatId2" placeholder="Chat ID 2 (opcional)"
                                class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2">
                     </div>
+                </div>
+
+                <!-- Link de reseña Google -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-star mr-1" style="color:#f59e0b;"></i> Link de reseña de Google
+                    </label>
+                    <input type="url" id="configGoogleReviewLink"
+                           placeholder="https://g.page/r/tu-link-de-reseña"
+                           class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2">
+                    <p class="text-xs text-gray-400 mt-1">Al entregar un pedido, se sugerirá pedir reseña por WhatsApp usando este link.</p>
                 </div>
 
                 <button type="button" data-action="saveStoreConfig"

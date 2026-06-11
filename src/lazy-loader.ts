@@ -72,13 +72,35 @@
 
     var _cargados = new Set();
     var _cargando = new Map(); // url/grupo → Promise
+    var _scriptPromises = new Map(); // url → Promise (para deduplicar scripts en vuelo)
 
     // ── Inyecta un <script> y resuelve cuando carga ──────────────
+    // BUG FIX: mantener mapa de promises por URL para reutilizar la promise
+    // en vuelo — evita que un querySelector encuentre un tag ya insertado
+    // por otro grupo y resuelva prematuramente antes de que el script ejecute.
     function _cargarScript(src) {
-        return new Promise(function (resolve) {
-            if (document.querySelector('script[src="' + src + '"]')) {
-                resolve(); return;
-            }
+        // Si ya hay una promise para este src (cargando o cargado), reutilizarla
+        if (_scriptPromises.has(src)) return _scriptPromises.get(src);
+
+        // Si el script ya está en el DOM con readyState 'complete', resolver inmediato
+        var existing = document.querySelector('script[src="' + src + '"]');
+        if (existing && (existing as any).readyState === 'complete') {
+            var resolved = Promise.resolve();
+            _scriptPromises.set(src, resolved);
+            return resolved;
+        }
+        // Si el script está en el DOM pero aún cargando, esperar su onload
+        if (existing) {
+            var waitExisting = new Promise(function(resolve) {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', resolve, { once: true }); // resolver aunque falle
+            });
+            _scriptPromises.set(src, waitExisting);
+            return waitExisting;
+        }
+
+        // Script no existe: crear, insertar, esperar
+        var p = new Promise(function (resolve) {
             var el = document.createElement('script');
             el.src = src;
             el.onload  = resolve;
@@ -88,6 +110,8 @@
             };
             document.body.appendChild(el);
         });
+        _scriptPromises.set(src, p);
+        return p;
     }
 
     // ── Inyecta un <link> CSS y resuelve cuando carga ────────────

@@ -198,20 +198,20 @@ function restaurarBackup() {
             }
             if (d.pedidosFinalizados !== undefined) { window.pedidosFinalizados = d.pedidosFinalizados; pedidosFinalizados = d.pedidosFinalizados; await savePedidosFinalizados(); }
             if (d.notas !== undefined)             { window.notas = d.notas; await sbSave('notas', window.notas); }
-            if (d.receivables !== undefined)       { window.receivables = d.receivables; await sbSave('receivables', receivables); }
+            if (d.receivables !== undefined)       { window.receivables = d.receivables; receivables = d.receivables; await sbSave('receivables', d.receivables); }
             if (d.payables !== undefined)          { window.payables = d.payables; await sbSave('payables', window.payables); }
             if (d.incomes !== undefined)      { window.incomes = d.incomes; incomes = d.incomes; await saveIncomes(); }
             if (d.expenses !== undefined)     { window.expenses = d.expenses; expenses = d.expenses; await saveExpenses(); }
-            if (d.categories !== undefined)   { window.categories = d.categories; await sbSave('categories', categories); }
-            if (d.quotes !== undefined)       { window.quotes = d.quotes; await sbSave('quotes', quotes); }
+            if (d.categories !== undefined)   { window.categories = d.categories; categories = d.categories; await sbSave('categories', d.categories); }
+            if (d.quotes !== undefined)       { window.quotes = d.quotes; quotes = d.quotes; await sbSave('quotes', d.quotes); }
             if (d.equipos !== undefined)      { equipos = d.equipos; await sbSave('equipos', equipos); }
             if (d.roiHistorial !== undefined) { roiHistorial = d.roiHistorial; await sbSave('roiHistorial', roiHistorial); }
             if (d.roiConfig !== undefined)    { roiConfig = d.roiConfig; await sbSave('roiConfig', roiConfig); }
             if (d.envioAnillos !== undefined) { envioAnillos = d.envioAnillos; await sbSave('envioAnillos', envioAnillos); }
             // BUG-008 FIX: restaurar campos que faltaban
             if (d.clients !== undefined)           { window.clients = d.clients; clients = d.clients; await saveClients(); }
-            if (d.storeConfig !== undefined)        { window.storeConfig = d.storeConfig; await sbSave('storeConfig', storeConfig); }
-            if (d.gastosRecurrentes !== undefined)  { window.gastosRecurrentes = d.gastosRecurrentes; await sbSave('gastosRecurrentes', gastosRecurrentes); }
+            if (d.storeConfig !== undefined)        { window.storeConfig = d.storeConfig; storeConfig = d.storeConfig; await sbSave('storeConfig', d.storeConfig); }
+            if (d.gastosRecurrentes !== undefined)  { window.gastosRecurrentes = d.gastosRecurrentes; gastosRecurrentes = d.gastosRecurrentes; await sbSave('gastosRecurrentes', d.gastosRecurrentes); }
             if (d.stockMovimientos !== undefined)   { window.stockMovimientos = d.stockMovimientos; window.stockMovements = d.stockMovimientos; await sbSave('stockMovimientos', window.stockMovimientos); }
             // Restaurar folioCounter para evitar folios duplicados
             if (d.folioCounter !== undefined && Number(d.folioCounter) > 0) {
