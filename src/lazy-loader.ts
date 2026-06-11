@@ -25,7 +25,7 @@
         balance:    ['js/balance.bundle.js'],
         reportes:   ['js/reportes.bundle.js'],
         clientes:   ['js/clientes.bundle.js'],
-        envios:     [CDN.leafletCSS, CDN.leafletJS, 'js/envios.bundle.js'],
+        envios:     ['js/envios.bundle.js'],
         backup:     ['js/backup.bundle.js']
     } : {
         inventario: [
@@ -50,7 +50,7 @@
         balance:  ['js/balance.js'],
         reportes: ['js/reportes.js'],
         clientes: ['js/clientes.js'],
-        envios:   [CDN.leafletCSS, CDN.leafletJS, 'js/envios.js'],
+        envios:   ['js/envios.js'],
         backup:   ['js/backup.js']
     };
 
@@ -186,17 +186,22 @@
     };
 
     // ── Garantizar Chart.js bajo demanda (balance y reportes) ───────
-    // Expuesto para que design-system.ts lo llame antes de renderizar gráficas.
-    // Siempre retorna la misma promise si ya está en vuelo o cargado.
     window._mkEnsureChartJs = function () {
         return _cargarScript(CDN.chartjs);
     };
 
+    // ── Garantizar Leaflet bajo demanda (envios — mapas) ────────────
+    // CSS + JS deben cargarse juntos antes de usar L.*
+    window._mkEnsureLeaflet = function () {
+        return Promise.all([_cargarCSS(CDN.leafletCSS), _cargarScript(CDN.leafletJS)]);
+    };
+
     // ── Prefetch agresivo — todos los grupos en paralelo a 300ms ──
-    // Chart.js arranca inmediatamente (sin esperar 300ms) porque
-    // balance y reportes lo necesitan pero no lo tienen en su grupo.
+    // Chart.js y Leaflet arrancan de inmediato (sin esperar 300ms)
+    // para que estén listos cuando el usuario interactúe con ellos.
     window.addEventListener('load', function () {
-        _cargarScript(CDN.chartjs);   // inicia YA — no bloqueará ningún bundle
+        _cargarScript(CDN.chartjs);                                 // para balance/reportes
+        _cargarCSS(CDN.leafletCSS); _cargarScript(CDN.leafletJS);  // para envios/mapas
         setTimeout(function () {
             _cargarGrupo('pedidos');
             _cargarGrupo('inventario');

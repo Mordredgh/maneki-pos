@@ -63,9 +63,12 @@ var _mapaCobView = null;
 var _mapaCobMarker = null;
 var _mapaAnillosLayerGroup = null;
 
-function initMapaCoberturaView() {
+async function initMapaCoberturaView() {
     const el = document.getElementById('mapaCoberturaView');
     if (!el) return;
+    if (typeof (window as any).L === 'undefined' && (window as any)._mkEnsureLeaflet) {
+        await (window as any)._mkEnsureLeaflet();
+    }
     if (_mapaCobView) {
         // Ya existe, solo redibujar anillos
         _redrawLeafletAnillos(_mapaCobView, _mapaAnillosLayerGroup, 'cob');
@@ -392,9 +395,12 @@ function guardarAnillos() {
 }
 
 // ── Mapa de configuración con Leaflet ──
-function initMapaConfigLeaflet() {
+async function initMapaConfigLeaflet() {
     const el = document.getElementById('mapaAnillos');
     if (!el) return;
+    if (typeof (window as any).L === 'undefined' && (window as any)._mkEnsureLeaflet) {
+        await (window as any)._mkEnsureLeaflet();
+    }
     if (_mapaConfig) {
         // Ya existe: solo invalidar y redibujar
         setTimeout(() => { _mapaConfig.invalidateSize(); redrawMapaConfig(); }, 100);
