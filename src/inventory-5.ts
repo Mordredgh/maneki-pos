@@ -210,7 +210,8 @@ function renderInventoryTable() {
     if (!tbody) return;
     // P1: hash guard — saltar re-render completo si los datos no cambiaron
     const _prods = window.products||[];
-    const _iHash = _prods.length + '_' + _prods.reduce((s: number,p: any)=>s+Number(p.stock||0),0).toFixed(0) + '_' + ((document.getElementById('inventorySearch') as HTMLInputElement|null)?.value||'');
+    const _tipoQ = (document.getElementById('inventoryTipoFilter') as HTMLSelectElement|null)?.value || '';
+    const _iHash = _prods.length + '_' + _prods.reduce((s: number,p: any)=>s+Number(p.stock||0),0).toFixed(0) + '_' + ((document.getElementById('inventorySearch') as HTMLInputElement|null)?.value||'') + '_' + _tipoQ;
     const dualEl = document.getElementById('invDualContainer');
     if (dualEl && (dualEl as any)._lastHash === _iHash) return;
     if (dualEl) (dualEl as any)._lastHash = _iHash;
@@ -670,6 +671,10 @@ function renderInventoryTable() {
 
     // ── Construir HTML de cada sección ────────────────────────────────────────
     function buildSection({ id, title, titleColor, titleBg, btnLabel, btnOnclick, btnColor, extraBtnHTML, products: list, renderFila, headers, emptyMsg }) {
+        // Filtro por tipo: ocultar sección si no corresponde al tipo seleccionado
+        const _tipoFiltro = (document.getElementById('inventoryTipoFilter') as HTMLSelectElement|null)?.value || '';
+        if (_tipoFiltro === 'materia' && id !== 'mp') return '';
+        if (_tipoFiltro === 'producto' && id === 'mp') return '';
         // Si la lista está vacía y hay búsqueda activa, colapsar sección
         const _searchActive = (document.getElementById('inventorySearch')?.value?.trim() || '').length > 0;
         if (list.length === 0 && _searchActive) return '';
