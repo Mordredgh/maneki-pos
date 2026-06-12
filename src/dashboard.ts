@@ -440,8 +440,7 @@ function _updateDashboardImpl() {
         if (apCard && !apCard._mkKpiClick) {
             apCard._mkKpiClick = true;
             apCard.style.cursor = 'pointer';
-            apCard.classList.add('hover:shadow-md');
-            apCard.title = 'Ver pedidos activos';
+            // No agregar title — el tooltip nativo del browser aparece como barra negra
             apCard.addEventListener('click', () => { if (typeof showSection === 'function') showSection('pedidos'); });
         }
     }
@@ -1385,45 +1384,40 @@ function _renderWidgetTemporadas() {
         { nombre: 'Año Nuevo',         emoji: '🎆', mes: 11, dia: 31 },
     ];
 
-    // Encontrar la próxima temporada
-    let proxima: any = null;
-    let diasRestantes = Infinity;
-
-    temporadas.forEach(t => {
+    // Ordenar las 3 próximas temporadas
+    const proximas: any[] = temporadas.map(t => {
         let fecha = new Date(year, t.mes, t.dia);
         if (fecha < hoy) fecha = new Date(year + 1, t.mes, t.dia);
         const diff = Math.ceil((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-        if (diff < diasRestantes) {
-            diasRestantes = diff;
-            proxima = { ...t, fecha };
-        }
-    });
+        return { ...t, fecha, diasRestantes: diff };
+    }).sort((a, b) => a.diasRestantes - b.diasRestantes).slice(0, 3);
 
-    if (!proxima) return;
+    if (!proximas.length) return;
 
-    // Ventas del mismo mes el año pasado
-    const ventasAnoPasado = (window.salesHistory || []).filter((s: any) => {
-        if (!s.date) return false;
-        const [yr, mo] = s.date.split('-');
-        return Number(yr) === year - 1 && Number(mo) === proxima.mes + 1;
-    }).reduce((sum: number, s: any) => sum + (s.total || 0), 0);
+    container.innerHTML = proximas.map((proxima, idx) => {
+        const ventasAnoPasado = (window.salesHistory || []).filter((s: any) => {
+            if (!s.date) return false;
+            const [yr, mo] = s.date.split('-');
+            return Number(yr) === year - 1 && Number(mo) === proxima.mes + 1;
+        }).reduce((sum: number, s: any) => sum + (s.total || 0), 0);
 
-    const urgencia = diasRestantes <= 14 ? '#dc2626' : diasRestantes <= 30 ? '#d97706' : '#059669';
+        const urgencia = proxima.diasRestantes <= 14 ? '#dc2626' : proxima.diasRestantes <= 30 ? '#d97706' : '#059669';
+        const bg = idx === 0 ? '#f9fafb' : '#fff';
+        const border = idx === 0 ? '1.5px solid #e5e7eb' : '1px solid #f3f4f6';
 
-    container.innerHTML = `
-        <div class="flex items-center gap-3 p-3 rounded-xl" style="background:#f9fafb;border:1px solid #e5e7eb">
-            <span style="font-size:1.8rem">${proxima.emoji}</span>
+        return `<div class="flex items-center gap-3 p-3 rounded-xl" style="background:${bg};border:${border};${idx > 0 ? 'margin-top:6px;' : ''}">
+            <span style="font-size:${idx === 0 ? '1.8rem' : '1.3rem'}">${proxima.emoji}</span>
             <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-gray-700">${proxima.nombre}</p>
-                <p class="text-xs text-gray-500">${proxima.fecha.toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</p>
-                ${ventasAnoPasado > 0 ? `<p class="text-xs text-gray-400">Año pasado: $${ventasAnoPasado.toLocaleString('es-MX')}</p>` : ''}
+                <p class="font-bold text-gray-700" style="font-size:${idx === 0 ? '.8rem' : '.73rem'};margin:0;">${proxima.nombre}</p>
+                <p class="text-gray-500" style="font-size:.7rem;margin:1px 0 0;">${proxima.fecha.toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</p>
+                ${ventasAnoPasado > 0 ? `<p style="font-size:.65rem;color:#9ca3af;margin:1px 0 0;">Año pasado: $${ventasAnoPasado.toLocaleString('es-MX')}</p>` : ''}
             </div>
-            <div class="text-center">
-                <p class="text-lg font-bold" style="color:${urgencia}">${diasRestantes}</p>
-                <p class="text-xs text-gray-400">días</p>
+            <div class="text-center" style="min-width:36px;">
+                <p style="font-size:${idx === 0 ? '1.1rem' : '.9rem'};font-weight:800;color:${urgencia};margin:0;">${proxima.diasRestantes}</p>
+                <p style="font-size:.62rem;color:#9ca3af;margin:0;">días</p>
             </div>
-        </div>
-    `;
+        </div>`;
+    }).join('');
 }
 window._renderWidgetTemporadas = _renderWidgetTemporadas;
 
