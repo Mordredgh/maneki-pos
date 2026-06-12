@@ -1375,13 +1375,22 @@ function _renderWidgetTemporadas() {
     const year = hoy.getFullYear();
 
     const temporadas = [
-        { nombre: 'San Valentín',      emoji: '💝', mes: 1,  dia: 14 },
-        { nombre: 'Día de la Mujer',   emoji: '💐', mes: 2,  dia: 8  },
-        { nombre: 'Día de las Madres', emoji: '🌸', mes: 4,  dia: 10 },
-        { nombre: 'Día del Padre',     emoji: '👔', mes: 5,  dia: 15 },
-        { nombre: 'Día de Muertos',    emoji: '💀', mes: 9,  dia: 2  },
-        { nombre: 'Navidad',           emoji: '🎄', mes: 11, dia: 25 },
-        { nombre: 'Año Nuevo',         emoji: '🎆', mes: 11, dia: 31 },
+        { nombre: 'Día de Reyes',       emoji: '👑', mes: 0,  dia: 6  },
+        { nombre: 'San Valentín',       emoji: '💝', mes: 1,  dia: 14 },
+        { nombre: 'Día de la Mujer',    emoji: '💐', mes: 2,  dia: 8  },
+        { nombre: 'Día del Niño',       emoji: '🧸', mes: 3,  dia: 30 },
+        { nombre: 'Día de las Madres',  emoji: '🌸', mes: 4,  dia: 10 },
+        { nombre: 'Día del Maestro',    emoji: '📚', mes: 4,  dia: 15 },
+        { nombre: 'Día del Padre',      emoji: '👔', mes: 5,  dia: 15 },
+        { nombre: 'Graduaciones',       emoji: '🎓', mes: 5,  dia: 20 },
+        { nombre: 'Día del Amigo',      emoji: '🤝', mes: 6,  dia: 20 },
+        { nombre: 'Día del Abuelo/a',   emoji: '👴', mes: 7,  dia: 28 },
+        { nombre: 'Independencia MX',   emoji: '🇲🇽', mes: 8,  dia: 16 },
+        { nombre: 'Día del Médico',     emoji: '⚕️', mes: 9,  dia: 23 },
+        { nombre: 'Halloween',          emoji: '🎃', mes: 9,  dia: 31 },
+        { nombre: 'Día de Muertos',     emoji: '💀', mes: 10, dia: 2  },
+        { nombre: 'Navidad',            emoji: '🎄', mes: 11, dia: 25 },
+        { nombre: 'Año Nuevo',          emoji: '🎆', mes: 11, dia: 31 },
     ];
 
     // Ordenar las 3 próximas temporadas
