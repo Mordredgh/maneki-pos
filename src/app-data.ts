@@ -718,7 +718,7 @@ async function convertQuoteToPedido(quoteId) {
     if (!quote) return;
 
     showConfirm(`¿Convertir la cotización ${quote.folio} de ${quote.customer} en un pedido por encargo?`, 'Convertir cotización')
-    .then(ok => {
+    .then(async ok => {
         if (!ok) return;
 
         // Armar concepto desde los productos de la cotización
@@ -736,7 +736,7 @@ async function convertQuoteToPedido(quoteId) {
         // Crear el pedido
         const nuevoPedido = {
             id: mkId(),
-            folio: generarFolioPedido(),
+            folio: await generarFolioPedido(),
             cliente: quote.customer,
             telefono: '',
             redes: '',

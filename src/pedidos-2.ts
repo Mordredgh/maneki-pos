@@ -114,13 +114,10 @@ async function _descontarInventarioPedido(pedido) {
         // BUG-5 FIX: calcular cuántas unidades hay que FABRICAR (vs sacar de vitrina ya producida).
         // Si el PT tiene stock propio Y mpComponentes, primero se agota el stock ya fabricado;
         // solo se descuenta MP para las unidades que excedan ese stock (a fabricar).
-        const _stockFabricadoAntes = (() => {
-            // Stock disponible del PT antes del descuento que ya hicimos arriba
-            if (Array.isArray(prod.variants) && prod.variants.length > 0) {
-                return _rollback.find(r => String(r.id) === String(prod.id))?.stockBefore ?? 0;
-            }
-            return antesPT;
-        })();
+        // antesPT = stock real ANTES de descontar ESTA línea, incluyendo descuentos de líneas previas
+        // del mismo producto. No usar _rollback.find() porque devuelve el primer snapshot
+        // (stock original antes de cualquier línea), incorrecto si el mismo prod aparece 2 veces.
+        const _stockFabricadoAntes = antesPT;
         const _cantidadAFabricar = Math.max(0, cantidad - _stockFabricadoAntes);
 
         // Descontar MP de los componentes del PT × unidades a fabricar solamente
@@ -514,7 +511,7 @@ function setPedidoStatus(status) {
                     id: mkId(),
                     type: 'pedido',
                     folio: p.folio,
-                    date: (p.fechaFinalizado || new Date().toISOString()).split('T')[0],
+                    date: (function(){ const _d = new Date(p.fechaFinalizado || Date.now()); return `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`; })(),
                     time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
                     customer: p.cliente || 'Cliente',
                     concept: p.concepto || p.folio,

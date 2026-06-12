@@ -394,7 +394,10 @@ async function _applyRTDesktop(key) {
 async function _applyRTDesktopConDatos(key, fresh) {
     if (!Array.isArray(fresh)) return;
     if (key === 'pedidos') {
-        _rtInPlace(window.pedidos, fresh);
+        // Cross-ref: excluir pedidos que ya existen en pedidosFinalizados (resurrecciones por race)
+        const _finIds = new Set<string>((window.pedidosFinalizados || []).map((p: any) => String(p.id)));
+        const _safeFresh = _finIds.size > 0 ? fresh.filter((p: any) => !_finIds.has(String(p.id))) : fresh;
+        _rtInPlace(window.pedidos, _safeFresh);
         if (typeof renderPedidosTable === 'function') renderPedidosTable();
         if (typeof updatePedidosStats === 'function') updatePedidosStats();
         if (typeof updateDashboard === 'function') updateDashboard();
@@ -1289,8 +1292,10 @@ function savePedidos() {
     return _task;
 }
 // ── savePedidosFinalizados — escribe en public.orders_finalizados ──
+// Mutex idéntico al de savePedidos: evita race entre saves concurrentes.
+let _savePedidosFinQueue: Promise<void> = Promise.resolve();
 function savePedidosFinalizados() {
-    return (async () => {
+    const _task = _savePedidosFinQueue.then(async () => {
         // Persistir en tabla relacional public.orders_finalizados
         try {
             // BUG-RT-ECO FIX: mismo sello que savePedidos
@@ -1334,25 +1339,33 @@ function savePedidosFinalizados() {
         } catch(e) {
             console.error('savePedidosFinalizados relacional excepción:', e);
         }
-    })();
+    });
+    _savePedidosFinQueue = _task.then(() => {}).catch(() => {});
+    return _task;
 }
 
 // ── deletePedidoActivo — borra de public.orders al finalizar/cancelar-mover ──
-// upsert no elimina filas; sin este DELETE el pedido reaparece al recargar.
-async function deletePedidoActivo(id: string): Promise<void> {
-    try {
-        const { error } = await db.from('orders').delete().eq('id', String(id));
-        if (error) console.error('deletePedidoActivo error:', error);
-    } catch(e) { console.error('deletePedidoActivo excepción:', e); }
+// Se encola DESPUÉS de _savePedidosQueue: garantiza que el upsert en vuelo no
+// re-inserte la fila justo después del DELETE (era el root-cause de PE-0064/65).
+function deletePedidoActivo(id: string): Promise<void> {
+    return _savePedidosQueue.then(async () => {
+        try {
+            const { error } = await db.from('orders').delete().eq('id', String(id));
+            if (error) console.error('deletePedidoActivo error:', error);
+        } catch(e) { console.error('deletePedidoActivo excepción:', e); }
+    });
 }
 (window as any).deletePedidoActivo = deletePedidoActivo;
 
 // ── deletePedidoFinalizado — borra de public.orders_finalizados al reactivar ──
-async function deletePedidoFinalizado(id: string): Promise<void> {
-    try {
-        const { error } = await db.from('orders_finalizados').delete().eq('id', String(id));
-        if (error) console.error('deletePedidoFinalizado error:', error);
-    } catch(e) { console.error('deletePedidoFinalizado excepción:', e); }
+// Se encola después de _savePedidosFinQueue por la misma razón.
+function deletePedidoFinalizado(id: string): Promise<void> {
+    return _savePedidosFinQueue.then(async () => {
+        try {
+            const { error } = await db.from('orders_finalizados').delete().eq('id', String(id));
+            if (error) console.error('deletePedidoFinalizado error:', error);
+        } catch(e) { console.error('deletePedidoFinalizado excepción:', e); }
+    });
 }
 (window as any).deletePedidoFinalizado = deletePedidoFinalizado;
 

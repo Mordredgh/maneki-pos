@@ -9,47 +9,17 @@ let _abonoPedidoMetodo = 'cash';
 let _pedidoStatusActualId = null;
 let _kanbanCompacto = false;
 
-// FIX C6: lock para evitar folios duplicados por doble-click o llamadas simultáneas
-let _folioGenerando = false;
-
-function generarFolioPedido() {
-    // FIX C6: si ya hay una generación en curso, abortar para evitar duplicados
-    if (_folioGenerando) return null;
-    _folioGenerando = true;
+// generarFolioPedido — llama la RPC atómica maneki_next_folio (SELECT...FOR UPDATE en Postgres).
+// Garantiza unicidad entre dispositivos. La RPC usa la key 'contador_PE' en la tabla store.
+async function generarFolioPedido(): Promise<string | null> {
     try {
-    // IMPORTANTE: el contador NUNCA se recalcula desde el array de pedidos.
-    // Solo se incrementa — así evitamos folios duplicados si se borran pedidos.
-    // Fuente de verdad: window._folioCounter (cargado desde Supabase/localStorage al iniciar)
-
-    // Rescate: si por alguna razón el contador no está inicializado,
-    // arrancamos desde el máximo que exista en los datos locales (solo la primera vez)
-    if (!window._folioCounter || window._folioCounter === 0) {
-        const todosLos = [...(window.pedidos || []), ...(window.pedidosFinalizados || [])];
-        const maxUsado = todosLos.reduce((max, p) => {
-            if (!p.folio) return max;
-            const num = parseInt((p.folio || '').replace(/^PE-0*/, ''), 10);
-            return isNaN(num) ? max : Math.max(max, num);
-        }, 0);
-        window._folioCounter = maxUsado; // arrancamos desde el máximo existente
-    }
-
-    // Incrementar siempre — nunca recalcular
-    window._folioCounter = (window._folioCounter || 0) + 1;
-    const folio = 'PE-' + String(window._folioCounter).padStart(4, '0');
-
-    // Persistir en Supabase y en localStorage como respaldo offline
-    const _fc = window._folioCounter;
-    if (typeof db !== 'undefined') {
-        (async () => { try { await db.from('store').upsert({ key: 'folioCounter', value: String(_fc) }); } catch(e) { console.warn('[Folio] Error al persistir contador:', e?.message); if (typeof manekiToastExport === 'function') manekiToastExport('⚠️ Folio guardado localmente (sin conexión)', 'warn'); } })();
-    }
-    try { localStorage.setItem('maneki_folioCounter', String(_fc)); } catch(e) {}
-
-    return folio;
+        const n = await getNextFolio('PE');
+        window._folioCounter = n;
+        try { localStorage.setItem('maneki_folioCounter', String(n)); } catch(_) {}
+        return 'PE-' + String(n).padStart(4, '0');
     } catch(e) {
         console.error('[Folio] Error generando folio:', e);
         return null;
-    } finally {
-        _folioGenerando = false;  // Always releases lock
     }
 }
 
@@ -652,8 +622,7 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
             manekiToastExport('✅ Pedido actualizado.', 'ok');
         }
     } else {
-        if (window._folioCounterReady) await window._folioCounterReady;
-        const folio = generarFolioPedido();
+        const folio = await generarFolioPedido();
         if (!folio) {
             manekiToastExport('⚠️ No se pudo generar folio único. Verifica conexión y recarga la página.', 'err');
             clearTimeout(_lockTimeout);

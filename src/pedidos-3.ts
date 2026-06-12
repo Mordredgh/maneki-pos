@@ -365,7 +365,7 @@ window.openPedidoStatusModal = openPedidoStatusModal;
 window.closePedidoStatusModal = closePedidoStatusModal;
 window.setPedidoStatus = setPedidoStatus;
 // ── NTH-01: Duplicar pedido ──────────────────────────────────────────────────
-function duplicarPedido(id) {
+async function duplicarPedido(id) {
     const original = (window.pedidos || []).find(p => String(p.id) === String(id))
                   || (window.pedidosFinalizados || []).find(p => String(p.id) === String(id));
     if (!original) return;
@@ -374,7 +374,7 @@ function duplicarPedido(id) {
     const copia = {
         ...original,
         id: nuevoId,
-        folio: generarFolioPedido(),
+        folio: await generarFolioPedido(),
         status: 'confirmado',
         anticipo: 0,
         resta: original.total || 0,
