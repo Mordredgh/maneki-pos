@@ -141,7 +141,16 @@ function _rtTransformarFila(tabla, row) {
         costo: row.costo||0, anticipo: row.anticipo||0, total: row.total||0,
         resta: row.resta||0, notas: row.notas||null, status: row.status||'confirmado',
         fechaCreacion: row.fecha_creacion||null, productosInventario: row.productos_inventario||[],
-        inventarioDescontado: row.inventario_descontado||false, fromQuote: row.from_quote||null
+        inventarioDescontado: row.inventario_descontado||false, fromQuote: row.from_quote||null,
+        // BUG-RT-ECO FIX: mapear TODOS los campos — antes el eco realtime reemplazaba
+        // el pedido local con un objeto sin pagos/empaques/prioridad/etc. y los perdía
+        whatsapp: row.whatsapp||row.telefono||null, facebook: row.facebook||row.redes||null,
+        lugarEntrega: row.lugar_entrega||null, costoMateriales: row.costo_materiales||0,
+        prioridad: row.prioridad||'normal', notasInternas: row.notas_internas||null,
+        pagos: row.pagos||[], empaques: row.empaques||[],
+        historialEstados: row.historial_estados||[], fechaUltimoEstado: row.fecha_ultimo_estado||null,
+        fechaPedido: row.fecha_pedido||row.fecha||null, empaquesDescontados: row.empaques_descontados===true,
+        _updatedAt: row.updated_at||null
     };
     if (tabla === 'orders_finalizados') return {
         id: row.id, folio: row.folio||null, cliente: row.cliente||null,
@@ -151,7 +160,15 @@ function _rtTransformarFila(tabla, row) {
         resta: row.resta||0, notas: row.notas||null, status: row.status||'finalizado',
         fechaCreacion: row.fecha_creacion||null, fechaFinalizado: row.fecha_finalizado||null,
         productosInventario: row.productos_inventario||[], inventarioDescontado: row.inventario_descontado||false,
-        fromQuote: row.from_quote||null
+        fromQuote: row.from_quote||null,
+        // BUG-RT-ECO FIX: campos completos también en finalizados
+        whatsapp: row.whatsapp||row.telefono||null, facebook: row.facebook||row.redes||null,
+        lugarEntrega: row.lugar_entrega||null, costoMateriales: row.costo_materiales||0,
+        prioridad: row.prioridad||'normal', notasInternas: row.notas_internas||null,
+        pagos: row.pagos||[], empaques: row.empaques||[],
+        historialEstados: row.historial_estados||[],
+        fechaPedido: row.fecha_pedido||row.fecha||null, empaquesDescontados: row.empaques_descontados===true,
+        _updatedAt: row.updated_at||null
     };
     if (tabla === 'sales_history') return {
         id: row.id, folio: row.folio||null, date: row.date||null, time: row.time||null,
@@ -292,14 +309,26 @@ async function _applyRTRelacional(tabla, payload) {
             } else if (eventType === 'UPDATE') {
                 const i = arr.findIndex(x => String(x.id) === String(transformed.id));
                 if (i >= 0) {
+                    const localReg = arr[i];
+                    // BUG-RT-ECO FIX: descartar ecos propios y payloads stale.
+                    // Si el registro local tiene _updatedAt igual o más nuevo que el payload,
+                    // este evento es el eco de nuestro propio save (o uno viejo encolado
+                    // mientras el modal estaba abierto) — aplicarlo regresaría el pedido
+                    // a un estado anterior (artículos borrados que reaparecen, etc.)
+                    if (localReg && localReg._updatedAt && transformed._updatedAt &&
+                        transformed._updatedAt <= localReg._updatedAt) {
+                        if ((window as any).MK_DEBUG) console.log('[Realtime] eco stale descartado:', tabla, transformed.id);
+                        return;
+                    }
                     // Evitar que el stock derivado de DB sobreescriba el stock físico local
                     if (tabla === 'products') {
-                        const localP = arr[i];
-                        if (localP && localP.tipo !== 'materia_prima' && localP.tipo !== 'servicio' && Array.isArray(localP.mpComponentes) && localP.mpComponentes.length > 0) {
-                            transformed.stock = localP.stock || 0;
+                        if (localReg && localReg.tipo !== 'materia_prima' && localReg.tipo !== 'servicio' && Array.isArray(localReg.mpComponentes) && localReg.mpComponentes.length > 0) {
+                            transformed.stock = localReg.stock || 0;
                         }
                     }
-                    arr.splice(i, 1, transformed);
+                    // BUG-RT-ECO FIX: merge sobre el registro local en lugar de reemplazo total —
+                    // conserva campos locales que la transformación no mapea (checklist, refs, etc.)
+                    arr.splice(i, 1, Object.assign({}, localReg, transformed));
                 }
                 else arr.push(transformed);
             } else if (eventType === 'DELETE') {
@@ -1171,7 +1200,10 @@ function savePedidos() {
     return (async () => {
         // Persistir en tabla relacional public.orders
         try {
-            const rows = pedidos.map(p => ({
+            // BUG-RT-ECO FIX: sellar _updatedAt local = updated_at enviado, para que
+            // el guard de realtime pueda detectar y descartar el eco de este save
+            const _tsSave = new Date().toISOString();
+            const rows = pedidos.map(p => ((p as any)._updatedAt = _tsSave, {
                 id:                   String(p.id),
                 folio:                p.folio               || null,
                 cliente:              p.cliente             || null,
@@ -1203,7 +1235,7 @@ function savePedidos() {
                 fecha_ultimo_estado:  p.fechaUltimoEstado   || null,
                 fecha_pedido:         p.fechaPedido         || null,
                 empaques_descontados: p.empaquesDescontados === true,
-                updated_at:           new Date().toISOString()
+                updated_at:           _tsSave
             }));
             const { error } = await db.from('orders').upsert(rows, { onConflict: 'id' });
             if (error) console.error('savePedidos relacional error:', error);
@@ -1217,7 +1249,9 @@ function savePedidosFinalizados() {
     return (async () => {
         // Persistir en tabla relacional public.orders_finalizados
         try {
-            const rows = pedidosFinalizados.map(p => ({
+            // BUG-RT-ECO FIX: mismo sello que savePedidos
+            const _tsSaveF = new Date().toISOString();
+            const rows = pedidosFinalizados.map(p => ((p as any)._updatedAt = _tsSaveF, {
                 id:                    String(p.id),
                 folio:                 p.folio                || null,
                 cliente:               p.cliente              || null,
@@ -1249,7 +1283,7 @@ function savePedidosFinalizados() {
                 historial_estados:     p.historialEstados     || [],
                 fecha_pedido:          p.fechaPedido          || null,
                 empaques_descontados:  p.empaquesDescontados  === true,
-                updated_at:            new Date().toISOString()
+                updated_at:            _tsSaveF
             }));
             const { error } = await db.from('orders_finalizados').upsert(rows, { onConflict: 'id' });
             if (error) console.error('savePedidosFinalizados relacional error:', error);

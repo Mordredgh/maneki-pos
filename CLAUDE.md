@@ -6,6 +6,35 @@
 
 ---
 
+## Changelog del Programa
+
+> ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
+
+### v2.2.0 (11 junio 2026)
+- ⚡ Carga más rápida — scripts agrupados en bundles, una sola petición al abrir la app
+- 📦 Inventario sin lag — búsqueda y filtros con render incremental, no congela la pantalla
+- 🔄 Actualización automática — el SW detecta cambios y muestra aviso para recargar
+- 📊 Disponibilidad de materias primas con caché — abre pedidos al instante
+- 📱 Sidebar y botones corregidos en móvil — ya no se bloqueaban los clicks
+- 🛒 Pedidos se guardan completos — corregido bug donde artículos agregados o borrados se revertían solos
+- 🗂️ Kanban más compacto — tarjetas pequeñas y columnas con ancho fijo
+- ⏱️ Secciones ya no se quedan cargando — Balance, Reportes, Pedidos y Envíos abren al instante
+
+### v2.1.0 (3 junio 2026)
+- 🎨 Rediseño premium del dashboard con KPIs y gráficas mejoradas
+- 🔍 Command palette (Ctrl+K) para navegar y ejecutar acciones sin mouse
+- 📊 Comparativa año a año en reportes con variación porcentual
+- 👥 Segmentación RFM de clientes (Campeones, Leales, En riesgo, etc.)
+- 🔒 Seguridad: eliminado inline onclick, CSP reforzado, XSS corregido en múltiples puntos
+
+### v2.0.0 (1 junio 2026)
+- 🌐 Migración completa de app de escritorio a PWA web (Coolify)
+- ☁️ Supabase como fuente de verdad con realtime y soporte offline
+- 📲 Instalable como app en celular y escritorio
+- 🚀 Service Worker con caché inteligente para uso sin conexión
+
+---
+
 ## Runtime Environment
 
 This is a **web application** deployed on Coolify (VPS: 195.26.247.101).
@@ -744,3 +773,4 @@ nginx -t && systemctl reload nginx
 4. Revisar la sección **PENDIENTES** arriba para saber qué atacar
 5. Al compilar TS siempre usar: `npx esbuild src/X.ts --outfile=js/X.js --sourcemap --target=es2020 --minify`
 6. Al terminar: `git push github fresh-start:master`
+7. **Si hay nueva versión:** actualizar la sección **Changelog del Programa** con las novedades en formato de viñetas cortas para el usuario final (no técnicas)
