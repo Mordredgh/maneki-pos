@@ -913,7 +913,7 @@ function renderInventoryTable() {
             dualContainer.appendChild(secEl);
         }
 
-        const secHash = secDef.products.length + '_' + secDef.products.reduce((s, p) => s + String(p.id), '') + '_' + (window[`_invPage_${secDef.id}`] || 1) + '_' + (window._invSortCol || '') + (window._invSortDir || '');
+        const secHash = secDef.products.length + '_' + secDef.products.reduce((s, p) => s + String(p.id), '') + '_' + (window[`_invPage_${secDef.id}`] || 1) + '_' + (window._invSortCol || '') + (window._invSortDir || '') + '_' + _tipoQ;
         if ((secEl as any)._hash !== secHash) {
             secEl.innerHTML = html;
             (secEl as any)._hash = secHash;
