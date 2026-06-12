@@ -474,23 +474,13 @@ function kanbanCardHTML(p) {
                ⏰ RETRASADO — venció ${p.entrega}
            </div>`
         : '';
-    // MEJORA 2B: mini-timeline de historial de estados
-    const _ESTADOS_LABEL = {confirmado:'Conf.',pago:'Pago',produccion:'Prod.',envio:'Envío',salida:'Salió',retirar:'Retirar'};
-    const _timelineHTML = (p.historialEstados && p.historialEstados.length > 0)
-        ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin:4px 0;">
-            ${p.historialEstados.slice(-4).map(h => `
-                <span style="font-size:9px;background:#f3f4f6;color:#6b7280;padding:1px 5px;border-radius:99px;">
-                    ${_ESTADOS_LABEL[h.estado]||h.estado} ${h.fecha ? h.fecha.slice(5) : ''}
-                </span>`).join('→')}
-           </div>`
-        : '';
-    return `<div class="kanban-card mk-kanban-card-${p.status || 'confirmado'} bg-white rounded-xl p-3 shadow-sm border border-gray-100 select-none"
+    return `<div class="kanban-card mk-kanban-card-${p.status || 'confirmado'} bg-white rounded-xl p-2 shadow-sm border border-gray-100 select-none"
         data-id="${p.id}" data-status="${p.status || 'confirmado'}"
         style="position:relative;" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
         ${_checkboxHtml}
         ${_retrasadoHTML}
-        <div class="flex justify-between items-start mb-1">
+        <div class="flex justify-between items-start mb-0.5">
             <div class="flex items-center flex-wrap gap-1">
                 <span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
                 <span class="mk-status-pill mk-pill-${p.status || 'confirmado'}">${_statusLabel(p.status)}</span>
@@ -498,19 +488,17 @@ function kanbanCardHTML(p) {
             </div>
             ${alertaHtml}
         </div>
-        <p class="font-semibold text-gray-800 text-sm leading-tight mb-1">${_e(p.cliente)}</p>
-        ${_timelineHTML}
-        ${_thumbHtml}
-        <p class="text-xs text-gray-500 mb-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${_e(p.concepto)}</p>
-        ${p.lugarEntrega ? `<p class="text-xs mb-1 truncate" style="color:#7c3aed;">📍 ${_e(p.lugarEntrega)}</p>` : ''}
-        <div class="flex justify-between items-center text-xs text-gray-500 mb-1">
-            <span ondblclick="window._kanbanQuickEditFecha(event,'${_e(p.id)}')" style="cursor:pointer;padding:1px 3px;border-radius:4px;" title="Doble-clic para editar fecha">📅 ${p.entrega || '—'}</span>
+        <p class="font-semibold text-gray-800 text-sm leading-tight mb-0.5">${_e(p.cliente)}</p>
+        ${_thumbHtml ? _thumbHtml.replace('h-14','h-10') : ''}
+        <p class="text-xs text-gray-500 mb-0.5" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">${_e(p.concepto)}</p>
+        <div class="flex justify-between items-center text-xs text-gray-500 mb-0.5">
+            <span ondblclick="window._kanbanQuickEditFecha(event,'${_e(p.id)}')" style="cursor:pointer;padding:1px 3px;border-radius:4px;" title="Doble-clic para editar fecha">📅 ${p.entrega || '—'}${p.lugarEntrega ? ` · <span style="color:#7c3aed;">📍 ${_e(p.lugarEntrega)}</span>` : ''}</span>
             <span class="${_saldo > 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'}">
                 ${_saldo > 0 ? '💰 $' + _saldo.toFixed(0) : '✅ Pagado'}
             </span>
         </div>
         ${diff !== null ? `<div class="kanban-urgency-bar ${diff < 0 ? 'urgency-overdue' : diff === 0 ? 'urgency-urgent' : diff <= 2 ? 'urgency-soon' : 'urgency-ok'}" style="width:${diff < 0 ? 100 : Math.max(8, Math.min(100, 100 - (diff / 14 * 100)))}%"></div>` : ''}
-        <div class="flex gap-1 mt-2 items-center" style="position:relative;">
+        <div class="flex gap-1 mt-1.5 items-center" style="position:relative;">
             <button onclick="openPedidoStatusModal('${p.id}')" class="flex-1 text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">⚡ Estado</button>
             <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">✏️</button>
             <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
