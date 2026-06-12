@@ -480,25 +480,18 @@ function kanbanCardHTML(p) {
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
         ${_checkboxHtml}
         ${_retrasadoHTML}
-        <div class="flex justify-between items-start mb-0.5">
-            <div class="flex items-center flex-wrap gap-1">
-                <span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
-                <span class="mk-status-pill mk-pill-${p.status || 'confirmado'}">${_statusLabel(p.status)}</span>
-                ${_prioBadge}
-            </div>
-            ${alertaHtml}
+        <div class="flex justify-between items-center mb-0.5">
+            <span class="text-xs font-bold text-amber-600">${_e(p.folio)}${_prioBadge ? ' ' + p.prioridad.slice(0,1).toUpperCase() : ''}</span>
+            ${alertaHtml || ''}
         </div>
-        <p class="font-semibold text-gray-800 text-sm leading-tight mb-0.5">${_e(p.cliente)}</p>
-        ${_thumbHtml ? _thumbHtml.replace('h-14','h-10') : ''}
-        <p class="text-xs text-gray-500 mb-0.5" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">${_e(p.concepto)}</p>
-        <div class="flex justify-between items-center text-xs text-gray-500 mb-0.5">
-            <span ondblclick="window._kanbanQuickEditFecha(event,'${_e(p.id)}')" style="cursor:pointer;padding:1px 3px;border-radius:4px;" title="Doble-clic para editar fecha">📅 ${p.entrega || '—'}${p.lugarEntrega ? ` · <span style="color:#7c3aed;">📍 ${_e(p.lugarEntrega)}</span>` : ''}</span>
-            <span class="${_saldo > 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'}">
-                ${_saldo > 0 ? '💰 $' + _saldo.toFixed(0) : '✅ Pagado'}
-            </span>
+        <p class="font-semibold text-gray-800 text-sm leading-tight mb-0.5 truncate">${_e(p.cliente)}</p>
+        <p class="text-xs text-gray-400 mb-0.5 truncate">${_e(p.concepto)}</p>
+        <div class="flex justify-between items-center text-xs mb-0.5">
+            <span class="text-gray-400 truncate" ondblclick="window._kanbanQuickEditFecha(event,'${_e(p.id)}')" style="cursor:pointer;" title="Doble-clic para editar fecha">📅 ${p.entrega || '—'}${p.lugarEntrega ? ` · 📍 ${_e(p.lugarEntrega)}` : ''}</span>
+            <span class="ml-1 shrink-0 font-bold ${_saldo > 0 ? 'text-red-500' : 'text-green-600'}">${_saldo > 0 ? '$' + _saldo.toFixed(0) : '✓'}</span>
         </div>
-        ${diff !== null ? `<div class="kanban-urgency-bar ${diff < 0 ? 'urgency-overdue' : diff === 0 ? 'urgency-urgent' : diff <= 2 ? 'urgency-soon' : 'urgency-ok'}" style="width:${diff < 0 ? 100 : Math.max(8, Math.min(100, 100 - (diff / 14 * 100)))}%"></div>` : ''}
-        <div class="flex gap-1 mt-1.5 items-center" style="position:relative;">
+        ${diff !== null ? `<div class="kanban-urgency-bar ${diff < 0 ? 'urgency-overdue' : diff === 0 ? 'urgency-urgent' : diff <= 2 ? 'urgency-soon' : 'urgency-ok'}" style="width:${diff < 0 ? 100 : Math.max(8, Math.min(100, 100 - (diff / 14 * 100)))}%;margin-bottom:4px;"></div>` : ''}
+        <div class="flex gap-1 items-center" style="position:relative;">
             <button onclick="openPedidoStatusModal('${p.id}')" class="flex-1 text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">⚡ Estado</button>
             <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">✏️</button>
             <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
