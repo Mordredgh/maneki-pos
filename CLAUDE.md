@@ -1,14 +1,27 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 12 junio 2026 — Sesión 20 (auditoría Fable 5 — 11 bugs, commit `b8fb78d`)
-> **Sin pendientes de código.** App estable con guard anti-eco, mutex saves, folios atómicos.
-> **Versión app:** 2.2.0 | **SW hash:** maneki-01108fac31 | **Branch:** fresh-start → master
+> **Última actualización:** 12 junio 2026 — Sesión 21 (14 features audit Fable 5, commit `58c8f22`)
+> **Sin pendientes de código.** App estable. Todas las mejoras UI/UX y nice-to-haves del audit aplicadas.
+> **Versión app:** 2.2.0 | **SW hash:** maneki-c8796b1801 | **Branch:** fresh-start → master
 
 ---
 
 ## Changelog del Programa
 
 > ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
+
+### v2.3.0 (12 junio 2026)
+- 💳 Barra de progreso de pago en cada tarjeta kanban (rojo → amarillo → verde)
+- 🎉 Campo "Ocasión" en pedidos (XV, boda, graduación, baby shower, etc.) con badge en kanban
+- ⏳ Recordatorio automático cuando un pedido lleva +3 días en "Retirar" (con botón WA)
+- 💰 Cobro al entregar: al finalizar un pedido con saldo pendiente, se ofrece registrar el cobro
+- 🖨️ Orden de Producción imprimible con todos los pedidos en producción del día
+- 🔍 Ctrl+K ahora busca pedidos por folio y cliente directamente desde la paleta de comandos
+- 💾 Indicador visual de guardado (✓ Guardado / Guardando...) en esquina de la pantalla
+- 📋 Conteo físico de inventario: ajusta stock masivo con un solo clic
+- 🛒 Lista de reabastecimiento por proveedor con exportación WA y CSV
+- 📊 Gráfica donut de valor de inventario por categoría
+- 🤖 Stock mínimo sugerido automáticamente desde el consumo real de los últimos 60 días
 
 ### v2.2.0 (11 junio 2026)
 - ⚡ Carga más rápida — scripts agrupados en bundles, una sola petición al abrir la app
@@ -484,6 +497,50 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | 🥉 | Fila de totales sticky en tablas | Medio | Medio |
 | ⭐ | Clases utilitarias anti-deriva de tokens | Estructural | Medio |
 | ⭐ | Micro-pulido (empty states, alertas, sombras, aria) | Medio | Bajo |
+
+---
+
+## ✅ Sesión 21 (12 junio 2026) — 14 features del audit Fable 5 (commit `58c8f22`)
+
+> Sonnet/Fable aplicaron todas las mejoras UI/UX y nice-to-haves solicitadas.
+> Migración Supabase: columna `ocasion` añadida a `orders` y `orders_finalizados`.
+
+| Feature | Archivo(s) | Tipo |
+|---------|-----------|------|
+| Barra progreso pago en kanban card | `pedidos-1-views.ts` | UI |
+| Badge de ocasión en kanban card | `pedidos-1-views.ts` | UI |
+| Recordatorio "Retirar >3 días" + botón WA | `pedidos-1-views.ts` | UI |
+| Campo "Ocasión" en modal de pedido (select dinámico) | `pedidos-1-modal.ts` | Feature |
+| Ocasión persistida en Supabase (orders + orders_finalizados) | `db.ts` + Supabase MCP | BD |
+| Cobro al entregar al finalizar pedido | `pedidos-2.ts` | Feature |
+| Imprimir Orden de Producción del día | `pedidos-3.ts`, `index.html` | Feature |
+| Ctrl+K busca pedidos activos y finalizados recientes | `ui-extras.ts` | UX |
+| mkSaveIndicator conectado a savePedidos + saveProducts | `db.ts` | UX |
+| Conteo físico de inventario (modal + bulk adjust) | `inventory-5.ts` | Feature |
+| Lista de reabastecimiento por proveedor (WA + CSV) | `inventory-5.ts` | Feature |
+| Donut chart valor por categoría | `inventory-5.ts` | Feature |
+| Stock mínimo sugerido automático (60d consumo) | `inventory-5.ts` | Feature |
+| Botones de herramientas en toolbar de inventario | `inventory-5.ts` | UI |
+
+### ⚠️ Patrones usados (Sesión 21)
+
+```javascript
+// CONTEO FÍSICO: abrirConteoFisico() → modal con inputs por producto → _mkAplicarConteoFisico()
+//   Llama registrarMovimiento({...}) para dejar traza + saveProducts()
+
+// COBRO AL ENTREGAR: en setPedidoStatus('finalizado'), si calcSaldoPendiente > 0:
+//   → showConfirm → push a pagos[], incomes[], salesHistory (type:'abono') → saveIncomes()
+//   → al calcular _saldoFinal en el step siguiente, ya es 0 → no duplica salesHistory
+
+// OCASIÓN: campo dinámico inyectado en openPedidoModal (como notasInternas)
+//   Guardado en pedido.ocasion, columna ocasion TEXT en orders/orders_finalizados
+
+// ORDEN PRODUCCIÓN: imprimirOrdenProduccion() filtra status 'pago','produccion','salida'
+//   Genera HTML + window.open + setTimeout 600ms para print()
+
+// STOCK MÍNIMO: sugerirStockMinimo() lee pedidosFinalizados últimos 60d
+//   Fórmula: ceil(consumo60d / 60 * 14) → 14 días de cobertura
+```
 
 ---
 

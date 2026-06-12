@@ -411,6 +411,8 @@ function renderInventoryTable() {
                     ${product.proveedorUrl ? `<button type="button" onclick="window.open(this.dataset.url,'_blank')" data-url="${_esc(product.proveedorUrl)}" title="Abrir proveedor" aria-label="Abrir proveedor" style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🔗</button>` : ''}
                     <button type="button" onclick="cambiarTipoProducto('${pid}')" title="Convertir a Producto Terminado" aria-label="Convertir tipo de producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→📦</button>
+                    <button type="button" onclick="abrirMovimientoProducto('${pid}')" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📈</button>
                     <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
@@ -560,6 +562,8 @@ function renderInventoryTable() {
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ''}
                     ${product.movimientos && product.movimientos.length ? `<button type="button" onclick="verMovimientosProducto('${pid}')" title="Ver movimientos de stock (${product.movimientos.length})" aria-label="Ver movimientos de stock"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>` : ''}
+                    <button type="button" onclick="abrirMovimientoProducto('${pid}')" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📈</button>
                     <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
@@ -1909,3 +1913,147 @@ function sugerirStockMinimo() {
   document.getElementById('mkStockMin_ov')?.remove();
   if (typeof manekiToastExport==='function') manekiToastExport(`✅ Stock mínimo actualizado en ${aplicados} producto${aplicados!==1?'s':''}`, 'ok');
 };
+
+// ── 5. Gráfica de movimientos por producto (últimos 90 días) ──────────────
+function abrirMovimientoProducto(pid: string) {
+  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  const prod = (window.products||[]).find((p: any) => String(p.id) === String(pid));
+  if (!prod) { if (typeof manekiToastExport==='function') manekiToastExport('Producto no encontrado','warn'); return; }
+
+  // Recolectar movimientos: de product.movimientos + window.stockMovimientos global
+  const hace90ms = Date.now() - 90 * 86400000;
+  const seenIds = new Set<string>();
+  const movs: any[] = [];
+
+  const addMov = (m: any) => {
+    if (!m) return;
+    const ts = m.fecha ? new Date(m.fecha + (m.hora ? 'T' + m.hora : '')).getTime() : (m.timestamp ? new Date(m.timestamp).getTime() : 0);
+    if (ts && ts < hace90ms) return;
+    const key = m.id || (String(m.productoId||pid) + '_' + ts + '_' + (m.cantidad||0));
+    if (seenIds.has(key)) return;
+    seenIds.add(key);
+    movs.push({ ...m, _ts: ts || Date.now() });
+  };
+
+  (prod.movimientos || []).forEach(addMov);
+  ((window as any).stockMovimientos || []).filter((m: any) => String(m.productoId) === String(pid)).forEach(addMov);
+
+  movs.sort((a, b) => b._ts - a._ts);
+
+  // Agrupar por semana (últimas 13 semanas)
+  const semanas: { label: string; entradas: number; salidas: number }[] = [];
+  for (let w = 12; w >= 0; w--) {
+    const fin = new Date(Date.now() - w * 7 * 86400000);
+    const ini = new Date(fin.getTime() - 7 * 86400000);
+    const label = `${ini.getDate()}/${ini.getMonth()+1}`;
+    let entradas = 0, salidas = 0;
+    movs.forEach(m => {
+      if (m._ts >= ini.getTime() && m._ts < fin.getTime()) {
+        const diff = (m.stockDespues != null && m.stockAntes != null) ? (Number(m.stockDespues) - Number(m.stockAntes)) : 0;
+        const tipo = (m.tipo || '').toLowerCase();
+        const esEntrada = diff > 0 || tipo.includes('entrada') || tipo.includes('compra') || tipo.includes('ajuste_positivo');
+        if (esEntrada) entradas += Math.abs(Number(m.cantidad)||Math.abs(diff)||1);
+        else salidas += Math.abs(Number(m.cantidad)||Math.abs(diff)||1);
+      }
+    });
+    semanas.push({ label, entradas, salidas });
+  }
+
+  // SVG sparkline
+  const maxVal = Math.max(1, ...semanas.map(s => Math.max(s.entradas, s.salidas)));
+  const W = 480, H = 100, barW = Math.floor((W - 20) / semanas.length / 2) - 1;
+  const bars = semanas.map((s, i) => {
+    const x = 10 + i * (barW * 2 + 4);
+    const hE = Math.round((s.entradas / maxVal) * (H - 20));
+    const hS = Math.round((s.salidas / maxVal) * (H - 20));
+    return `
+      <rect x="${x}" y="${H - 10 - hE}" width="${barW}" height="${hE}" fill="#10b981" rx="2" opacity=".85" title="Entradas: ${s.entradas}"/>
+      <rect x="${x + barW + 1}" y="${H - 10 - hS}" width="${barW}" height="${hS}" fill="#ef4444" rx="2" opacity=".75" title="Salidas: ${s.salidas}"/>
+      <text x="${x + barW}" y="${H - 1}" text-anchor="middle" font-size="8" fill="#9ca3af">${s.label}</text>`;
+  }).join('');
+
+  const svgEl = movs.length === 0 ? '<p style="text-align:center;color:#9ca3af;padding:20px 0;font-size:.85rem;">Sin movimientos en los últimos 90 días</p>' : `
+    <div style="background:#f9fafb;border-radius:10px;padding:10px;margin-bottom:14px;">
+      <div style="display:flex;gap:12px;margin-bottom:6px;font-size:.75rem;font-weight:700;">
+        <span style="color:#10b981;">■ Entradas</span>
+        <span style="color:#ef4444;">■ Salidas</span>
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" width="100%" height="100" style="display:block;">
+        <line x1="10" y1="${H-10}" x2="${W-10}" y2="${H-10}" stroke="#e5e7eb" stroke-width="1"/>
+        ${bars}
+      </svg>
+      <div style="font-size:.72rem;color:#9ca3af;margin-top:4px;text-align:right;">← 13 semanas</div>
+    </div>`;
+
+  // Tabla de movimientos recientes
+  const tipo_label: Record<string, string> = {
+    entrada_manual: '📥 Entrada manual', compra: '🛒 Compra', ajuste_positivo: '➕ Ajuste +',
+    salida_manual: '📤 Salida manual', merma: '🗑️ Merma', venta: '💰 Venta',
+    descuento_pedido: '📦 Pedido', ajuste_negativo: '➖ Ajuste −',
+  };
+  const tablaMovs = movs.slice(0, 30).map((m: any) => {
+    const fecha = m.fecha || (m._ts ? new Date(m._ts).toLocaleDateString('es-MX') : '—');
+    const hora = m.hora || '';
+    const tipo = tipo_label[m.tipo||''] || (m.tipo||'—');
+    const diff = (m.stockDespues != null && m.stockAntes != null) ? Number(m.stockDespues) - Number(m.stockAntes) : 0;
+    const cant = Number(m.cantidad) || Math.abs(diff) || 0;
+    const esPos = diff > 0 || (m.tipo||'').includes('entrada') || (m.tipo||'').includes('compra');
+    const cantColor = esPos ? '#10b981' : '#ef4444';
+    const cantStr = esPos ? `+${cant}` : `-${cant}`;
+    return `<tr style="border-bottom:1px solid #f3f4f6;">
+      <td style="padding:6px 10px;font-size:.8rem;white-space:nowrap;">${_e(fecha)} ${hora ? `<span style="color:#9ca3af;font-size:.72rem;">${_e(hora.substring(0,5))}</span>` : ''}</td>
+      <td style="padding:6px 10px;font-size:.78rem;">${_e(tipo)}</td>
+      <td style="padding:6px 10px;text-align:center;font-weight:700;color:${cantColor};">${cantStr}</td>
+      <td style="padding:6px 10px;text-align:center;font-size:.78rem;color:#6b7280;">${m.stockDespues != null ? m.stockDespues : '—'}</td>
+      <td style="padding:6px 10px;font-size:.75rem;color:#9ca3af;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${_e(m.motivo||'')}">${_e(m.motivo||'')}</td>
+    </tr>`;
+  }).join('');
+
+  const stockActual = typeof getStockEfectivo==='function' ? getStockEfectivo(prod) : (Number(prod.stock)||0);
+  const totalEntradas = movs.reduce((s, m) => {
+    const diff = (m.stockDespues != null && m.stockAntes != null) ? Number(m.stockDespues) - Number(m.stockAntes) : 0;
+    return s + (diff > 0 || (m.tipo||'').includes('entrada') || (m.tipo||'').includes('compra') ? Math.abs(Number(m.cantidad)||Math.abs(diff)||0) : 0);
+  }, 0);
+  const totalSalidas = movs.reduce((s, m) => {
+    const diff = (m.stockDespues != null && m.stockAntes != null) ? Number(m.stockDespues) - Number(m.stockAntes) : 0;
+    const esPos = diff > 0 || (m.tipo||'').includes('entrada') || (m.tipo||'').includes('compra');
+    return s + (!esPos ? Math.abs(Number(m.cantidad)||Math.abs(diff)||0) : 0);
+  }, 0);
+
+  const html = `
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:100px;background:#f0fdf4;border-radius:10px;padding:10px 14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#10b981;">${stockActual}</div>
+        <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Stock actual</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:#eff6ff;border-radius:10px;padding:10px 14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#10b981;">+${totalEntradas}</div>
+        <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Entradas 90d</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:#fef2f2;border-radius:10px;padding:10px 14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#ef4444;">-${totalSalidas}</div>
+        <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Salidas 90d</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:#f9fafb;border-radius:10px;padding:10px 14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#374151;">${movs.length}</div>
+        <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Movimientos</div>
+      </div>
+    </div>
+    ${svgEl}
+    ${movs.length > 0 ? `
+    <table style="width:100%;border-collapse:collapse;font-size:.82rem;">
+      <thead><tr style="background:#f9fafb;font-size:.73rem;color:#9ca3af;font-weight:700;">
+        <th style="padding:7px 10px;text-align:left;">Fecha</th>
+        <th style="padding:7px 10px;text-align:left;">Tipo</th>
+        <th style="padding:7px 10px;text-align:center;">Cant.</th>
+        <th style="padding:7px 10px;text-align:center;">Stock</th>
+        <th style="padding:7px 10px;text-align:left;">Motivo</th>
+      </tr></thead>
+      <tbody>${tablaMovs}</tbody>
+    </table>
+    ${movs.length > 30 ? `<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:10px;">...y ${movs.length - 30} más</p>` : ''}` : ''}
+  `;
+
+  _mkInvModal('mkMovProd', `📈 Movimientos — ${_e(prod.name||'Producto')} (90d)`, html, '780px');
+}
+(window as any).abrirMovimientoProducto = abrirMovimientoProducto;
