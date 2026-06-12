@@ -402,15 +402,23 @@ function eliminarPedidoFinalizado(id) {
     if (!pedido) return;
     showConfirm(`El pedido ${pedido.folio || id} será eliminado del historial de ventas.`, '⚠️ Eliminar pedido').then(ok => {
         if (!ok) return;
-        // FIX #13: filtrar por id (único) en vez de folio (puede repetirse)
         const _idElim = String(id);
+        const _folioElim = pedido.folio || '';
         pedidosFinalizados = pedidosFinalizados.filter(p => String(p.id) !== _idElim);
         savePedidosFinalizados();
-        salesHistory = salesHistory.filter(s => String(s.id) !== _idElim);
+        // Borrar TODOS los registros del folio: venta final, anticipos, abonos.
+        // El registro de venta usa id=mkId() (nunca coincide con el id del pedido),
+        // por eso antes el filtro por id no borraba nada y el ingreso quedaba fantasma.
+        const _idsShElim = salesHistory
+            .filter(s => _folioElim ? (s.folio === _folioElim || String(s.id) === _idElim) : String(s.id) === _idElim)
+            .map(s => String(s.id));
+        salesHistory = salesHistory.filter(s => !_idsShElim.includes(String(s.id)));
         saveSalesHistory();
-        // FIX-ELIM: upsert no elimina — borrar de orders_finalizados y sales_history
+        // FIX-ELIM: upsert no elimina — borrar de orders_finalizados y sales_history en Supabase
         if (typeof (window as any).deletePedidoFinalizado === 'function') (window as any).deletePedidoFinalizado(_idElim);
-        if (typeof (window as any).deleteSalesHistoryEntry === 'function') (window as any).deleteSalesHistoryEntry(_idElim);
+        if (typeof (window as any).deleteSalesHistoryEntry === 'function') {
+            _idsShElim.forEach((shId: string) => (window as any).deleteSalesHistoryEntry(shId));
+        }
         if (typeof _allVentasCache !== 'undefined') _allVentasCache = null;
         renderHistorialPedidos();
         renderSalesHistory();

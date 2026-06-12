@@ -125,33 +125,46 @@ function confirmarCancelPedido() {
 
     const tieneProductos = pedido.productosInventario && pedido.productosInventario.length > 0;
     function _ejecutarCancelacion(regresarStock) {
-    if (regresarStock && pedido.inventarioDescontado === true) {
-        pedido.productosInventario.forEach(function(item) {
-            const prod = products.find(function(p) { return String(p.id) === String(item.id); });
-            if (prod) prod.stock += item.quantity;
-        });
-        saveProducts();
-        renderInventoryTable();
+        if (regresarStock && pedido.inventarioDescontado === true) {
+            // Usar _regresarInventarioPedido (maneja variantes, servicios, syncStockFromVariants)
+            if (typeof _regresarInventarioPedido === 'function') {
+                _regresarInventarioPedido(pedido);
+            } else {
+                pedido.productosInventario.forEach(function(item) {
+                    const prod = products.find(function(p) { return String(p.id) === String(item.id); });
+                    if (prod && prod.tipo !== 'servicio') prod.stock += (item.quantity || item.cantidad || 1);
+                });
+            }
+            // Regresar empaques si se habían descontado
+            if (pedido.empaquesDescontados && typeof _regresarEmpaquesInventario === 'function') {
+                _regresarEmpaquesInventario(pedido);
+            }
+            if (typeof saveProducts === 'function') saveProducts();
+            if (typeof renderInventoryTable === 'function') renderInventoryTable();
+        }
+        pedidos = pedidos.filter(function(p) { return p.id !== pedidoACancelar; });
+        savePedidos();
+        // Borrar de Supabase orders — upsert no elimina filas y el pedido reaparece al recargar
+        if (typeof (window as any).deletePedidoActivo === 'function') {
+            (window as any).deletePedidoActivo(String(pedido.id));
+        }
+        // Limpiar historial ROI de este pedido y revertir recuperado en equipos
+        if (typeof limpiarRoiDePedido === 'function') limpiarRoiDePedido(pedidoACancelar);
+        closeCancelPedidoModal();
+        renderPedidosTable();
+        updateDashboard();
+        const msgStock = regresarStock
+            ? ' ✅ Stock regresado al inventario.'
+            : (tieneProductos ? ' ⚠️ Stock NO regresado (producto ya terminado).' : '');
+        manekiToastExport('✅ Pedido ' + pedido.folio + ' cancelado.' + msgStock, 'ok');
     }
-    pedidos = pedidos.filter(function(p) { return p.id !== pedidoACancelar; });
-    savePedidos();
-    // Limpiar historial ROI de este pedido y revertir recuperado en equipos
-    limpiarRoiDePedido(pedidoACancelar);
-    closeCancelPedidoModal();
-    renderPedidosTable();
-    updateDashboard();
-    const msgStock = regresarStock
-        ? ' ✅ Stock regresado al inventario.'
-        : (tieneProductos ? ' ⚠️ Stock NO regresado (producto ya terminado).' : '');
-    manekiToastExport('✅ Pedido ' + pedido.folio + ' cancelado.' + msgStock, 'ok');
-}
-if (tieneProductos) {
-    const lista = pedido.productosInventario.map(function(i) { return i.name + ' x' + i.quantity; }).join(', ');
-    showConfirm('¿Regresar productos al inventario?\n(' + lista + ')\n\nAceptar = NO está hecho, regresa al stock.\nCancelar = ya terminado.', '¿Regresar stock?')
-        .then(function(regresar) { _ejecutarCancelacion(regresar); });
-} else {
-    _ejecutarCancelacion(false);
-}
+    if (tieneProductos) {
+        const lista = pedido.productosInventario.map(function(i) { return i.name + ' x' + (i.quantity || i.cantidad || 1); }).join(', ');
+        showConfirm('¿Regresar productos al inventario?\n(' + lista + ')\n\nAceptar = NO está hecho, regresa al stock.\nCancelar = ya terminado.', '¿Regresar stock?')
+            .then(function(regresar) { _ejecutarCancelacion(regresar); });
+    } else {
+        _ejecutarCancelacion(false);
+    }
 }
 
 let storeLogo = null; // Base64 de la imagen

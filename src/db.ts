@@ -21,7 +21,10 @@ const _rtTablaAKey = {
     'products':           'products',
     'orders':             'pedidos',
     'orders_finalizados': 'pedidosFinalizados',
-    'sales_history':      'salesHistory'
+    'sales_history':      'salesHistory',
+    'clients':            'clients',
+    'incomes':            'incomes',
+    'expenses':           'expenses'
 };
 
 let db = null;
@@ -132,7 +135,8 @@ function _rtTransformarFila(tabla, row) {
         stock: row.stock||0, stockMin: row.stock_min||0, image: row.image||null,
         imageUrl: row.image_url||null, tags: row.tags||[], variants: row.variants||[],
         mpComponentes: row.mp_componentes||[], proveedor: row.proveedor||null,
-        notas: row.notas||null, publicarTienda: row.publicar_tienda||false
+        notas: row.notas||null, publicarTienda: row.publicar_tienda||false,
+        _updatedAt: row.updated_at||null
     };
     if (tabla === 'orders') return {
         id: row.id, folio: row.folio||null, cliente: row.cliente||null,
@@ -174,7 +178,27 @@ function _rtTransformarFila(tabla, row) {
         id: row.id, folio: row.folio||null, date: row.date||null, time: row.time||null,
         customer: row.customer||null, concept: row.concept||null, note: row.note||null,
         products: row.products||[], subtotal: row.subtotal||0, discount: row.discount||0,
-        tax: row.tax||0, total: row.total||0, method: row.method||null
+        tax: row.tax||0, total: row.total||0, method: row.method||null,
+        _updatedAt: row.updated_at||null
+    };
+    if (tabla === 'clients') return {
+        id: row.id, name: row.name||'', phone: row.phone||null,
+        facebook: row.facebook||null, email: row.email||null,
+        type: row.type||'regular', notas: row.notas||null,
+        totalPurchases: row.total_purchases||0, lastPurchase: row.last_purchase||null,
+        tags: row.tags||[], _updatedAt: row.updated_at||null
+    };
+    if (tabla === 'incomes') return {
+        id: row.id, concept: row.concept||null, amount: Number(row.amount||0),
+        date: row.date||null, client: row.client||null,
+        fromPOS: row.from_pos===true, folioOrigen: row.folio_origen||null,
+        pedidoId: row.pedido_id||null, _updatedAt: row.updated_at||null
+    };
+    if (tabla === 'expenses') return {
+        id: row.id, concept: row.concept||null, amount: Number(row.amount||0),
+        date: row.date||null, category: row.category||null,
+        etiqueta: row.etiqueta||null, notas: row.notas||null,
+        fromPayable: row.from_payable===true, _updatedAt: row.updated_at||null
     };
     return null;
 }
@@ -1080,6 +1104,11 @@ function saveProducts() {
             // Migrar imágenes base64 a Storage antes de escribir
         await Promise.all(products.map(p => _migrarBase64AStorage(p)));
 
+        // Sellar _updatedAt en objetos locales para que el guard anti-eco funcione:
+        // cuando Supabase devuelva el eco de este save, _updatedAt <= local → se descarta
+        const _tsSaveP = new Date().toISOString();
+        products.forEach((p: any) => { p._updatedAt = _tsSaveP; });
+
         const rows = products.map(p => ({
                 id:               String(p.id),
                 name:             p.name             || '',
@@ -1143,20 +1172,23 @@ function saveSalesHistory() {
     (async () => {
         // Persistir en tabla relacional public.sales_history
         try {
+            const _tsSaveSH = new Date().toISOString();
+            salesHistory.forEach((s: any) => { s._updatedAt = _tsSaveSH; });
             const rows = salesHistory.map(s => ({
-                id:       String(s.id),
-                folio:    s.folio    || null,
-                date:     s.date     || null,
-                time:     s.time     || null,
-                customer: s.customer || null,
-                concept:  s.concept  || null,
-                note:     s.note     || null,
-                products: s.products || [],
-                subtotal: Number(s.subtotal) || 0,
-                discount: Number(s.discount) || 0,
-                tax:      Number(s.tax)      || 0,
-                total:    Number(s.total)    || 0,
-                method:   s.method   || null
+                id:         String(s.id),
+                folio:      s.folio    || null,
+                date:       s.date     || null,
+                time:       s.time     || null,
+                customer:   s.customer || null,
+                concept:    s.concept  || null,
+                note:       s.note     || null,
+                products:   s.products || [],
+                subtotal:   Number(s.subtotal) || 0,
+                discount:   Number(s.discount) || 0,
+                tax:        Number(s.tax)      || 0,
+                total:      Number(s.total)    || 0,
+                method:     s.method   || null,
+                updated_at: _tsSaveSH
             }));
             const { error } = await db.from('sales_history').upsert(rows, { onConflict: 'id' });
             if (error) console.error('saveSalesHistory relacional error:', error);
