@@ -689,6 +689,8 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
     _pedidoGuardando = false;
     // FIX C7: re-habilitar botón guardar al terminar (éxito o error)
     if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = editId ? 'Actualizar Pedido' : 'Guardar Pedido'; }
+    // Limpiar flag dirty para que closeModal no pida confirmación
+    if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('pedidoModal');
     closeModal('pedidoModal');
     renderPedidosTable();
     updatePedidosStats();
