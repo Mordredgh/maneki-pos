@@ -298,30 +298,11 @@ function renderBienvenida() {
         }, 60000);
     }
 
+    // mornDailySales, mornReceivable y mornSalesSub son sincronizados por _updateDashboardImpl
+    // (dashboard.ts) para evitar duplicar la misma lógica de cálculo.
+    // Aquí solo calculamos los KPIs exclusivos de la sección bienvenida.
     try {
-        const hoy      = _fechaHoy();
-        const currency = v => '$' + (v || 0).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-
-        const ventas    = window.salesHistory || JSON.parse(localStorage.getItem('maneki_ventas') || '[]');
-        const ventasHoy = ventas.filter(v => (v.date || '').startsWith(hoy));
-        const totalHoy  = ventasHoy.reduce((s, v) => s + (parseFloat(v.total) || 0), 0);
-        const totalAyer = (() => {
-            const ayer = new Date(now); ayer.setDate(ayer.getDate() - 1);
-            const str  = `${ayer.getFullYear()}-${String(ayer.getMonth()+1).padStart(2,'0')}-${String(ayer.getDate()).padStart(2,'0')}`;
-            return ventas.filter(v => (v.date || '').startsWith(str)).reduce((s, v) => s + (parseFloat(v.total) || 0), 0);
-        })();
-        elSet('mornDailySales', currency(totalHoy));
-        const diffEl = document.getElementById('mornSalesSub');
-        if (diffEl) {
-            if (totalAyer > 0) {
-                const pct = ((totalHoy - totalAyer) / totalAyer * 100).toFixed(0);
-                diffEl.textContent = (pct >= 0 ? '▲ +' : '▼ ') + Math.abs(pct) + '% vs ayer';
-                diffEl.style.color = pct >= 0 ? '#16a34a' : '#dc2626';
-            } else {
-                diffEl.textContent = `${ventasHoy.length} venta${ventasHoy.length !== 1 ? 's' : ''} hoy`;
-            }
-        }
-
+        const hoy        = _fechaHoy();
         const pedidosArr = window.pedidos || JSON.parse(localStorage.getItem('maneki_pedidos') || '[]');
         const urgentes   = pedidosArr.filter(p => p.entrega === hoy && !['finalizado', 'cancelado'].includes(p.status || ''));
         elSet('mornUrgentCount', urgentes.length);
@@ -349,17 +330,8 @@ function renderBienvenida() {
         const criticos  = productos.filter(p => (parseInt(p.stock) || 0) <= (storeConfig.stockMinimo || 5) && p.activo !== false);
         elSet('mornLowStock', criticos.length);
 
-        // Calcular "me deben" desde pedidos activos con saldo pendiente
-        // igual que el dashboard completo — no usar balanceItems que es otra cosa
-        const totalDeben = pedidosArr
-            .filter(p => !['finalizado','cancelado','entregado'].includes((p.status||'').toLowerCase()))
-            .reduce((s, p) => {
-                const resta = typeof calcSaldoPendiente === 'function'
-                    ? calcSaldoPendiente(p)
-                    : Math.max(0, Number(p.total||0) - Number(p.anticipo||0));
-                return s + resta;
-            }, 0);
-        elSet('mornReceivable', currency(totalDeben));
+        // Solicitar actualización del dashboard para sincronizar mornDailySales / mornReceivable
+        if (typeof updateDashboard === 'function') updateDashboard();
 
     } catch (e) {
         console.warn('Error cargando KPIs morning dashboard:', e);

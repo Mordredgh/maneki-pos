@@ -472,6 +472,18 @@ function ajustarStock(id) {
     // Sugerencia inteligente de punto de reorden
     _renderSugerenciaReorden(p, modal);
 
+    // Mostrar campo de costo ponderado solo cuando la cantidad es positiva (entrada)
+    const _cantInput = document.getElementById('ajustarStockCantidad') as HTMLInputElement;
+    if (_cantInput && !(_cantInput as any)._costoPondListener) {
+        (_cantInput as any)._costoPondListener = true;
+        _cantInput.addEventListener('input', function() {
+            const _wrap = document.getElementById('_ajusteCostoPonderadoWrap');
+            const _costoEl = document.getElementById('ajusteStockCostoNuevo') as HTMLInputElement;
+            if (_wrap) _wrap.style.display = parseInt((this as HTMLInputElement).value) > 0 ? '' : 'none';
+            if (_costoEl && parseInt((this as HTMLInputElement).value) <= 0) _costoEl.value = '';
+        });
+    }
+
     if (typeof openModal === 'function') openModal('ajustarStockModal');
 }
 window.ajustarStock = ajustarStock;
@@ -501,6 +513,13 @@ function _inyectarCamposAjusteStock(modal) {
                 <option value="Entrada de mercancía">Entrada de mercancía</option>
                 <option value="Otro">Otro</option>
             </select>
+        </div>
+        <div id="_ajusteCostoPonderadoWrap" style="margin-top:8px;display:none;">
+            <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">
+                Costo por unidad <span style="font-weight:400;color:#9ca3af;">(recalcula promedio ponderado)</span>
+            </label>
+            <input type="number" id="ajusteStockCostoNuevo" placeholder="Ej: 25.50" min="0" step="0.01"
+                style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;">
         </div>
         <div style="margin-top:8px;">
             <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Notas adicionales <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
@@ -593,6 +612,22 @@ function confirmarAjusteStock() {
     const antes = getStockEfectivo(p); // Effective total stock before
     const _stockOriginal = parseInt(p.stock) || 0;
     p.stock = Math.max(0, _stockOriginal + delta);
+
+    // Costo promedio ponderado — solo cuando es entrada con nuevo costo
+    if (delta > 0) {
+        const _costoNuevoEl = document.getElementById('ajusteStockCostoNuevo') as HTMLInputElement;
+        if (_costoNuevoEl && _costoNuevoEl.value.trim() !== '') {
+            const _costoNuevo = parseFloat(_costoNuevoEl.value);
+            if (!isNaN(_costoNuevo) && _costoNuevo > 0) {
+                const _costoActual = Number(p.cost || p.costo || 0);
+                const _totalUnidades = _stockOriginal + delta;
+                p.cost = _totalUnidades > 0
+                    ? (_stockOriginal * _costoActual + delta * _costoNuevo) / _totalUnidades
+                    : _costoNuevo;
+                p.cost = Math.round(p.cost * 100) / 100;
+            }
+        }
+    }
 
     // Si tiene variantes, ajustar la primera disponible
     if (p.variants && p.variants.length > 0 && delta !== 0) {

@@ -1543,11 +1543,11 @@ function _mkInvToolbarOnce() {
     btnRow.id = 'mkInvHerramientas';
     btnRow.style.cssText = 'display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px;';
     btnRow.innerHTML = `
-      <button type="button" onclick="abrirConteoFisico()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Conteo físico de inventario">📋 Conteo físico</button>
-      <button type="button" onclick="abrirReabastecimiento()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Lista de reabastecimiento por proveedor">🛒 Reabastecimiento</button>
-      <button type="button" onclick="mostrarDonutCategoria()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Valor de inventario por categoría">📊 Por categoría</button>
-      <button type="button" onclick="sugerirStockMinimo()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Sugerir stock mínimo automático desde pedidos">🤖 Stock mínimo</button>
-      <button type="button" onclick="abrirTendenciaInventario()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Gráfica de tendencia del valor de inventario">📈 Tendencia</button>
+      <button type="button" onclick="abrirConteoFisico()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Conteo físico de inventario"><i class="fas fa-clipboard-check" style="margin-right:5px;"></i>Conteo físico</button>
+      <button type="button" onclick="abrirReabastecimiento()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Lista de reabastecimiento por proveedor"><i class="fas fa-truck" style="margin-right:5px;"></i>Reabastecimiento</button>
+      <button type="button" onclick="mostrarDonutCategoria()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Valor de inventario por categoría"><i class="fas fa-chart-pie" style="margin-right:5px;"></i>Por categoría</button>
+      <button type="button" onclick="sugerirStockMinimo()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Sugerir stock mínimo automático desde pedidos"><i class="fas fa-robot" style="margin-right:5px;"></i>Stock mínimo</button>
+      <button type="button" onclick="abrirTendenciaInventario()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Gráfica de tendencia del valor de inventario"><i class="fas fa-chart-line" style="margin-right:5px;"></i>Tendencia</button>
     `;
     const filterInfo = document.getElementById('mkInvFilterInfo');
     if (filterInfo) filterInfo.parentElement!.insertBefore(btnRow, filterInfo);

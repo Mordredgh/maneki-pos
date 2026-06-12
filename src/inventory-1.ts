@@ -127,8 +127,10 @@ function saveStockMovements() {
 }
 
 function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motivo, stockAntes, stockDespues }) {
+    const _movId  = mkId();
+    const _movIso = new Date().toISOString();
     window.stockMovements.unshift({
-        id:             mkId(),
+        id:             _movId,
         fecha:          (typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().split('T')[0]) + 'T' + new Date().toLocaleTimeString('es-MX'),
         productoId, productoNombre, tipo, cantidad,
         motivo:         motivo || '',
@@ -136,6 +138,21 @@ function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motiv
     });
     if (window.stockMovements.length > 500) { window.stockMovements.splice(500); window.stockMovimientos = window.stockMovements; } // BUG-012 FIX: splice in-place para no romper la referencia; sincronizar alias stockMovimientos
     saveStockMovements();
+    // Escritura directa a tabla relacional stock_movements
+    if (typeof db !== 'undefined' && db) {
+        (db as any).from('stock_movements').insert({
+            id: _movId,
+            producto_id: String(productoId),
+            producto_nombre: productoNombre || null,
+            tipo, cantidad,
+            motivo: motivo || null,
+            stock_antes: stockAntes != null ? Number(stockAntes) : null,
+            stock_despues: stockDespues != null ? Number(stockDespues) : null,
+            fecha: _movIso
+        }).then(({ error }: any) => {
+            if (error) console.warn('[Stock] Fallo insert stock_movements:', error.message);
+        });
+    }
 }
 window.registrarMovimiento = registrarMovimiento;
 

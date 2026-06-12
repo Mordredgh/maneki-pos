@@ -798,16 +798,16 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <i class="fas fa-plus"></i> Agregar <span style="font-size:.7rem;opacity:.8;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
-                                <button type="button" data-action="openPtModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">📦 Producto Terminado</button>
-                                <button type="button" data-action="openVariableProductModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🎨 Producto Variable</button>
-                                <button type="button" data-action="openMpModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">🏭 Materia Prima</button>
-                                <button type="button" data-action="openSvcModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold">⚙️ Servicio</button>
+                                <button type="button" data-action="openPtModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-box w-4 text-center" style="color:#7c3aed;"></i> Producto Terminado</button>
+                                <button type="button" data-action="openVariableProductModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-palette w-4 text-center" style="color:#0284c7;"></i> Producto Variable</button>
+                                <button type="button" data-action="openMpModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-industry w-4 text-center" style="color:#6d28d9;"></i> Materia Prima</button>
+                                <button type="button" data-action="openSvcModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-cog w-4 text-center" style="color:#6b7280;"></i> Servicio</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
                                 <label class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold cursor-pointer">
-                                    📥 Importar CSV
+                                    <i class="fas fa-file-import w-4 text-center" style="color:#16a34a;"></i> Importar CSV
                                     <input type="file" id="invCsvImportInput" accept=".csv" style="display:none;" data-change="importarInventarioCSV" data-pass-el="1">
                                 </label>
-                                <button type="button" data-action="descargarTemplateCSV" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📋 Descargar template CSV</button>
+                                <button type="button" data-action="descargarTemplateCSV" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-file-download w-4 text-center" style="color:#6b7280;"></i> Descargar template CSV</button>
                             </div>
                         </div>
 
@@ -840,13 +840,13 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <i class="fas fa-cog"></i> Herramientas <span style="font-size:.7rem;opacity:.7;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
-                                <button type="button" data-action="toggleMovimientosInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history"></i> Movimientos de stock</button>
+                                <button type="button" data-action="toggleMovimientosInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history w-4 text-center" style="color:#7c3aed;"></i> Movimientos de stock</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
-                                <button type="button" data-action="guardarSnapshotInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2">📸 Guardar snapshot</button>
-                                <button type="button" data-action="verSnapshotsInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2">📅 Ver snapshots</button>
+                                <button type="button" data-action="guardarSnapshotInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-camera w-4 text-center" style="color:#4f46e5;"></i> Guardar snapshot</button>
+                                <button type="button" data-action="verSnapshotsInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-calendar-alt w-4 text-center" style="color:#6b7280;"></i> Ver snapshots</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
-                                <button type="button" data-action="abrirBulkEditPrecios" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2">💲 Actualizar precios en masa</button>
-                                <button type="button" data-action="imprimirEtiquetasBatch" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 rounded-lg text-gray-700 flex items-center gap-2">🏷️ Imprimir etiquetas (todas)</button>
+                                <button type="button" data-action="abrirBulkEditPrecios" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-dollar-sign w-4 text-center" style="color:#d97706;"></i> Actualizar precios en masa</button>
+                                <button type="button" data-action="imprimirEtiquetasBatch" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-tags w-4 text-center" style="color:#ea580c;"></i> Imprimir etiquetas (todas)</button>
                             </div>
                         </div>
 

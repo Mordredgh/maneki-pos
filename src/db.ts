@@ -840,6 +840,17 @@ const _RELATIONAL_TABLES = {
         etiqueta: row.etiqueta || null,
         notas: row.notas || null,
         fromPayable: row.from_payable === true
+    })},
+    stockMovimientos: { table: 'stock_movements', min: 1, orderBy: 'fecha', limit: 1000, map: (row: any) => ({
+        id: row.id,
+        fecha: row.fecha,
+        productoId: row.producto_id,
+        productoNombre: row.producto_nombre,
+        tipo: row.tipo,
+        cantidad: row.cantidad,
+        motivo: row.motivo,
+        stockAntes: row.stock_antes,
+        stockDespues: row.stock_despues
     })}
 };
 

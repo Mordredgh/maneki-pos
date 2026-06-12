@@ -414,6 +414,39 @@ function _updateDashboardImpl() {
     const np = document.getElementById('netProfit');
     const ar = document.getElementById('accountsReceivable');
     const ap = document.getElementById('dashActivePedidos');
+    // Calcular "vs ayer" para bienvenida usando la misma pasada de datos
+    const _ayer = (() => { const d=new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+    let _ventasAyer = 0;
+    for (const s of (salesHistory || [])) {
+        if (s.method === 'Cancelado') continue;
+        if (s.type === 'pedido' || s.type === 'abono' || s.type === 'anticipo') continue;
+        if (s.date === _ayer) _ventasAyer += (s.total || 0);
+    }
+    for (const p of (window.pedidosFinalizados || [])) {
+        if (!p.total) continue;
+        const _pf = ((p.fechaFinalizado || p.fecha || '')).split('T')[0];
+        if (_pf === _ayer) _ventasAyer += Number(p.total);
+    }
+
+    // Sincronizar KPIs de la sección bienvenida (evita recalcular en renderBienvenida)
+    const _fmtMorn = (v: number) => '$' + v.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0});
+    const _mds = document.getElementById('mornDailySales');
+    const _mrv = document.getElementById('mornReceivable');
+    const _mss = document.getElementById('mornSalesSub');
+    if (_mds) _mds.textContent = _fmtMorn(todaySales);
+    if (_mrv) _mrv.textContent = _fmtMorn(accountsReceivable);
+    if (_mss) {
+        if (_ventasAyer > 0) {
+            const _pct = Math.round((todaySales - _ventasAyer) / _ventasAyer * 100);
+            _mss.textContent = (_pct >= 0 ? '▲ +' : '▼ ') + Math.abs(_pct) + '% vs ayer';
+            (_mss as HTMLElement).style.color = _pct >= 0 ? '#16a34a' : '#dc2626';
+        } else {
+            const _cntHoy = (salesHistory || []).filter((s:any) => s.date === today && s.method !== 'Cancelado' && !['pedido','abono','anticipo'].includes(s.type||'')).length;
+            _mss.textContent = `${_cntHoy} venta${_cntHoy !== 1 ? 's' : ''} hoy`;
+            (_mss as HTMLElement).style.color = '';
+        }
+    }
+
     if (ds) animarNumero(ds, 0, todaySales, 700, '$', '');
     if (np) {
         animarNumero(np, 0, netProfit, 700, '$', '');
