@@ -230,17 +230,17 @@ function _descontarEmpaquesInventario(pedido) {
         descontados++;
     }
     if (descontados > 0 && typeof saveProducts === 'function') {
-        try {
-            saveProducts();
-        } catch(e) {
+        // saveProducts() es async — usar .catch() para manejar el fallo correctamente
+        // (un try/catch sincrónico no puede capturar rechazos de Promises no awaited)
+        saveProducts().catch(e => {
             stockOriginal.forEach(({ mp, antes, variantsBefore }) => {
                 mp.stock = antes;
                 if (variantsBefore && Array.isArray(mp.variants)) {
                     variantsBefore.forEach((snap, i) => { if (mp.variants[i]) mp.variants[i].qty = snap.qty; });
                 }
             });
-            throw e;
-        }
+            console.error('[Empaques] saveProducts falló — stock revertido:', e);
+        });
     }
     return descontados;
 }

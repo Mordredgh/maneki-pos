@@ -216,21 +216,25 @@ function _setupRealtime() {
     // ── Canal 2: tablas relacionales (escrituras desde Lovable / otras apps) ──
     // P4: un canal único con un solo debounce consolidado — evita 5 re-renders independientes
     // cuando múltiples tablas cambian en la misma ventana de tiempo.
-    const _rtPending: Record<string, any> = {};
+    const _rtPending: Record<string, any[]> = {};
     let _rtConsolidatedTimer: any = null;
     function _flushRTPending() {
         const entries = Object.entries(_rtPending);
         Object.keys(_rtPending).forEach(k => delete _rtPending[k]);
-        Promise.all(entries.map(([tabla, payload]) =>
-            _applyRTRelacional(tabla, payload).catch(e => console.warn('[Realtime] _applyRTRelacional:', tabla, e))
-        ));
+        // Procesar cada tabla secuencialmente para preservar orden de eventos
+        Promise.all(entries.map(async ([tabla, payloads]) => {
+            for (const payload of payloads) {
+                await _applyRTRelacional(tabla, payload).catch(e => console.warn('[Realtime] _applyRTRelacional:', tabla, e));
+            }
+        }));
     }
     Object.keys(_rtTablaAKey).forEach(tabla => {
         const _chRel = db.channel('maneki-rt-' + tabla)
             .on('postgres_changes', { event: '*', schema: 'public', table: tabla }, payload => {
-                // Guardar último payload por tabla; si llegan múltiples cambios en 600ms,
-                // se procesan todos juntos en un solo flush (una sola pasada de re-renders)
-                _rtPending[tabla] = payload;
+                // Acumular todos los payloads por tabla — antes solo guardaba el último
+                // y eventos INSERT intermedios se perdían si llegaba un UPDATE dentro del debounce
+                if (!_rtPending[tabla]) _rtPending[tabla] = [];
+                _rtPending[tabla].push(payload);
                 clearTimeout(_rtConsolidatedTimer);
                 _rtConsolidatedTimer = setTimeout(_flushRTPending, 600);
             })

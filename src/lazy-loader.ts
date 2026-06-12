@@ -200,7 +200,15 @@
     // Chart.js y Leaflet arrancan de inmediato (sin esperar 300ms)
     // para que estén listos cuando el usuario interactúe con ellos.
     window.addEventListener('load', function () {
-        _cargarScript(CDN.chartjs);                                 // para balance/reportes
+        // Chart.js: al terminar de cargar, re-renderizar el gráfico de flujo de caja
+        // si el dashboard está activo (en la carga inicial, la gráfica queda en blanco
+        // porque Chart.js CDN aún no había respondido cuando updateDashboard() corrió)
+        _cargarScript(CDN.chartjs).then(function () {
+            var dash = document.getElementById('dashboard-section');
+            if (dash && !dash.classList.contains('hidden')) {
+                if (typeof window.renderCashFlowChart === 'function') window.renderCashFlowChart();
+            }
+        });
         _cargarCSS(CDN.leafletCSS); _cargarScript(CDN.leafletJS);  // para envios/mapas
         setTimeout(function () {
             _cargarGrupo('pedidos');
