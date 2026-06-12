@@ -45,12 +45,13 @@
             <span class="ml-1 shrink-0 font-bold ${t>0?"text-red-500":"text-green-600"}">${t>0?"$"+t.toFixed(0):"\u2713"}</span>
         </div>
         ${o!==null?`<div class="kanban-urgency-bar ${o<0?"urgency-overdue":o===0?"urgency-urgent":o<=2?"urgency-soon":"urgency-ok"}" style="width:${o<0?100:Math.max(8,Math.min(100,100-o/14*100))}%;margin-bottom:4px;"></div>`:""}
-        <div class="flex gap-1 items-center" style="position:relative;">
-            <button onclick="openPedidoStatusModal('${e.id}')" class="flex-1 text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">\u26A1 Estado</button>
-            <button onclick="openPedidoModal('${e.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">\u270F\uFE0F</button>
-            <button onclick="openAbonoPedido('${e.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
-            <button onclick="abrirWhatsAppPedido('${e.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
-            <button onclick="eliminarPedido('${e.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-red-50 text-xs text-red-500">\u{1F5D1}</button>
+        <div class="flex flex-col gap-1">
+            <button onclick="openPedidoStatusModal('${e.id}')" class="w-full text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">\u26A1 Estado</button>
+            <div class="flex gap-1 items-center" style="position:relative;">
+            <button onclick="openPedidoModal('${e.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">\u270F\uFE0F</button>
+            <button onclick="openAbonoPedido('${e.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
+            <button onclick="abrirWhatsAppPedido('${e.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
+            <button onclick="eliminarPedido('${e.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-red-50 text-xs text-red-500">\u{1F5D1}</button>
             <div style="position:relative;">
                 <button onclick="(function(btn){var m=btn.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);})(this)" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-100 text-xs text-gray-500 font-bold" title="M\xE1s acciones">\u22EF</button>
                 <div style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 -4px 24px rgba(0,0,0,0.13);min-width:140px;padding:4px;">
@@ -60,6 +61,7 @@
                     <button onclick="exportarPedidoPDF('${e.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">\u{1F4C4} Descargar PDF</button>
                     <button onclick="imprimirEtiquetaPedido('${e.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700">\u{1F3F7}\uFE0F Etiqueta</button>
                 </div>
+            </div>
             </div>
         </div>
     </div>`}let _pedidosTablePage=1;const _PEDIDOS_PER_PAGE=25;function _inyectarBuscadorTabla(){if(document.getElementById("tablaPedidosBuscar"))return;const e=document.getElementById("vistaTabla");if(!e)return;const t=document.createElement("div");t.id="tablaBuscadorBar",t.style.cssText="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;",t.innerHTML=`

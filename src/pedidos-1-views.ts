@@ -491,12 +491,13 @@ function kanbanCardHTML(p) {
             <span class="ml-1 shrink-0 font-bold ${_saldo > 0 ? 'text-red-500' : 'text-green-600'}">${_saldo > 0 ? '$' + _saldo.toFixed(0) : '✓'}</span>
         </div>
         ${diff !== null ? `<div class="kanban-urgency-bar ${diff < 0 ? 'urgency-overdue' : diff === 0 ? 'urgency-urgent' : diff <= 2 ? 'urgency-soon' : 'urgency-ok'}" style="width:${diff < 0 ? 100 : Math.max(8, Math.min(100, 100 - (diff / 14 * 100)))}%;margin-bottom:4px;"></div>` : ''}
-        <div class="flex gap-1 items-center" style="position:relative;">
-            <button onclick="openPedidoStatusModal('${p.id}')" class="flex-1 text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">⚡ Estado</button>
-            <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">✏️</button>
-            <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
-            <button onclick="abrirWhatsAppPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
-            <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-red-50 text-xs text-red-500">🗑</button>
+        <div class="flex flex-col gap-1">
+            <button onclick="openPedidoStatusModal('${p.id}')" class="w-full text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">⚡ Estado</button>
+            <div class="flex gap-1 items-center" style="position:relative;">
+            <button onclick="openPedidoModal('${p.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">✏️</button>
+            <button onclick="openAbonoPedido('${p.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
+            <button onclick="abrirWhatsAppPedido('${p.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
+            <button onclick="eliminarPedido('${p.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-red-50 text-xs text-red-500">🗑</button>
             <div style="position:relative;">
                 <button onclick="(function(btn){var m=btn.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);})(this)" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-100 text-xs text-gray-500 font-bold" title="Más acciones">⋯</button>
                 <div style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 -4px 24px rgba(0,0,0,0.13);min-width:140px;padding:4px;">
@@ -506,6 +507,7 @@ function kanbanCardHTML(p) {
                     <button onclick="exportarPedidoPDF('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">📄 Descargar PDF</button>
                     <button onclick="imprimirEtiquetaPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700">🏷️ Etiqueta</button>
                 </div>
+            </div>
             </div>
         </div>
     </div>`;
