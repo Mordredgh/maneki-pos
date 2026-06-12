@@ -942,10 +942,10 @@ async function sbLoad(key, def) {
 // Existe por compatibilidad con código legacy que la llamaba directamente; no hace nada.
 function saveToLocalStorage(key, data) {}
 
-// BUG #15 FIX: getNextFolio con fallback offline
-// ✅ FIX: usar .maybeSingle() en lugar de .single() para evitar error 406
-// PERF-01 FIX: mutex lock para evitar race condition cuando se llama getNextFolio
-// varias veces en rápida sucesión (ej: doble clic en botón de venta)
+// getNextFolio — genera el siguiente folio de forma atómica.
+// Usa la RPC maneki_next_folio() que hace SELECT…FOR UPDATE en Postgres,
+// eliminando la race condition de dos dispositivos leyendo el mismo contador.
+// El mutex local sigue siendo necesario para proteger doble-clic en el mismo dispositivo.
 let _localFolioCounters = {};
 let _folioLock = false;
 async function getNextFolio(tipo, _retry = 0) {
@@ -956,20 +956,21 @@ async function getNextFolio(tipo, _retry = 0) {
     }
     _folioLock = true;
     try {
-        const key = 'contador_' + tipo;
         try {
-            const { data } = await db.from('store').select('value').eq('key', key).maybeSingle();
-            let actual = 0;
-            if (data) actual = parseInt(JSON.parse(data.value)) || 0;
-            const siguiente = actual + 1;
-            db.from('store').upsert({ key: key, value: JSON.stringify(siguiente) }, { onConflict: 'key' })
-                .catch(e => console.warn('[Maneki DB]', e?.message || e));
-            _localFolioCounters[tipo] = siguiente;
-            return siguiente;
+            // RPC atómica: el servidor hace el incremento con FOR UPDATE — sin duplicados
+            const { data, error } = await _withTimeout(
+                db.rpc('maneki_next_folio', { p_tipo: tipo }), 6000
+            );
+            if (!error && typeof data === 'number' && data > 0) {
+                _localFolioCounters[tipo] = data;
+                return data;
+            }
+            throw new Error(error?.message || 'RPC sin resultado');
         } catch(e) {
-            // Fallback offline: usar máximo de folios existentes en salesHistory
+            console.warn('[getNextFolio] RPC falló, usando fallback offline:', e?.message || e);
+            // Fallback offline: máximo conocido + 1 (puede repetirse si dos dispositivos usan esto)
             if (tipo === 'venta') {
-                const maxExistente = salesHistory.reduce((max, s) => {
+                const maxExistente = (salesHistory || []).reduce((max, s) => {
                     const n = parseInt((s.folio || '').replace('V-', '')) || 0;
                     return n > max ? n : max;
                 }, _localFolioCounters[tipo] || 0);
@@ -1232,8 +1233,12 @@ function saveGastosRecurrentes() { (async () => { await sbSave('gastosRecurrente
 function saveReceivables()   { (async () => { await sbSave('receivables', receivables); })(); }
 function savePayables()      { (async () => { await sbSave('payables', payables); })(); }
 // ── savePedidos — escribe en public.orders ──
+// Mutex: serializa guardados concurrentes para que el último siempre gane.
+// Si save-A está en vuelo y save-B llega, B espera a que A termine y luego
+// ejecuta con el estado ACTUAL de pedidos — sin race de versiones desactualizadas.
+let _savePedidosQueue: Promise<void> = Promise.resolve();
 function savePedidos() {
-    return (async () => {
+    const _task = _savePedidosQueue.then(async () => {
         // Persistir en tabla relacional public.orders
         try {
             // BUG-RT-ECO FIX: sellar _updatedAt local = updated_at enviado, para que
@@ -1278,7 +1283,10 @@ function savePedidos() {
         } catch(e) {
             console.error('savePedidos relacional excepción:', e);
         }
-    })();
+    });
+    // La cola nunca rechaza — los errores ya se capturan arriba
+    _savePedidosQueue = _task.then(() => {}).catch(() => {});
+    return _task;
 }
 // ── savePedidosFinalizados — escribe en public.orders_finalizados ──
 function savePedidosFinalizados() {

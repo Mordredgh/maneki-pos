@@ -1,4 +1,4 @@
-const CACHE_NAME = "maneki-4b19805f6d";
+const CACHE_NAME = "maneki-01108fac31";
 
 // P6: assets críticos (deben estar en caché para que la app arranque)
 const CRITICAL_ASSETS = [
