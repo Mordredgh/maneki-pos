@@ -1588,7 +1588,7 @@ function _mkInvSummaryRow() {
     if (!ids.has(String(p.id))) return;
     n++;
     const st = stockCache?.get(String(p.id)) ?? (Number(p.stock) || 0);
-    valor += (Number(p.price) || 0) * st;
+    valor += (Number(p.cost) || 0) * Math.max(0, st);
     if (st <= (Number(p.stockMin) || 5)) low++;
   });
   let sum = document.getElementById('mkInvSummary');
@@ -1601,7 +1601,7 @@ function _mkInvSummaryRow() {
     dual.parentElement.insertBefore(sum, dual.nextSibling);
   }
   sum.innerHTML =
-    `<span>Valor de inventario: <b>$${valor.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</b></span>` +
+    `<span>Valor en costo: <b>$${valor.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</b></span>` +
     `<span style="color:var(--tx-muted);">${n} producto${n !== 1 ? 's' : ''}</span>` +
     (low > 0 ? `<span style="color:#dc2626;font-weight:800;">⚠ ${low} bajo stock</span>` : `<span style="color:#059669;font-weight:700;">✓ stock saludable</span>`);
 }
