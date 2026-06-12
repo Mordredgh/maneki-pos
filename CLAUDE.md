@@ -1,8 +1,8 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 11 junio 2026 — Sesión 19 (auditoría ultracode completa — commit `b5679be`)
-> **Sin pendientes de código.** 16 bugs corregidos + 18 features/nice-to-have aplicados.
-> **Versión app:** 2.2.0 | **SW hash:** maneki-a3be635281 | **Branch:** fresh-start → master
+> **Última actualización:** 12 junio 2026 — Sesión 20 (auditoría Fable 5 — 11 bugs, commit `b8fb78d`)
+> **Sin pendientes de código.** App estable con guard anti-eco, mutex saves, folios atómicos.
+> **Versión app:** 2.2.0 | **SW hash:** maneki-01108fac31 | **Branch:** fresh-start → master
 
 ---
 
@@ -487,7 +487,38 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 
 ---
 
-## ✅ Sesión 18 (10 junio 2026) — Integridad de datos + auditoría profunda de bugs
+## ✅ Sesión 20 (12 junio 2026) — Auditoría Fable 5: 11 bugs, 3 commits
+
+> Fable 5 auditó toda la app buscando bugs del patrón "CDN spinner" y "stale echo". Sonnet aplicó los 11 hallazgos.
+
+| Commit | Bugs | Fixes |
+|--------|------|-------|
+| `fb48531` | 3 | Empaques rollback muerto (try/catch síncrono sobre async → `.catch()`); `_rtPending` era object (sobrescribía eventos → array accumulator); Cashflow chart en blanco (re-render en `.then()` de Chart.js CDN eager load) |
+| `a6c2e15` | 6 | Cancel pedido: 4 sub-bugs (stock empaques, `saveProducts`, `deletePedidoActivo`, ROI); Ghost income: filtrar por folio (salesHistory usa `mkId()` ≠ `pedido.id`); Guard anti-eco en `products`; Multi-device sync (clients/incomes/expenses en RT + `_updatedAt`); `sales_history` sin `updated_at` en upsert Supabase |
+| `b8fb78d` | 2 | Folios atómicos: RPC `maneki_next_folio` con `SELECT...FOR UPDATE` en Postgres (migración aplicada via Supabase MCP); `savePedidos` mutex: `_savePedidosQueue` Promise chain serializa saves concurrentes |
+
+### ⚠️ Patrones nuevos (Sesión 20)
+
+```javascript
+// GUARD ANTI-ECO: cada save stampea _updatedAt = new Date().toISOString() en todos los ítems
+// El RT handler descarta el evento si transformed._updatedAt <= localReg._updatedAt
+// Tablas: products, pedidos, pedidosFinalizados, salesHistory, clients, incomes, expenses
+
+// MUTEX SAVES: let _savePedidosQueue: Promise<void> = Promise.resolve()
+// savePedidos() encadena: _savePedidosQueue = _savePedidosQueue.then(async () => { ... })
+// El segundo save espera al primero y lee el estado actual de pedidos[] (más fresco)
+
+// FOLIOS ATÓMICOS: getNextFolio(tipo) llama db.rpc('maneki_next_folio', { p_tipo: tipo })
+// Fallback offline: contador local en _localFolioCounters si RPC falla
+// La función Postgres usa SELECT...FOR UPDATE — bloqueo a nivel fila, imposible folio duplicado
+
+// _rtPending: Record<string, any[]> — array, no sobrescribe; flush procesa todos en orden
+// _rtTablaAKey cubre: products, orders, orders_finalizados, sales_history, clients, incomes, expenses
+```
+
+---
+
+## ✅ Sesión 18 (10 junio 2026) — Integridad de datos + auditoría profunda de bugs — Integridad de datos + auditoría profunda de bugs
 
 > Sesión dedicada a corregir el patrón "upsert no elimina" en Supabase y a una
 > auditoría multi-ángulo (7 agentes) sobre todo el programa. 7 commits desplegados.

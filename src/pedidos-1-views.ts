@@ -474,14 +474,32 @@ function kanbanCardHTML(p) {
                ⏰ RETRASADO — venció ${p.entrega}
            </div>`
         : '';
+    // Badge de ocasión (XV, boda, graduación, etc.)
+    const _ocasionLabels: Record<string,string> = {xv:'👑 XV',boda:'💍 Boda',graduacion:'🎓 Grad.',baby_shower:'🍼 Baby',aniversario:'❤️ Aniv.',navidad:'🎄 Nav.',otro:'✨'};
+    const _ocasionBadge = (p.ocasion && _ocasionLabels[p.ocasion]) ? `<span style="font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;background:#f5f3ff;color:#7c3aed;">${_ocasionLabels[p.ocasion]}</span>` : '';
+    // Recordatorio: pedido en "Retirar" más de 3 días sin ser recogido
+    const _retirarAlerta = (function(){
+        if ((p.status||'') !== 'retirar') return '';
+        const _fe = p.fechaUltimoEstado || null;
+        if (!_fe) return '';
+        const _dias = Math.round((Date.now() - new Date(_fe).getTime()) / 86400000);
+        if (_dias < 3) return '';
+        const _tel = (p.telefono || p.whatsapp || '').replace(/\D/g,'');
+        const _waTxt = encodeURIComponent(`Hola ${p.cliente}, tu pedido ${p.folio} está listo para retirar 🛍️ ¿Cuándo pasas?`);
+        return `<div style="background:#fff7ed;border-radius:8px;padding:3px 8px;margin-bottom:4px;font-size:.7rem;font-weight:700;color:#c2410c;display:flex;align-items:center;gap:6px;">⏳ ${_dias}d esperando retiro${_tel ? ` <a href="https://wa.me/52${_tel}?text=${_waTxt}" target="_blank" onclick="event.stopPropagation()" style="color:#25D366;text-decoration:none;font-size:.78rem;">📲 WA</a>` : ''}</div>`;
+    })();
+    // Porcentaje de pago (anticipo+abonos / total) para barra de progreso
+    const _tot = Number(p.total||0);
+    const _pct = _tot > 0 ? Math.min(100, Math.round(((_tot - _saldo) / _tot) * 100)) : (_saldo === 0 ? 100 : 0);
     return `<div class="kanban-card mk-kanban-card-${p.status || 'confirmado'} bg-white rounded-xl p-2 shadow-sm border border-gray-100 select-none"
         data-id="${p.id}" data-status="${p.status || 'confirmado'}"
         style="position:relative;" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
         ${_checkboxHtml}
         ${_retrasadoHTML}
-        <div class="flex justify-between items-center mb-0.5">
-            <span class="text-xs font-bold text-amber-600">${_e(p.folio)}${_prioBadge ? ' ' + p.prioridad.slice(0,1).toUpperCase() : ''}</span>
+        ${_retirarAlerta}
+        <div class="flex justify-between items-center mb-0.5 flex-wrap gap-1">
+            <span class="text-xs font-bold text-amber-600">${_e(p.folio)}${_prioBadge ? ' ' + p.prioridad.slice(0,1).toUpperCase() : ''}${_ocasionBadge ? ' ' + _ocasionBadge : ''}</span>
             ${alertaHtml || ''}
         </div>
         <p class="font-semibold text-gray-800 text-sm leading-tight mb-0.5 truncate">${_e(p.cliente)}</p>
@@ -509,6 +527,9 @@ function kanbanCardHTML(p) {
                 </div>
             </div>
             </div>
+        </div>
+        <div style="margin-top:5px;height:3px;background:#f3f4f6;border-radius:2px;overflow:hidden;" title="${_pct}% pagado">
+            <div style="width:${_pct}%;height:100%;background:${_pct>=100?'#10b981':_pct>=50?'#f59e0b':'#ef4444'};border-radius:2px;transition:width .4s;"></div>
         </div>
     </div>`;
 }

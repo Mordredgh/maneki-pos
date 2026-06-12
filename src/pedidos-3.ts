@@ -1389,6 +1389,60 @@ async function verificarEntregasProximas({ silencioso = false } = {}) {
 }
 window.verificarEntregasProximas = verificarEntregasProximas;
 
+// ── Imprimir Orden de Producción del Día ──────────────────────────────────
+function imprimirOrdenProduccion() {
+    const estadosProduccion = ['pago','produccion','salida'];
+    const pedidos = (window.pedidos || []).filter(p => estadosProduccion.includes(p.status || ''));
+    if (pedidos.length === 0) {
+        if (typeof manekiToastExport === 'function') manekiToastExport('Sin pedidos en producción hoy', 'warn');
+        return;
+    }
+    const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const _e = (typeof window._esc === 'function') ? window._esc : (s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const statusLabel = (s: string) => ({pago:'💰 Pagado',produccion:'🔧 Producción',salida:'🚚 Salió'})[s] || s;
+    const filas = pedidos.map(p => {
+        const items = (p.productosInventario || []).map((it: any) =>
+            `<li>${_e(it.name || it.concepto || '—')} × ${it.quantity || 1}${it.variante ? ` <span style="color:#7c3aed;">[${_e(it.variante)}]</span>` : ''}</li>`
+        ).join('');
+        return `
+        <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;break-inside:avoid;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div>
+                    <span style="font-weight:800;color:#C5A572;font-size:1.1rem;">${_e(p.folio)}</span>
+                    <span style="margin-left:10px;font-size:.8rem;background:#f3f4f6;padding:2px 8px;border-radius:99px;">${statusLabel(p.status)}</span>
+                    ${p.ocasion ? `<span style="margin-left:6px;font-size:.78rem;background:#f5f3ff;color:#7c3aed;padding:2px 8px;border-radius:99px;">${_e(p.ocasion)}</span>` : ''}
+                </div>
+                <span style="font-size:.82rem;color:#6b7280;">Entrega: <b>${p.entrega || '—'}</b></span>
+            </div>
+            <p style="font-weight:700;font-size:.95rem;margin-bottom:4px;">${_e(p.cliente)}</p>
+            <p style="color:#6b7280;font-size:.82rem;margin-bottom:8px;">${_e(p.concepto || '')}</p>
+            ${items ? `<ul style="margin:0;padding-left:20px;font-size:.82rem;color:#374151;">${items}</ul>` : ''}
+            ${p.notas ? `<p style="margin-top:8px;font-size:.78rem;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:6px;">📝 ${_e(p.notas)}</p>` : ''}
+        </div>`;
+    }).join('');
+    const html = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<title>Orden de Producción — ${hoy}</title>
+<style>
+  body{font-family:system-ui,sans-serif;color:#1f2937;padding:24px;max-width:860px;margin:0 auto;}
+  h1{color:#C5A572;margin-bottom:4px;}
+  @media print{body{padding:0;}}
+</style>
+</head><body>
+<h1>🔧 Orden de Producción</h1>
+<p style="color:#6b7280;margin-bottom:20px;">Fecha: <b>${hoy}</b> · ${pedidos.length} pedido${pedidos.length!==1?'s':''} en producción</p>
+${filas}
+<p style="margin-top:24px;font-size:.75rem;color:#d1d5db;text-align:center;">Maneki Store · generado ${new Date().toLocaleString('es-MX')}</p>
+</body></html>`;
+    const w = window.open('', '_blank');
+    if (!w) { if (typeof manekiToastExport === 'function') manekiToastExport('Permite ventanas emergentes para imprimir', 'warn'); return; }
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 600);
+}
+window.imprimirOrdenProduccion = imprimirOrdenProduccion;
+
 // Ejecutar automáticamente al cargar y cada 12 horas
 (function initRecordatorioEntregas() {
     // Esperar a que los datos estén cargados antes del primer chequeo

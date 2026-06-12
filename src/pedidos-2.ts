@@ -454,6 +454,49 @@ function setPedidoStatus(status) {
         showConfirm(_confirMsg, _confirTitle).then(async ok => {
             if (!ok) return;
             if (!window.pedidosFinalizados) window.pedidosFinalizados = [];
+
+            // Cobro al entregar: si queda saldo, ofrecer registrarlo antes de finalizar
+            const _saldoACobrar = (typeof calcSaldoPendiente === 'function') ? calcSaldoPendiente(window.pedidos[idx]) : 0;
+            if (_saldoACobrar > 0.01) {
+                const _cobrar = await showConfirm(
+                    `💰 Saldo pendiente: $${_saldoACobrar.toFixed(2)}. ¿Registrar cobro como Efectivo ahora?`,
+                    '💰 Cobro al entregar'
+                );
+                if (_cobrar) {
+                    const _cobroId = mkId();
+                    const _fechaHoyStr = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+                    if (!window.pedidos[idx].pagos) window.pedidos[idx].pagos = [];
+                    window.pedidos[idx].pagos.push({
+                        id: _cobroId, tipo: 'abono', monto: _saldoACobrar,
+                        fecha: _fechaHoyStr,
+                        hora: new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
+                        metodo: 'efectivo', nota: 'Cobro al entregar'
+                    });
+                    // Registrar en salesHistory como abono para que aparezca en Balance/Reportes
+                    if (!window.salesHistory) window.salesHistory = [];
+                    window.salesHistory.push({
+                        id: _cobroId, type: 'abono',
+                        folio: window.pedidos[idx].folio,
+                        date: _fechaHoyStr,
+                        time: new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
+                        customer: window.pedidos[idx].cliente || 'Cliente',
+                        concept: `Cobro al entregar ${window.pedidos[idx].folio}`,
+                        products: [], total: _saldoACobrar, method: 'Efectivo', note: 'Cobro al entregar'
+                    });
+                    // Registrar en incomes para Balance
+                    if (Array.isArray(window.incomes)) {
+                        window.incomes.push({
+                            id: _cobroId,
+                            concept: `Cobro al entregar ${window.pedidos[idx].folio}`,
+                            amount: _saldoACobrar,
+                            date: _fechaHoyStr,
+                            folioOrigen: window.pedidos[idx].folio
+                        });
+                        if (typeof saveIncomes === 'function') saveIncomes();
+                    }
+                }
+            }
+
             const p = {
                 ...window.pedidos[idx],
                 status: 'finalizado',

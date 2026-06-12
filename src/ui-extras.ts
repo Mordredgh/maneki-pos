@@ -923,6 +923,22 @@ function _mkBuildCommands(): MkCommand[] {
         { ico:'🌓', label:'Alternar modo oscuro', keys:'dark light tema',            group:'Preferencias', run: () => _mkCall('toggleDarkMode') },
         { ico:'↕️', label:'Alternar densidad de tabla', keys:'compacto comodo filas', group:'Preferencias', run: () => mkToggleDensidad() },
         { ico:'⌨️', label:'Ver atajos de teclado', sub:'?', keys:'shortcuts ayuda',   group:'Preferencias', run: () => _mkCall('mostrarAtajos') },
+        // Pedidos activos (dinámico)
+        ...((window.pedidos || []).slice(0, 20).map((p: any) => ({
+            ico: '📋',
+            label: `${p.folio || '—'} · ${p.cliente || '—'}`,
+            keys: [p.folio, p.cliente, p.concepto, p.telefono].filter(Boolean).join(' ').toLowerCase(),
+            group: 'Pedidos',
+            run: () => { _mkCall('showSection', 'pedidos'); setTimeout(() => { const inp = document.getElementById('kanbanBuscar') as HTMLInputElement|null; if (inp) { inp.value = p.folio || ''; inp.dispatchEvent(new Event('input')); } }, 300); }
+        }))),
+        // Pedidos finalizados recientes
+        ...((window.pedidosFinalizados || []).slice(-10).reverse().slice(0, 5).map((p: any) => ({
+            ico: '✅',
+            label: `${p.folio || '—'} · ${p.cliente || '—'} (finalizado)`,
+            keys: [p.folio, p.cliente, p.concepto].filter(Boolean).join(' ').toLowerCase(),
+            group: 'Pedidos',
+            run: () => { _mkCall('showSection', 'pedidos'); setTimeout(() => _mkCall('mostrarHistorialPedidos'), 400); }
+        }))),
     ];
 }
 

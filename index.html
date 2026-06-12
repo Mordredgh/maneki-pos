@@ -1619,6 +1619,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                     style="background: linear-gradient(135deg,#9B7BC4,#C4A8E0)">
                 <i class="fas fa-hammer"></i> Lista de Producción
             </button>
+            <button type="button" onclick="typeof imprimirOrdenProduccion==='function'?imprimirOrdenProduccion():manekiToastExport('Cargando...','warn')"
+                    class="px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
+                    style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;"
+                    title="Imprimir orden de producción del día">
+                <i class="fas fa-print"></i> <span class="hidden sm:inline">Orden</span>
+            </button>
             <button type="button" data-action="manekiExportar" data-arg="pedidos"
                     class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
                     style="background: linear-gradient(135deg,#10B981,#059669)">

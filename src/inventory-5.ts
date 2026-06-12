@@ -1523,6 +1523,21 @@ function _mkInvToolbarOnce() {
     info.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-2px 0 12px;';
     toolbar.parentElement!.insertBefore(info, toolbar.nextSibling);
   }
+  // (d) Botones de herramientas avanzadas de inventario
+  if (!document.getElementById('mkInvHerramientas')) {
+    const btnRow = document.createElement('div');
+    btnRow.id = 'mkInvHerramientas';
+    btnRow.style.cssText = 'display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px;';
+    btnRow.innerHTML = `
+      <button type="button" onclick="abrirConteoFisico()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Conteo físico de inventario">📋 Conteo físico</button>
+      <button type="button" onclick="abrirReabastecimiento()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Lista de reabastecimiento por proveedor">🛒 Reabastecimiento</button>
+      <button type="button" onclick="mostrarDonutCategoria()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Valor de inventario por categoría">📊 Por categoría</button>
+      <button type="button" onclick="sugerirStockMinimo()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Sugerir stock mínimo automático desde pedidos">🤖 Stock mínimo</button>
+    `;
+    const filterInfo = document.getElementById('mkInvFilterInfo');
+    if (filterInfo) filterInfo.parentElement!.insertBefore(btnRow, filterInfo);
+    else toolbar.parentElement!.insertBefore(btnRow, toolbar.nextSibling);
+  }
 }
 
 function _mkInvCounterChips() {
@@ -1594,3 +1609,303 @@ function _mkInvSummaryRow() {
   (wrapped as any)._mkWrapped = true;
   (window as any).renderInventoryTable = wrapped;
 })();
+
+// ══════════════════════════════════════════════════════
+// HERRAMIENTAS AVANZADAS DE INVENTARIO
+// ══════════════════════════════════════════════════════
+
+// Helper: abrir/cerrar modal inline
+function _mkInvModal(id: string, titulo: string, contenidoHtml: string, ancho = '700px') {
+  let ov = document.getElementById(id + '_ov');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = id + '_ov';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;';
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `
+    <div style="background:white;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.2);width:100%;max-width:${ancho};max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:18px 24px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <h3 style="margin:0;font-size:1.1rem;font-weight:800;color:#1f2937;">${titulo}</h3>
+        <button onclick="document.getElementById('${id}_ov').remove()" style="border:none;background:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;line-height:1;">✕</button>
+      </div>
+      <div style="overflow-y:auto;padding:20px 24px;flex:1;">${contenidoHtml}</div>
+    </div>`;
+  ov.onclick = (e: MouseEvent) => { if (e.target === ov) ov!.remove(); };
+  ov.style.display = 'flex';
+}
+
+// ── 1. Conteo físico ─────────────────────────────────
+function abrirConteoFisico() {
+  const prods = (window.products || []).filter((p: any) => p.tipo !== 'servicio' && p.activo !== false);
+  if (!prods.length) { if (typeof manekiToastExport==='function') manekiToastExport('Sin productos para contar','warn'); return; }
+  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  const filas = prods.map((p: any, i: number) => {
+    const st = typeof getStockEfectivo==='function' ? getStockEfectivo(p) : (Number(p.stock)||0);
+    return `<tr style="${i%2?'background:#f9fafb':''}">
+      <td style="padding:7px 10px;font-weight:600;font-size:.85rem;">${_e(p.name)}</td>
+      <td style="padding:7px 10px;text-align:center;color:#6b7280;font-size:.82rem;">${_e(p.category||'—')}</td>
+      <td style="padding:7px 10px;text-align:center;font-weight:700;">${st}</td>
+      <td style="padding:7px 10px;text-align:center;">
+        <input type="number" min="0" value="${st}" data-pid="${_e(p.id)}" data-sistema="${st}"
+          style="width:70px;border:1.5px solid #e5e7eb;border-radius:8px;padding:4px 8px;font-size:.85rem;text-align:center;outline:none;"
+          onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'" class="conteo-input">
+      </td>
+    </tr>`;
+  }).join('');
+  const html = `
+    <p style="font-size:.85rem;color:#6b7280;margin-bottom:16px;">Ingresa las cantidades físicas. Solo se ajustan los productos donde el conteo difiere del sistema.</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="background:#f9fafb;">
+        <th style="padding:8px 10px;text-align:left;font-size:.78rem;color:#6b7280;font-weight:700;">Producto</th>
+        <th style="padding:8px 10px;text-align:center;font-size:.78rem;color:#6b7280;font-weight:700;">Categoría</th>
+        <th style="padding:8px 10px;text-align:center;font-size:.78rem;color:#6b7280;font-weight:700;">Sistema</th>
+        <th style="padding:8px 10px;text-align:center;font-size:.78rem;color:#6b7280;font-weight:700;">Conteo físico</th>
+      </tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="document.getElementById('mkConteo_ov').remove()" style="padding:9px 20px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;font-weight:600;">Cancelar</button>
+      <button onclick="_mkAplicarConteoFisico()" style="padding:9px 24px;border-radius:10px;background:linear-gradient(135deg,#C5A572,#a8864f);color:white;border:none;cursor:pointer;font-weight:700;">✅ Aplicar ajustes</button>
+    </div>`;
+  _mkInvModal('mkConteo', '📋 Conteo Físico de Inventario', html, '780px');
+}
+(window as any).abrirConteoFisico = abrirConteoFisico;
+
+(window as any)._mkAplicarConteoFisico = function() {
+  const inputs = document.querySelectorAll('#mkConteo_ov .conteo-input');
+  let ajustes = 0;
+  inputs.forEach((inp: any) => {
+    const pid = inp.dataset.pid;
+    const sistema = Number(inp.dataset.sistema);
+    const conteo = Number(inp.value);
+    if (isNaN(conteo) || conteo === sistema) return;
+    const prod = (window.products || []).find((p: any) => String(p.id) === String(pid));
+    if (!prod) return;
+    const diff = conteo - sistema;
+    prod.stock = conteo;
+    if (typeof registrarMovimiento === 'function') {
+      registrarMovimiento({ productoId: prod.id, productoNombre: prod.name, tipo: diff > 0 ? 'entrada_manual' : 'salida_manual', cantidad: Math.abs(diff), motivo: 'Conteo físico', stockAntes: sistema, stockDespues: conteo });
+    }
+    ajustes++;
+  });
+  if (ajustes === 0) { if (typeof manekiToastExport==='function') manekiToastExport('Sin diferencias que ajustar','warn'); return; }
+  if (typeof saveProducts==='function') saveProducts();
+  if (typeof renderInventoryTable==='function') renderInventoryTable();
+  document.getElementById('mkConteo_ov')?.remove();
+  if (typeof manekiToastExport==='function') manekiToastExport(`✅ ${ajustes} ajuste${ajustes!==1?'s':''} aplicados`, 'ok');
+};
+
+// ── 2. Lista de reabastecimiento por proveedor ───────
+function abrirReabastecimiento() {
+  const bajos = (window.products || []).filter((p: any) => {
+    if (p.tipo === 'servicio' || p.activo === false) return false;
+    const st = typeof getStockEfectivo==='function' ? getStockEfectivo(p) : (Number(p.stock)||0);
+    return st <= (Number(p.stockMin) || 5);
+  });
+  if (!bajos.length) { if (typeof manekiToastExport==='function') manekiToastExport('✅ Sin productos bajo stock mínimo','ok'); return; }
+  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  // Agrupar por proveedor
+  const grupos: Record<string, any[]> = {};
+  bajos.forEach((p: any) => {
+    const prov = p.proveedor || 'Sin proveedor';
+    if (!grupos[prov]) grupos[prov] = [];
+    grupos[prov].push(p);
+  });
+  const html = Object.entries(grupos).map(([prov, items]) => {
+    const provEsc = _e(prov);
+    const filas = items.map((p: any) => {
+      const st = typeof getStockEfectivo==='function' ? getStockEfectivo(p) : (Number(p.stock)||0);
+      const min = Number(p.stockMin)||5;
+      const sugerido = Math.max(1, min * 2 - st);
+      return `<tr><td style="padding:6px 10px;font-size:.83rem;font-weight:600;">${_e(p.name)}</td>
+        <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${st}</td>
+        <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${min}</td>
+        <td style="padding:6px 10px;text-align:center;font-size:.82rem;font-weight:700;color:#C5A572;">${sugerido}</td>
+        <td style="padding:6px 10px;font-size:.78rem;color:#6b7280;">${_e(p.unidad||'pza')}</td></tr>`;
+    }).join('');
+    const waTxt = encodeURIComponent(`Hola, necesito reabastecer:\n${items.map((p:any)=>{const st=Number(p.stock)||0;const min=Number(p.stockMin)||5;return `• ${p.name}: ${Math.max(1,min*2-st)} ${p.unidad||'pza'}`}).join('\n')}`);
+    const waUrl = p?.proveedorUrl?.startsWith('http') ? p.proveedorUrl : `https://wa.me/?text=${waTxt}`;
+    return `<div style="margin-bottom:18px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+      <div style="background:#f9fafb;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+        <b style="font-size:.88rem;">${provEsc} (${items.length})</b>
+        <div style="display:flex;gap:6px;">
+          <a href="https://wa.me/?text=${encodeURIComponent(`Hola, necesito reabastecer:\n${items.map((pr:any)=>`• ${pr.name}: ${Math.max(1,(Number(pr.stockMin)||5)*2-(typeof getStockEfectivo==='function'?getStockEfectivo(pr):Number(pr.stock)||0))} ${pr.unidad||'pza'}`).join('\n')}`)}" target="_blank"
+            style="font-size:.75rem;padding:4px 10px;border-radius:8px;background:#25D366;color:white;text-decoration:none;font-weight:700;">📲 WA</a>
+          <button onclick="_mkExportReabCSV('${provEsc}')" style="font-size:.75rem;padding:4px 10px;border-radius:8px;background:#10b981;color:white;border:none;cursor:pointer;font-weight:700;">📥 CSV</button>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="font-size:.75rem;color:#6b7280;">
+          <th style="padding:6px 10px;text-align:left;">Producto</th>
+          <th style="padding:6px 10px;text-align:center;">Stock</th>
+          <th style="padding:6px 10px;text-align:center;">Mín.</th>
+          <th style="padding:6px 10px;text-align:center;">Pedir</th>
+          <th style="padding:6px 10px;">Unidad</th>
+        </tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+  _mkInvModal('mkReab', `🛒 Reabastecimiento — ${bajos.length} productos`, html, '720px');
+}
+(window as any).abrirReabastecimiento = abrirReabastecimiento;
+
+(window as any)._mkExportReabCSV = function(proveedor: string) {
+  const bajos = (window.products || []).filter((p: any) => {
+    if (p.tipo==='servicio'||p.activo===false) return false;
+    const prov = p.proveedor||'Sin proveedor';
+    if (proveedor && prov !== proveedor) return false;
+    const st = typeof getStockEfectivo==='function'?getStockEfectivo(p):Number(p.stock)||0;
+    return st <= (Number(p.stockMin)||5);
+  });
+  const csv = ['Producto,Stock actual,Stock mínimo,Cantidad a pedir,Unidad,Proveedor',
+    ...bajos.map((p: any)=>{
+      const st = typeof getStockEfectivo==='function'?getStockEfectivo(p):Number(p.stock)||0;
+      const min = Number(p.stockMin)||5;
+      return `"${p.name}",${st},${min},${Math.max(1,min*2-st)},${p.unidad||'pza'},"${p.proveedor||''}"`;
+    })].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `reabastecimiento_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+};
+
+// ── 3. Donut chart: valor por categoría ─────────────
+function mostrarDonutCategoria() {
+  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  const catMap: Record<string, number> = {};
+  (window.products || []).forEach((p: any) => {
+    if (p.tipo==='servicio'||p.activo===false) return;
+    const st = typeof getStockEfectivo==='function'?getStockEfectivo(p):Number(p.stock)||0;
+    const val = (Number(p.price)||0) * st;
+    const cat = p.category||'Sin categoría';
+    catMap[cat] = (catMap[cat]||0) + val;
+  });
+  const entries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const total = entries.reduce((s,[,v])=>s+v, 0);
+  const colors = ['#C5A572','#7c3aed','#10b981','#3b82f6','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#f97316','#14b8a6'];
+  const filas = entries.map(([cat, val], i) => {
+    const pct = total > 0 ? (val/total*100).toFixed(1) : '0';
+    return `<tr>
+      <td style="padding:6px 12px;">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colors[i%colors.length]};margin-right:6px;"></span>
+        ${_e(cat)}
+      </td>
+      <td style="padding:6px 12px;text-align:right;font-weight:700;">$${val.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+      <td style="padding:6px 12px;text-align:right;color:#6b7280;">${pct}%</td>
+    </tr>`;
+  }).join('');
+  const html = `
+    <p style="font-size:.85rem;color:#6b7280;margin-bottom:16px;">Valor de inventario (precio × stock) por categoría. Total: <b>$${total.toLocaleString('es-MX',{maximumFractionDigits:0})}</b></p>
+    <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+      <canvas id="mkDonutCat" width="200" height="200" style="flex-shrink:0;max-width:200px;"></canvas>
+      <table style="flex:1;min-width:200px;border-collapse:collapse;">
+        <thead><tr style="font-size:.75rem;color:#9ca3af;">
+          <th style="padding:6px 12px;text-align:left;">Categoría</th>
+          <th style="padding:6px 12px;text-align:right;">Valor</th>
+          <th style="padding:6px 12px;text-align:right;">%</th>
+        </tr></thead>
+        <tbody>${filas}</tbody>
+        <tfoot><tr style="border-top:2px solid #e5e7eb;font-weight:800;">
+          <td style="padding:8px 12px;">Total</td>
+          <td style="padding:8px 12px;text-align:right;">$${total.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+          <td style="padding:8px 12px;text-align:right;">100%</td>
+        </tr></tfoot>
+      </table>
+    </div>`;
+  _mkInvModal('mkDonut', '📊 Valor de Inventario por Categoría', html, '700px');
+  // Dibujar donut con Chart.js si está disponible
+  setTimeout(() => {
+    const canvas = document.getElementById('mkDonutCat') as HTMLCanvasElement|null;
+    if (!canvas) return;
+    try {
+      const Chart = (window as any).Chart;
+      if (typeof Chart === 'undefined') { canvas.style.display='none'; return; }
+      new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: entries.map(([c])=>c),
+          datasets: [{ data: entries.map(([,v])=>Math.round(v)), backgroundColor: entries.map((_,i)=>colors[i%colors.length]), borderWidth: 2 }]
+        },
+        options: { plugins: { legend: { display: false } }, cutout: '65%', responsive: false }
+      });
+    } catch(e) { if (canvas) canvas.style.display='none'; }
+  }, 100);
+}
+(window as any).mostrarDonutCategoria = mostrarDonutCategoria;
+
+// ── 4. Stock mínimo sugerido desde consumo de pedidos ──
+function sugerirStockMinimo() {
+  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  // Calcular consumo de los últimos 60 días desde pedidos finalizados
+  const hace60 = new Date(); hace60.setDate(hace60.getDate()-60);
+  const consumo: Record<string, number> = {};
+  (window.pedidosFinalizados || []).forEach((p: any) => {
+    const fecha = p.fechaFinalizado || p.entrega || '';
+    if (fecha && new Date(fecha) < hace60) return;
+    (p.productosInventario || []).forEach((it: any) => {
+      if (!it.id || it.id==='libre') return;
+      consumo[String(it.id)] = (consumo[String(it.id)]||0) + (Number(it.quantity||it.cantidad)||1);
+    });
+  });
+  const prods = (window.products || []).filter((p: any) => p.tipo!=='servicio' && p.activo!==false && consumo[String(p.id)]);
+  if (!prods.length) {
+    if (typeof manekiToastExport==='function') manekiToastExport('Sin datos de consumo en los últimos 60 días','warn');
+    return;
+  }
+  const filas = prods.map((p: any) => {
+    const total60 = consumo[String(p.id)] || 0;
+    const diario = total60 / 60;
+    const sugerido = Math.max(1, Math.ceil(diario * 14)); // 14 días de cobertura
+    const actual = Number(p.stockMin)||0;
+    const cambio = sugerido !== actual ? `<span style="color:${sugerido>actual?'#10b981':'#f59e0b'};font-weight:700;">${sugerido>actual?'▲':'▼'} ${sugerido}</span>` : `<span style="color:#6b7280;">${sugerido} (sin cambio)</span>`;
+    return `<tr>
+      <td style="padding:6px 10px;font-size:.83rem;font-weight:600;">${_e(p.name)}</td>
+      <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${total60}</td>
+      <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${diario.toFixed(1)}/día</td>
+      <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${actual}</td>
+      <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${cambio}</td>
+      <td style="padding:6px 10px;text-align:center;">
+        <input type="checkbox" checked data-pid="${_e(p.id)}" data-nuevo="${sugerido}" class="mkStockMinCb" style="accent-color:#C5A572;width:16px;height:16px;">
+      </td>
+    </tr>`;
+  }).join('');
+  const html = `
+    <p style="font-size:.85rem;color:#6b7280;margin-bottom:14px;">Basado en el consumo real de los últimos 60 días. Stock mínimo sugerido = 14 días de cobertura.</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="font-size:.75rem;color:#9ca3af;background:#f9fafb;">
+        <th style="padding:7px 10px;text-align:left;">Producto</th>
+        <th style="padding:7px 10px;text-align:center;">Uso 60d</th>
+        <th style="padding:7px 10px;text-align:center;">Promedio</th>
+        <th style="padding:7px 10px;text-align:center;">Actual</th>
+        <th style="padding:7px 10px;text-align:center;">Sugerido</th>
+        <th style="padding:7px 10px;text-align:center;">✓</th>
+      </tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="document.getElementById('mkStockMin_ov').remove()" style="padding:9px 20px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;font-weight:600;">Cancelar</button>
+      <button onclick="_mkAplicarStockMinSugerido()" style="padding:9px 24px;border-radius:10px;background:linear-gradient(135deg,#C5A572,#a8864f);color:white;border:none;cursor:pointer;font-weight:700;">🤖 Aplicar seleccionados</button>
+    </div>`;
+  _mkInvModal('mkStockMin', '🤖 Stock Mínimo Sugerido', html, '780px');
+}
+(window as any).sugerirStockMinimo = sugerirStockMinimo;
+
+(window as any)._mkAplicarStockMinSugerido = function() {
+  const cbs = document.querySelectorAll('#mkStockMin_ov .mkStockMinCb:checked');
+  let aplicados = 0;
+  cbs.forEach((cb: any) => {
+    const pid = cb.dataset.pid;
+    const nuevo = Number(cb.dataset.nuevo);
+    const prod = (window.products||[]).find((p:any)=>String(p.id)===String(pid));
+    if (!prod || isNaN(nuevo)) return;
+    prod.stockMin = nuevo;
+    aplicados++;
+  });
+  if (!aplicados) return;
+  if (typeof saveProducts==='function') saveProducts();
+  if (typeof renderInventoryTable==='function') renderInventoryTable();
+  document.getElementById('mkStockMin_ov')?.remove();
+  if (typeof manekiToastExport==='function') manekiToastExport(`✅ Stock mínimo actualizado en ${aplicados} producto${aplicados!==1?'s':''}`, 'ok');
+};

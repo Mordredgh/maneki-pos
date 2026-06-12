@@ -1102,6 +1102,7 @@ function _calcStockParaSupabase(p) {
 }
 
 function saveProducts() {
+    _mkSI('saving');
     return (async () => {
         // Persistir en tabla relacional public.products (fuente de verdad)
         try {
@@ -1146,9 +1147,11 @@ function saveProducts() {
                 updated_at:       new Date().toISOString()
             }));
             const { error } = await db.from('products').upsert(rows, { onConflict: 'id' });
-            if (error) console.error('saveProducts relacional error:', error);
+            if (error) { console.error('saveProducts relacional error:', error); _mkSI('error'); }
+            else _mkSI('saved');
         } catch(e) {
             console.error('saveProducts relacional excepción:', e);
+            _mkSI('error');
         }
     })();
 }
@@ -1240,7 +1243,9 @@ function savePayables()      { (async () => { await sbSave('payables', payables)
 // Si save-A está en vuelo y save-B llega, B espera a que A termine y luego
 // ejecuta con el estado ACTUAL de pedidos — sin race de versiones desactualizadas.
 let _savePedidosQueue: Promise<void> = Promise.resolve();
+const _mkSI = (s: string) => { try { if (typeof (window as any).mkSaveIndicator === 'function') (window as any).mkSaveIndicator(s); } catch(_){} };
 function savePedidos() {
+    _mkSI('saving');
     const _task = _savePedidosQueue.then(async () => {
         // Persistir en tabla relacional public.orders
         try {
@@ -1273,6 +1278,7 @@ function savePedidos() {
                 costo_materiales:     Number(p.costoMateriales) || 0,
                 prioridad:            p.prioridad           || 'normal',
                 notas_internas:       p.notasInternas       || null,
+                ocasion:              p.ocasion             || null,
                 pagos:                p.pagos               || [],
                 empaques:             p.empaques            || [],
                 historial_estados:    p.historialEstados    || [],
@@ -1282,9 +1288,11 @@ function savePedidos() {
                 updated_at:           _tsSave
             }));
             const { error } = await db.from('orders').upsert(rows, { onConflict: 'id' });
-            if (error) console.error('savePedidos relacional error:', error);
+            if (error) { console.error('savePedidos relacional error:', error); _mkSI('error'); }
+            else _mkSI('saved');
         } catch(e) {
             console.error('savePedidos relacional excepción:', e);
+            _mkSI('error');
         }
     });
     // La cola nunca rechaza — los errores ya se capturan arriba
@@ -1327,6 +1335,7 @@ function savePedidosFinalizados() {
                 costo_materiales:      Number(p.costoMateriales) || 0,
                 prioridad:             p.prioridad            || 'normal',
                 notas_internas:        p.notasInternas        || null,
+                ocasion:               p.ocasion              || null,
                 pagos:                 p.pagos                || [],
                 empaques:              p.empaques             || [],
                 historial_estados:     p.historialEstados     || [],

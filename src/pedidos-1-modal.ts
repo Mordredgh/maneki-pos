@@ -116,6 +116,28 @@ function openPedidoModal(id) {
                 onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#d1d5db'"></textarea>`;
         taNotas.parentElement.insertAdjacentElement('afterend', wrapper);
     })();
+    // Campo de Ocasión (XV, boda, graduación…)
+    (function _inyectarOcasionField() {
+        if (document.getElementById('pedidoOcasion')) return;
+        const refEl = document.getElementById('pedidoLugarEntrega') || document.getElementById('pedidoConcepto');
+        if (!refEl) return;
+        const wrapper = document.createElement('div');
+        wrapper.id = 'pedidoOcasionWrapper';
+        wrapper.style.cssText = 'margin-top:8px;';
+        wrapper.innerHTML = `
+            <label style="display:block;font-size:.75rem;font-weight:600;color:#6b7280;margin-bottom:4px;">🎉 Ocasión</label>
+            <select id="pedidoOcasion" style="width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:7px 10px;font-size:.83rem;outline:none;background:white;color:#374151;">
+                <option value="">— Sin ocasión —</option>
+                <option value="xv">👑 XV años</option>
+                <option value="boda">💍 Boda</option>
+                <option value="graduacion">🎓 Graduación</option>
+                <option value="baby_shower">🍼 Baby shower</option>
+                <option value="aniversario">❤️ Aniversario</option>
+                <option value="navidad">🎄 Navidad</option>
+                <option value="otro">✨ Otro</option>
+            </select>`;
+        refEl.parentElement.insertAdjacentElement('afterend', wrapper);
+    })();
 
     if (id) {
         const p = (window.pedidos || []).find(x => String(x.id) === String(id));
@@ -141,6 +163,9 @@ function openPedidoModal(id) {
             const _prio = p.prioridad || 'normal';
             const _prioBtn = document.getElementById({ alta:'btnPrioAlta', normal:'btnPrioNormal', baja:'btnPrioBaja' }[_prio] || 'btnPrioNormal');
             setPedidoPrioridad(_prio, _prioBtn);
+            // Cargar ocasión
+            const _ocEl = document.getElementById('pedidoOcasion') as HTMLSelectElement|null;
+            if (_ocEl) _ocEl.value = p.ocasion || '';
             // Limpiar precio libre al editar (los productos ya están cargados)
             const _plEdit = document.getElementById('pedidoPrecioLibre');
             if (_plEdit) _plEdit.value = '';
@@ -470,6 +495,8 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
     const costoMateriales = parseFloat(document.getElementById('pedidoCostoMateriales').value) || 0;
     // NTH-05: prioridad del pedido
     const prioridad = (document.getElementById('pedidoPrioridad')?.value) || 'normal';
+    // Campo de ocasión (XV, boda, graduación, etc.)
+    const ocasion = (document.getElementById('pedidoOcasion') as HTMLSelectElement|null)?.value || '';
     let items = [...(window.pedidoProductosSeleccionados || [])];
 
     // FIX SUBMIT-SYNC: leer valores actuales de los inputs inline de precio y cantidad
@@ -616,7 +643,7 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
             }
 
             // Guardar alias móvil (whatsapp/facebook) para compatibilidad bidireccional
-            window.pedidos[idx] = { ...pActual, cliente, telefono, redes, whatsapp: telefono, facebook: redes, fechaPedido, entrega, concepto, cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad, pagos: pagosActualizados, productosInventario: (window.pedidoProductosSeleccionados || []).map(i => ({...i})), empaques: (window.pedidoEmpaquesSeleccionados || []).map(e => ({...e})) };
+            window.pedidos[idx] = { ...pActual, cliente, telefono, redes, whatsapp: telefono, facebook: redes, fechaPedido, entrega, concepto, cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad, ocasion, pagos: pagosActualizados, productosInventario: (window.pedidoProductosSeleccionados || []).map(i => ({...i})), empaques: (window.pedidoEmpaquesSeleccionados || []).map(e => ({...e})) };
             await savePedidos();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Pedido actualizado.', 'ok');
@@ -636,7 +663,7 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
             cliente, telefono, redes,
             whatsapp: telefono, facebook: redes,  // alias móvil para compatibilidad
             fechaPedido, entrega, concepto,
-            cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad,
+            cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad, ocasion,
             status: 'confirmado',
             pagos: anticipo > 0 ? [{
                 id: mkId(),
