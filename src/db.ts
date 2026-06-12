@@ -1209,12 +1209,16 @@ function saveIncomes() {
     (async () => {
 
         try {
-            const rows = (window.incomes||[]).map(i => ({
-                id: i.id != null ? i.id : undefined, concept: i.concept||i.concepto||null,
-                amount: Number(i.amount||i.monto)||0, date: i.date||i.fecha||null,
-                client: i.client||i.cliente||null, from_pos: i.fromPOS===true,
-                folio_origen: i.folioOrigen||null, pedido_id: i.pedidoId||null
-            }));
+            const rows = (window.incomes||[]).map(i => {
+                // Garantizar que todos los ingresos tienen id antes del upsert (onConflict:'id' requiere id uniforme)
+                if (i.id == null) i.id = (typeof mkId === 'function' ? mkId() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+                return {
+                    id: String(i.id), concept: i.concept||i.concepto||null,
+                    amount: Number(i.amount||i.monto)||0, date: i.date||i.fecha||null,
+                    client: i.client||i.cliente||null, from_pos: i.fromPOS===true,
+                    folio_origen: i.folioOrigen||null, pedido_id: i.pedidoId||null
+                };
+            });
             // Solo si hay filas con datos
             if (rows.length && db) await db.from('incomes').upsert(rows,{onConflict:'id'}).catch(e=>console.warn('[incomes]',e));
         } catch(e){ console.warn('[saveIncomes] Error al guardar en Supabase:', e?.message); }

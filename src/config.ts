@@ -868,7 +868,7 @@ window.MK.toast = function(msg, type) {
 window.MK.navigate = function(section) {
     if (typeof showSection === 'function') showSection(section);
 };
-window.MK.version = '2.3.0';
+window.MK.version = '2.4.0';
 
 // ── MK.state — unified view of all module state ────────────────────────────
 // Getter/setter facade: MK.state.X reads/writes window.X.

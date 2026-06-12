@@ -10,6 +10,20 @@
 
 > ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
 
+### v2.4.0 (12 junio 2026)
+- 🛡️ Seguridad BD: eliminados pedidos zombi PE-0064/PE-0068, corregido `search_path` de funciones Postgres, política RLS de abonos reforzada
+- 📋 Archivar productos: botón 📁 en cada fila para ocultar descontinuados sin borrar el historial
+- 📅 Vista "Carga Semanal": 14 días con semáforo verde/amarillo/rojo según pedidos agendados
+- 💬 WA Masivo Retiro: abre WhatsApp de todos los pedidos con +3 días esperando ser retirados
+- 💰 Cierre de Caja: resumen diario de cobros agrupados por método de pago
+- 📥 Exportar Kardex CSV: descarga el historial de movimientos de cualquier producto
+- 📈 Tendencia de Inventario: gráfica de línea con el valor histórico del inventario
+- 🔍 Búsqueda de productos dentro de pedidos: el buscador del kanban ahora encuentra por nombre de artículo
+- 🎀 Filtro por ocasión en kanban: dropdown XV/Boda/Graduación/Baby/Aniversario/Navidad
+- ⚠️ Alerta de stock insuficiente: aviso visible cuando se finaliza un pedido con más cantidad que stock disponible
+- 🆔 Ingresos siempre con ID: los cobros sin ID generan uno automáticamente antes del upsert (evita errores silenciosos)
+- 🔎 Detector de duplicados similares: al crear un producto, advierte si ya existe uno con nombre >80% similar
+
 ### v2.3.0 (12 junio 2026)
 - 💳 Barra de progreso de pago en cada tarjeta kanban (rojo → amarillo → verde)
 - 🎉 Campo "Ocasión" en pedidos (XV, boda, graduación, baby shower, etc.) con badge en kanban

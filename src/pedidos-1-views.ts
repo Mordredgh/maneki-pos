@@ -218,6 +218,19 @@ function setKanbanUrgencia(filtro, btn) {
 }
 window.setKanbanUrgencia = setKanbanUrgencia;
 
+// ── Filtro por ocasión en kanban ──────────────────────────────────────────────
+let _kanbanOcasionFiltro = '';
+function setKanbanOcasion(ocasion: string, btn?: HTMLElement) {
+    _kanbanOcasionFiltro = ocasion;
+    _kanbanExpandidos.clear();
+    document.querySelectorAll('.btn-kanban-ocasion').forEach((b: any) => {
+        b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
+    });
+    if (btn) { btn.style.background = '#7c3aed'; btn.style.color = 'white'; btn.style.borderColor = '#7c3aed'; }
+    renderKanbanBoard();
+}
+(window as any).setKanbanOcasion = setKanbanOcasion;
+
 let _kanbanFocusMode = false;
 function toggleKanbanFocus() {
     _kanbanFocusMode = !_kanbanFocusMode;
@@ -262,6 +275,10 @@ function renderKanbanBoard() {
             return true;
         });
     }
+    // Filtro por ocasión
+    if (_kanbanOcasionFiltro) {
+        lista = lista.filter(p => (p.ocasion || '') === _kanbanOcasionFiltro);
+    }
 
     let totalVisible = 0;
     const _nsKanban = window._normSearch || (s => String(s||'').toLowerCase());
@@ -270,7 +287,8 @@ function renderKanbanBoard() {
         const badge = document.getElementById('kBadge-' + col);
         if (!el) return;
         const items = lista.filter(p => (p.status||'').toLowerCase() === col && (
-            !q || [p.folio, p.cliente, p.clienteNombre, p.telefono, p.whatsapp, p.concepto, p.notas, p.descripcion]
+            !q || [p.folio, p.cliente, p.clienteNombre, p.telefono, p.whatsapp, p.concepto, p.notas, p.descripcion,
+                ...(p.productosInventario||[]).map((i: any) => i.name||i.nombre||'')]
                 .some(v => v && _nsKanban(String(v)).includes(_nsKanban(q)))
         ));
         totalVisible += items.length;

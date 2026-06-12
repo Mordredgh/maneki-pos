@@ -98,7 +98,15 @@ async function _descontarInventarioPedido(pedido) {
             else prod.stock = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
         } else {
             // Producto SIN variantes: descontar prod.stock directamente
-            prod.stock = Math.max(0, antesPT - cantidad);
+            const _deficit = antesPT - cantidad;
+            if (_deficit < 0) {
+                // Registrar el déficit antes de truncar — no silencioso
+                console.warn(`[Stock] Déficit en "${prod.name}": se pidieron ${cantidad} pero había ${antesPT}. Faltaron ${Math.abs(_deficit)} unidades.`);
+                if (typeof manekiToastExport === 'function') {
+                    manekiToastExport(`⚠️ Stock insuficiente de ${prod.name}: pidieron ${cantidad}, había ${antesPT}`, 'warn');
+                }
+            }
+            prod.stock = Math.max(0, _deficit);
         }
 
         if (typeof registrarMovimiento === 'function') {
@@ -1662,6 +1670,68 @@ document.addEventListener('DOMContentLoaded', function() {
                     wrap.appendChild(b);
                 });
                 kanbanBuscar.parentElement.appendChild(wrap);
+            }
+        }
+        // Botones de acción rápida: WA Masivo + Cierre de Caja
+        if (!document.getElementById('btnWAMasivoRetirar')) {
+            const kanbanBuscar3 = document.getElementById('kanbanBuscar');
+            if (kanbanBuscar3 && kanbanBuscar3.parentElement) {
+                const actionsWrap = document.createElement('div');
+                actionsWrap.style.cssText = 'display:flex;gap:4px;margin-left:auto;align-items:center;';
+                const btnWA = document.createElement('button');
+                btnWA.id = 'btnWAMasivoRetirar';
+                btnWA.title = 'WhatsApp masivo para pedidos en retiro (+3 días)';
+                btnWA.style.cssText = 'padding:5px 10px;border-radius:8px;border:1.5px solid #25D366;background:#f0fdf4;color:#166534;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;';
+                btnWA.innerHTML = '💬 WA Retiro';
+                btnWA.onclick = function() { if (typeof (window as any).abrirWAMasivoRetirar === 'function') (window as any).abrirWAMasivoRetirar(); };
+                const btnCaja = document.createElement('button');
+                btnCaja.id = 'btnCierreCaja';
+                btnCaja.title = 'Ver resumen de cobros del día';
+                btnCaja.style.cssText = 'padding:5px 10px;border-radius:8px;border:1.5px solid #f59e0b;background:#fffbeb;color:#92400e;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;';
+                btnCaja.innerHTML = '💰 Caja';
+                btnCaja.onclick = function() { if (typeof (window as any).abrirCierreCaja === 'function') (window as any).abrirCierreCaja(); };
+                const btnCarga = document.createElement('button');
+                btnCarga.id = 'btnCargaSemanal';
+                btnCarga.title = 'Ver carga de producción de los próximos 14 días';
+                btnCarga.style.cssText = 'padding:5px 10px;border-radius:8px;border:1.5px solid #7c3aed;background:#f5f3ff;color:#4c1d95;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;';
+                btnCarga.innerHTML = '📅 Carga';
+                btnCarga.onclick = function() { if (typeof (window as any).abrirCargaSemanal === 'function') (window as any).abrirCargaSemanal(); };
+                actionsWrap.appendChild(btnCarga);
+                actionsWrap.appendChild(btnWA);
+                actionsWrap.appendChild(btnCaja);
+                kanbanBuscar3.parentElement.appendChild(actionsWrap);
+            }
+        }
+        // Filtro por ocasión (dropdown compacto)
+        if (!document.getElementById('kanbanOcasionFilter')) {
+            const kanbanBuscar2 = document.getElementById('kanbanBuscar');
+            if (kanbanBuscar2 && kanbanBuscar2.parentElement) {
+                const ocasionWrap = document.createElement('div');
+                ocasionWrap.style.cssText = 'display:flex;align-items:center;gap:4px;margin-left:4px;';
+                const ocasionSel = document.createElement('select');
+                ocasionSel.id = 'kanbanOcasionFilter';
+                ocasionSel.title = 'Filtrar por ocasión';
+                ocasionSel.style.cssText = 'padding:4px 8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.78rem;font-weight:600;color:#6b7280;background:#fff;cursor:pointer;max-width:130px;';
+                const ocasionOpts = [
+                    ['','🎀 Ocasión'],['xv','👑 XV'],['boda','💍 Boda'],
+                    ['graduacion','🎓 Grad.'],['baby_shower','🍼 Baby'],
+                    ['aniversario','❤️ Aniv.'],['navidad','🎄 Nav.'],['otro','✨ Otro']
+                ];
+                ocasionOpts.forEach(([v, l]) => {
+                    const opt = document.createElement('option');
+                    opt.value = v; opt.textContent = l;
+                    ocasionSel.appendChild(opt);
+                });
+                ocasionSel.onchange = function() {
+                    const v = ocasionSel.value;
+                    ocasionSel.style.borderColor = v ? '#7c3aed' : '#e5e7eb';
+                    ocasionSel.style.color = v ? '#7c3aed' : '#6b7280';
+                    if (typeof (window as any).setKanbanOcasion === 'function') {
+                        (window as any).setKanbanOcasion(v);
+                    }
+                };
+                ocasionWrap.appendChild(ocasionSel);
+                kanbanBuscar2.parentElement.appendChild(ocasionWrap);
             }
         }
     }, 1000);

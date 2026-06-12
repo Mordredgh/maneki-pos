@@ -592,7 +592,7 @@ async function guardarProductoTerminado() {
     if (!nombre) { manekiToastExport('⚠️ El nombre es requerido','warn'); document.getElementById('ptNombre')?.focus(); return; }
     if (!precio||precio<=0) { manekiToastExport('⚠️ El precio de venta debe ser mayor a $0','warn'); document.getElementById('ptPrecio')?.focus(); return; }
     if (precio<costo) { manekiToastExport('⚠️ El precio no puede ser menor al costo','warn'); document.getElementById('ptPrecio')?.focus(); return; }
-    // GUARD: detectar nombre duplicado (no solo SKU)
+    // GUARD: detectar nombre duplicado (exacto) y similar (fuzzy >80%)
     const _excludeIdPt = window.modoEdicion ? window.edicionProductoId : null;
     const _nombreDupPt = (window.products||[]).find(p =>
         (p.name || '').trim().toLowerCase() === nombre.toLowerCase() && String(p.id) !== String(_excludeIdPt)
@@ -600,6 +600,26 @@ async function guardarProductoTerminado() {
     if (_nombreDupPt) {
         manekiToastExport(`⚠️ Ya existe un producto llamado "${_nombreDupPt.name}". Usa un nombre diferente o edita el existente.`, 'warn');
         document.getElementById('ptNombre')?.focus(); return;
+    }
+    // Detector de similares: ratio = 1 - levenshtein / maxLen > 0.80 → advertencia no bloqueante
+    if (typeof _fuzzyMatch === 'function') {
+        const _similarPt = (window.products||[]).find(p => {
+            if (String(p.id) === String(_excludeIdPt)) return false;
+            const a = nombre.toLowerCase(), b = (p.name||'').toLowerCase();
+            if (a === b) return false; // ya detectado arriba
+            const maxLen = Math.max(a.length, b.length);
+            if (maxLen < 4) return false;
+            // Usar levenshtein si está disponible en window
+            if (typeof (window as any)._levenshtein === 'function') {
+                const dist = (window as any)._levenshtein(a, b);
+                return (1 - dist / maxLen) >= 0.80;
+            }
+            return false;
+        });
+        if (_similarPt) {
+            manekiToastExport(`⚠️ Nombre similar a "${_similarPt.name}" ya existente. Si es diferente, continúa guardando.`, 'warn');
+            // Solo advierte, no bloquea
+        }
     }
     if (sku && !skuEsUnico(sku, _excludeIdPt)) {
         manekiToastExport(`⚠️ El SKU "${sku}" ya está en uso`,'warn'); return;

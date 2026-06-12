@@ -688,3 +688,220 @@ window.generarFolioCotizacion = generarFolioCotizacion;
 (window as any)._recalcQuoteTotal = _recalcQuoteTotal;
 (window as any)._renderQuoteProductosBody = _renderQuoteProductosBody;
 (window as any)._quoteProductos = _quoteProductos;
+
+// ─── VISTA DE CARGA DE PRODUCCIÓN SEMANAL ───────────────────────────────────
+function abrirCargaSemanal() {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const _e = (window as any)._esc || ((s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+    const dias: { fecha: string; label: string; dow: string; pedidos: any[] }[] = [];
+    const dowNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    for (let i = 0; i < 14; i++) {
+        const d = new Date(hoy.getTime() + i * 86400000);
+        const fechaStr = d.toISOString().split('T')[0];
+        const label = `${d.getDate()}/${d.getMonth()+1}`;
+        const dow = dowNames[d.getDay()];
+        const pedidosDia = (window.pedidos || []).filter((p: any) =>
+            p.entrega === fechaStr && !['entregado','completado','cancelado'].includes(p.status||'')
+        );
+        dias.push({ fecha: fechaStr, label, dow, pedidos: pedidosDia });
+    }
+    const maxPed = Math.max(1, ...dias.map(d => d.pedidos.length));
+
+    const barras = dias.map((d, i) => {
+        const n = d.pedidos.length;
+        const color = n === 0 ? '#e5e7eb' : n <= 2 ? '#22c55e' : n <= 4 ? '#f59e0b' : '#ef4444';
+        const hPct = n === 0 ? 6 : Math.max(10, Math.round((n / maxPed) * 100));
+        const esHoy = i === 0;
+        const esFinSemana = d.pedidos.length === 0 && (new Date(d.fecha + 'T00:00:00').getDay() % 6 === 0);
+        const detalleItems = d.pedidos.slice(0, 3).map((p: any) =>
+            `<div style="font-size:.7rem;color:#374151;padding:2px 0;border-bottom:1px solid #f3f4f6;">${_e(p.folio)} · ${_e(p.cliente||'—')}</div>`
+        ).join('') + (d.pedidos.length > 3 ? `<div style="font-size:.68rem;color:#9ca3af;">+${d.pedidos.length - 3} más</div>` : '');
+
+        return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;cursor:${n>0?'pointer':'default'};"
+            title="${d.fecha}: ${n} pedido${n!==1?'s':''}${n>0?' — '+d.pedidos.map((p:any)=>p.folio||p.cliente||'').join(', '):''}">
+            <div style="width:100%;height:120px;display:flex;align-items:flex-end;justify-content:center;padding:0 1px;">
+                <div style="width:85%;border-radius:4px 4px 0 0;background:${color};height:${hPct}%;min-height:${n>0?8:4}px;transition:height 0.3s;"></div>
+            </div>
+            <div style="font-size:.65rem;font-weight:${esHoy?'800':'600'};color:${esHoy?'#7c3aed':'#374151'};margin-top:2px;text-align:center;">${d.dow}</div>
+            <div style="font-size:.6rem;color:${esHoy?'#7c3aed':'#9ca3af'};text-align:center;">${d.label}</div>
+            <div style="font-size:.7rem;font-weight:700;color:${n===0?'#d1d5db':color};margin-top:2px;">${n || ''}</div>
+        </div>`;
+    }).join('');
+
+    const leyenda = `
+        <div style="display:flex;gap:12px;margin-top:10px;font-size:.72rem;color:#6b7280;justify-content:center;">
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#22c55e;margin-right:3px;"></span>1–2 pedidos</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f59e0b;margin-right:3px;"></span>3–4 pedidos</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#ef4444;margin-right:3px;"></span>+5 pedidos</span>
+        </div>`;
+
+    let modal = document.getElementById('cargaSemanalModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'cargaSemanalModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;';
+        modal.addEventListener('click', (e: Event) => { if (e.target === modal) modal.style.display = 'none'; });
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;width:min(700px,95vw);max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+        <div style="padding:18px 22px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#f5f3ff,#ede9fe);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h2 style="font-size:1.05rem;font-weight:800;color:#4c1d95;margin:0;">📅 Carga de Producción — Próximos 14 Días</h2>
+                <p style="font-size:.75rem;color:#7c3aed;margin:3px 0 0;">Pedidos programados por fecha de entrega · Semáforo de saturación</p>
+            </div>
+            <button onclick="document.getElementById('cargaSemanalModal').style.display='none'"
+                style="width:30px;height:30px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:15px;line-height:1;">✕</button>
+        </div>
+        <div style="padding:16px 18px;overflow-y:auto;flex:1;">
+            <div style="display:flex;gap:2px;align-items:flex-end;">${barras}</div>
+            ${leyenda}
+        </div>
+    </div>`;
+
+    modal.style.display = 'flex';
+}
+(window as any).abrirCargaSemanal = abrirCargaSemanal;
+
+// ─── WA MASIVO PARA PEDIDOS EN "RETIRAR" ────────────────────────────────────
+function abrirWAMasivoRetirar() {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const _e = (window as any)._esc || ((s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+    const pendientes = (window.pedidos || []).filter((p: any) => {
+        if (p.status !== 'retirar') return false;
+        const fechaEstado = p.fechaUltimoEstado || p.updated_at || p.fechaCreacion;
+        if (!fechaEstado) return false;
+        const dias = Math.round((hoy.getTime() - new Date(fechaEstado).getTime()) / 86400000);
+        return dias >= 3;
+    });
+
+    let modal = document.getElementById('waMasivoModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'waMasivoModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;';
+        modal.addEventListener('click', (e: Event) => { if (e.target === modal) modal.style.display = 'none'; });
+        document.body.appendChild(modal);
+    }
+
+    const storeNameEl = document.querySelector('.sidebar-store-name') as HTMLElement | null;
+    const storeName = storeNameEl ? storeNameEl.textContent || 'Maneki Store' : 'Maneki Store';
+
+    const filas = pendientes.length === 0
+        ? '<p style="text-align:center;color:#9ca3af;padding:24px;font-size:.85rem;">No hay pedidos con más de 3 días esperando retiro 🎉</p>'
+        : pendientes.map((p: any) => {
+            const fechaEstado = p.fechaUltimoEstado || p.updated_at || p.fechaCreacion;
+            const dias = fechaEstado ? Math.round((hoy.getTime() - new Date(fechaEstado).getTime()) / 86400000) : '?';
+            const tel = (p.telefono || p.whatsapp || '').replace(/\D/g,'');
+            const saldo = (typeof calcSaldoPendiente === 'function') ? calcSaldoPendiente(p) : 0;
+            const msgBase = `Hola ${p.cliente||''}! 😊 Tu pedido ${p.folio||''} de ${storeName} ya está listo para retirar${saldo > 0 ? ` (saldo pendiente: $${saldo.toFixed(2)})` : ''} ✨`;
+            const waUrl = tel ? `https://wa.me/52${tel}?text=${encodeURIComponent(msgBase)}` : '';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f3f4f6;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:.82rem;font-weight:700;color:#374151;">${_e(p.folio)} · ${_e(p.cliente||'—')}</div>
+                    <div style="font-size:.75rem;color:#9ca3af;">${_e(p.concepto||'—')} · <span style="color:#f59e0b;font-weight:700;">${dias} días esperando</span>${saldo>0?` · <span style="color:#ef4444;">Saldo: $${saldo.toFixed(2)}</span>`:''}</div>
+                </div>
+                ${waUrl
+                    ? `<a href="${waUrl}" target="_blank" rel="noopener"
+                        style="padding:7px 14px;border-radius:10px;background:#25D366;color:white;text-decoration:none;font-size:.78rem;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:4px;">
+                        💬 WhatsApp
+                       </a>`
+                    : `<span style="font-size:.72rem;color:#9ca3af;">Sin teléfono</span>`
+                }
+            </div>`;
+        }).join('');
+
+    modal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;width:min(560px,95vw);max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+        <div style="padding:18px 22px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#dcfce7,#f0fdf4);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h2 style="font-size:1.05rem;font-weight:800;color:#166534;margin:0;">💬 WA Masivo — Pedidos en Retiro</h2>
+                <p style="font-size:.75rem;color:#4ade80;margin:3px 0 0;">${pendientes.length} pedido${pendientes.length!==1?'s':''} con +3 días esperando</p>
+            </div>
+            <button onclick="document.getElementById('waMasivoModal').style.display='none'"
+                style="width:30px;height:30px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:15px;line-height:1;">✕</button>
+        </div>
+        <div style="overflow-y:auto;flex:1;">${filas}</div>
+    </div>`;
+
+    modal.style.display = 'flex';
+}
+(window as any).abrirWAMasivoRetirar = abrirWAMasivoRetirar;
+
+// ─── CIERRE DE CAJA DEL DÍA ─────────────────────────────────────────────────
+function abrirCierreCaja() {
+    const hoy = (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const _e = (window as any)._esc || ((s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+
+    // Cobros del día: ingresos registrados hoy con pedidoId o folioOrigen
+    const cobrosHoy = (window.incomes || []).filter((i: any) =>
+        (i.date || i.fecha || '').startsWith(hoy) && (i.pedidoId || i.folioOrigen || i.fromPOS)
+    );
+
+    // Agrupar por método de pago
+    const metodos: Record<string, number> = {};
+    let totalDia = 0;
+    cobrosHoy.forEach((i: any) => {
+        const metodo = (i.method || i.metodo || 'Efectivo').trim();
+        const monto = Number(i.amount || i.monto || 0);
+        metodos[metodo] = (metodos[metodo] || 0) + monto;
+        totalDia += monto;
+    });
+
+    // Pedidos finalizados hoy
+    const finalizadosHoy = (window.pedidosFinalizados || []).filter((p: any) => {
+        const f = p.fechaFinalizado || p.fecha || '';
+        return f.startsWith(hoy);
+    });
+
+    const metodosHtml = Object.keys(metodos).length === 0
+        ? '<p style="color:#9ca3af;font-size:.8rem;text-align:center;padding:12px;">Sin cobros registrados hoy</p>'
+        : Object.entries(metodos).map(([m, total]) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid #f3f4f6;">
+                <span style="font-size:.85rem;font-weight:600;color:#374151;">${_e(m)}</span>
+                <span style="font-size:.95rem;font-weight:800;color:#059669;">$${(total as number).toFixed(2)}</span>
+            </div>`).join('');
+
+    const detailHtml = cobrosHoy.slice(0, 20).map((i: any) => `
+        <div style="display:flex;justify-content:space-between;padding:5px 12px;font-size:.77rem;color:#6b7280;">
+            <span>${_e(i.concept||i.concepto||i.folioOrigen||'—')}</span>
+            <span style="font-weight:700;color:#374151;">$${Number(i.amount||i.monto||0).toFixed(2)}</span>
+        </div>`).join('');
+
+    let modal = document.getElementById('cierreCajaModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'cierreCajaModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;';
+        modal.addEventListener('click', (e: Event) => { if (e.target === modal) modal.style.display = 'none'; });
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;width:min(520px,95vw);max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+        <div style="padding:18px 22px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#fef3c7,#fff7ed);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h2 style="font-size:1.05rem;font-weight:800;color:#92400e;margin:0;">💰 Cierre de Caja — ${hoy}</h2>
+                <p style="font-size:.75rem;color:#b45309;margin:3px 0 0;">${cobrosHoy.length} cobro${cobrosHoy.length!==1?'s':''} registrado${cobrosHoy.length!==1?'s':''} · ${finalizadosHoy.length} pedido${finalizadosHoy.length!==1?'s':''} finalizado${finalizadosHoy.length!==1?'s':''}</p>
+            </div>
+            <button onclick="document.getElementById('cierreCajaModal').style.display='none'"
+                style="width:30px;height:30px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:15px;line-height:1;">✕</button>
+        </div>
+        <div style="overflow-y:auto;flex:1;padding:4px 0;">
+            <div style="padding:12px 16px 4px;font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;">Por método de pago</div>
+            ${metodosHtml}
+            <div style="padding:8px 12px;background:#f0fdf4;margin:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-weight:800;font-size:.9rem;color:#065f46;">Total del día</span>
+                <span style="font-weight:800;font-size:1.2rem;color:#059669;">$${totalDia.toFixed(2)}</span>
+            </div>
+            ${cobrosHoy.length > 0 ? `
+            <div style="padding:12px 16px 4px;font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;">Detalle</div>
+            ${detailHtml}
+            ${cobrosHoy.length > 20 ? `<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px;">...y ${cobrosHoy.length - 20} más</p>` : ''}` : ''}
+        </div>
+    </div>`;
+
+    modal.style.display = 'flex';
+}
+(window as any).abrirCierreCaja = abrirCierreCaja;

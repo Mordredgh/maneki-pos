@@ -10,6 +10,7 @@ function _levenshtein(a: string, b: string): number {
                 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
     return dp[m][n];
 }
+(window as any)._levenshtein = _levenshtein;
 function _fuzzyMatch(query: string, target: string, threshold = 2): boolean {
     query = query.toLowerCase().trim();
     target = target.toLowerCase();
@@ -414,6 +415,8 @@ function renderInventoryTable() {
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→📦</button>
                     <button type="button" onclick="abrirMovimientoProducto('${pid}')" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📈</button>
+                    <button type="button" onclick="archivarProducto('${pid}')" title="${product.activo===false?'Desarchivar producto (activar)':'Archivar producto (ocultar)'}" aria-label="Archivar/Desarchivar"
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(107,114,128,0.25);background:rgba(107,114,128,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">${product.activo===false?'🔓':'📁'}</button>
                     <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
@@ -565,6 +568,8 @@ function renderInventoryTable() {
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>` : ''}
                     <button type="button" onclick="abrirMovimientoProducto('${pid}')" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📈</button>
+                    <button type="button" onclick="archivarProducto('${pid}')" title="${product.activo===false?'Desarchivar producto (activar)':'Archivar producto (ocultar)'}" aria-label="Archivar/Desarchivar"
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(107,114,128,0.25);background:rgba(107,114,128,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">${product.activo===false?'🔓':'📁'}</button>
                     <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
@@ -1542,6 +1547,7 @@ function _mkInvToolbarOnce() {
       <button type="button" onclick="abrirReabastecimiento()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Lista de reabastecimiento por proveedor">🛒 Reabastecimiento</button>
       <button type="button" onclick="mostrarDonutCategoria()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Valor de inventario por categoría">📊 Por categoría</button>
       <button type="button" onclick="sugerirStockMinimo()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Sugerir stock mínimo automático desde pedidos">🤖 Stock mínimo</button>
+      <button type="button" onclick="abrirTendenciaInventario()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Gráfica de tendencia del valor de inventario">📈 Tendencia</button>
     `;
     const filterInfo = document.getElementById('mkInvFilterInfo');
     if (filterInfo) filterInfo.parentElement!.insertBefore(btnRow, filterInfo);
@@ -1920,6 +1926,29 @@ function sugerirStockMinimo() {
 };
 
 // ── 5. Gráfica de movimientos por producto (últimos 90 días) ──────────────
+// ── Archivar / Desarchivar producto ───────────────────────────────────────────
+function archivarProducto(pid: string) {
+  const prod = (window.products || []).find((p: any) => String(p.id) === String(pid));
+  if (!prod) return;
+  const estaActivo = prod.activo !== false;
+  const accion = estaActivo ? 'archivar' : 'desarchivar';
+  const msg = estaActivo
+    ? `¿Archivar "${prod.name}"? Dejará de aparecer en inventario y búsquedas, pero se conserva el historial.`
+    : `¿Desarchivar "${prod.name}"? Volverá a aparecer en inventario.`;
+  if (typeof showConfirm === 'function') {
+    showConfirm(msg, estaActivo ? '📁 Archivar' : '🔓 Desarchivar').then((ok: boolean) => {
+      if (!ok) return;
+      prod.activo = !estaActivo;
+      prod.updatedAt = new Date().toISOString();
+      if (typeof saveProducts === 'function') saveProducts();
+      if (typeof renderInventoryTable === 'function') renderInventoryTable();
+      if (typeof manekiToastExport === 'function')
+        manekiToastExport(estaActivo ? `📁 "${prod.name}" archivado` : `🔓 "${prod.name}" desarchivado`, 'ok');
+    });
+  }
+}
+(window as any).archivarProducto = archivarProducto;
+
 function abrirMovimientoProducto(pid: string) {
   const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
   const prod = (window.products||[]).find((p: any) => String(p.id) === String(pid));
@@ -2059,6 +2088,94 @@ function abrirMovimientoProducto(pid: string) {
     ${movs.length > 30 ? `<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:10px;">...y ${movs.length - 30} más</p>` : ''}` : ''}
   `;
 
-  _mkInvModal('mkMovProd', `📈 Movimientos — ${_e(prod.name||'Producto')} (90d)`, html, '780px');
+  const htmlConBoton = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <button onclick="(function(){
+        var movs=${JSON.stringify(movs.map(m=>({
+          fecha:m.fecha||(m._ts?new Date(m._ts).toLocaleDateString('es-MX'):''),
+          hora:m.hora||'',tipo:m.tipo||'',
+          cantidad:m.cantidad||0,motivo:m.motivo||'',
+          stockAntes:m.stockAntes??'',stockDespues:m.stockDespues??''
+        })))};
+        var headers=['Fecha','Hora','Tipo','Cantidad','Motivo','Stock antes','Stock después'];
+        var csv=headers.join(',')+'\\n';
+        movs.forEach(function(m){
+          var row=[m.fecha,m.hora,m.tipo,m.cantidad,m.motivo,m.stockAntes,m.stockDespues];
+          csv+=row.map(function(v){return '\"'+String(v).replace(/\"/g,'\"\"')+'\"';}).join(',')+'\\n';
+        });
+        var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');
+        a.href=url;a.download='kardex-${_e(prod.name||'producto').replace(/[^a-zA-Z0-9]/g,'_')}-90d.csv';
+        a.click();URL.revokeObjectURL(url);
+        if(typeof manekiToastExport==='function')manekiToastExport('📥 Kardex exportado','ok');
+      })()"
+        style="padding:7px 14px;border-radius:10px;background:#3b82f6;color:#fff;border:none;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        📥 Exportar CSV
+      </button>
+    </div>
+    ${html}`;
+  _mkInvModal('mkMovProd', `📈 Movimientos — ${_e(prod.name||'Producto')} (90d)`, htmlConBoton, '780px');
 }
 (window as any).abrirMovimientoProducto = abrirMovimientoProducto;
+
+// ── Gráfica de tendencia del valor de inventario ──────────────────────────────
+function abrirTendenciaInventario() {
+  const snaps = (window as any).inventarioSnapshots || [];
+  if (snaps.length === 0) {
+    if (typeof manekiToastExport === 'function') manekiToastExport('Sin datos históricos aún. Los snapshots se generan automáticamente.', 'warn');
+    return;
+  }
+  const sorted = [...snaps].sort((a: any, b: any) => (a.fecha||'').localeCompare(b.fecha||''));
+  const labels = sorted.map((s: any) => s.fecha || '');
+  const valores = sorted.map((s: any) => Number(s.valorTotal || s.valor || 0));
+  const W = 540, H = 140;
+  const maxVal = Math.max(1, ...valores);
+  const minVal = Math.min(...valores);
+  const range = maxVal - minVal || 1;
+  const pts = valores.map((v, i) => {
+    const x = 20 + (i / Math.max(1, valores.length - 1)) * (W - 40);
+    const y = H - 20 - ((v - minVal) / range) * (H - 40);
+    return `${x},${y}`;
+  });
+  const polyline = `<polyline points="${pts.join(' ')}" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linejoin="round"/>`;
+  const dots = valores.map((v, i) => {
+    const x = 20 + (i / Math.max(1, valores.length - 1)) * (W - 40);
+    const y = H - 20 - ((v - minVal) / range) * (H - 40);
+    return `<circle cx="${x}" cy="${y}" r="3.5" fill="#6366f1" opacity=".9"><title>${labels[i]}: $${v.toLocaleString('es-MX')}</title></circle>`;
+  }).join('');
+  const xLabels = labels.filter((_: any, i: number) => i === 0 || i === labels.length - 1 || i % Math.ceil(labels.length / 6) === 0)
+    .map((lbl: string, i: number, arr: string[]) => {
+      const origIdx = labels.indexOf(lbl);
+      const x = 20 + (origIdx / Math.max(1, labels.length - 1)) * (W - 40);
+      return `<text x="${x}" y="${H - 2}" text-anchor="middle" font-size="9" fill="#9ca3af">${lbl.slice(5)}</text>`;
+    }).join('');
+  const ultimo = valores[valores.length - 1] || 0;
+  const primero = valores[0] || 0;
+  const variacion = primero > 0 ? ((ultimo - primero) / primero * 100).toFixed(1) : '—';
+  const varColor = Number(variacion) >= 0 ? '#10b981' : '#ef4444';
+  const html = `
+    <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:100px;background:#eff6ff;border-radius:10px;padding:10px 14px;text-align:center;">
+        <div style="font-size:1.2rem;font-weight:800;color:#4f46e5;">$${ultimo.toLocaleString('es-MX',{maximumFractionDigits:0})}</div>
+        <div style="font-size:.72rem;color:#6b7280;">Valor actual</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:#f0fdf4;border-radius:10px;padding:10px 14px;text-align:center;">
+        <div style="font-size:1.2rem;font-weight:800;color:${varColor};">${Number(variacion)>=0?'+':''}${variacion}%</div>
+        <div style="font-size:.72rem;color:#6b7280;">Variación total</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:#f9fafb;border-radius:10px;padding:10px 14px;text-align:center;">
+        <div style="font-size:1.2rem;font-weight:800;color:#374151;">${sorted.length}</div>
+        <div style="font-size:.72rem;color:#6b7280;">Snapshots</div>
+      </div>
+    </div>
+    <div style="background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:14px;">
+      <svg viewBox="0 0 ${W} ${H}" width="100%" height="140" style="display:block;overflow:visible;">
+        <line x1="20" y1="${H-20}" x2="${W-10}" y2="${H-20}" stroke="#e5e7eb" stroke-width="1"/>
+        ${polyline}${dots}${xLabels}
+      </svg>
+      <p style="font-size:.72rem;color:#9ca3af;text-align:right;margin-top:4px;">← Valor de inventario en costo · ${sorted.length} puntos</p>
+    </div>`;
+  _mkInvModal('mkTendenciaInv', '📈 Tendencia del Valor de Inventario', html, '640px');
+}
+(window as any).abrirTendenciaInventario = abrirTendenciaInventario;
