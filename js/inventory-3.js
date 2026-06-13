@@ -1,7 +1,7 @@
 "use strict";function _resetMpVariantesUI(){window._mpVariantes=[];const t=document.getElementById("mpUsaVariantes");t&&(t.checked=!1);const e=document.getElementById("mpVariantesPanel");e&&(e.style.display="none");const o=document.getElementById("mpVariantesSlider");o&&(o.style.background="#d1d5db");const n=document.getElementById("mpVariantesThumb");n&&(n.style.left="3px");const a=document.getElementById("mpStockRow");a&&(a.style.opacity="1");const i=document.getElementById("mpStock");i&&(i.readOnly=!1,i.value=0);const r=document.getElementById("mpVariantesList");r&&(r.innerHTML='<span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>');const d=document.getElementById("mpVariantesStockTotal");d&&(d.style.display="none")}function closeMateriaPrimaModal(){typeof closeModal=="function"&&closeModal("mpModal");const t=document.getElementById("mpForm");t&&t.reset(),window.modoEdicion=!1,window.edicionProductoId=null,window.currentProductImage=null,window.currentProductImageFile=null,window._mpTagsActuales=[],_resetMpVariantesUI(),renderMpTags()}window.closeMateriaPrimaModal=closeMateriaPrimaModal;function renderMpTags(){const t=document.getElementById("mpTagsGrid");if(!t)return;t.innerHTML=TAGS_MATERIA_PRIMA.map(o=>{const n=(window._mpTagsActuales||[]).includes(o);return`<button type="button" onclick="toggleMpTag('${o}')"
             id="mptag-${o.replace(/[^a-zA-Z0-9]/g,"")}"
             style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
-                border:1.5px solid ${n?"#C5A572":"#e5e7eb"};
+                border:1.5px solid ${n?"#C5973B":"#e5e7eb"};
                 background:${n?"#FFF9F0":"#fff"};
                 color:${n?"#92400e":"#6b7280"};">
             ${o}
@@ -55,7 +55,7 @@
                         onkeydown="if(event.key==='Enter'){event.preventDefault();agregarMpTagCustom();}"
                         class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
                     <button type="button" onclick="agregarMpTagCustom()"
-                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">+ Agregar</button>
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5973B">+ Agregar</button>
                 </div>
                 <div id="mpTagsCustomSelected" class="flex flex-wrap gap-2 mt-2"></div>
             </div>

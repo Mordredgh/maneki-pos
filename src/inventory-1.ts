@@ -1,4 +1,4 @@
-// ============== INVENTORY MODULE ==============
+﻿// ============== INVENTORY MODULE ==============
 // ── Fallback: showSection puede no estar definida todavía al cargar este módulo ──
 // design-system.js la define más tarde — este fallback evita ReferenceError
 if (typeof window.showSection === 'undefined') {
@@ -734,7 +734,7 @@ function invInlineEditPrice(id, td) {
     const input = document.createElement('input');
     input.type = 'number'; input.min = '0'; input.step = '0.01';
     input.value = prev.toFixed(2);
-    input.style.cssText = 'width:80px;padding:2px 6px;border:1.5px solid #C5A572;border-radius:6px;font-size:.85rem;text-align:center;font-weight:700;';
+    input.style.cssText = 'width:80px;padding:2px 6px;border:1.5px solid #C5973B;border-radius:6px;font-size:.85rem;text-align:center;font-weight:700;';
     const commit = () => {
         const nv = parseFloat(input.value);
         if (!isNaN(nv) && nv >= 0 && nv !== prev) {
@@ -969,7 +969,7 @@ function ptRenderGaleria() {
         div.style = 'position:relative;width:120px;height:120px;';
         div.dataset.fileIdx = i;
         const img = document.createElement('img');
-        img.style = 'width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #C5A572;opacity:.85;';
+        img.style = 'width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #C5973B;opacity:.85;';
         const reader = new FileReader();
         reader.onload = ev => { img.src = ev.target.result; };
         reader.readAsDataURL(file);
@@ -1444,7 +1444,7 @@ function imprimirEtiquetasBatch(ids?: string[]) {
                 ${p.sku ? `<div style="font-size:7pt;color:#9ca3af;margin-top:1mm;">SKU: ${_esc(p.sku)}</div>` : ''}
             </div>
             <div style="display:flex;justify-content:space-between;align-items:flex-end;">
-                <div style="font-size:16pt;font-weight:900;color:#C5A572;">$${Number(p.price).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:2})}</div>
+                <div style="font-size:16pt;font-weight:900;color:#C5973B;">$${Number(p.price).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:2})}</div>
                 <div style="font-size:7pt;color:#9ca3af;text-align:right;">${_esc(p.category || p.categoria || '')}</div>
             </div>
         </div>`).join('');
@@ -1460,7 +1460,7 @@ function imprimirEtiquetasBatch(ids?: string[]) {
             @media print { .no-print { display:none; } }
         </style>
     </head><body>
-        <div class="header no-print">${prods.length} etiquetas · Maneki Store · <button onclick="window.print()" style="padding:4px 12px;background:#C5A572;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:8pt;">🖨️ Imprimir</button></div>
+        <div class="header no-print">${prods.length} etiquetas · Maneki Store · <button onclick="window.print()" style="padding:4px 12px;background:#C5973B;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:8pt;">🖨️ Imprimir</button></div>
         ${etiquetasHTML}
     </body></html>`);
     win.document.close();

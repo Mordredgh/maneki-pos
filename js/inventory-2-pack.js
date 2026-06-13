@@ -12,7 +12,7 @@
                 <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Nombre del Pack *</label>
                 <input type="text" id="packNombre" placeholder="Ej: Pack Boxer + Calcetas"
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;box-sizing:border-box;"
-                    onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                    onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
             </div>
 
             <!-- PRODUCTOS DEL PACK -->
@@ -20,7 +20,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                     <label style="font-size:.85rem;font-weight:700;color:#374151;">\u{1F4E6} Productos en el Pack</label>
                     <button type="button" onclick="packAbrirSelectorPT()"
-                        style="padding:6px 14px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
+                        style="padding:6px 14px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         + Agregar producto
                     </button>
                 </div>
@@ -74,7 +74,7 @@
                     <input type="number" id="packPrecio" step="0.01" min="0" placeholder="0.00"
                         oninput="packMostrarMargen()"
                         style="width:100%;padding:12px 16px 12px 28px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;box-sizing:border-box;"
-                        onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
                 <div id="packMargenInfo" style="font-size:.8rem;margin-top:6px;min-height:18px;"></div>
                 <!-- Sugerir por margen -->
@@ -90,7 +90,7 @@
                     <label style="display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:6px;">SKU (opcional)</label>
                     <input type="text" id="packSku" placeholder="Auto-generado"
                         style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;box-sizing:border-box;"
-                        onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
                 <div>
                     <label style="display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:6px;">Categor\xEDa (opcional)</label>
@@ -114,7 +114,7 @@
             </div>
 
             <button type="button" id="packSubmitBtn" onclick="guardarPack()"
-                style="width:100%;padding:14px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.02em;">
+                style="width:100%;padding:14px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.02em;">
                 \u2705 Guardar Pack
             </button>
         </form>
@@ -140,7 +140,7 @@
                     <input type="number" min="1" value="${t.qty}"
                         onchange="packActualizarQty('${t.productoId}', this.value)"
                         style="width:46px;padding:4px 6px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.82rem;text-align:center;outline:none;"
-                        onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
                 <div style="text-align:center;">
                     <div style="font-size:.68rem;color:#9ca3af;margin-bottom:2px;">Costo pack</div>
@@ -149,7 +149,7 @@
                         <input type="number" min="0" step="0.01" value="${Number(t.costoCustom).toFixed(2)}"
                             onchange="packActualizarCosto('${t.productoId}', this.value)"
                             style="width:72px;padding:4px 6px 4px 16px;border:1.5px solid #fde68a;border-radius:8px;font-size:.82rem;outline:none;"
-                            onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#fde68a'">
+                            onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#fde68a'">
                     </div>
                 </div>
                 <button type="button" onclick="packQuitarComponente('${t.productoId}')"

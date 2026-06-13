@@ -1,4 +1,4 @@
-// ============== DASHBOARD ==============
+﻿// ============== DASHBOARD ==============
 // Shim: calcSaldoPendiente vive en balance.bundle (lazy). Usar _csp() en dashboard.
 const _csp = (p: any): number => typeof (window as any).calcSaldoPendiente === 'function'
     ? (window as any).calcSaldoPendiente(p)
@@ -1004,7 +1004,7 @@ function renderResumenDia() {
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;">
                 <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;cursor:pointer;transition:box-shadow .15s;" class="hover:shadow-md" onclick="showSection('pedidos')" title="Ver pedidos">
-                    <p style="font-size:1.4rem;font-weight:900;color:#C5A572;margin:0;">${nActivos}</p>
+                    <p style="font-size:1.4rem;font-weight:900;color:#C5973B;margin:0;">${nActivos}</p>
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">pedidos activos</p>
                 </div>
                 <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;cursor:pointer;transition:box-shadow .15s;" class="hover:shadow-md" onclick="showSection('pedidos');typeof setPedidoFiltro==='function'&&setPedidoFiltro('entregado')" title="Ver entregas de hoy">
@@ -1065,7 +1065,7 @@ function renderAccesosRapidos() {
         btn.innerHTML = `<span style="font-size:1.5rem;line-height:1;">${a.emoji}</span><span style="font-size:.68rem;font-weight:700;color:#374151;text-align:center;line-height:1.2;">${a.label}</span>`;
         btn.title = a.label;
         btn.addEventListener('click', a.fn);
-        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#C5A572'; btn.style.boxShadow = '0 2px 8px rgba(197,165,114,.18)'; });
+        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#C5973B'; btn.style.boxShadow = '0 2px 8px rgba(197,165,114,.18)'; });
         btn.addEventListener('mouseleave', () => { btn.style.borderColor = '#f3f4f6'; btn.style.boxShadow = ''; });
         container.appendChild(btn);
     });

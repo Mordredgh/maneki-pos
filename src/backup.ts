@@ -122,8 +122,9 @@ function _activarBackupPendiente(data, fileName) {
     // SEC-4: Validar versión del backup antes de habilitar la restauración
     const EXPECTED_VERSION = '2.1';
     if (!data.version) {
-        (window as any).manekiToastExport?.('⚠️ Backup sin versión — puede ser muy antiguo. Revisa los datos restaurados.', 'warn') ||
-        alert('⚠️ Backup sin versión detectada. Puede estar incompleto.');
+        if (typeof (window as any).manekiToastExport === 'function') {
+            (window as any).manekiToastExport('⚠️ Backup sin versión — puede ser muy antiguo. Revisa los datos restaurados.', 'warn');
+        }
     } else if (data.version !== EXPECTED_VERSION && data.version < EXPECTED_VERSION) {
         (window as any).manekiToastExport?.(`⚠️ Backup versión ${data.version} (actual: ${EXPECTED_VERSION}) — algunos datos pueden faltar`, 'warn');
     }

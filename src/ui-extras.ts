@@ -1,4 +1,4 @@
-// Guard: _esc puede estar definida globalmente por otro módulo,
+﻿// Guard: _esc puede estar definida globalmente por otro módulo,
 // pero definimos una local por si este archivo carga antes
 if (typeof _esc !== 'function') {
     window._esc = function(s) {
@@ -1615,7 +1615,7 @@ function manekiUndoToast(msg, undoFn, duracion) {
         <div class="mk-toast-body" style="flex:1">
             <div class="mk-toast-msg">${msg}</div>
         </div>
-        <button id="${_id}" style="background:#C5A572;color:white;border:none;border-radius:8px;padding:6px 16px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;">Deshacer</button>
+        <button id="${_id}" style="background:#C5973B;color:white;border:none;border-radius:8px;padding:6px 16px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;">Deshacer</button>
         <div class="mk-toast-progress" style="animation-duration:${duracion}ms"></div>`;
     container.appendChild(toast);
     let _undone = false;
@@ -1642,7 +1642,7 @@ window.manekiUndoToast = manekiUndoToast;
 .mk-skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:800px 100%;animation:mkShimmer 1.5s infinite;border-radius:8px;min-height:20px}
 #mk-loading-overlay{position:fixed;inset:0;background:rgba(250,248,245,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}
 #mk-loading-overlay.fade-out{opacity:0;pointer-events:none}
-.mk-loading-spinner{width:44px;height:44px;border:3.5px solid #e5e7eb;border-top-color:#C5A572;border-radius:50%;animation:spin 0.8s linear infinite}
+.mk-loading-spinner{width:44px;height:44px;border:3.5px solid #e5e7eb;border-top-color:#C5973B;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}`;
     document.head.appendChild(style);
 

@@ -1,4 +1,4 @@
-function _resetMpVariantesUI() {
+﻿function _resetMpVariantesUI() {
     window._mpVariantes = [];
     const chk = document.getElementById('mpUsaVariantes');
     if (chk) chk.checked = false;
@@ -38,7 +38,7 @@ function renderMpTags() {
         return `<button type="button" onclick="toggleMpTag('${tag}')"
             id="mptag-${tag.replace(/[^a-zA-Z0-9]/g,'')}"
             style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
-                border:1.5px solid ${active ? '#C5A572' : '#e5e7eb'};
+                border:1.5px solid ${active ? '#C5973B' : '#e5e7eb'};
                 background:${active ? '#FFF9F0' : '#fff'};
                 color:${active ? '#92400e' : '#6b7280'};">
             ${tag}
@@ -143,7 +143,7 @@ function injectMpModal() {
                         onkeydown="if(event.key==='Enter'){event.preventDefault();agregarMpTagCustom();}"
                         class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
                     <button type="button" onclick="agregarMpTagCustom()"
-                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5A572">+ Agregar</button>
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5973B">+ Agregar</button>
                 </div>
                 <div id="mpTagsCustomSelected" class="flex flex-wrap gap-2 mt-2"></div>
             </div>

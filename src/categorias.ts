@@ -1,10 +1,10 @@
-// ============== CATEGORIES MODULE ==============
+﻿// ============== CATEGORIES MODULE ==============
         
         function renderCategoriesGrid() {
             const grid = document.getElementById('categoriesGrid');
             grid.innerHTML = categories.map(category => {
                 const productCount = products.filter(p => p.category === category.id).length;
-                const escColor = _esc(category.color || '#C5A572');
+                const escColor = _esc(category.color || '#C5973B');
                 const escCatId = _esc(category.id);
                 // Use data-catid attribute to avoid JS injection from special chars in category.id
                 return `
@@ -21,7 +21,7 @@
                             </div>
                         </div>
                         <h3 class="text-lg font-bold text-gray-800 mb-1">${_esc(category.name)}</h3>
-                        <p class="text-sm font-medium" style="color: ${category.color || '#C5A572'}">${productCount} producto${productCount !== 1 ? 's' : ''}</p>
+                        <p class="text-sm font-medium" style="color: ${category.color || '#C5973B'}">${productCount} producto${productCount !== 1 ? 's' : ''}</p>
                     </div>
                 `;
             }).join('');
@@ -67,7 +67,7 @@
                 id = baseId + '_' + suffix++;
             }
             
-            const color = document.getElementById('categoryColor')?.value || '#C5A572';
+            const color = document.getElementById('categoryColor')?.value || '#C5973B';
             const newCategory = {
                 id: id,
                 name: name,
@@ -108,10 +108,10 @@
             document.getElementById('editCategoryEmoji').value = cat.emoji || '📦';
             document.getElementById('editSelectedEmojiDisplay').textContent = cat.emoji || '📦';
             document.getElementById('editEmojiSearch').value = '';
-            document.getElementById('editCategoryColor').value = cat.color || '#C5A572';
+            document.getElementById('editCategoryColor').value = cat.color || '#C5973B';
             openModal('editCategoryModal');
             setTimeout(() => {
-                selectEditColor(cat.color || '#C5A572');
+                selectEditColor(cat.color || '#C5973B');
                 renderEditEmojiGrid();
             }, 50);
         }
@@ -156,7 +156,7 @@
             document.getElementById('editSelectedEmojiDisplay').textContent = emoji;
             document.querySelectorAll('.edit-emoji-btn').forEach(btn => {
                 btn.style.background = btn.textContent.trim() === emoji ? '#FFF9F0' : '';
-                btn.style.border = btn.textContent.trim() === emoji ? '2px solid #C5A572' : '';
+                btn.style.border = btn.textContent.trim() === emoji ? '2px solid #C5973B' : '';
             });
         }
 
@@ -166,7 +166,7 @@
             const id = document.getElementById('editCategoryId').value;
             const name = document.getElementById('editCategoryName').value.trim();
             const emoji = document.getElementById('editCategoryEmoji').value || '📦';
-            const color = document.getElementById('editCategoryColor').value || '#C5A572';
+            const color = document.getElementById('editCategoryColor').value || '#C5973B';
             if (!name) { manekiToastExport('⚠️ El nombre no puede estar vacío', 'warn'); return; }
             const idx = categories.findIndex(c => c.id === id);
             if (idx === -1) return;

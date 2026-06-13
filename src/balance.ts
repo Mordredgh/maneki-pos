@@ -1,4 +1,4 @@
-// ============== BALANCE MODULE ==============
+﻿// ============== BALANCE MODULE ==============
 
 // FIX 1 — _fechaLocal() removed: use global _fechaHoy() (config.js) directly
 // (having a local _fechaLocal() here caused a collision with ui-extras.ts's
@@ -193,7 +193,7 @@ function _renderGraficaCategorias(gastosMes, mesStr) {
     const total = Object.values(mapa).reduce((s, v) => s + v, 0);
     const sorted = Object.entries(mapa).sort((a, b) => b[1] - a[1]);
 
-    const colores = ['#C5A572','#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#14b8a6'];
+    const colores = ['#C5973B','#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#14b8a6'];
     const barras = sorted.map(([cat, monto], i) => {
         const pct = total > 0 ? (monto / total * 100).toFixed(1) : 0;
         const color = colores[i % colores.length];
@@ -549,19 +549,19 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             procesarGastosRecurrentes();
             procesarIngresosRecurrentes();
 
-            // BUG-BAL-01 FIX: excluir incomes marcados con fromPOS:true para no duplicar con ventas directas.
-            // BUG-BAL-02 FIX: excluir incomes de abonos de pedidos (tienen folio de pedido guardado)
-            //   ya que esos pedidos se contabilizan via totalPedidosFin cuando se finalizan.
-            // incomes "manuales" = entradas sin fromPOS y sin folioOrigen de pedido
+            // MODELO DE CONTABILIDAD (C3-FIX):
+            // · totalIncomeManual = incomes manuales sin fromPOS y sin folioOrigen
+            //   Los incomes con folioOrigen (anticipos/abonos) ya están dentro de p.total;
+            //   excluirlos aquí evita doble conteo.
+            // · totalPedidosFin = p.total de pedidosFinalizados SIN filtro por foliosEnIncomes.
+            //   Bug anterior: si un pedido tenía income con folioOrigen, caía fuera de AMBAS fuentes → ingreso perdido.
             const listaIncomes = (window.incomes||[]);
             const totalIncomeManual = listaIncomes
                 .filter(i => !i.fromPOS && !i.folioOrigen)
                 .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
 
-            // Pedidos finalizados (total cobrado real) — excluye los que ya están en incomes por folio
-            const foliosEnIncomes = new Set(listaIncomes.map(i => i.folio || i.folioOrigen).filter(Boolean));
+            // Pedidos finalizados: p.total es el ingreso completo independiente de cómo se pagó
             const totalPedidosFin = (window.pedidosFinalizados||[])
-                .filter(p => !foliosEnIncomes.has(p.folio))
                 .reduce((sum, p) => sum + Number(p.total||0), 0);
 
             // Ventas directas — desde salesHistory (sin type y no canceladas)
@@ -653,7 +653,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             <div class="mk-tx-expense flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(expense.concept)}</p>
-                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#C5A572;font-weight:600">${_esc(expense.categoria)}</span>` : ''}${expense.etiqueta ? ' ' + _etiquetaBadge(expense.etiqueta) : ''}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">↺</span>' : ''}</p>
+                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#C5973B;font-weight:600">${_esc(expense.categoria)}</span>` : ''}${expense.etiqueta ? ' ' + _etiquetaBadge(expense.etiqueta) : ''}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">↺</span>' : ''}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="font-bold text-red-600">-$${Number(expense.amount||0).toFixed(2)}</span>

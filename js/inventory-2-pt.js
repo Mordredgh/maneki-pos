@@ -21,7 +21,7 @@
             <div style="background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px;padding:16px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                     <label style="font-size:.85rem;font-weight:700;color:#374151;">\u{1F5BC}\uFE0F Galer\xEDa de fotos <span style="font-weight:400;color:#9ca3af;">(hasta 20)</span></label>
-                    <label style="padding:6px 14px;background:#C5A572;color:#fff;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
+                    <label style="padding:6px 14px;background:#C5973B;color:#fff;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         + Agregar fotos
                         <input type="file" id="ptGaleriaInput" accept="image/*" multiple style="display:none;" onchange="ptAgregarFotosGaleria(this.files)">
                     </label>
@@ -36,7 +36,7 @@
                 <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Nombre del Producto *</label>
                 <input type="text" id="ptNombre" required placeholder="Ej: Playera Personalizada"
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;box-sizing:border-box;"
-                    onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                    onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
             </div>
 
             <!-- MATERIAS PRIMAS Y SERVICIOS QUE LO CONFORMAN -->
@@ -71,7 +71,7 @@
                 <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">C\xF3digo SKU</label>
                 <input type="text" id="ptSku" placeholder="Se generar\xE1 autom\xE1ticamente si est\xE1 vac\xEDo"
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;box-sizing:border-box;"
-                    onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                    onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
             </div>
 
             <!-- CATEGOR\xCDA -->
@@ -88,13 +88,13 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;">
                     <input type="text" id="ptVarTipo" placeholder="Tipo: Talla, Color..."
                         style="padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;"
-                        onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
                     <input type="text" id="ptVarValor" placeholder="Valor: M, Rojo..."
                         style="padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;"
-                        onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'"
+                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'"
                         onkeydown="if(event.key==='Enter'){event.preventDefault();agregarVariantePt();}">
                     <button type="button" onclick="agregarVariantePt()"
-                        style="padding:10px 14px;background:#C5A572;color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;">+ Agregar</button>
+                        style="padding:10px 14px;background:#C5973B;color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;">+ Agregar</button>
                 </div>
                 <div id="ptVariantsList" style="display:flex;flex-direction:column;gap:6px;">
                     <p style="font-size:.8rem;color:#9ca3af;">Sin variantes agregadas</p>
@@ -131,7 +131,7 @@
                             <input type="number" id="ptMargenCustom" placeholder="%" min="0" max="999"
                                 style="width:70px;padding:6px 10px;border:1.5px solid #fde68a;border-radius:8px;font-size:.85rem;outline:none;">
                             <button type="button" onclick="ptAplicarMargenCustom()"
-                                style="padding:6px 12px;background:#C5A572;color:#fff;border:none;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;">Aplicar</button>
+                                style="padding:6px 12px;background:#C5973B;color:#fff;border:none;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;">Aplicar</button>
                         </div>
                     </div>
                 </div>
@@ -143,8 +143,8 @@
                 <div style="position:relative;">
                     <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-weight:600;">$</span>
                     <input type="number" id="ptPrecio" required step="0.01" min="0"
-                        style="width:100%;padding:12px 16px 12px 28px;border:2px solid #C5A572;border-radius:12px;font-size:1.1rem;font-weight:700;outline:none;box-sizing:border-box;color:#1a0533;"
-                        onfocus="this.style.borderColor='#E8B84B'" onblur="this.style.borderColor='#C5A572'">
+                        style="width:100%;padding:12px 16px 12px 28px;border:2px solid #C5973B;border-radius:12px;font-size:1.1rem;font-weight:700;outline:none;box-sizing:border-box;color:#1a0533;"
+                        onfocus="this.style.borderColor='#E8B84B'" onblur="this.style.borderColor='#C5973B'">
                 </div>
                 <div id="ptMargenInfo" style="font-size:.78rem;color:#6b7280;margin-top:6px;"></div>
             </div>
@@ -154,7 +154,7 @@
                 <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">\u{1F3AF} Piezas por hoja / unidad de MP <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
                 <input type="number" id="ptRendimientoPorHoja" min="1" placeholder="Ej: 12 (stickers que caben en 1 hoja)"
                     style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;outline:none;box-sizing:border-box;"
-                    onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                    onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
                 <p style="font-size:.72rem;color:#9ca3af;margin-top:5px;">Si vendes por cantidad (ej. 100 stickers), el sistema divide entre este n\xFAmero para calcular cu\xE1ntas hojas descontar del inventario y calcular el costo.</p>
             </div>
 
@@ -164,7 +164,7 @@
                 <div style="display:flex;align-items:center;gap:10px;">
                     <input type="number" id="ptStockMin" min="0" step="1" value="5"
                         style="width:100px;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;outline:none;box-sizing:border-box;"
-                        onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
                     <span style="font-size:.8rem;color:#6b7280;">Se te notificar\xE1 cuando el stock baje de este n\xFAmero</span>
                 </div>
             </div>
@@ -185,7 +185,7 @@
             </div>
 
             <button type="button" id="ptSubmitBtn" onclick="guardarProductoTerminado()"
-                style="width:100%;padding:16px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-top:8px;letter-spacing:.02em;">
+                style="width:100%;padding:16px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-top:8px;letter-spacing:.02em;">
                 \u2705 Agregar Producto
             </button>
         </form>
@@ -202,7 +202,7 @@
                     </div>
                 </div>`)}},80)}window.injectPtModal=injectPtModal;function poblarCategoriasPt(){const e=document.getElementById("ptCategory");if(!e)return;const t=window.categories||[];e.innerHTML=t.map(o=>`<option value="${_esc(o.id)}">${o.emoji||""} ${_esc(o.name)}</option>`).join("")}window.poblarCategoriasPt=poblarCategoriasPt;function renderTagsPt(){const e=document.getElementById("ptTagsGrid");e&&(e.innerHTML=TAGS_PT.map(t=>{const o=(window._ptTagsActuales||[]).includes(t);return`<button type="button" onclick="toggleTagPt('${t}')"
             style="padding:5px 14px;border-radius:99px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;
-            border:1.5px solid ${o?"#C5A572":"#e5e7eb"};background:${o?"#FFF9F0":"#fff"};color:${o?"#92400e":"#6b7280"};">
+            border:1.5px solid ${o?"#C5973B":"#e5e7eb"};background:${o?"#FFF9F0":"#fff"};color:${o?"#92400e":"#6b7280"};">
             ${t}</button>`}).join(""))}window.renderTagsPt=renderTagsPt;function toggleTagPt(e){window._ptTagsActuales=window._ptTagsActuales||[];const t=window._ptTagsActuales.indexOf(e);t>-1?window._ptTagsActuales.splice(t,1):window._ptTagsActuales.push(e),renderTagsPt()}window.toggleTagPt=toggleTagPt;function poblarCategoriasPv(){const e=document.getElementById("pvCategory");if(!e)return;const o=(window.categories||[]).map(i=>`<option value="${_esc(i.id)}">${i.emoji||""} ${_esc(i.name)}</option>`).join("");e.innerHTML='<option value="">Sin categor\xEDa</option>'+o}window.poblarCategoriasPv=poblarCategoriasPv;function renderTagsPv(){const e=document.getElementById("pvTagsGrid");e&&(e.innerHTML=TAGS_PT.map(t=>{const o=(window._pvTagsActuales||[]).includes(t);return`<button type="button" onclick="toggleTagPv('${t}')"
             style="padding:5px 14px;border-radius:99px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;
             border:1.5px solid ${o?"#7c3aed":"#e5e7eb"};background:${o?"#f5f3ff":"#fff"};color:${o?"#7c3aed":"#6b7280"};">

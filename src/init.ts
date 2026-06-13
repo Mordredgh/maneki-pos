@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
     'use strict';
 
     // ── SW_UPDATED: toast cuando el service worker activa una nueva versión ──
@@ -103,7 +103,7 @@
         if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'mk-confetti-canvas'; canvas.style.cssText='position:fixed;inset:0;z-index:99999;pointer-events:none;'; document.body.appendChild(canvas); }
         canvas.width = innerWidth; canvas.height = innerHeight; canvas.style.display = 'block';
         const ctx = canvas.getContext('2d');
-        const colors = ['#C5A572','#E8B84B','#F5D080','#9B7BC4','#C4A8E0','#F2A97E','#10b981','#ef4444','#3b82f6'];
+        const colors = ['#C5973B','#E8B84B','#F5D080','#9B7BC4','#C4A8E0','#F2A97E','#10b981','#ef4444','#3b82f6'];
         const pieces = Array.from({length:80}, ()=>({
             x: Math.random()*innerWidth, y: -10-Math.random()*40,
             w: 4+Math.random()*5, h: 4+Math.random()*5,
@@ -431,7 +431,7 @@
         // Color determinístico basado en el nombre
         let hash = 0;
         for (let i=0; i<n.length; i++) hash = n.charCodeAt(i) + ((hash<<5)-hash);
-        const colors = ['#C5A572','#9B7BC4','#F2A97E','#10b981','#3b82f6','#ef4444','#f59e0b','#06b6d4','#8b5cf6','#ec4899'];
+        const colors = ['#C5973B','#9B7BC4','#F2A97E','#10b981','#3b82f6','#ef4444','#f59e0b','#06b6d4','#8b5cf6','#ec4899'];
         const bg = colors[Math.abs(hash) % colors.length];
         return `<span class="mk-avatar" style="background:${bg}">${initials}</span>`;
     };

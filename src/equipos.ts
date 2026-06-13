@@ -1,4 +1,4 @@
-// ============== EQUIPOS / ROI ==============
+﻿// ============== EQUIPOS / ROI ==============
 
 let equipos = [];
 let roiHistorial = [];
@@ -121,7 +121,7 @@ function renderEquiposGrid() {
             <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
             <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
             <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
-            <button onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5A572;">+ Agregar equipo</button>
+            <button onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5973B;">+ Agregar equipo</button>
         </div>`;
         return;
     }
@@ -135,7 +135,7 @@ function renderEquiposGrid() {
         const faltaMeta = Math.max(0, eq.metaReemplazo - eq.recuperado);
         const invertida = pctRecuperado >= 100;
 
-        const barColorInv = invertida ? '#10B981' : '#C5A572';
+        const barColorInv = invertida ? '#10B981' : '#C5973B';
         const barColorMeta = pctMeta >= 100 ? '#10B981' : '#8B5CF6';
 
         // MEJ-4: barra de progreso metaMensual
@@ -332,7 +332,7 @@ function _ensureRoiConceptoField() {
     div.innerHTML = `<label style="font-size:.78rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Concepto del pago (opcional)</label>
         <input type="text" id="roiConceptoPago" placeholder="Ej: ROI pedido MAN-045"
                style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;box-sizing:border-box;"
-               onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'">`;
+               onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">`;
     lista.insertAdjacentElement('afterend', div);
 }
 
@@ -391,7 +391,7 @@ function actualizarCalculoRoi() {
     document.querySelectorAll('.roi-equipo-check').forEach(ch => {
         const label = ch.closest('label');
         if (ch.checked) {
-            label.style.borderColor = '#C5A572';
+            label.style.borderColor = '#C5973B';
             label.style.background = '#FFF9F0';
         } else {
             label.style.borderColor = '';
@@ -447,7 +447,7 @@ function abrirRoiManualModal() {
     if (lista) {
         lista.innerHTML = equipos.map(eq => `
             <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-amber-50" style="border-color:#e5e7eb;">
-                <input type="checkbox" class="roi-manual-check" value="${eq.id}" onchange="calcRoiManual()" style="accent-color:#C5A572;">
+                <input type="checkbox" class="roi-manual-check" value="${eq.id}" onchange="calcRoiManual()" style="accent-color:#C5973B;">
                 <span class="text-lg">${eq.emoji || '🔧'}</span>
                 <span class="text-sm font-semibold text-gray-700">${_esc(eq.nombre)}</span>
             </label>`).join('');
@@ -475,7 +475,7 @@ function calcRoiManual() {
     if (porEl) porEl.textContent = '$' + porEquipo.toLocaleString('es-MX', {minimumFractionDigits:2});
     document.querySelectorAll('.roi-manual-check').forEach(ch => {
         const label = ch.closest('label');
-        if (ch.checked) { label.style.borderColor = '#C5A572'; label.style.background = '#FFF9F0'; }
+        if (ch.checked) { label.style.borderColor = '#C5973B'; label.style.background = '#FFF9F0'; }
         else { label.style.borderColor = ''; label.style.background = ''; }
     });
 }
@@ -626,7 +626,7 @@ function switchEquipoTab(tab) {
         const panel = document.getElementById('equipoTabPanel-' + t);
         if (!btn || !panel) return;
         if (t === tab) {
-            btn.style.background = '#C5A572';
+            btn.style.background = '#C5973B';
             btn.style.color = 'white';
             panel.classList.remove('hidden');
         } else {

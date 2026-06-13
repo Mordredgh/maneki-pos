@@ -759,7 +759,7 @@ function _renderSugerenciaReorden(producto, modal) {
             <div style="background:#FEF3C7;border-radius:8px;padding:6px 8px;text-align:center;">
                 <p style="font-size:.65rem;color:#92400E;margin:0;">Lead time</p>
                 <p style="font-size:.9rem;font-weight:700;color:#78350F;margin:2px 0 0;">${leadTimeDias}d
-                    <button onclick="(function(){var v=prompt('Días que tarda tu proveedor en entregar:','${leadTimeDias}');if(v&&!isNaN(v)){var p=(window.products||[]).find(x=>String(x.id)==='${producto.id}');if(p){p.leadTime=parseInt(v);if(typeof saveProducts==='function')saveProducts();manekiToastExport('✅ Lead time guardado: '+v+' días','ok');}}})()"
+                    <button onclick="_mkEditLeadTime('${producto.id}',${leadTimeDias})"
                        style="font-size:.6rem;background:none;border:none;cursor:pointer;color:#B45309;">✏️</button>
                 </p>
             </div>
@@ -910,5 +910,40 @@ function calcularDisponibilidadDesdeMP(product, pMap?: Map<string, any>, sCache?
     return { piezas: minPiezas === Infinity ? 0 : minPiezas, detalle };
 }
 window.calcularDisponibilidadDesdeMP = calcularDisponibilidadDesdeMP;
+
+// ── Lead time editor (reemplaza prompt() nativo) ───────────────────────────
+async function _mkEditLeadTime(productoId: string, leadTimeActual: number) {
+    // Crear mini-modal inline para pedir el lead time sin usar prompt() nativo
+    const prev = document.getElementById('_mkLeadTimeModal');
+    if (prev) prev.remove();
+    const div = document.createElement('div');
+    div.id = '_mkLeadTimeModal';
+    div.innerHTML = `
+        <div style="position:fixed;inset:0;background:#0008;z-index:9999;display:flex;align-items:center;justify-content:center;">
+            <div style="background:#fff;border-radius:16px;padding:28px 32px;width:320px;box-shadow:0 8px 32px #0003;">
+                <h3 style="font-size:1rem;font-weight:700;margin:0 0 12px;">⏱ Lead Time del Proveedor</h3>
+                <p style="font-size:.85rem;color:#6b7280;margin:0 0 16px;">¿Cuántos días tarda tu proveedor en entregar?</p>
+                <input id="_mkLeadTimeInput" type="number" min="1" max="365" value="${leadTimeActual}"
+                    style="width:100%;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:10px;font-size:1rem;box-sizing:border-box;margin-bottom:20px;">
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button onclick="document.getElementById('_mkLeadTimeModal').remove()"
+                        style="padding:8px 18px;background:#f3f4f6;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Cancelar</button>
+                    <button onclick="(function(){
+                        var v=document.getElementById('_mkLeadTimeInput').value;
+                        if(v&&!isNaN(Number(v))&&Number(v)>0){
+                            var p=(window.products||[]).find(x=>String(x.id)==='${productoId}');
+                            if(p){p.leadTime=parseInt(v);if(typeof saveProducts==='function')saveProducts();if(typeof renderInventoryTable==='function')renderInventoryTable();if(typeof manekiToastExport==='function')manekiToastExport('✅ Lead time guardado: '+v+' días','ok');}
+                        }
+                        document.getElementById('_mkLeadTimeModal').remove();
+                    })()" class="mk-btn-primary"
+                        style="padding:8px 18px;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Guardar</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(div);
+    const inp = document.getElementById('_mkLeadTimeInput') as HTMLInputElement;
+    if (inp) { inp.focus(); inp.select(); }
+}
+window._mkEditLeadTime = _mkEditLeadTime;
 
 // ── Render tabla de inventario — separada en dos secciones independientes ──

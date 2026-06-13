@@ -134,5 +134,5 @@ CREATE INDEX IF NOT EXISTS idx_orders_fecha ON mk_orders(fecha_entrega);
 CREATE INDEX IF NOT EXISTS idx_sales_date ON mk_sales(date);
 CREATE INDEX IF NOT EXISTS idx_products_tipo ON mk_products(tipo);
 CREATE INDEX IF NOT EXISTS idx_products_category ON mk_products(category);
-`},async report(){const e=await this.estimateDataSize();return console.log("%c\u{1F4CA} Maneki Migration Report","font-size:14px;font-weight:800;color:#C5A572"),console.table(e),console.log(e._recommendation),typeof manekiToastExport=="function"&&manekiToastExport(`\u{1F4CA} Datos: ${e._total.totalKB}KB en JSON blobs. ${e._recommendation}`,"info"),e}},console.log("%c\u{1F4A1} Migration prep loaded \u2014 run _mkMigrationPrep.report() to see data analysis","color:#9ca3af;font-size:10px");
+`},async report(){const e=await this.estimateDataSize();return console.log("%c\u{1F4CA} Maneki Migration Report","font-size:14px;font-weight:800;color:#C5973B"),console.table(e),console.log(e._recommendation),typeof manekiToastExport=="function"&&manekiToastExport(`\u{1F4CA} Datos: ${e._total.totalKB}KB en JSON blobs. ${e._recommendation}`,"info"),e}},console.log("%c\u{1F4A1} Migration prep loaded \u2014 run _mkMigrationPrep.report() to see data analysis","color:#9ca3af;font-size:10px");
 //# sourceMappingURL=migration-prep.js.map

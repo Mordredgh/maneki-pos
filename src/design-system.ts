@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
 'use strict';
 
 // ─────────────────────────────────────────────────────────────────
@@ -685,7 +685,7 @@ function _patchRenderAnalisis() {
                         <td class="px-6 py-3">
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <div style="flex:1;height:5px;background:#f3f4f6;border-radius:99px;overflow:hidden;">
-                                    <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#C5A572,#E8B84B);border-radius:99px;"></div>
+                                    <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#C5973B,#E8B84B);border-radius:99px;"></div>
                                 </div>
                                 <span style="font-size:0.7rem;color:#6b7280;width:38px;text-align:right;">${pct}%</span>
                             </div>

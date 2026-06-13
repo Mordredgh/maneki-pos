@@ -1,4 +1,4 @@
-// ── Cambiar vista kanban / tabla ──
+﻿// ── Cambiar vista kanban / tabla ──
 function setVistaPedidos(vista) {
     _pedidoVistaActual = vista;
     const kanban  = document.getElementById('vistaKanban');
@@ -7,7 +7,7 @@ function setVistaPedidos(vista) {
     const btnK    = document.getElementById('btnVistaKanban');
     const btnT    = document.getElementById('btnVistaTabla');
     const btnC    = document.getElementById('btnVistaCalendario');
-    const activo  = '#C5A572';
+    const activo  = '#C5973B';
     const inactivo = '';
     // ocultar todo
     [kanban, tabla, cal].forEach(el => el && el.classList.add('hidden'));
@@ -34,7 +34,7 @@ function filterPedidos(status, btn) {
     document.querySelectorAll('.pedido-filter').forEach(b => {
         b.style.borderColor = '#E5E7EB'; b.style.background = 'white'; b.style.color = '#4B5563';
     });
-    if (btn) { btn.style.borderColor = '#C5A572'; btn.style.background = '#FFF9F0'; btn.style.color = '#C5A572'; }
+    if (btn) { btn.style.borderColor = '#C5973B'; btn.style.background = '#FFF9F0'; btn.style.color = '#C5973B'; }
     renderTablaPedidos();
 }
 
@@ -213,7 +213,7 @@ function setKanbanUrgencia(filtro, btn) {
     document.querySelectorAll('.btn-kanban-urgencia').forEach(b => {
         b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
     });
-    if (btn) { btn.style.background = '#C5A572'; btn.style.color = 'white'; btn.style.borderColor = '#C5A572'; }
+    if (btn) { btn.style.background = '#C5973B'; btn.style.color = 'white'; btn.style.borderColor = '#C5973B'; }
     renderKanbanBoard();
 }
 window.setKanbanUrgencia = setKanbanUrgencia;
@@ -243,7 +243,7 @@ function toggleKanbanFocus() {
     if (searchBar) { searchBar.style.marginLeft = _kanbanFocusMode ? '0' : ''; }
     if (btn) {
         btn.title = _kanbanFocusMode ? 'Salir del modo focus' : 'Modo focus (ocultar sidebar)';
-        btn.style.background = _kanbanFocusMode ? '#C5A572' : '';
+        btn.style.background = _kanbanFocusMode ? '#C5973B' : '';
         btn.style.color      = _kanbanFocusMode ? 'white'   : '';
     }
 }
@@ -454,7 +454,7 @@ function kanbanCardHTML(p) {
     const _checkboxHtml = `<input type="checkbox" ${_isSelected ? 'checked' : ''}
         onchange="_toggleKanbanSelect('${p.id}', this.checked)"
         onclick="event.stopPropagation()"
-        style="position:absolute;top:6px;right:6px;width:16px;height:16px;cursor:pointer;accent-color:#C5A572;opacity:${_isSelected ? '1' : '0'};transition:opacity .15s;"
+        style="position:absolute;top:6px;right:6px;width:16px;height:16px;cursor:pointer;accent-color:#C5973B;opacity:${_isSelected ? '1' : '0'};transition:opacity .15s;"
         class="_kanban-check"
         title="Seleccionar para acción en lote">`;
 
@@ -568,7 +568,7 @@ function _inyectarBuscadorTabla() {
         <div style="flex:1;min-width:200px;position:relative;">
             <input id="tablaPedidosBuscar" type="text" placeholder="🔍 Buscar por cliente, folio, concepto..."
                 style="width:100%;padding:10px 14px 10px 36px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;background:#fff;"
-                onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'"
+                onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'"
                 oninput="_pedidosTablePage=1;renderTablaPedidos()">
             <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.4;">🔎</span>
         </div>
