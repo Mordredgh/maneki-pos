@@ -279,8 +279,10 @@
     (function () {
         var FK = 'mk_filtros_guardados';
         function _getFiltros() { try { return JSON.parse(localStorage.getItem(FK) || '[]'); } catch (e) { return []; } }
-        function _guardarFiltroActual() {
-            var nombre = prompt('Nombre para este filtro:');
+        async function _guardarFiltroActual() {
+            var nombre = typeof (window as any).showPrompt === 'function'
+                ? await (window as any).showPrompt('¿Cómo quieres llamar este filtro?', '', 'Guardar filtro')
+                : window.prompt('Nombre para este filtro:');
             if (!nombre || !nombre.trim()) return;
             var filtros = {
                 buscar: (document.getElementById('pedidoBuscar') || {}).value || (document.getElementById('tablaBuscarInput') || {}).value || '',

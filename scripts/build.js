@@ -6,6 +6,10 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const OUT = path.join(ROOT, 'js');
 
+// ── Step 0: Footgun lint (rompe el build si regresa un bug de clase conocida) ─
+console.log('Footgun lint...');
+require('./lint-footguns.js');   // lanza Error y aborta el build si encuentra algo
+
 // ── Step 1: Compile TS → JS (individual files, needed for dev) ──────────────
 const tsFiles = fs.readdirSync(SRC).filter(f => f.endsWith('.ts'));
 console.log(`Compiling ${tsFiles.length} TypeScript files...`);

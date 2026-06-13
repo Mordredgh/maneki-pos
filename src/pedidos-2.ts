@@ -850,7 +850,7 @@ async function confirmarAbonoPedido() {
     if (!p.pagos) p.pagos = [];
     const _d = new Date();
     const abonoId = mkId();
-    const _fechaLocal = _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
+    const _fechaStr = _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
 
     // ── ROLLBACK FIX: guardar copias antes de mutar para poder restaurar si falla el save ──
     const _pagosBefore       = p.pagos.slice();
@@ -861,7 +861,7 @@ async function confirmarAbonoPedido() {
         id: abonoId,
         tipo: 'abono',
         monto, metodo: _abonoPedidoMetodo, nota,
-        fecha: _fechaLocal,
+        fecha: _fechaStr,
         hora: _d.toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'})
     });
     // normalizarResta recalcula anticipo y resta desde pagos[] — nunca acumular manualmente
@@ -875,7 +875,7 @@ async function confirmarAbonoPedido() {
             id: abonoId,
             concept: `Abono pedido ${p.folio}`,
             amount: monto,
-            date: _fechaLocal,
+            date: _fechaStr,
             folioOrigen: p.folio
         });
     }
@@ -886,7 +886,7 @@ async function confirmarAbonoPedido() {
             id: abonoId,
             type: 'abono',
             folio: p.folio,
-            date: _fechaLocal,
+            date: _fechaStr,
             time: _d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
             customer: p.cliente || 'Cliente',
             concept: `Abono pedido ${p.folio}`,

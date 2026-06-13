@@ -651,6 +651,44 @@ function irAReportes() {
     window.showConfirm = showConfirm;
     window.confirmModalResolve = confirmModalResolve;
 
+    // ── PROMPT MODAL REUTILIZABLE ──────────────────────────────────────────────
+    // Existía showConfirm pero NO un equivalente para pedir texto, así que el código
+    // caía en prompt() nativo (bloqueante y feo). showPrompt() cierra ese hueco.
+    // Devuelve Promise<string|null> — null si el usuario cancela.
+    function showPrompt(message, defaultValue = '', title = 'Ingresar valor') {
+        return new Promise(resolve => {
+            let ov = document.getElementById('mkPromptOverlay');
+            if (ov) ov.remove();
+            ov = document.createElement('div');
+            ov.id = 'mkPromptOverlay';
+            ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,15,20,.55);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
+            const box = document.createElement('div');
+            box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;width:min(420px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.3);font-family:inherit;';
+            box.innerHTML =
+                '<h3 style="margin:0 0 6px;font-size:17px;font-weight:700;color:#1f2937;">' + _esc(title) + '</h3>' +
+                '<p style="margin:0 0 14px;font-size:14px;color:#6b7280;">' + _esc(message) + '</p>' +
+                '<input id="mkPromptInput" type="text" style="width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:15px;outline:none;" />' +
+                '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">' +
+                '<button id="mkPromptCancel" style="padding:9px 18px;border:1.5px solid #e5e7eb;background:#fff;border-radius:10px;font-weight:600;cursor:pointer;color:#374151;">Cancelar</button>' +
+                '<button id="mkPromptOk" class="mk-btn-primary" style="padding:9px 18px;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Guardar</button>' +
+                '</div>';
+            ov.appendChild(box);
+            document.body.appendChild(ov);
+            const input: any = document.getElementById('mkPromptInput');
+            input.value = defaultValue;
+            const done = (val) => { ov.remove(); resolve(val); };
+            document.getElementById('mkPromptCancel').onclick = () => done(null);
+            document.getElementById('mkPromptOk').onclick = () => done(input.value);
+            ov.onclick = (e) => { if (e.target === ov) done(null); };
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); done(input.value); }
+                else if (e.key === 'Escape') { e.preventDefault(); done(null); }
+            };
+            setTimeout(() => { input.focus(); input.select(); }, 30);
+        });
+    }
+    window.showPrompt = showPrompt;
+
 // ── Ctrl+K / Cmd+K — enfocar buscador global ──────────────────────────────
 // ── NTH-19: N = nuevo, Esc = cerrar modal, R = recargar dashboard ─────────
 document.addEventListener('keydown', function(e) {
