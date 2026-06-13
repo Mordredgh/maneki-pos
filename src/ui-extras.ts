@@ -179,8 +179,17 @@ function _fechaLocalDe(d) {
 //   · Fuente secundaria p.pagos[]: pagos con id que NO estén ya en salesHistory se suman
 //     para cubrir abonos guardados antes del fix de salesHistory, y anticipos iniciales de
 //     pedidos que no pasaron por _inyectarAnticiposEnSalesHistory.
+// Cache de _totalVentasDia — se invalida automáticamente cuando cambia la longitud de los datos.
+// Sin esto, sparkline (7 llamadas) + comparativa semanal (14 llamadas) hacen O(42n) iteraciones.
+let _vtdCache: Map<string, number> | null = null;
+let _vtdCacheKey = '';
+(window as any)._invalidarVentasDiaCache = () => { _vtdCache = null; };
+
 function _totalVentasDia(dStr) {
     const sh = window.salesHistory || salesHistory || [];
+    const ck = `${sh.length}_${(window.pedidos||[]).length}_${(window.pedidosFinalizados||[]).length}`;
+    if (!_vtdCache || _vtdCacheKey !== ck) { _vtdCache = new Map(); _vtdCacheKey = ck; }
+    if (_vtdCache.has(dStr)) return _vtdCache.get(dStr);
 
     // Folios que ya tienen registro 'type:pedido' completo en salesHistory (finalizados)
     const foliosFinalizados = new Set(
@@ -218,6 +227,7 @@ function _totalVentasDia(dStr) {
         });
     });
 
+    _vtdCache!.set(dStr, total);
     return total;
 }
 

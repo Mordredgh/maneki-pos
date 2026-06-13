@@ -143,6 +143,17 @@ function updateDashboard() {
             (window.expenses || []).length,
             (window.incomes || []).length
         ].join('_');
+        // Visibilidad: si el dashboard no está activo, solo actualizar badges (ligero)
+        // y forzar re-render completo la próxima vez que el usuario navegue a dashboard.
+        const _activeSection = localStorage.getItem('maneki_activeSection') || '';
+        const _dashVisible = !_activeSection || _activeSection === 'dashboard' || _activeSection === 'bienvenida';
+        if (!_dashVisible) {
+            if (_newHash !== _lastDashboardHash) {
+                _lastDashboardHash = null; // invalidar para que re-renderice al volver
+                try { actualizarSidebarBadges(); } catch(e) {}
+            }
+            return;
+        }
         if (_newHash === _lastDashboardHash) return;
         _lastDashboardHash = _newHash;
         _updateDashboardImpl();
@@ -213,29 +224,31 @@ function _updateDashboardImpl() {
     const mesActualStr = today.substring(0, 7);
     const fechaPrevMes = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const mesAnteriorStr = `${fechaPrevMes.getFullYear()}-${String(fechaPrevMes.getMonth() + 1).padStart(2, '0')}`;
-    let todaySales = 0, totalSales = 0, totalCosts = 0, monthlySales = 0, ventasMesActual = 0, ventasMesAnterior = 0;
-    // Solo ventas POS reales — excluir pedidos/abonos/anticipos (igual que balance.js)
-    // para evitar doble conteo con los pedidosFinalizados que se suman abajo.
+    const _ayerD = new Date(now); _ayerD.setDate(_ayerD.getDate() - 1);
+    const _ayer = `${_ayerD.getFullYear()}-${String(_ayerD.getMonth()+1).padStart(2,'0')}-${String(_ayerD.getDate()).padStart(2,'0')}`;
+    let todaySales = 0, totalSales = 0, totalCosts = 0, monthlySales = 0, ventasMesActual = 0, ventasMesAnterior = 0, _ventasAyer = 0;
+    // Una sola pasada sobre salesHistory — calcula KPIs de hoy, mes actual, mes anterior y ayer.
     for (const s of (salesHistory || [])) {
         if (s.method === 'Cancelado') continue;
         if (s.type === 'pedido' || s.type === 'abono' || s.type === 'anticipo') continue;
         const t = s.total || 0;
-        const c = (s.products || []).reduce((a, p) => a + ((p.costoAlVender ?? p.cost ?? 0) * (p.quantity || 1)), 0);
-        if (s.date === today)                             todaySales     += t;
-        if (s.date && s.date.startsWith(mesActualStr))  { totalSales += t; totalCosts += c; monthlySales += t; ventasMesActual  += t; }
-        if (s.date && s.date.startsWith(mesAnteriorStr)) ventasMesAnterior += t;
+        const d = s.date || '';
+        if (d === today)                        todaySales     += t;
+        else if (d === _ayer)                   _ventasAyer    += t;
+        if (d.startsWith(mesActualStr))       { totalSales += t; totalCosts += (s.products || []).reduce((a: number, p: any) => a + ((p.costoAlVender ?? p.cost ?? 0) * (p.quantity || 1)), 0); monthlySales += t; ventasMesActual += t; }
+        else if (d.startsWith(mesAnteriorStr))  ventasMesAnterior += t;
     }
     // Pedidos finalizados — usar p.total como fuente de verdad (igual que balance.js)
-    // Solo pedidosFinalizados, no pedidos activos (esos aún no están cobrados)
     for (const p of (window.pedidosFinalizados || [])) {
         if (!p.total) continue;
         const fecha = ((p.fechaFinalizado || p.fecha || '')).split('T')[0];
         if (!fecha) continue;
         const monto = Number(p.total);
         const costo = Number(p.costoMateriales || p.costo || 0);
-        if (fecha === today)                           todaySales     += monto;
-        if (fecha.startsWith(mesActualStr))          { totalSales += monto; totalCosts += costo; monthlySales   += monto; ventasMesActual  += monto; }
-        if (fecha.startsWith(mesAnteriorStr))          ventasMesAnterior += monto;
+        if (fecha === today)                           { todaySales  += monto; }
+        else if (fecha === _ayer)                      { _ventasAyer += monto; }
+        if (fecha.startsWith(mesActualStr))          { totalSales += monto; totalCosts += costo; monthlySales += monto; ventasMesActual += monto; }
+        else if (fecha.startsWith(mesAnteriorStr))     ventasMesAnterior += monto;
     }
     const netProfit = totalSales - totalCosts;
     // NTH-02: cargar meta mensual desde storeConfig la primera vez (persistente)
@@ -254,13 +267,14 @@ function _updateDashboardImpl() {
     if (goalPctEl) goalPctEl.textContent = goalPct + '% de tu meta mensual';
     if (monthSalesEl) monthSalesEl.textContent = '$' + monthlySales.toFixed(2);
 
-    // ── Stock bajo + Predictivo ──
-    const _gse = typeof getStockEfectivo === 'function' ? getStockEfectivo : (p => p.stock || 0);
-    const lowStockItems = products.filter(p => {
+    // ── Stock bajo + Predictivo — una sola pasada O(n) ──
+    const _gse = typeof getStockEfectivo === 'function' ? getStockEfectivo : (p: any) => p.stock || 0;
+    const lowStockItems: any[] = [], outOfStock: any[] = [];
+    for (const p of (products || [])) {
         const s = _gse(p);
-        return s > 0 && s <= (p.stockMin || 5);
-    });
-    const outOfStock = products.filter(p => _gse(p) === 0);
+        if (s === 0) outOfStock.push(p);
+        else if (s <= (p.stockMin || 5)) lowStockItems.push(p);
+    }
     const lowStockBadge = document.getElementById('lowStockBadge');
     if (lowStockBadge) lowStockBadge.textContent = (lowStockItems.length + outOfStock.length) + ' items';
     // UX5: badge de stock crítico en el sidebar para visibilidad sin entrar al módulo
@@ -418,19 +432,7 @@ function _updateDashboardImpl() {
     const np = document.getElementById('netProfit');
     const ar = document.getElementById('accountsReceivable');
     const ap = document.getElementById('dashActivePedidos');
-    // Calcular "vs ayer" para bienvenida usando la misma pasada de datos
-    const _ayer = (() => { const d=new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
-    let _ventasAyer = 0;
-    for (const s of (salesHistory || [])) {
-        if (s.method === 'Cancelado') continue;
-        if (s.type === 'pedido' || s.type === 'abono' || s.type === 'anticipo') continue;
-        if (s.date === _ayer) _ventasAyer += (s.total || 0);
-    }
-    for (const p of (window.pedidosFinalizados || [])) {
-        if (!p.total) continue;
-        const _pf = ((p.fechaFinalizado || p.fecha || '')).split('T')[0];
-        if (_pf === _ayer) _ventasAyer += Number(p.total);
-    }
+    // _ventasAyer y _ayer ya calculados en el loop principal de salesHistory
 
     // Sincronizar KPIs de la sección bienvenida (evita recalcular en renderBienvenida)
     const _fmtMorn = (v: number) => '$' + v.toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0});
@@ -668,16 +670,22 @@ function _updateDashboardImpl() {
         }
     }
 
-    _renderAtencionHoy();
-    _renderDiaMasRentable();
-    checkAlertasEntregas();
-    checkPedidosSinMovimiento();
+    // Widgets secundarios diferidos — los KPIs y entregas se pintan antes.
+    // Cada setTimeout(0) cede el hilo al browser para que pueda repintar entre cada bloque.
     actualizarSidebarBadges();
     if (typeof actualizarBadgePOS === 'function') actualizarBadgePOS();
-    renderSyncIndicator();
-    renderResumenDia();
-    renderAccesosRapidos();
-    _renderWidgetTemporadas();
+    setTimeout(() => {
+        try { checkAlertasEntregas(); } catch(e) {}
+        try { checkPedidosSinMovimiento(); } catch(e) {}
+        try { renderSyncIndicator(); } catch(e) {}
+        setTimeout(() => {
+            try { _renderAtencionHoy(); } catch(e) {}
+            try { _renderDiaMasRentable(); } catch(e) {}
+            try { renderResumenDia(); } catch(e) {}
+            try { renderAccesosRapidos(); } catch(e) {}
+            try { _renderWidgetTemporadas(); } catch(e) {}
+        }, 0);
+    }, 0);
 }
 
 // NTH-08: Widget día más rentable de la semana ──────────────────────────────
