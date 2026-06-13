@@ -450,12 +450,12 @@ input:focus, select:focus, textarea:focus, button:focus {
       <!-- Izquierda: gráficas principales -->
       <div style="display:flex;flex-direction:column;gap:16px;">
         <div class="mk-card" style="padding:20px 22px;">
-          <div class="mk-chart-title"><span>📈 Ventas · últimos 7 días</span></div>
+          <div class="mk-chart-title"><span><i class="fas fa-chart-line" style="margin-right:6px;"></i>Ventas · últimos 7 días</span></div>
           <canvas id="salesChart" height="130"></canvas>
         </div>
         <div class="mk-card" style="padding:20px 22px;">
           <div class="mk-chart-title" style="color:#0e7490;">
-            <span>💰 Flujo de caja — 8 semanas</span>
+            <span><i class="fas fa-money-bill-wave" style="margin-right:6px;"></i>Flujo de caja — 8 semanas</span>
           </div>
           <div style="height:200px;position:relative;margin-top:8px;"><canvas id="dashCashFlowChart"></canvas></div>
         </div>
@@ -465,20 +465,20 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div style="display:flex;flex-direction:column;gap:14px;">
         <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);">
           <div class="mk-chart-title">
-            <span>⏰ Entregas próximas</span>
+            <span><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Entregas próximas</span>
             <button type="button" data-action="showSection" data-arg="pedidos" style="font-size:.7rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;">Ver →</button>
           </div>
           <div id="dashUpcomingDeliveries"><p class="text-gray-400 text-xs text-center py-4">Sin entregas próximas 🎉</p></div>
         </div>
         <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#fffbf5,#fff7ed);">
           <div class="mk-chart-title">
-            <span>📦 Stock bajo</span>
+            <span><i class="fas fa-box-open" style="margin-right:6px;"></i>Stock bajo</span>
             <span style="font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:99px;background:#ffedd5;color:#c2410c;" id="lowStockBadge">0 items</span>
           </div>
           <div id="dashLowStockList" class="space-y-1" style="max-height:155px;overflow-y:auto;"></div>
         </div>
         <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#fff7ed,#ffedd5);">
-          <div class="mk-chart-title" style="color:#c2410c;"><span>🔔 Atención hoy</span></div>
+          <div class="mk-chart-title" style="color:#c2410c;"><span><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>Atención hoy</span></div>
           <div id="atencionHoyList" style="margin-top:8px;"></div>
         </div>
       </div>
@@ -490,17 +490,17 @@ input:focus, select:focus, textarea:focus, button:focus {
 
       <div class="mk-card mk-chart-area">
         <div class="mk-chart-title" style="display:flex;justify-content:space-between;align-items:center;">
-          <span>📊 Comparativa semanal</span>
+          <span><i class="fas fa-chart-bar" style="margin-right:6px;"></i>Comparativa semanal</span>
           <button type="button" data-action="generarResumenSemanalWA" title="Copiar resumen para WhatsApp"
             style="background:#25D366;color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:.7rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
-            📋 WA
+            <i class="fas fa-whatsapp"></i> WA
           </button>
         </div>
         <div id="semanalWidget"></div>
       </div>
 
       <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
-        <div class="mk-chart-title" style="color:#166534;"><span>📋 Pedidos por estado</span></div>
+        <div class="mk-chart-title" style="color:#166534;"><span><i class="fas fa-clipboard-list" style="margin-right:6px;"></i>Pedidos por estado</span></div>
         <div id="dashPedidosEstado" style="margin-top:4px;"></div>
       </div>
 
@@ -3524,20 +3524,20 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <!-- Mobile Bottom Navigation -->
 <nav id="mobileBottomNav" style="display:none; height:60px; padding-bottom: env(safe-area-inset-bottom, 0px);" class="fixed bottom-0 left-0 right-0 z-[198] flex items-center justify-around bg-white border-t border-gray-200 shadow-lg">
-  <button type="button" data-action="_mkNavSidebar" data-arg="dashboard" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
-    <span style="font-size:20px;">🏠</span><span>Inicio</span>
+  <button type="button" data-action="_mkNavSidebar" data-arg="dashboard" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;" aria-label="Inicio">
+    <i class="fas fa-home" style="font-size:20px;"></i><span>Inicio</span>
   </button>
-  <button type="button" data-action="_mkNavSidebar" data-arg="pedidos" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
-    <span style="font-size:20px;">📦</span><span>Pedidos</span>
+  <button type="button" data-action="_mkNavSidebar" data-arg="pedidos" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;" aria-label="Pedidos">
+    <i class="fas fa-clipboard-list" style="font-size:20px;"></i><span>Pedidos</span>
   </button>
-  <button type="button" data-action="_mkNavSidebar" data-arg="inventory" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
-    <span style="font-size:20px;">🏷️</span><span>Inventario</span>
+  <button type="button" data-action="_mkNavSidebar" data-arg="inventory" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;" aria-label="Inventario">
+    <i class="fas fa-boxes" style="font-size:20px;"></i><span>Inventario</span>
   </button>
-  <button type="button" data-action="_mkNavSidebar" data-arg="balance" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
-    <span style="font-size:20px;">💰</span><span>Balance</span>
+  <button type="button" data-action="_mkNavSidebar" data-arg="balance" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;" aria-label="Balance">
+    <i class="fas fa-receipt" style="font-size:20px;"></i><span>Balance</span>
   </button>
-  <button type="button" data-action="_mkToggleSidebar" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;">
-    <span style="font-size:20px;">☰</span><span>Más</span>
+  <button type="button" data-action="_mkToggleSidebar" class="flex flex-col items-center gap-0.5 py-2 px-3 text-gray-500" style="background:none;border:none;cursor:pointer;font-size:11px;min-width:48px;" aria-label="Menú">
+    <i class="fas fa-bars" style="font-size:20px;"></i><span>Más</span>
   </button>
 </nav>
 <!-- SW register + filtros guardados now in init.js / csp-delegate.js -->

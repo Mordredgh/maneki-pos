@@ -1183,7 +1183,7 @@ function renderMovimientos() {
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;">
             <span style="font-size:16px;">${icons[m.tipo]||'⚪'}</span>
             <div style="flex:1;min-width:0;">
-                <div style="font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(m.productoNombre)}</div>
+                <div style="font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(m.productoNombre || (m.productoId && !(window.products||[]).find((x:any)=>String(x.id)===String(m.productoId)) ? '(producto eliminado)' : '—'))}</div>
                 <div style="color:#6b7280;font-size:11px;">${f} · ${m.tipo} · ${_esc(m.motivo||'Sin motivo')}</div>
             </div>
             <div style="text-align:right;white-space:nowrap;">
@@ -1233,7 +1233,7 @@ function renderStockMovements(containerId) {
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;">
             <span style="font-size:16px;">${icons[m.tipo]||'⚪'}</span>
             <div style="flex:1;min-width:0;">
-                <div style="font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(m.productoNombre)}</div>
+                <div style="font-weight:600;color:#1f2937;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(m.productoNombre || (m.productoId && !(window.products||[]).find((x:any)=>String(x.id)===String(m.productoId)) ? '(producto eliminado)' : '—'))}</div>
                 <div style="color:#6b7280;font-size:11px;">${f} · ${m.tipo} · ${_esc(m.motivo||'Sin motivo')}</div>
             </div>
             <div style="text-align:right;white-space:nowrap;">
