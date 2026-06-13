@@ -602,7 +602,10 @@ span.badge-vip {
   background: white;
 }
 .kanban-card:hover {
-  transform: translateY(-5px) rotate(0.25deg) !important;
+  /* S26: sin rotate — una micro-rotación fraccionaria activaba anti-aliasing
+     sub-pixel que hacía ver "sombreados"/borrosos los renglones internos
+     (texto, pastillas del timeline, bordes). Solo elevación vertical en px enteros. */
+  transform: translateY(-4px) !important;
   box-shadow: var(--hi-top-sm), var(--sh-xl) !important;
   border-color: rgba(197,151,59,0.25) !important;
 }
