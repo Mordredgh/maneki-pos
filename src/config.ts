@@ -1,4 +1,4 @@
-// ── Helper centralizado para fecha local YYYY-MM-DD (evita UTC shift de noche) ──
+﻿// ── Helper centralizado para fecha local YYYY-MM-DD (evita UTC shift de noche) ──
 function _fechaHoy() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -170,7 +170,7 @@ function switchHistoryTab(tab) {
     const activeContent = document.getElementById('tabContent' + tab.charAt(0).toUpperCase() + tab.slice(1));
     const activeBtn     = document.getElementById('tab'        + tab.charAt(0).toUpperCase() + tab.slice(1));
     if (activeContent) activeContent.classList.remove('hidden');
-    if (activeBtn)     { activeBtn.style.borderColor = '#C5A572'; activeBtn.style.color = '#C5A572'; }
+    if (activeBtn)     { activeBtn.style.borderColor = '#C5973B'; activeBtn.style.color = '#C5973B'; }
 }
 
 // ============== STORE CONFIG ==============
@@ -318,8 +318,8 @@ function renderBienvenida() {
                 : urgentes.slice(0, 4).map(p => `
                     <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fff5f5;border-left:3px solid #ef4444;margin-bottom:6px;cursor:pointer;" onclick="showSection('pedidos')">
                         <div style="flex:1;">
-                            <p style="font-size:.78rem;font-weight:700;color:#1f2937;margin:0;">${_esc(p.customer || p.cliente || 'Sin nombre')}</p>
-                            <p style="font-size:.68rem;color:#6b7280;margin:1px 0 0;">${p.items?.length || 0} producto${(p.items?.length || 0) !== 1 ? 's' : ''} · ${_esc(p.status || 'pendiente')}</p>
+                            <p style="font-size:.78rem;font-weight:700;color:#1f2937;margin:0;">${_esc(p.cliente || p.customer || 'Sin nombre')}</p>
+                            <p style="font-size:.68rem;color:#6b7280;margin:1px 0 0;">${(p.productosInventario||p.productos||[]).length} producto${(p.productosInventario||p.productos||[]).length !== 1 ? 's' : ''} · ${_esc(p.status || 'pendiente')}</p>
                         </div>
                         <span style="font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:99px;background:#fee2e2;color:#dc2626;">HOY</span>
                     </div>

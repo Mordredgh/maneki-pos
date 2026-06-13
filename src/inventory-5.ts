@@ -1,4 +1,4 @@
-// ── N-SEARCH-004: Búsqueda typo-tolerant (Levenshtein distance) ───────────
+﻿// ── N-SEARCH-004: Búsqueda typo-tolerant (Levenshtein distance) ───────────
 function _levenshtein(a: string, b: string): number {
     const m = a.length, n = b.length;
     const dp: number[][] = Array.from({length: m+1}, (_, i) =>
@@ -109,7 +109,7 @@ function abrirBulkPrecioModal() {
             <button onclick="bulkPrecioPreview()"
                 style="padding:8px 18px;border:none;border-radius:10px;background:#e0f2fe;color:#0369a1;font-size:.85rem;font-weight:700;cursor:pointer;">👁 Vista previa</button>
             <button onclick="bulkPrecioAplicar()"
-                style="padding:8px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;">✅ Aplicar</button>
+                style="padding:8px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;">✅ Aplicar</button>
         </div>
     </div>`;
 
@@ -740,8 +740,8 @@ function renderInventoryTable() {
                 </div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                     ${extraBtnHTML || ''}
-                    <button onclick="${btnOnclick}"
-                        style="padding:7px 16px;background:${btnColor};color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
+                    <button onclick="${btnOnclick}" class="mk-btn-primary"
+                        style="padding:7px 16px;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         ${btnLabel}
                     </button>
                 </div>
@@ -813,7 +813,6 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#fffbeb,#fef9f0)',
             btnLabel: '+ Producto',
             btnOnclick: 'openAddProductModal()',
-            btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
             extraBtnHTML: `<button type="button" onclick="injectPackModal();openPackModal()" class="mk-toolbar-btn">🎁 Crear Pack</button><button type="button" onclick="abrirBulkPrecioModal()" class="mk-toolbar-btn">📊 Actualizar precios</button>`,
             products: pts,
             renderFila: renderFilaPT,
@@ -839,7 +838,6 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#f0f9ff,#e0f2fe)',
             btnLabel: '+ Producto Variable',
             btnOnclick: 'injectVariableProductModal();openVariableProductModal()',
-            btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
             products: pvs,
             renderFila: renderFilaVariable,
             headers: [
@@ -864,7 +862,6 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#faf5ff,#f5f3ff)',
             btnLabel: '+ Materia Prima',
             btnOnclick: 'injectMpModal();openAddMateriaPrimaModal()',
-            btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
             products: mps,
             renderFila: renderFilaMP,
             headers: [
@@ -888,7 +885,6 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#f5f3ff,#ede9fe)',
             btnLabel: '+ Nuevo Servicio',
             btnOnclick: 'injectSvcModal();openServicioModal()',
-            btnColor: 'linear-gradient(135deg,#C5A572,#E8B84B)',
             products: svcs,
             renderFila: renderFilaServicio,
             headers: [
@@ -941,7 +937,7 @@ function renderInventoryTable() {
             <p style="font-size:1.1rem;font-weight:700;color:#374151;margin-bottom:6px;">Sin resultados para tu búsqueda</p>
             <p style="font-size:.875rem;color:#9ca3af;margin-bottom:20px;">Intenta con otro término o limpia los filtros</p>
             <button onclick="(function(){var el=document.getElementById('inventorySearch');if(el){el.value='';el.dispatchEvent(new Event('input'));}var tEl=document.getElementById('inventoryTagFilter');if(tEl)tEl.value='';var pEl=document.getElementById('inventoryProveedorFilter');if(pEl)pEl.value='';renderInventoryTable();})()"
-                style="padding:10px 22px;background:linear-gradient(135deg,#C5A572,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:.875rem;font-weight:700;cursor:pointer;">
+                style="padding:10px 22px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:.875rem;font-weight:700;cursor:pointer;">
                 Limpiar búsqueda
             </button>
         </div>`;
@@ -1400,9 +1396,15 @@ async function invBulkEliminar() {
   );
   if (_pedAfectados.length > 0) {
       const _folios = _pedAfectados.map(p => p.folio||p.id).slice(0,5).join(', ');
-      if (!confirm(`⚠️ ${_pedAfectados.length} pedido(s) activo(s) usan estos productos (${_folios}). ¿Eliminar de todas formas?`)) return;
+      const _okPed = typeof showConfirm === 'function'
+          ? await showConfirm(`⚠️ ${_pedAfectados.length} pedido(s) activo(s) usan estos productos (${_folios}). ¿Eliminar de todas formas?`, 'Productos en pedidos activos')
+          : confirm(`⚠️ ${_pedAfectados.length} pedido(s) activo(s) usan estos productos (${_folios}). ¿Eliminar de todas formas?`);
+      if (!_okPed) return;
   }
-  if (!confirm(`¿Eliminar ${ids.length} producto(s)? Esta acción no se puede deshacer.`)) return;
+  const _okDel = typeof showConfirm === 'function'
+      ? await showConfirm(`¿Eliminar ${ids.length} producto(s)? Esta acción no se puede deshacer.`, '🗑 Confirmar eliminación')
+      : confirm(`¿Eliminar ${ids.length} producto(s)? Esta acción no se puede deshacer.`);
+  if (!_okDel) return;
   // FIX-3: capturar IDs antes de filtrar para poder usarlos en Supabase
   const idsAEliminar = [...ids];
   window.products = (window.products||[]).filter(p => !idsAEliminar.includes(String(p.id)));
@@ -1672,7 +1674,7 @@ function abrirConteoFisico() {
       <td style="padding:7px 10px;text-align:center;">
         <input type="number" min="0" value="${st}" data-pid="${_e(p.id)}" data-sistema="${st}"
           style="width:70px;border:1.5px solid #e5e7eb;border-radius:8px;padding:4px 8px;font-size:.85rem;text-align:center;outline:none;"
-          onfocus="this.style.borderColor='#C5A572'" onblur="this.style.borderColor='#e5e7eb'" class="conteo-input">
+          onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'" class="conteo-input">
       </td>
     </tr>`;
   }).join('');
@@ -1689,7 +1691,7 @@ function abrirConteoFisico() {
     </table>
     <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
       <button onclick="document.getElementById('mkConteo_ov').remove()" style="padding:9px 20px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;font-weight:600;">Cancelar</button>
-      <button onclick="_mkAplicarConteoFisico()" style="padding:9px 24px;border-radius:10px;background:linear-gradient(135deg,#C5A572,#a8864f);color:white;border:none;cursor:pointer;font-weight:700;">✅ Aplicar ajustes</button>
+      <button onclick="_mkAplicarConteoFisico()" style="padding:9px 24px;border-radius:10px;background:linear-gradient(135deg,#C5973B,#a8864f);color:white;border:none;cursor:pointer;font-weight:700;">✅ Aplicar ajustes</button>
     </div>`;
   _mkInvModal('mkConteo', '📋 Conteo Físico de Inventario', html, '780px');
 }
@@ -1744,7 +1746,7 @@ function abrirReabastecimiento() {
       return `<tr><td style="padding:6px 10px;font-size:.83rem;font-weight:600;">${_e(p.name)}</td>
         <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${st}</td>
         <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${min}</td>
-        <td style="padding:6px 10px;text-align:center;font-size:.82rem;font-weight:700;color:#C5A572;">${sugerido}</td>
+        <td style="padding:6px 10px;text-align:center;font-size:.82rem;font-weight:700;color:#C5973B;">${sugerido}</td>
         <td style="padding:6px 10px;font-size:.78rem;color:#6b7280;">${_e(p.unidad||'pza')}</td></tr>`;
     }).join('');
     const waTxt = encodeURIComponent(`Hola, necesito reabastecer:\n${items.map((p:any)=>{const st=Number(p.stock)||0;const min=Number(p.stockMin)||5;return `• ${p.name}: ${Math.max(1,min*2-st)} ${p.unidad||'pza'}`}).join('\n')}`);
@@ -1790,7 +1792,9 @@ function abrirReabastecimiento() {
     })].join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = `reabastecimiento_${new Date().toISOString().split('T')[0]}.csv`;
+  const _hoy = new Date();
+  const _fechaCSV = `${_hoy.getFullYear()}-${String(_hoy.getMonth()+1).padStart(2,'0')}-${String(_hoy.getDate()).padStart(2,'0')}`;
+  a.download = `reabastecimiento_${_fechaCSV}.csv`;
   a.click();
 };
 
@@ -1807,7 +1811,7 @@ function mostrarDonutCategoria() {
   });
   const entries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
   const total = entries.reduce((s,[,v])=>s+v, 0);
-  const colors = ['#C5A572','#7c3aed','#10b981','#3b82f6','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#f97316','#14b8a6'];
+  const colors = ['#C5973B','#7c3aed','#10b981','#3b82f6','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#f97316','#14b8a6'];
   const filas = entries.map(([cat, val], i) => {
     const pct = total > 0 ? (val/total*100).toFixed(1) : '0';
     return `<tr>
@@ -1890,7 +1894,7 @@ function sugerirStockMinimo() {
       <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${actual}</td>
       <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${cambio}</td>
       <td style="padding:6px 10px;text-align:center;">
-        <input type="checkbox" checked data-pid="${_e(p.id)}" data-nuevo="${sugerido}" class="mkStockMinCb" style="accent-color:#C5A572;width:16px;height:16px;">
+        <input type="checkbox" checked data-pid="${_e(p.id)}" data-nuevo="${sugerido}" class="mkStockMinCb" style="accent-color:#C5973B;width:16px;height:16px;">
       </td>
     </tr>`;
   }).join('');
@@ -1909,7 +1913,7 @@ function sugerirStockMinimo() {
     </table>
     <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
       <button onclick="document.getElementById('mkStockMin_ov').remove()" style="padding:9px 20px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;font-weight:600;">Cancelar</button>
-      <button onclick="_mkAplicarStockMinSugerido()" style="padding:9px 24px;border-radius:10px;background:linear-gradient(135deg,#C5A572,#a8864f);color:white;border:none;cursor:pointer;font-weight:700;">🤖 Aplicar seleccionados</button>
+      <button onclick="_mkAplicarStockMinSugerido()" style="padding:9px 24px;border-radius:10px;background:linear-gradient(135deg,#C5973B,#a8864f);color:white;border:none;cursor:pointer;font-weight:700;">🤖 Aplicar seleccionados</button>
     </div>`;
   _mkInvModal('mkStockMin', '🤖 Stock Mínimo Sugerido', html, '780px');
 }

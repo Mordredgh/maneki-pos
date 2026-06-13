@@ -1,4 +1,4 @@
-// ── Eliminar pedido activo ──
+﻿// ── Eliminar pedido activo ──
 // ─── LISTA DE PRODUCCIÓN DEL DÍA ────────────────────────────────────────────
 let _produccionFiltro = 'todos';
 
@@ -124,7 +124,7 @@ function imprimirListaProduccion() {
     const win = window.open('', '_blank');
     win.document.write(`<!DOCTYPE html><html><head>
         <meta charset="UTF-8"><title>Lista de Producción</title>
-        <style>body{font-family:sans-serif;padding:2rem;} h1{color:#7c3aed;} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#C5A572;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#4B5563;} .meta{font-size:12px;color:#6B7280;margin-top:4px;} @media print{body{padding:0.5rem;}}</style>
+        <style>body{font-family:sans-serif;padding:2rem;} h1{color:#7c3aed;} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#C5973B;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#4B5563;} .meta{font-size:12px;color:#6B7280;margin-top:4px;} @media print{body{padding:0.5rem;}}</style>
     </head><body>
         <h1>🔨 Lista de Producción</h1>
         <p style="color:#6B7280;font-size:13px;">${storeName} · ${new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
@@ -223,7 +223,7 @@ function abrirFotoReferencia(id) {
     if (!content) return;
 
     if (!urls.length) {
-        content.innerHTML = `<div onclick="document.getElementById('fotoRefInput').click()" style="border:2px dashed #d1d5db;border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='#C5A572'" onmouseout="this.style.borderColor='#d1d5db'">
+        content.innerHTML = `<div onclick="document.getElementById('fotoRefInput').click()" style="border:2px dashed #d1d5db;border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='#C5973B'" onmouseout="this.style.borderColor='#d1d5db'">
             <p style="font-size:2.2rem;">📷</p>
             <p style="font-size:.85rem;color:#6b7280;margin-top:8px;font-weight:600;">Toca para subir fotos de referencia</p>
             <p style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Hasta ${_FOTO_MAX} fotos · JPG, PNG, WEBP · máx 5 MB c/u</p>
@@ -238,7 +238,7 @@ function abrirFotoReferencia(id) {
             </div>`;
         });
         if (urls.length < _FOTO_MAX) {
-            grid += `<div onclick="document.getElementById('fotoRefInput').click()" style="aspect-ratio:1;border:2px dashed #d1d5db;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#fafafa;" onmouseover="this.style.borderColor='#C5A572'" onmouseout="this.style.borderColor='#d1d5db'">
+            grid += `<div onclick="document.getElementById('fotoRefInput').click()" style="aspect-ratio:1;border:2px dashed #d1d5db;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#fafafa;" onmouseover="this.style.borderColor='#C5973B'" onmouseout="this.style.borderColor='#d1d5db'">
                 <span style="font-size:1.4rem;color:#9ca3af;">+</span>
                 <span style="font-size:.6rem;color:#9ca3af;margin-top:2px;">Agregar</span>
             </div>`;
@@ -457,7 +457,7 @@ function _inyectarQuoteModal() {
     <div class="flex gap-2 mt-5 flex-wrap">
       <button type="button" onclick="closeQuoteModal()" class="flex-1 py-2 rounded-xl text-sm" style="background:#f3f4f6;color:#374151;">Cancelar</button>
       <button type="button" id="quoteSaveBtn" onclick="_guardarCotizacion()" class="flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#7c3aed;color:white;">Guardar cotización</button>
-      <button type="button" id="quoteExportBtn" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#C5A572;color:white;" onclick="exportarCotizacionPNG(_quoteViewId)">Guardar PNG</button>
+      <button type="button" id="quoteExportBtn" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#C5973B;color:white;" onclick="exportarCotizacionPNG(_quoteViewId)">Guardar PNG</button>
     </div>
   </div>
 </div>`;
@@ -592,10 +592,11 @@ function deleteQuote(id: string) {
             if (typeof manekiToastExport === 'function') manekiToastExport('Cotización eliminada.', 'ok');
         });
     } else {
-        if (!confirm('¿Eliminar esta cotización?')) return;
+        if (!window.confirm('¿Eliminar esta cotización? Esta acción no se puede deshacer.')) return;
         (window as any).quotes = ((window as any).quotes || []).filter((c: any) => String(c.id) !== String(id));
         if (typeof (window as any).saveQuotes === 'function') (window as any).saveQuotes();
         renderQuotesTable();
+        if (typeof manekiToastExport === 'function') manekiToastExport('Cotización eliminada.', 'ok');
     }
 }
 
@@ -610,7 +611,7 @@ async function exportarCotizacionPNG(quoteId: string) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 600, 700);
 
-    ctx.fillStyle = '#C5A572';
+    ctx.fillStyle = '#C5973B';
     ctx.fillRect(0, 0, 600, 80);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 24px Arial';
@@ -652,7 +653,7 @@ async function exportarCotizacionPNG(quoteId: string) {
     });
 
     y += 40;
-    ctx.fillStyle = '#C5A572';
+    ctx.fillStyle = '#C5973B';
     ctx.fillRect(20, y, 560, 40);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 18px Arial';
@@ -697,7 +698,7 @@ function abrirCargaSemanal() {
     const dowNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
     for (let i = 0; i < 14; i++) {
         const d = new Date(hoy.getTime() + i * 86400000);
-        const fechaStr = d.toISOString().split('T')[0];
+        const fechaStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         const label = `${d.getDate()}/${d.getMonth()+1}`;
         const dow = dowNames[d.getDay()];
         const pedidosDia = (window.pedidos || []).filter((p: any) =>
