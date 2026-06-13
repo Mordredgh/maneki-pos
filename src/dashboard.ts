@@ -1,4 +1,8 @@
 // ============== DASHBOARD ==============
+// Shim: calcSaldoPendiente vive en balance.bundle (lazy). Usar _csp() en dashboard.
+const _csp = (p: any): number => typeof (window as any).calcSaldoPendiente === 'function'
+    ? (window as any).calcSaldoPendiente(p)
+    : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
 
         // ============== ALERTAS ENTREGAS PRÓXIMAS ==============
         function checkAlertasEntregas() {
@@ -43,7 +47,7 @@
                     clase = 'dos-dias'; etiqueta = 'En 2 días'; icono = '🟡';
                 }
                 // FIX: usar calcSaldoPendiente (fuente de verdad unificada de CxC) en lugar de p.anticipo directo
-                const saldo = calcSaldoPendiente(p).toFixed(2);
+                const saldo = _csp(p).toFixed(2);
                 return `
                     <div class="alerta-pedido-card ${clase}">
                         <span class="text-2xl">${icono}</span>
@@ -356,7 +360,7 @@ function _updateDashboardImpl() {
     // ── Cuentas por cobrar ──
     // Recalcular SIEMPRE desde datos crudos — no confiar en p.resta ni p.anticipo de Supabase.
     // FIX 8: use calcSaldoPendiente from balance.js (window.calcSaldoPendiente) for unified CxC
-    const _calcSaldo = calcSaldoPendiente;
+    const _calcSaldo = _csp;
     const accountsReceivable = [
         ...receivables.filter(r => r.status === 'pending').map(r => r.amount || 0),
         ...pedidos
@@ -495,7 +499,7 @@ function _updateDashboardImpl() {
         arCard.style.cursor = 'pointer';
         arCard.addEventListener('click', function() {
             const pedidosArr = window.pedidos || pedidos || [];
-            const _calcS = calcSaldoPendiente;
+            const _calcS = _csp;
             // Agrupar por cliente los pedidos con saldo > 0
             const mapa = {};
             pedidosArr
@@ -719,7 +723,7 @@ function _renderAtencionHoy() {
     // Pedidos con saldo pendiente
     const porCobrar = (window.pedidos || []).filter(p =>
         p.status !== 'cancelado' &&
-        calcSaldoPendiente(p) > 0
+        _csp(p) > 0
     );
     if (porCobrar.length > 0) {
         items.push(`💳 ${porCobrar.length} pedido${porCobrar.length > 1 ? 's' : ''} con saldo pendiente`);
@@ -967,7 +971,7 @@ function renderResumenDia() {
 
     const nHoy = pedidosActivos.filter(p => (p.entrega || p.fechaEntrega) === hoy).length;
 
-    const totalPorCobrar = pedidosActivos.reduce((acc, p) => acc + calcSaldoPendiente(p), 0);
+    const totalPorCobrar = pedidosActivos.reduce((acc, p) => acc + _csp(p), 0);
 
     const sinFecha = pedidosActivos.filter(p => !p.entrega && !p.fechaEntrega).length;
 
