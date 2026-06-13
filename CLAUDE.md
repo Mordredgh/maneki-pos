@@ -1,6 +1,6 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 12 junio 2026 — Sesión 21 (14 features audit Fable 5, commit `58c8f22`)
+> **Última actualización:** 12 junio 2026 — Sesión 23 (bugfixes audit S23: 10 íconos, movimientos relacional, costo ponderado, commits `0ad629e`, `083809d`)
 > **Sin pendientes de código.** App estable. Todas las mejoras UI/UX y nice-to-haves del audit aplicadas.
 > **Versión app:** 2.2.0 | **SW hash:** maneki-c8796b1801 | **Branch:** fresh-start → master
 
@@ -9,6 +9,16 @@
 ## Changelog del Programa
 
 > ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
+
+### v2.5.0 (12 junio 2026)
+- 🔧 Auditoría S23: 8 bugs corregidos y mejoras de estabilidad
+- 🎨 10 íconos faltantes añadidos al sistema de íconos SVG (botones ya no aparecen en blanco)
+- 🧹 "Limpiar movimientos" ahora borra también la tabla relacional `stock_movements` en Supabase
+- 💰 El campo de costo se limpia al cambiar de producto en el ajuste de stock
+- 📊 El costo promedio ponderado ya alimenta el historial de costos del producto
+- 🔍 Productos eliminados muestran "(producto eliminado)" en lugar de nombre en blanco en movimientos
+- ⚡ Índice de BD agregado en `stock_movements.producto_id` para consultas más rápidas
+- 🖼️ Emojis en dashboard y navegación mobile reemplazados por íconos SVG consistentes
 
 ### v2.4.0 (12 junio 2026)
 - 🛡️ Seguridad BD: eliminados pedidos zombi PE-0064/PE-0068, corregido `search_path` de funciones Postgres, política RLS de abonos reforzada
@@ -511,6 +521,34 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | 🥉 | Fila de totales sticky en tablas | Medio | Medio |
 | ⭐ | Clases utilitarias anti-deriva de tokens | Estructural | Medio |
 | ⭐ | Micro-pulido (empty states, alertas, sombras, aria) | Medio | Bajo |
+
+---
+
+## ✅ Sesión 23 (12 junio 2026) — Bugfixes audit S23, commits `0ad629e` `083809d`
+
+| Bug | Fix | Archivos |
+|-----|-----|---------|
+| BUG-1 | 10 íconos FA faltantes (`fa-box`, `fa-truck`, `fa-camera`, `fa-palette`, `fa-industry`, `fa-file-import`, `fa-file-download`, `fa-clipboard-check`, `fa-chart-pie`, `fa-robot`) añadidos al diccionario D de `icons.ts` | `src/icons.ts` |
+| BUG-2 | `limpiarMovimientosInventario()` usaba `confirm()` nativo y solo limpiaba el blob; ahora usa `showConfirm()` + también borra de `stock_movements` en Supabase | `src/inventory-5.ts` |
+| BUG-2b | `clearAllData()` en ui-extras.ts también limpia `stock_movements` relacional en el Promise.all | `src/ui-extras.ts` |
+| BUG-4 | Eliminado sistema dual `movimientosStock` en `confirmarAjusteStock()` — el canónico `registrarMovimiento()` ya hacía el trabajo | `src/inventory-4.ts` |
+| BUG-5 | Campo costo + wrap de costo ponderado se limpian al abrir modal para nuevo producto en `ajustarStock()` | `src/inventory-4.ts` |
+| BUG-6 | Reabastecimiento con promedio ponderado ahora hace push a `p.historialCostos` (antes solo actualizaba `p.cost`) | `src/inventory-4.ts` |
+| BUG-9 | Movimientos con producto eliminado muestran `(producto eliminado)` en lugar de string vacío | `src/inventory-5.ts` |
+| DB | Índice `idx_stock_movements_producto` creado en Supabase sobre `stock_movements(producto_id)` | Supabase MCP |
+| UI | Emojis en 7 títulos de charts del dashboard → `<i class="fas ...">` con FA icons | `index.html` |
+| UI | Botón "📋 WA" → `<i class="fas fa-whatsapp">` | `index.html` |
+| UI | Nav mobile (5 botones) → FA icons con `font-size:20px` + `aria-label` | `index.html` |
+
+### ⚠️ Deuda técnica registrada (no aplicada)
+
+| # | Motivo | Nota |
+|---|--------|------|
+| BUG-10 | RT subscription para `stock_movements` | Requiere transformer + anti-echo + wiring; logging table — no crítico |
+| BUG-11 | 1 producto sin costo en BD | Data issue, corregir manualmente en la app |
+| activity_log UI | Tabla existe pero tiene 0 filas | No es accionable hasta que el código la popule |
+| Push notifications | vapid_keys en Supabase | Requiere Edge Function + pg_cron — muy complejo |
+| Reporte mensual PDF | jsPDF o similar | Requiere lib externa |
 
 ---
 
