@@ -472,3 +472,150 @@ describe('calcBalanceTotals', () => {
     expect(t.balance).toBe(1650);
   });
 });
+
+// ── normalizarResta (source: pedidos-1-views.ts) ───────────────────────────────
+// ESPEJO de la lógica por-pedido. p.pagos[] es la FUENTE DE VERDAD; p.anticipo y
+// p.resta SIEMPRE se recalculan (nunca se confían los valores guardados en Supabase,
+// que pueden venir inconsistentes de versiones viejas). Esto es lo que el cliente debe.
+function normalizarRestaPedido(p: any): { anticipo: number; resta: number } {
+  const totalPagado = (p.pagos || []).reduce((s: number, ab: any) => s + Number(ab.monto || 0), 0);
+  if (totalPagado > 0) {
+    p.anticipo = totalPagado;
+    p.resta = Math.max(0, Number(p.total || 0) - totalPagado);
+  } else {
+    p.anticipo = Number(p.anticipo || 0);
+    p.resta = Math.max(0, Number(p.total || 0) - p.anticipo);
+  }
+  return { anticipo: p.anticipo, resta: p.resta };
+}
+
+describe('normalizarResta', () => {
+  it('suma de pagos es la fuente de verdad del anticipo', () => {
+    const p = { total: 1000, anticipo: 999, pagos: [{ monto: 300 }, { monto: 200 }] };
+    const r = normalizarRestaPedido(p);
+    expect(r.anticipo).toBe(500);   // ignora el 999 guardado
+    expect(r.resta).toBe(500);
+  });
+
+  it('sin pagos → usa el anticipo legacy guardado', () => {
+    const p = { total: 1000, anticipo: 400, pagos: [] };
+    const r = normalizarRestaPedido(p);
+    expect(r.anticipo).toBe(400);
+    expect(r.resta).toBe(600);
+  });
+
+  it('sin pagos ni anticipo → resta = total completo', () => {
+    const r = normalizarRestaPedido({ total: 800 });
+    expect(r.anticipo).toBe(0);
+    expect(r.resta).toBe(800);
+  });
+
+  it('pagos que superan el total → resta nunca negativa', () => {
+    const p = { total: 500, pagos: [{ monto: 300 }, { monto: 400 }] };
+    const r = normalizarRestaPedido(p);
+    expect(r.anticipo).toBe(700);
+    expect(r.resta).toBe(0);
+  });
+
+  it('pedido totalmente pagado → resta 0', () => {
+    const p = { total: 1000, pagos: [{ monto: 1000 }] };
+    expect(normalizarRestaPedido(p).resta).toBe(0);
+  });
+
+  it('refleja ediciones en pagos existentes (no acumula)', () => {
+    const p: any = { total: 1000, pagos: [{ monto: 300 }] };
+    normalizarRestaPedido(p);
+    expect(p.resta).toBe(700);
+    // El usuario edita el abono de 300 a 250 — al renormalizar NO debe acumular.
+    p.pagos[0].monto = 250;
+    normalizarRestaPedido(p);
+    expect(p.anticipo).toBe(250);
+    expect(p.resta).toBe(750);
+  });
+
+  it('maneja montos como string', () => {
+    const p = { total: '1500', pagos: [{ monto: '500' }] };
+    const r = normalizarRestaPedido(p);
+    expect(r.anticipo).toBe(500);
+    expect(r.resta).toBe(1000);
+  });
+});
+
+// ── descontarVariantePT (source: pedidos-2.ts _descontarInventarioPedido) ───────
+// ESPEJO del parseo de variante + decremento. La variante llega como "Tipo: Valor"
+// (ej "Color: Rojo"); FIX-3 la separa y descuenta de la variante correcta. Sin
+// variante, descuenta de la de mayor stock. prod.stock se recalcula desde las variantes.
+function descontarVariantePT(prod: any, item: any): void {
+  const cantidad = item.quantity || item.cantidad || 1;
+  if (item.variante) {
+    const _colIdx = item.variante.indexOf(':');
+    const _vType = _colIdx !== -1 ? item.variante.slice(0, _colIdx).trim() : item.variante;
+    const _vValue = _colIdx !== -1 ? item.variante.slice(_colIdx + 1).trim() : '';
+    const _ptVar = prod.variants.find((v: any) =>
+      (v.type || v.tipo || '') === _vType && (v.value || v.valor || '') === _vValue
+    );
+    if (_ptVar) { _ptVar.qty = Math.max(0, (_ptVar.qty || 0) - cantidad); }
+  } else {
+    const _varMayor = prod.variants.slice().sort((a: any, b: any) => (parseInt(b.qty) || 0) - (parseInt(a.qty) || 0))[0];
+    if (_varMayor) { _varMayor.qty = Math.max(0, (parseInt(_varMayor.qty) || 0) - cantidad); }
+  }
+  prod.stock = prod.variants.reduce((s: number, v: any) => s + (parseInt(v.qty) || 0), 0);
+}
+
+describe('descontarVariantePT', () => {
+  it('descuenta de la variante exacta por "Tipo: Valor"', () => {
+    const prod = { stock: 8, variants: [
+      { type: 'Color', value: 'Rojo', qty: 5 },
+      { type: 'Color', value: 'Azul', qty: 3 },
+    ]};
+    descontarVariantePT(prod, { variante: 'Color: Rojo', quantity: 2 });
+    expect(prod.variants[0].qty).toBe(3);
+    expect(prod.variants[1].qty).toBe(3);
+    expect(prod.stock).toBe(6); // se recalcula desde variantes
+  });
+
+  it('soporta esquema en español {tipo, valor}', () => {
+    const prod = { stock: 4, variants: [{ tipo: 'Talla', valor: 'M', qty: 4 }] };
+    descontarVariantePT(prod, { variante: 'Talla: M', cantidad: 1 });
+    expect(prod.variants[0].qty).toBe(3);
+    expect(prod.stock).toBe(3);
+  });
+
+  it('sin variante → descuenta de la de mayor stock', () => {
+    const prod = { stock: 13, variants: [
+      { type: 'Color', value: 'Rojo', qty: 2 },
+      { type: 'Color', value: 'Azul', qty: 9 },
+      { type: 'Color', value: 'Verde', qty: 2 },
+    ]};
+    descontarVariantePT(prod, { quantity: 4 });
+    expect(prod.variants[1].qty).toBe(5); // la de 9 (mayor) baja a 5
+    expect(prod.variants[0].qty).toBe(2);
+    expect(prod.stock).toBe(9);
+  });
+
+  it('variante sin match no toca nada pero recalcula stock', () => {
+    const prod = { stock: 99, variants: [{ type: 'Color', value: 'Rojo', qty: 5 }] };
+    descontarVariantePT(prod, { variante: 'Color: Negro', quantity: 2 });
+    expect(prod.variants[0].qty).toBe(5);       // sin cambios
+    expect(prod.stock).toBe(5);                 // stock corregido desde variantes
+  });
+
+  it('nunca deja la variante en negativo', () => {
+    const prod = { stock: 2, variants: [{ type: 'Color', value: 'Rojo', qty: 2 }] };
+    descontarVariantePT(prod, { variante: 'Color: Rojo', quantity: 10 });
+    expect(prod.variants[0].qty).toBe(0);
+    expect(prod.stock).toBe(0);
+  });
+
+  it('variante sin ":" usa el string completo como tipo', () => {
+    const prod = { stock: 3, variants: [{ type: 'Rojo', value: '', qty: 3 }] };
+    descontarVariantePT(prod, { variante: 'Rojo', quantity: 1 });
+    expect(prod.variants[0].qty).toBe(2);
+  });
+
+  it('cantidad por defecto = 1 cuando no se especifica', () => {
+    const prod = { stock: 5, variants: [{ type: 'Color', value: 'Rojo', qty: 5 }] };
+    descontarVariantePT(prod, { variante: 'Color: Rojo' });
+    expect(prod.variants[0].qty).toBe(4);
+  });
+});
