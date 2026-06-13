@@ -6,7 +6,16 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const OUT = path.join(ROOT, 'js');
 
-// ── Step 0: Footgun lint (rompe el build si regresa un bug de clase conocida) ─
+// ── Step 0a: Tests de regresión — no se puede deployar con lógica rota ─────────
+console.log('Tests...');
+try {
+  execSync('npx vitest run --reporter=verbose', { cwd: ROOT, stdio: 'inherit' });
+} catch (e) {
+  console.error('\n  ✖ Tests fallaron — corrige los tests antes de buildear.\n');
+  process.exit(1);
+}
+
+// ── Step 0b: Footgun lint (rompe el build si regresa un bug de clase conocida) ─
 console.log('Footgun lint...');
 require('./lint-footguns.js');   // lanza Error y aborta el build si encuentra algo
 

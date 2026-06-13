@@ -619,3 +619,137 @@ describe('descontarVariantePT', () => {
     expect(prod.variants[0].qty).toBe(4);
   });
 });
+
+// ── reactivarPedido cleanup (source: pedidos-2.ts reactivarPedido, BUG C1 FIX) ─
+// ESPEJO de las 4 operaciones de limpieza que ocurren al reactivar un pedido.
+// Antes del fix C1: nada se limpiaba → si el pedido se volvía a finalizar,
+// salesHistory y incomes acumulaban entradas duplicadas → doble conteo en reportes.
+//
+// Lógica extraída (sin efectos secundarios de DB ni toasts):
+//   a) quitar de salesHistory el registro con folio===p.folio y type==='pedido'
+//   b) filtrar incomes quitando los de folioOrigen===p.folio o type==='cobro_entrega'
+//   c) revertir totalPurchases del cliente
+function limpiarAlReactivar(p: any, state: { salesHistory: any[]; incomes: any[]; clients: any[] }) {
+  // a) salesHistory
+  const shIdx = state.salesHistory.findIndex(s => s.folio === p.folio && s.type === 'pedido');
+  const shIdEliminado = shIdx !== -1 ? state.salesHistory[shIdx].id : null;
+  if (shIdx !== -1) state.salesHistory.splice(shIdx, 1);
+
+  // b) incomes
+  const incomesAntes = state.incomes.length;
+  state.incomes = state.incomes.filter(inc =>
+    inc.folioOrigen !== p.folio && !(inc.type === 'cobro_entrega' && inc.folio === p.folio)
+  );
+  const incomesEliminados = incomesAntes - state.incomes.length;
+
+  // c) totalPurchases del cliente
+  const cli = state.clients.find(c =>
+    (p.clienteId && String(c.id) === String(p.clienteId)) ||
+    (c.name || '').toLowerCase().trim() === (p.cliente || '').toLowerCase().trim()
+  );
+  if (cli && Number(p.total || 0) > 0) {
+    cli.totalPurchases = Math.max(0, (Number(cli.totalPurchases) || 0) - Number(p.total || 0));
+  }
+
+  return { shIdEliminado, incomesEliminados, clienteActualizado: !!cli };
+}
+
+describe('reactivarPedido cleanup (C1)', () => {
+  // REGRESIÓN C1: sin limpieza, finalizar dos veces duplica salesHistory e incomes.
+  it('C1: salesHistory type:pedido se elimina al reactivar', () => {
+    const state = {
+      salesHistory: [
+        { id: 'sh-1', folio: 'PE-010', type: 'pedido', total: 1000 },
+        { id: 'sh-2', folio: 'PE-011', type: 'pedido', total: 500 },  // otro pedido
+      ],
+      incomes: [],
+      clients: [],
+    };
+    limpiarAlReactivar({ folio: 'PE-010', total: 1000 }, state);
+    expect(state.salesHistory).toHaveLength(1);
+    expect(state.salesHistory[0].folio).toBe('PE-011');  // el otro queda intacto
+  });
+
+  it('C1: entradas de salesHistory de tipo abono/anticipo NO se tocan', () => {
+    const state = {
+      salesHistory: [
+        { id: 'sh-1', folio: 'PE-010', type: 'pedido', total: 1000 },
+        { id: 'sh-2', folio: 'PE-010', type: 'abono',  total: 300 },
+        { id: 'sh-3', folio: 'PE-010', type: 'anticipo', total: 200 },
+      ],
+      incomes: [],
+      clients: [],
+    };
+    limpiarAlReactivar({ folio: 'PE-010', total: 1000 }, state);
+    // Solo el type:'pedido' se elimina; abonos/anticipos permanecen
+    expect(state.salesHistory).toHaveLength(2);
+    expect(state.salesHistory.every(s => s.type !== 'pedido')).toBe(true);
+  });
+
+  it('C1: incomes con folioOrigen del pedido se eliminan', () => {
+    const state = {
+      salesHistory: [],
+      incomes: [
+        { id: 'i-1', amount: 600, folioOrigen: 'PE-010' },            // anticipo → fuera
+        { id: 'i-2', amount: 400, folioOrigen: 'PE-010' },            // abono → fuera
+        { id: 'i-3', amount: 200, folioOrigen: 'PE-999' },            // otro pedido → queda
+        { id: 'i-4', amount: 150 },                                    // manual → queda
+      ],
+      clients: [],
+    };
+    const r = limpiarAlReactivar({ folio: 'PE-010', total: 1000 }, state);
+    expect(state.incomes).toHaveLength(2);
+    expect(r.incomesEliminados).toBe(2);
+    expect(state.incomes.map(i => i.id)).toEqual(['i-3', 'i-4']);
+  });
+
+  it('C1: income type:cobro_entrega del mismo folio se elimina', () => {
+    const state = {
+      salesHistory: [],
+      incomes: [
+        { id: 'c-1', type: 'cobro_entrega', folio: 'PE-010', amount: 400 },
+        { id: 'c-2', type: 'cobro_entrega', folio: 'PE-999', amount: 200 }, // otro → queda
+      ],
+      clients: [],
+    };
+    limpiarAlReactivar({ folio: 'PE-010', total: 1000 }, state);
+    expect(state.incomes).toHaveLength(1);
+    expect(state.incomes[0].folio).toBe('PE-999');
+  });
+
+  it('C1: totalPurchases del cliente se reduce en p.total', () => {
+    const state = {
+      salesHistory: [],
+      incomes: [],
+      clients: [{ id: '42', name: 'Ana López', totalPurchases: 5000 }],
+    };
+    limpiarAlReactivar({ folio: 'PE-010', total: 1000, clienteId: '42' }, state);
+    expect(state.clients[0].totalPurchases).toBe(4000);
+  });
+
+  it('C1: totalPurchases nunca cae a negativo', () => {
+    const state = {
+      salesHistory: [],
+      incomes: [],
+      clients: [{ id: '1', name: 'Juan', totalPurchases: 200 }],
+    };
+    limpiarAlReactivar({ folio: 'PE-010', total: 9999, clienteId: '1' }, state);
+    expect(state.clients[0].totalPurchases).toBe(0);
+  });
+
+  it('C1: cliente sin nombre match deja totalPurchases intacto', () => {
+    const state = {
+      salesHistory: [],
+      incomes: [],
+      clients: [{ id: '99', name: 'Otro', totalPurchases: 3000 }],
+    };
+    const r = limpiarAlReactivar({ folio: 'PE-010', total: 500, cliente: 'Nadie' }, state);
+    expect(r.clienteActualizado).toBe(false);
+    expect(state.clients[0].totalPurchases).toBe(3000);
+  });
+
+  it('C1: pedido sin salesHistory previo no rompe nada', () => {
+    const state = { salesHistory: [], incomes: [], clients: [] };
+    expect(() => limpiarAlReactivar({ folio: 'PE-NEW', total: 500 }, state)).not.toThrow();
+  });
+});
