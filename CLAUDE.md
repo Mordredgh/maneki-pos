@@ -1,8 +1,8 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 12 junio 2026 — Sesión 23 (bugfixes audit S23: 10 íconos, movimientos relacional, costo ponderado, commits `0ad629e`, `083809d`)
-> **Sin pendientes de código.** App estable. Todas las mejoras UI/UX y nice-to-haves del audit aplicadas.
-> **Versión app:** 2.2.0 | **SW hash:** maneki-c8796b1801 | **Branch:** fresh-start → master
+> **Última actualización:** 12 junio 2026 — Sesión 24 (auditoría dual: 9 bugs + 4 items diseño premium, commits `befa834`…`fe83c32`)
+> **Sin pendientes de código.** App estable. Todas las mejoras UI/UX y bugs del audit S24 aplicados.
+> **Versión app:** 2.6.0 | **SW hash:** maneki-6d404f45f1 | **Branch:** fresh-start → master
 
 ---
 
@@ -10,12 +10,22 @@
 
 > ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
 
-### v2.6.0 (12 junio 2026)
-- 🎨 Token de oro unificado: #C5A572 (144 usos) reemplazado por #C5973B (--mk-g500 canónico) en 22 archivos
-- 🔲 Botones de toolbar en inventario usan clase mk-btn-primary en vez de gradiente inline
-- 💬 Diálogos nativos confirm()/alert()/prompt() reemplazados por showConfirm() del design system
-- 🔧 Lead time de proveedor usa mini-modal propio (_mkEditLeadTime) en vez de prompt() nativo
-- 🎯 7 section-headers migrados de emoji HTML-entity a íconos FA SVG del sistema local
+### v2.6.0 (12 junio 2026) — Auditoría Dual S24
+**Bugs críticos (Agentes 1+2+3):**
+- 🐛 C1: reactivar pedido ahora limpia salesHistory, incomes y totalPurchases del cliente
+- 🐛 C2: race condition en descuento de inventario resuelto (await correcto, inventarioDescontado solo true si guardado)
+- 🐛 C3: balance descuadraba cuando pedido tenía abono/anticipo — eliminado filtro foliosEnIncomes de totalPedidosFin
+- 🐛 A1: id de salesHistory en lotes usa mkId() en vez de pedidoFin.id (evita colisión upsert)
+- 🐛 A2: UTC shift en vista Carga Semanal corregido (fechas locales con getFullYear/getMonth/getDate)
+- 🐛 A4: bienvenida usa p.cliente||p.customer y productosInventario||productos (campos correctos)
+- 🐛 A5: valuación e inventario por categoría usan getStockEfectivo() en vez de p.stock crudo
+- 🐛 B3: nombre de archivo CSV de reabastecimiento usa fecha local
+- 🐛 B1: gráficas de reportes usan chart.update('none') en vez de destroy()+new Chart()
+**Diseño premium:**
+- 🎨 D1: token oro #C5A572 → #C5973B (--mk-g500 canónico) en 24 archivos
+- 🔲 D2: toolbar inventario usa mk-btn-primary en vez de gradiente inline
+- 💬 D3: confirm()/alert()/prompt() nativos → showConfirm() + mini-modal para lead time
+- 🎯 D4: 7 section-headers migrados de emoji HTML-entity a íconos FA SVG
 
 ### v2.5.0 (12 junio 2026)
 - 🔧 Auditoría S23: 8 bugs corregidos y mejoras de estabilidad
