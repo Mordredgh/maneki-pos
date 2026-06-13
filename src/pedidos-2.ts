@@ -1,4 +1,4 @@
-async function _eliminarFotoStorageAlFinalizar(pedido) {
+﻿async function _eliminarFotoStorageAlFinalizar(pedido) {
     const { paths } = _fotosArray(pedido);
     if (!paths.length) return;
     try { await db.storage.from(FOTO_BUCKET).remove(paths); }
@@ -446,7 +446,7 @@ function closePedidoStatusModal() {
     closeModal('pedidoStatusModal');
 }
 
-function setPedidoStatus(status) {
+async function setPedidoStatus(status) {
     const id = document.getElementById('pedidoStatusId').value;
     const idx = (window.pedidos || []).findIndex(p => String(p.id) === String(id));
     if (idx === -1) return;
@@ -714,13 +714,15 @@ function setPedidoStatus(status) {
             if (pedido.inventarioDescontado) {
                 manekiToastExport('⚠️ El inventario ya fue descontado para este pedido', 'warn');
             } else if ((pedido.productosInventario || []).length > 0) {
-                // BUG-1 FIX: _descontarInventarioPedido es async — fire+flag pattern.
-                // El descuento en memoria ocurre antes del primer await interno de la función,
-                // por lo que marcar inventarioDescontado=true de inmediato es correcto.
-                _descontarInventarioPedido(pedido).then((n: number) => {
-                    if (n > 0) manekiToastExport(`📦 ${n} material(es) descontado(s) del inventario.`, 'ok');
-                }).catch((e: any) => console.error('[Inv setPedidoStatus]', e));
-                window.pedidos[idx].inventarioDescontado = true;
+                // BUG C2 FIX: await correcto — marcar flag solo si el descuento termina sin error
+                try {
+                    const _nDescont = await _descontarInventarioPedido(pedido);
+                    window.pedidos[idx].inventarioDescontado = true;
+                    if (_nDescont > 0) manekiToastExport(`📦 ${_nDescont} material(es) descontado(s) del inventario.`, 'ok');
+                } catch(e) {
+                    window.pedidos[idx].inventarioDescontado = false;
+                    mkHandleError(e, 'descontar inventario al producir');
+                }
             }
             // Descontar empaques del pedido
             if ((pedido.empaques || []).length > 0 && !pedido.empaquesDescontados) {
@@ -795,7 +797,7 @@ function openAbonoPedido(id) {
     document.getElementById('abonoPedidoNota').value = '';
     _abonoPedidoMetodo = 'cash';
     document.querySelectorAll('.abono-ped-btn').forEach((b, i) => {
-        b.style.borderColor = i === 0 ? '#C5A572' : '';
+        b.style.borderColor = i === 0 ? '#C5973B' : '';
         b.style.background  = i === 0 ? '#FFF9F0' : '';
     });
     openModal('abonoPedidoModal');
@@ -808,7 +810,7 @@ function cerrarAbonoPedido() {
 function selectAbonoPedidoMethod(btn, method) {
     _abonoPedidoMetodo = method;
     document.querySelectorAll('.abono-ped-btn').forEach(b => { b.style.borderColor = ''; b.style.background = ''; });
-    btn.style.borderColor = '#C5A572'; btn.style.background = '#FFF9F0';
+    btn.style.borderColor = '#C5973B'; btn.style.background = '#FFF9F0';
 }
 
 let _abonoEnProceso = false;
@@ -1076,7 +1078,7 @@ function _actualizarBarraLote() {
             <option value="retirar">🏪 Retirar</option>
         </select>
         <button onclick="_aplicarCambioLote()"
-            style="padding:7px 18px;border-radius:8px;background:#C5A572;color:white;border:none;cursor:pointer;font-weight:700;font-size:.85rem;">
+            style="padding:7px 18px;border-radius:8px;background:#C5973B;color:white;border:none;cursor:pointer;font-weight:700;font-size:.85rem;">
             Aplicar
         </button>
         <button onclick="_cancelarSeleccionLote()"
@@ -1137,7 +1139,7 @@ function _aplicarCambioLote() {
                 const _saldoLote = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(pedidoFin) : Number(pedidoFin.total);
                 if (!_yaRegLote && _saldoLote > 0) {
                     window.salesHistory.push({
-                        id: pedidoFin.id, type: 'pedido', folio: pedidoFin.folio,
+                        id: mkId(), type: 'pedido', folio: pedidoFin.folio,
                         date: _fecha, customer: pedidoFin.cliente,
                         concept: pedidoFin.concepto || 'Pedido finalizado',
                         total: _saldoLote, method: 'Pedido',
@@ -1201,7 +1203,7 @@ window._cancelarSeleccionLote = _cancelarSeleccionLote;
 function toggleKanbanCompacto() {
     _kanbanCompacto = !_kanbanCompacto;
     const btn = document.getElementById('btnKanbanCompacto');
-    if (btn) { btn.style.background = _kanbanCompacto ? '#C5A572' : ''; btn.style.color = _kanbanCompacto ? 'white' : ''; }
+    if (btn) { btn.style.background = _kanbanCompacto ? '#C5973B' : ''; btn.style.color = _kanbanCompacto ? 'white' : ''; }
     renderKanbanBoard();
 }
 
@@ -1228,6 +1230,43 @@ function reactivarPedido(id) {
         if (!window.pedidos) window.pedidos = [];
 
         const _fecha = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+
+        // BUG C1 FIX: limpiar salesHistory, incomes y totalPurchases antes de reactivar
+        // para evitar doble conteo si el pedido se vuelve a finalizar.
+
+        // a) Eliminar el registro de salesHistory type:'pedido' generado al finalizar
+        if (Array.isArray(window.salesHistory)) {
+            const _shIdx = window.salesHistory.findIndex((s: any) => s.folio === p.folio && s.type === 'pedido');
+            if (_shIdx !== -1) {
+                const _shId = window.salesHistory[_shIdx].id;
+                window.salesHistory.splice(_shIdx, 1);
+                if (typeof deleteSalesHistoryEntry === 'function') deleteSalesHistoryEntry(_shId);
+            }
+        }
+
+        // b) Eliminar el income de "cobro al entregar" si existe (buscar por folioOrigen o type cobro_entrega)
+        if (Array.isArray(window.incomes)) {
+            const _incomesBefore = window.incomes.length;
+            window.incomes = window.incomes.filter((inc: any) =>
+                inc.folioOrigen !== p.folio && !(inc.type === 'cobro_entrega' && inc.folio === p.folio)
+            );
+            if (window.incomes.length !== _incomesBefore && typeof saveIncomes === 'function') saveIncomes();
+        }
+
+        // c) Invalidar caché de ventas
+        if (typeof window._invalidarCacheVentas === 'function') window._invalidarCacheVentas();
+
+        // d) Revertir totalPurchases del cliente
+        if (p.cliente && Array.isArray(window.clients) && Number(p.total || 0) > 0) {
+            const _cliRev = window.clients.find((c: any) =>
+                (p.clienteId && String(c.id) === String(p.clienteId)) ||
+                (c.name || '').toLowerCase().trim() === (p.cliente || '').toLowerCase().trim()
+            );
+            if (_cliRev) {
+                _cliRev.totalPurchases = Math.max(0, (Number(_cliRev.totalPurchases) || 0) - Number(p.total || 0));
+                if (typeof saveClients === 'function') saveClients();
+            }
+        }
 
         // BUG-4 FIX: si el inventario ya fue descontado, devolverlo antes de resetear el flag.
         // Al reactivar, el pedido vuelve a "confirmado" y al pasar a producción se descontará de nuevo.
@@ -1479,7 +1518,7 @@ function renderHistorialPedidos() {
             _histLoadMoreBtn = document.createElement('div');
             _histLoadMoreBtn.id = 'histLoadMoreBtn';
             _histLoadMoreBtn.style.cssText = 'text-align:center;margin-top:12px;';
-            _histLoadMoreBtn.innerHTML = `<button onclick="cargarMasPedidosFinalizados()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #C5A572;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más pedidos ↓</button>`;
+            _histLoadMoreBtn.innerHTML = `<button onclick="cargarMasPedidosFinalizados()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #C5973B;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más pedidos ↓</button>`;
             lista.insertAdjacentElement('afterend', _histLoadMoreBtn);
         } else {
             _histLoadMoreBtn.style.display = '';
@@ -1564,7 +1603,7 @@ function renderGraficaROI() {
     const canvas = document.getElementById('roiBarChart');
     if (!canvas) return;
     const equiposList = typeof equipos !== 'undefined' ? equipos : (window.equipos||[]);
-    if (!equiposList.length) { canvas.parentElement.innerHTML = '<div class="flex flex-col items-center justify-center py-8 gap-3"><p class="text-center text-gray-400 text-sm">Sin equipos registrados aún</p><button onclick="showSection(\'equipos\')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:#C5A572;color:#fff;">+ Agregar primer equipo</button></div>'; return; }
+    if (!equiposList.length) { canvas.parentElement.innerHTML = '<div class="flex flex-col items-center justify-center py-8 gap-3"><p class="text-center text-gray-400 text-sm">Sin equipos registrados aún</p><button onclick="showSection(\'equipos\')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:#C5973B;color:#fff;">+ Agregar primer equipo</button></div>'; return; }
     const ctx = canvas.getContext('2d');
     if (window._roiChart) window._roiChart.destroy();
     window._roiChart = new Chart(ctx, {
@@ -1625,7 +1664,7 @@ function renderTopClientes() {
     el.innerHTML = top.length===0
         ? '<p class="text-xs text-gray-400 text-center py-2">Sin datos aún</p>'
         : top.map((c,i) => `<div class="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-            <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0" style="background:#C5A572">${i+1}</span>
+            <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0" style="background:#C5973B">${i+1}</span>
             <div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">${_esc(c.nombre || '')}</p><p class="text-xs text-gray-400">${c.pedidos} pedidos</p></div>
             <span class="text-sm font-bold text-gray-700">$${c.total.toFixed(0)}</span>
         </div>`).join('');
@@ -1655,7 +1694,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 wrap.className = 'flex gap-1 ml-2';
                 wrap.style.cssText = 'align-items:center;';
                 const btns = [
-                    { id:'btnKanbanUrgTodos',   filtro:'todos',   label:'Todos',     color:'#C5A572' },
+                    { id:'btnKanbanUrgTodos',   filtro:'todos',   label:'Todos',     color:'#C5973B' },
                     { id:'btnKanbanUrgVencido', filtro:'vencido', label:'⛔ Vencidos', color:'#dc2626' },
                     { id:'btnKanbanUrgHoy',     filtro:'hoy',     label:'🔴 Hoy',     color:'#ea580c' },
                     { id:'btnKanbanUrgProximos',filtro:'pronto',  label:'🟡 2 días',  color:'#ca8a04' },
@@ -2000,7 +2039,7 @@ function _sugerirResenaGoogle(pedido: any) {
     const waUrl = tel ? `https://wa.me/${tel}?text=${msg}` : `https://wa.me/?text=${msg}`;
     setTimeout(() => {
         manekiToastExport(
-            `✨ <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="color:#C5A572;font-weight:700;text-decoration:underline;">¡Pide tu reseña a ${typeof _esc==='function'?_esc(nombre):nombre}! →</a>`,
+            `✨ <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="color:#C5973B;font-weight:700;text-decoration:underline;">¡Pide tu reseña a ${typeof _esc==='function'?_esc(nombre):nombre}! →</a>`,
             'ok'
         );
     }, 1200);
@@ -2245,13 +2284,13 @@ function renderHojaRuta() {
         totalCobrar += saldo;
         const dir = p.direccionEntrega || p.lugarEntrega || p.direccion || '';
         const mapsLink = dir
-            ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(dir)}" target="_blank" rel="noopener noreferrer" style="color:#C5A572;font-size:.75rem;font-weight:600;">📍 Ver en Maps</a>`
+            ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(dir)}" target="_blank" rel="noopener noreferrer" style="color:#C5973B;font-size:.75rem;font-weight:600;">📍 Ver en Maps</a>`
             : '';
         return `
         <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:10px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
                 <div>
-                    <span style="font-size:.8rem;font-weight:700;color:#C5A572;">${_e(p.folio||'—')}</span>
+                    <span style="font-size:.8rem;font-weight:700;color:#C5973B;">${_e(p.folio||'—')}</span>
                     <span style="font-size:.82rem;font-weight:700;color:#1f2937;margin-left:6px;">${_e(p.cliente||'—')}</span>
                     ${p.telefono ? `<a href="https://wa.me/${(_e(p.telefono)).replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" style="font-size:.75rem;color:#25D366;margin-left:6px;">📱 ${_e(p.telefono)}</a>` : ''}
                 </div>
