@@ -512,31 +512,46 @@ function _updateDashboardImpl() {
             const pedidosArr = window.pedidos || pedidos || [];
             const _calcS = _csp;
             // Agrupar por cliente los pedidos con saldo > 0
-            const mapa = {};
+            // U4-S26: capturar también el teléfono para ofrecer recordatorio por WhatsApp
+            const mapa: Record<string, { monto: number; tel: string }> = {};
             pedidosArr
                 .filter(p => !['finalizado','cancelado','entregado'].includes((p.status||'').toLowerCase()))
                 .forEach(p => {
                     const saldo = _calcS(p);
                     if (saldo <= 0) return;
                     const nombre = p.cliente || 'Sin nombre';
-                    mapa[nombre] = (mapa[nombre] || 0) + saldo;
+                    if (!mapa[nombre]) mapa[nombre] = { monto: 0, tel: '' };
+                    mapa[nombre].monto += saldo;
+                    if (!mapa[nombre].tel) {
+                        const _t = String(p.telefono || p.whatsapp || '').replace(/\D/g,'');
+                        if (_t) mapa[nombre].tel = _t;
+                    }
                 });
-            const entradas = Object.entries(mapa).sort((a, b) => b[1] - a[1]);
+            const entradas = Object.entries(mapa).sort((a, b) => b[1].monto - a[1].monto);
             if (entradas.length === 0) {
                 manekiToastExport('No hay saldos pendientes por cobrar', 'ok');
                 return;
             }
-            const total = entradas.reduce((s, [,v]) => s + v, 0);
+            const total = entradas.reduce((s, [,v]) => s + v.monto, 0);
+            // U4-S26: texto plano para copiar/compartir el desglose completo
+            const _resumenTexto = 'Saldos pendientes (Me deben):\n'
+                + entradas.map(([n, i]) => `• ${n}: ${fmtMoney(i.monto)}`).join('\n')
+                + `\n\nTotal: ${fmtMoney(total)}`;
             // Mostrar desglose en modal propio en lugar de alert() del OS
             const _isDark = document.body.classList.contains('dark');
             const _rowTextColor = _isDark ? '#e5e7eb' : '#374151';
             const _rowBorderColor = _isDark ? '#334155' : '#f3f4f6';
-            const filas = entradas.map(([nombre, monto]) =>
-                `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid ${_rowBorderColor};">
+            const filas = entradas.map(([nombre, info]) => {
+                const _waTxt = encodeURIComponent(`Hola ${nombre}, te recordamos tu saldo pendiente de ${fmtMoney(info.monto)} con Maneki Store 😊 ¿Cómo te gustaría liquidarlo?`);
+                const _waLink = info.tel
+                    ? `<a href="https://wa.me/52${info.tel}?text=${_waTxt}" target="_blank" onclick="event.stopPropagation()" title="Recordar por WhatsApp" style="color:#25D366;text-decoration:none;font-size:1rem;margin-left:10px;flex-shrink:0;"><i class="fab fa-whatsapp"></i></a>`
+                    : '';
+                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid ${_rowBorderColor};">
                     <span style="font-size:.85rem;color:${_rowTextColor};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(nombre)}</span>
-                    <span style="font-size:.85rem;font-weight:700;color:#dc2626;margin-left:12px;white-space:nowrap;">$${monto.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-                </div>`
-            ).join('');
+                    <span style="font-size:.85rem;font-weight:700;color:#dc2626;margin-left:12px;white-space:nowrap;">${fmtMoney(info.monto)}</span>
+                    ${_waLink}
+                </div>`;
+            }).join('');
             // Usar showConfirm como modal informativo (botón Aceptar = ok, sin cancelar)
             // Inyectar HTML en el div de confirmación si el sistema de modales lo soporta,
             // o bien usar un modal inline creado dinámicamente.
@@ -561,13 +576,31 @@ function _updateDashboardImpl() {
                         <span style="font-size:.85rem;font-weight:600;color:#6b7280;">Total</span>
                         <span id="_meDeben_totalVal" style="font-size:1.1rem;font-weight:900;color:#dc2626;"></span>
                     </div>
+                    <button id="_meDeben_copy" class="mk-btn-primary" style="margin-top:14px;width:100%;justify-content:center;">📋 Copiar desglose</button>
                 </div>`;
                 document.body.appendChild(_mdc);
                 document.getElementById('_meDeben_close').addEventListener('click', () => { _mdc.style.display = 'none'; });
                 _mdc.addEventListener('click', e => { if (e.target === _mdc) _mdc.style.display = 'none'; });
+                // U4-S26: copiar el desglose actual (texto guardado en el elemento en cada apertura)
+                document.getElementById('_meDeben_copy').addEventListener('click', () => {
+                    const txt = (_mdc as any)._resumen || '';
+                    const _ok = () => manekiToastExport('📋 Desglose copiado al portapapeles', 'ok');
+                    const _fallback = () => {
+                        try {
+                            const ta = document.createElement('textarea');
+                            ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0;';
+                            document.body.appendChild(ta); ta.select();
+                            document.execCommand('copy'); ta.remove(); _ok();
+                        } catch(e) { manekiToastExport('No se pudo copiar', 'warn'); }
+                    };
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(txt).then(_ok).catch(_fallback);
+                    } else { _fallback(); }
+                });
             }
+            (_mdc as any)._resumen = _resumenTexto;
             document.getElementById('_meDeben_body').innerHTML = filas;
-            document.getElementById('_meDeben_totalVal').textContent = '$' + total.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+            document.getElementById('_meDeben_totalVal').textContent = fmtMoney(total);
             _mdc.style.display = 'flex';
         });
     }

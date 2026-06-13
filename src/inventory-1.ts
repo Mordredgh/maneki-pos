@@ -1326,7 +1326,7 @@ function abrirBulkEditPrecios() {
                 <button onclick="document.getElementById('_bulkEditModal').style.display='none'"
                     style="flex:1;padding:10px;border:1.5px solid #E5E7EB;border-radius:12px;background:#fff;font-size:.85rem;cursor:pointer;">Cancelar</button>
                 <button id="_bulkApplyBtn" onclick="_aplicarBulkPrecios()"
-                    style="flex:2;padding:10px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;">
+                    style="flex:2;padding:10px;background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:#fff;border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;">
                     ✅ Aplicar cambios
                 </button>
             </div>

@@ -501,6 +501,7 @@ declare function setupSearchFilter(inputId: string, containerId: string, renderF
 declare function renderQuotesTable(): void;
 declare function guardarDatos(): void;
 declare function _money(n: number): string;
+declare function fmtMoney(amount: any): string;
 declare function eliminarPedidoFinalizado(id: string): void;
 declare function _invalidarCacheVentas(): void;
 declare function _safeLogo(url: string): string;

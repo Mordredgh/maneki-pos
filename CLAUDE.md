@@ -1,14 +1,25 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 13 junio 2026 — Sesión 25 (auditoría S25: 5 fixes de integridad/Supabase/rendimiento)
+> **Última actualización:** 13 junio 2026 — Sesión 26 (auditoría S26: 1 bug ghost + 4 fixes menores + 4 mejoras UI/UX)
 > **Sin pendientes de código.** App estable. Guardrails activos: lint pre-build + vitest (65 tests) en Step 0.
-> **Versión app:** 2.6.1 | **SW hash:** maneki-abc391dc59 | **Branch:** fresh-start → master
+> **Versión app:** 2.6.2 | **SW hash:** maneki-422db4a0fa | **Branch:** fresh-start → master
 
 ---
 
 ## Changelog del Programa
 
 > ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
+
+### v2.6.2 (13 junio 2026) — Auditoría S26 (bug ghost + UI/UX)
+**Bugs:**
+- 🐛 B5: eliminar venta del historial ahora emite DELETE en `sales_history` y `orders_finalizados` (eran upsert-only → la venta/pedido reaparecía al recargar). Misma clase F1 de S25.
+- 🛡️ B1: `JSON.parse` de `mk_clientes_sort` con try/catch — un localStorage corrupto ya no rompe la sección Clientes
+- 🔧 B3: invalidación completa del cache de ventas (`_allVentasCacheKey` incluido)
+**UI/UX:**
+- 💵 U1: formato de dinero unificado vía `fmtMoney()` (clientes, RFM, "Me deben", totales)
+- 🎨 U2: botones de acción a `.mk-btn-primary`; gradientes oro inline → token `var(--mk-gold-*)`
+- ⛔ U3: pedidos vencidos resaltados con borde rojo en kanban (incluida la vista compacta, antes sin indicador)
+- 📲 U4: en "Me deben" del dashboard, botón WhatsApp por cliente + "Copiar desglose"
 
 ### v2.6.1 (13 junio 2026) — Auditoría S25 (integridad Supabase + rendimiento)
 - 🐛 F1: ingresos/ventas fantasma — reactivar/eliminar pedido ahora borra los incomes y salesHistory de Supabase (antes solo del array local; `saveIncomes/saveSalesHistory` son upsert-only y reaparecían al recargar, descuadrando el balance y anulando el fix C1)
@@ -587,6 +598,35 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | Equipos/ROI | &#9881; (⚙) | fa-tools |
 | Pedidos por Encargo | &#128236; (📬) | fa-shopping-bag |
 | Configuración | &#9881; (⚙) | fa-cog |
+
+## ✅ Sesión 26 (13 junio 2026) — Auditoría profunda + mejoras UI/UX (v2.6.2)
+
+> Veredicto: la capa de datos/lógica/Supabase quedó SÓLIDA tras S24–S25 (fechas guardadas,
+> JSON.parse protegidos, descuento con rollback, memoización correcta). Solo apareció 1 bug
+> ghost nuevo (misma clase F1) + ajustes menores. El grueso fue UI/UX (lo nuevo del pedido).
+
+| ID | Sev/Tipo | Fix | Archivos |
+|----|----------|-----|---------|
+| B5 | 🟠 Bug | `eliminarVentaHistorial` filtraba salesHistory y pedidosFinalizados localmente pero `saveSalesHistory/savePedidosFinalizados` son upsert-only → reaparecían al recargar. Ahora emite `deleteSalesHistoryEntry(id)` + `deletePedidoFinalizado(id)`. | `reportes.ts` |
+| B1 | 🟡 Bug | `JSON.parse(mk_clientes_sort)` a nivel de módulo sin try/catch abortaba `clientes.bundle.js` si el valor estaba corrupto. | `clientes.ts` |
+| B3 | 🔵 Bug | Cache de ventas: resetear `_allVentasCache` Y `_allVentasCacheKey`. | `reportes.ts` |
+| U1 | 💵 UI | Dinero unificado vía `fmtMoney()` (entero sin decimales, fracción con 2). Antes: clientes $1,500 vs Me deben $1,500.00. | `clientes.ts`, `dashboard.ts`, `types/maneki.d.ts` |
+| U2 | 🎨 UI | 4 botones de acción → `.mk-btn-primary` (hover/active premium); gradiente oro inline → `var(--mk-gold-500/400)` en 4 archivos. Print CSS y tints decorativos intactos. | `inventory-5.ts`, `inventory-1/2-pt/2-pack.ts`, `init.ts` |
+| U3 | ⛔ UX | Pedidos vencidos (entrega < hoy, no finalizado/cancelado) con `border-left:3px #dc2626` en ambas vistas + badge ⛔ en la compacta (antes sin ningún indicador). | `pedidos-1-views.ts` |
+| U4 | 📲 NTH | Desglose "Me deben": link WhatsApp por cliente (recordatorio de saldo con teléfono del pedido) + botón "Copiar desglose" (clipboard con fallback execCommand). | `dashboard.ts` |
+
+### Nota: la clase de bug F1/B5 sigue viva — candidata a regla de lint
+
+`eliminarVentaHistorial` confirma que el patrón "quitar de array local sin DELETE en BD" reaparece
+en flujos nuevos. Ver [[project_upsert_delete_incomes]]. Considerar una regla de footgun que detecte
+`Array = Array.filter`/`.splice` sobre tablas relacionales sin un `delete*` cercano.
+
+### Estado de `npm run build:check` (tsc strict)
+
+Tiene ~25 errores **preexistentes** (require en reportes, `.message` sobre unknown, tipos en ui-extras/
+whatsapp). NO bloquean el deploy (esbuild transpila sin type-check). Limpieza pendiente como deuda futura.
+
+---
 
 ## ✅ Sesión 25 (13 junio 2026) — Auditoría profunda: integridad Supabase + rendimiento (v2.6.1)
 

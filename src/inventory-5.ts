@@ -108,8 +108,7 @@ function abrirBulkPrecioModal() {
                 style="padding:8px 18px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.85rem;cursor:pointer;">Cancelar</button>
             <button onclick="bulkPrecioPreview()"
                 style="padding:8px 18px;border:none;border-radius:10px;background:#e0f2fe;color:#0369a1;font-size:.85rem;font-weight:700;cursor:pointer;">👁 Vista previa</button>
-            <button onclick="bulkPrecioAplicar()"
-                style="padding:8px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;">✅ Aplicar</button>
+            <button onclick="bulkPrecioAplicar()" class="mk-btn-primary">✅ Aplicar</button>
         </div>
     </div>`;
 
@@ -937,7 +936,7 @@ function renderInventoryTable() {
             <p style="font-size:1.1rem;font-weight:700;color:#374151;margin-bottom:6px;">Sin resultados para tu búsqueda</p>
             <p style="font-size:.875rem;color:#9ca3af;margin-bottom:20px;">Intenta con otro término o limpia los filtros</p>
             <button onclick="(function(){var el=document.getElementById('inventorySearch');if(el){el.value='';el.dispatchEvent(new Event('input'));}var tEl=document.getElementById('inventoryTagFilter');if(tEl)tEl.value='';var pEl=document.getElementById('inventoryProveedorFilter');if(pEl)pEl.value='';renderInventoryTable();})()"
-                style="padding:10px 22px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:.875rem;font-weight:700;cursor:pointer;">
+                class="mk-btn-primary" style="padding:10px 22px;">
                 Limpiar búsqueda
             </button>
         </div>`;
@@ -1691,7 +1690,7 @@ function abrirConteoFisico() {
     </table>
     <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
       <button onclick="document.getElementById('mkConteo_ov').remove()" style="padding:9px 20px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;font-weight:600;">Cancelar</button>
-      <button onclick="_mkAplicarConteoFisico()" style="padding:9px 24px;border-radius:10px;background:linear-gradient(135deg,#C5973B,#a8864f);color:white;border:none;cursor:pointer;font-weight:700;">✅ Aplicar ajustes</button>
+      <button onclick="_mkAplicarConteoFisico()" class="mk-btn-primary" style="padding:9px 24px;">✅ Aplicar ajustes</button>
     </div>`;
   _mkInvModal('mkConteo', '📋 Conteo Físico de Inventario', html, '780px');
 }
@@ -1913,7 +1912,7 @@ function sugerirStockMinimo() {
     </table>
     <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
       <button onclick="document.getElementById('mkStockMin_ov').remove()" style="padding:9px 20px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;font-weight:600;">Cancelar</button>
-      <button onclick="_mkAplicarStockMinSugerido()" style="padding:9px 24px;border-radius:10px;background:linear-gradient(135deg,#C5973B,#a8864f);color:white;border:none;cursor:pointer;font-weight:700;">🤖 Aplicar seleccionados</button>
+      <button onclick="_mkAplicarStockMinSugerido()" class="mk-btn-primary" style="padding:9px 24px;">🤖 Aplicar seleccionados</button>
     </div>`;
   _mkInvModal('mkStockMin', '🤖 Stock Mínimo Sugerido', html, '780px');
 }

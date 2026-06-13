@@ -185,7 +185,7 @@
             </div>
 
             <button type="button" id="ptSubmitBtn" onclick="guardarProductoTerminado()"
-                style="width:100%;padding:16px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-top:8px;letter-spacing:.02em;">
+                style="width:100%;padding:16px;background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-top:8px;letter-spacing:.02em;">
                 \u2705 Agregar Producto
             </button>
         </form>

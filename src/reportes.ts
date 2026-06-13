@@ -1000,14 +1000,26 @@ function eliminarVentaHistorial(idOrIdx) {
         let venta = (window.salesHistory||[]).find(s => s.id === idOrIdx);
         if (!venta && typeof idOrIdx==='number') venta = (window.salesHistory||[])[idOrIdx];
         if (venta && venta.folio) {
+            // B5-S26: capturar los finalizados a borrar y emitir el DELETE en BD —
+            // savePedidosFinalizados() es upsert-only y sin esto el pedido reaparecía al recargar.
+            const _finElim = (window.pedidosFinalizados||[]).filter(p => p.folio === venta.folio);
             window.pedidosFinalizados = (window.pedidosFinalizados||[]).filter(p => p.folio !== venta.folio);
             if (typeof savePedidosFinalizados === 'function') savePedidosFinalizados();
+            if (typeof (window as any).deletePedidoFinalizado === 'function') {
+                _finElim.forEach((p: any) => (window as any).deletePedidoFinalizado(p.id));
+            }
         }
         const idx = (window.salesHistory||[]).findIndex(s => s.id === idOrIdx);
+        const _ventaId = idx !== -1 ? window.salesHistory[idx].id : (venta ? venta.id : null);
         if (idx !== -1) window.salesHistory.splice(idx, 1);
         else if (typeof idOrIdx==='number') window.salesHistory.splice(idOrIdx, 1);
         if (typeof saveSalesHistory === 'function') saveSalesHistory();
-        _allVentasCache = null;
+        // B5-S26: DELETE explícito en sales_history (upsert no borra) — sin esto la venta volvía
+        if (_ventaId != null && typeof (window as any).deleteSalesHistoryEntry === 'function') {
+            (window as any).deleteSalesHistoryEntry(_ventaId);
+        }
+        // B3-S26: invalidar cache completo (key incluida), no solo el blob
+        _allVentasCache = null; _allVentasCacheKey = '';
         renderSalesHistory();
         manekiToastExport('🗑️ Venta eliminada del historial', 'ok');
     });

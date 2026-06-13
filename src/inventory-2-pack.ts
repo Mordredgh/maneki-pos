@@ -66,7 +66,7 @@ function injectPackModal() {
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                     <label style="font-size:.85rem;font-weight:700;color:#374151;">📦 Productos en el Pack</label>
                     <button type="button" onclick="packAbrirSelectorPT()"
-                        style="padding:6px 14px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
+                        style="padding:6px 14px;background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         + Agregar producto
                     </button>
                 </div>
@@ -160,7 +160,7 @@ function injectPackModal() {
             </div>
 
             <button type="button" id="packSubmitBtn" onclick="guardarPack()"
-                style="width:100%;padding:14px;background:linear-gradient(135deg,#C5973B,#E8B84B);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.02em;">
+                style="width:100%;padding:14px;background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.02em;">
                 ✅ Guardar Pack
             </button>
         </form>

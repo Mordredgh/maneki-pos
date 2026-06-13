@@ -440,6 +440,10 @@ function kanbanCardHTML(p) {
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     const entrega = p.entrega ? new Date(p.entrega + 'T00:00:00') : null;
     const diff = entrega ? Math.round((entrega - hoy) / 86400000) : null;
+    // U3-S26: pedido vencido = fecha de entrega pasada y aún no finalizado/cancelado.
+    // Se usa para borde rojo de escaneo (ambas vistas) + badge en la vista compacta.
+    const _esVencido = diff !== null && diff < 0 && !['finalizado','cancelado'].includes((p.status||'').toLowerCase());
+    const _bordeVencido = _esVencido ? 'border-left:3px solid #dc2626;' : '';
     let alertaHtml = '';
     if (diff !== null) {
         if (diff < 0) alertaHtml = '<span class="text-xs font-bold text-red-700">⛔ Vencido</span>';
@@ -461,11 +465,11 @@ function kanbanCardHTML(p) {
     if (_kanbanCompacto) {
         return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex items-center gap-2"
             data-id="${p.id}" data-status="${p.status || 'confirmado'}"
-            style="position:relative;" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
+            style="position:relative;${_bordeVencido}" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
             draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
             ${_checkboxHtml}
             <div class="flex-1 min-w-0">
-                <span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
+                ${_esVencido ? '<span class="text-xs font-bold text-red-700" title="Entrega vencida">⛔</span> ' : ''}<span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
                 <span class="text-xs text-gray-700 ml-1 truncate">${_e(p.cliente)}</span>
             </div>
             <span class="text-xs ${_saldo>0?'text-red-500':'text-green-600'} font-bold whitespace-nowrap">$${_saldo.toFixed(0)}</span>
@@ -511,7 +515,7 @@ function kanbanCardHTML(p) {
     const _pct = _tot > 0 ? Math.min(100, Math.round(((_tot - _saldo) / _tot) * 100)) : (_saldo === 0 ? 100 : 0);
     return `<div class="kanban-card mk-kanban-card-${p.status || 'confirmado'} bg-white rounded-xl p-2 shadow-sm border border-gray-100 select-none"
         data-id="${p.id}" data-status="${p.status || 'confirmado'}"
-        style="position:relative;" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
+        style="position:relative;${_bordeVencido}" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
         ${_checkboxHtml}
         ${_retrasadoHTML}

@@ -166,7 +166,7 @@ window._rfmVerSegmento = function(segKey: string) {
             return `<tr style="border-bottom:1px solid #f3f4f6">
                 <td style="padding:7px 10px;font-size:.8rem;font-weight:600;color:#374151">${_e(nombre)}</td>
                 <td style="padding:7px 10px;font-size:.8rem;color:#6b7280;text-align:center">${v.frecuencia}</td>
-                <td style="padding:7px 10px;font-size:.8rem;font-weight:700;color:#059669;text-align:right">$${v.monto.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+                <td style="padding:7px 10px;font-size:.8rem;font-weight:700;color:#059669;text-align:right">${fmtMoney(v.monto)}</td>
                 <td style="padding:7px 10px;font-size:.8rem;color:#6b7280;text-align:right">${v.recenciaDias}d</td>
                 <td style="padding:7px 10px;text-align:center"><span style="font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:10px;background:${seg.bg};color:${seg.color}">${v.r}·${v.f}·${v.m}</span></td>
                 <td style="padding:7px 10px;text-align:center">${waBtn}</td>
@@ -197,7 +197,10 @@ window._rfmVerSegmento = function(segKey: string) {
 
 // ── NTH-10: Ordenamiento de tabla de clientes ────────────────────────────────
 // H47: persistir ordenamiento en localStorage entre renders
-const _cliSortSaved = JSON.parse(localStorage.getItem('mk_clientes_sort') || 'null');
+// B1-S26: try/catch — un valor corrupto en localStorage tiraba SyntaxError a nivel de
+// módulo y abortaba la evaluación de todo clientes.bundle.js (la sección no cargaba).
+let _cliSortSaved: any = null;
+try { _cliSortSaved = JSON.parse(localStorage.getItem('mk_clientes_sort') || 'null'); } catch (e) { _cliSortSaved = null; }
 let _clientesSortCol = _cliSortSaved?.col || 'name';
 let _clientesSortDir = _cliSortSaved?.dir || 'asc';
 
@@ -579,7 +582,7 @@ ${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(
 ${!client.phone && !client.facebook ? '—' : ''}
 </td>
 <td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : '—'}</td>
-                    <td class="px-6 py-4 text-right text-gray-800 font-semibold">$${(client.totalPurchases||0).toFixed(2)}</td>
+                    <td class="px-6 py-4 text-right text-gray-800 font-semibold">${fmtMoney(client.totalPurchases||0)}</td>
                     <td class="px-6 py-4 text-gray-600">${client.lastPurchase || '—'}</td>
                     <td class="px-6 py-4">
                         ${esVIP ? '<span class="badge-vip">VIP</span>' : '<span class="badge-success">Regular</span>'}
@@ -607,7 +610,7 @@ ${!client.phone && !client.facebook ? '—' : ''}
             document.getElementById('totalClients').textContent = clients.length;
             document.getElementById('vipClients').textContent = clients.filter(c => c.isVIP || c.type === 'vip').length;
             const totalPurchases = clients.reduce((sum, c) => sum + (Number(c.totalPurchases)||0), 0);
-            document.getElementById('totalPurchases').textContent = `$${totalPurchases.toFixed(2)}`;
+            document.getElementById('totalPurchases').textContent = fmtMoney(totalPurchases);
         }
 
         let selectedClientType = 'regular';
@@ -825,7 +828,7 @@ ${client.facebook ? `<a href="${_esc(client.facebook).startsWith('http') ? _esc(
 ${!client.phone && !client.facebook ? '—' : ''}
 </td>
                         <td class="px-6 py-4 text-gray-600 text-sm">${client.email ? _esc(client.email) : '—'}</td>
-                        <td class="px-6 py-4 text-right text-gray-800 font-semibold">$${(client.totalPurchases || 0).toFixed(2)}</td>
+                        <td class="px-6 py-4 text-right text-gray-800 font-semibold">${fmtMoney(client.totalPurchases || 0)}</td>
                         <td class="px-6 py-4 text-gray-600">${client.lastPurchase || '—'}</td>
                         <td class="px-6 py-4">
                             ${esVIP ? '<span class="badge-vip">VIP</span>' : '<span class="badge-success">Regular</span>'}
