@@ -458,6 +458,10 @@ function ajustarStock(id) {
     if (m) m.value = '';
     const prEl = document.getElementById('ajusteStockPuntoReorden');
     if (prEl) prEl.value = p.puntoReorden != null ? p.puntoReorden : '';
+    const _costWrap = document.getElementById('_ajusteCostoPonderadoWrap');
+    const _costInput = document.getElementById('ajusteStockCostoNuevo') as HTMLInputElement;
+    if (_costWrap) _costWrap.style.display = 'none';
+    if (_costInput) _costInput.value = '';
 
     // Guardar id en data attribute del modal como respaldo adicional
     const modal = document.getElementById('ajustarStockModal');
@@ -625,6 +629,13 @@ function confirmarAjusteStock() {
                     ? (_stockOriginal * _costoActual + delta * _costoNuevo) / _totalUnidades
                     : _costoNuevo;
                 p.cost = Math.round(p.cost * 100) / 100;
+                const _idxWA = (window.products||[]).findIndex((x:any) => String(x.id) === String(p.id));
+                if (_idxWA >= 0) {
+                    const _hcWA = [...(window.products[_idxWA].historialCostos || [])];
+                    _hcWA.push({ fecha: new Date().toISOString(), costoAntes: _costoActual, costoNuevo: p.cost, motivo: 'Promedio ponderado' });
+                    window.products[_idxWA].historialCostos = _hcWA;
+                    p.historialCostos = _hcWA;
+                }
             }
         }
     }
@@ -653,25 +664,6 @@ function confirmarAjusteStock() {
         stockAntes: antes, stockDespues: despues
     });
 
-    // FIX-2 + FIX-5: Registrar en movimientosStock (array canónico) con estructura completa
-    window.movimientosStock = window.movimientosStock || [];
-    const motivoEl  = document.getElementById('ajusteStockMotivoSelect');
-    const notasEl2  = document.getElementById('ajusteStockNotasExtra');
-    const _mvEntry = {
-        id: Date.now() + Math.random(),
-        fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})()),
-        productoId: p.id,
-        productoNombre: p.name || p.nombre,
-        deltaStock: delta,
-        stockResultante: despues,
-        motivo: motivoEl ? motivoEl.value : (motivo || 'Ajuste manual'),
-        notas: notasEl2 ? notasEl2.value : notas,
-        usuario: 'local'
-    };
-    window.movimientosStock.unshift(_mvEntry);
-    if (window.movimientosStock.length > 200) window.movimientosStock = window.movimientosStock.slice(0, 200);
-    if (typeof sbSave === 'function') sbSave('movimientosStock', window.movimientosStock);
-    else if (typeof guardarDatos === 'function') guardarDatos();
 
     // Guardar punto de reorden si se ingresó
     const prEl = document.getElementById('ajusteStockPuntoReorden');

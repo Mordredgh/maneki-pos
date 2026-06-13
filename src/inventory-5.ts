@@ -1196,10 +1196,18 @@ function renderMovimientos() {
 window.renderMovimientos = renderMovimientos;
 
 function limpiarMovimientosInventario() {
-    if (!confirm('¿Borrar todo el historial de movimientos?')) return;
-    window.stockMovements = [];
-    saveStockMovements();
-    renderMovimientos();
+    showConfirm('Se borrará permanentemente todo el historial de movimientos de inventario.', '¿Borrar historial?').then(ok => {
+        if (!ok) return;
+        window.stockMovements = [];
+        window.stockMovimientos = [];
+        saveStockMovements();
+        if (typeof db !== 'undefined' && db) {
+            (db as any).from('stock_movements').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(({ error }: any) => {
+                if (error) console.warn('[Inv] Error limpiando stock_movements relacional:', error.message);
+            });
+        }
+        renderMovimientos();
+    });
 }
 window.limpiarMovimientosInventario = limpiarMovimientosInventario;
 

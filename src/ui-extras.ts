@@ -23,6 +23,7 @@ function clearAllData() {
             // MEJ-12: pedidosFinalizados y abonos también deben limpiarse en memoria
             // o siguen apareciendo en Balance y Reportes hasta recargar la página
             window.pedidosFinalizados = []; window.abonos = [];
+            window.stockMovements = []; window.stockMovimientos = [];
             equipos = []; roiHistorial = []; roiConfig = { porcentaje: 10 };
 
             await Promise.all([
@@ -34,6 +35,7 @@ function clearAllData() {
                 sbSave('roiConfig', { porcentaje: 10 }),
                 sbSave('gastosRecurrentes', []), sbSave('stockMovimientos', []),
                 sbSave('pedidosFinalizados', []),
+                typeof db !== 'undefined' && db ? (db as any).from('stock_movements').delete().neq('id','00000000-0000-0000-0000-000000000000') : Promise.resolve(),
             ]);
 
             ['renderInventoryTable','renderClientsTable','renderSalesHistory',
