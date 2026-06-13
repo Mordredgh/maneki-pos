@@ -1,8 +1,8 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 12 junio 2026 — Sesión 24 (auditoría dual: 9 bugs + 4 items diseño premium, commits `befa834`…`fe83c32`)
-> **Sin pendientes de código.** App estable. Todas las mejoras UI/UX y bugs del audit S24 aplicados.
-> **Versión app:** 2.6.0 | **SW hash:** maneki-6d404f45f1 | **Branch:** fresh-start → master
+> **Última actualización:** 13 junio 2026 — Sesión 24 (auditoría dual + guardrail de build + 63 tests, commits `befa834`…`d7c163d`)
+> **Sin pendientes de código.** App estable. Guardrails activos: lint pre-build + vitest en Step 0.
+> **Versión app:** 2.6.0 | **SW hash:** maneki-9144be65ae | **Branch:** fresh-start → master
 
 ---
 
@@ -182,6 +182,14 @@ crypto.randomUUID()             // ❌ NO usar directo
 // ERRORES
 mkHandleError(err, context)     // ✅ handler centralizado
 
+// DIÁLOGOS — siempre modales async (nunca bloqueantes)
+showConfirm(msg, title)              // ✅ Promise<boolean>
+showPrompt(msg, defaultValue, title) // ✅ Promise<string|null> — reemplaza prompt() nativo
+confirm() / alert() / prompt()       // ❌ PROHIBIDO — el linter de build lo rechaza
+
+// FOOTGUN LINTER — scripts/lint-footguns.js corre como Step 0b del build
+// Para uso legítimo y deliberado añadir al final de la línea: // footgun-ok: <razón>
+
 // REPORTES — caché memoizada
 _getAllVentas()                  // ✅ en reportes.js — no bypasear
 // ⚠️  invalidar via window._invalidarCacheVentas() — NO asignar _allVentasCache = null directo (es variable privada)
@@ -195,7 +203,14 @@ window._mkRTSetupDone           // se checa antes de llamar _setupRealtime()
 ## Comandos Útiles
 
 ```bash
-# Compilar un archivo TS (SIEMPRE con --minify en producción)
+# Build completo (vitest → lint-footguns → esbuild → bundles → sw hash)
+node scripts/build.js
+# ⚠️  Falla si hay tests rotos O si hay un footgun detectado en src/
+
+# Correr solo los 63 tests de regresión (sin compilar)
+npx vitest run --reporter=verbose
+
+# Compilar un archivo TS individual (SIEMPRE con --minify en producción)
 npx esbuild src/X.ts --outfile=js/X.js --sourcemap --target=es2020 --minify
 # ⚠️  NO usar --format=iife ni --global-name=_
 
@@ -232,6 +247,8 @@ mostrarEstadoAlmacenamiento()
 - ❌ NO usar `--format=iife` ni `--global-name=_` en esbuild
 - ❌ NO usar `crypto.randomUUID()` directo — usar `mkId()`
 - ❌ NO parsear `JSON.parse()` la tabla `store` de Supabase sin try/catch — es JSON string
+- ❌ NO usar `prompt()` / `confirm()` / `alert()` nativos — usar `showPrompt()` / `showConfirm()` / `manekiToast()`
+- ❌ NO usar el nombre `_fechaLocal` en ningún módulo — colisiona con función de ui-extras (renombrar a `_fechaStr` u otro)
 
 ---
 
@@ -563,6 +580,110 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | Equipos/ROI | &#9881; (⚙) | fa-tools |
 | Pedidos por Encargo | &#128236; (📬) | fa-shopping-bag |
 | Configuración | &#9881; (⚙) | fa-cog |
+
+## ✅ Sesión 24 — Parte 2 (13 junio 2026) — Bugs S24 (C1–C3, A1–A5, B1–B3) + Guardrail de build + 63 tests, commits `befa834`…`d7c163d`
+
+### Bugs críticos (Agentes 1+2+3 S24)
+
+| ID | Fix | Archivos |
+|----|-----|---------|
+| C1 | `reactivarPedido` limpia: salesHistory (type:'pedido'), incomes (folioOrigen o cobro_entrega), totalPurchases del cliente | `src/pedidos-2.ts` |
+| C2 | Race condition en descuento de inventario: `await` correcto, `inventarioDescontado` solo `true` si guardado exitoso | `src/pedidos-2.ts` |
+| C3 | **Balance descuadraba** con pedidos que tenían abono/anticipo — eliminado filtro `foliosEnIncomes` de `totalPedidosFin`; ahora suma TODO `pedidosFinalizados` sin filtrar | `src/balance.ts` |
+| A1 | id de salesHistory en lotes usa `mkId()` en vez de `pedidoFin.id` (evita colisión upsert) | `src/pedidos-2.ts` |
+| A2 | UTC shift en vista Carga Semanal — fechas locales con `getFullYear/getMonth/getDate` | `src/pedidos-2.ts` |
+| A4 | Bienvenida WA usa `p.cliente||p.customer` y `productosInventario||productos` (campos correctos) | `src/pedidos-3.ts` |
+| A5 | Valuación e inventario por categoría usan `getStockEfectivo()` en vez de `p.stock` crudo | `src/inventory-5.ts` |
+| B3 | Nombre de archivo CSV de reabastecimiento usa fecha local | `src/inventory-5.ts` |
+| B1 | Gráficas de reportes usan `chart.update('none')` en vez de `destroy()+new Chart()` | `src/reportes.ts` |
+
+### C3 — lógica de balance corregida
+
+```typescript
+// ANTES (bug): excluía pedidos que tenían income con folioOrigen (abono) → descuadre
+const foliosEnIncomes = new Set(listaIncomes.map(i => i.folio || i.folioOrigen).filter(Boolean));
+const totalPedidosFin = pedidosFinalizados.filter(p => !foliosEnIncomes.has(p.folio)).reduce(...)
+
+// DESPUÉS (fix): el pedido siempre cuenta completo; el income manual excluye el abono vía folioOrigen
+const totalIncomeManual = listaIncomes.filter(i => !i.fromPOS && !i.folioOrigen).reduce(...)
+const totalPedidosFin   = pedidosFinalizados.reduce((sum, p) => sum + Number(p.total||0), 0)
+```
+
+### Guardrail anti-footguns (`scripts/lint-footguns.js`) — Step 0b del build
+
+Corre automáticamente en `node scripts/build.js`. Si detecta una regla, **aborta el build** con mensaje descriptivo.
+
+| Regla | Patrón detectado | Escape correcto |
+|-------|-----------------|----------------|
+| `fecha-utc` | `toISOString().split` | `_fechaHoy()` |
+| `uuid-directo` | `crypto.randomUUID` fuera de `db.ts` | `mkId()` |
+| `dialogo-nativo` | `confirm(` / `alert(` / `prompt(` sin `showConfirm`/`showPrompt`/`window.` cerca | `showConfirm()` / `showPrompt()` |
+| `nombre-global-prohibido` | nombre `_fechaLocal` en cualquier archivo | renombrar a `_fechaStr` u otro |
+| `esbuild-iife` | `--format=iife` o `--global-name` en scripts | nunca usar en este proyecto |
+
+- **Salta comentarios** (`//`, `*`, `/*`)
+- **Ventana de contexto ±1 línea** para fallbacks multilinea guardados
+- **Escape hatch:** añadir `// footgun-ok: <razón>` al final de la línea
+
+El linter detectó 2 bugs reales que el audit S24 había pasado por alto:
+- `csp-delegate.ts:283` — `prompt()` nativo → migrado a `showPrompt()` con fallback
+- `pedidos-2.ts:853` — nombre `_fechaLocal` → renombrado a `_fechaStr` (replace_all en ese módulo)
+
+### `showPrompt(msg, defaultValue, title)` — nuevo helper en `ui-extras.ts`
+
+Equivalente modal de `prompt()` nativo. Retorna `Promise<string|null>` (null si cancelado).
+
+```typescript
+// ANTES (prohibido por linter)
+const nombre = prompt('¿Nombre del filtro?');
+
+// DESPUÉS
+const nombre = await showPrompt('¿Cómo quieres llamar este filtro?', '', 'Guardar filtro');
+if (!nombre || !nombre.trim()) return;
+```
+
+### Suite de regresión — 63 tests en `tests/logic.test.ts` (Step 0a del build)
+
+Corre antes de compilar con `npx vitest run`. Si falla, el build aborta.
+
+| Función probada | Tests | Qué cubre |
+|-----------------|-------|----------|
+| `calcSaldoPendiente` | ~8 | Saldo desde `pagos[]`, anticipo, casos edge |
+| `getStockEfectivo` | ~7 | Variantes, sin variantes, stock 0 |
+| `calcMarginPct` | ~5 | Márgenes, división por cero |
+| `_descontarEmpaquesRollback` | ~6 | Rollback de empaques si falla save |
+| `calcularDisponibilidadDesdeMP` | ~6 | Disponibilidad desde materias primas |
+| **`calcBalanceTotals`** | **9** | **C3 regression: pedido con abono no desaparece ni se duplica** |
+| **`normalizarRestaPedido`** | **7** | `p.pagos[]` como fuente de verdad de anticipo/resta |
+| **`descontarVariantePT`** | **7** | Descuento de variante exacta vs mayor disponible |
+| **`limpiarAlReactivar`** | **8** | **C1 regression: reactivar limpia salesHistory+incomes+totalPurchases** |
+
+El test C3 clave:
+```typescript
+it('C3: pedido finalizado CON abono NO desaparece del balance', () => {
+  const t = calcBalanceTotals({
+    pedidosFinalizados: [{ folio: 'PE-077', total: 1500 }],
+    incomes: [{ amount: 600, folioOrigen: 'PE-077', concept: 'Abono pedido PE-077' }],
+  });
+  expect(t.totalPedidosFin).toBe(1500);   // pedido completo
+  expect(t.totalIncomeManual).toBe(0);     // abono excluido de income manual
+  expect(t.totalIncome).toBe(1500);        // sin doble conteo
+});
+```
+
+### Pipeline de build actualizado
+
+```
+node scripts/build.js
+├── Step 0a: npx vitest run --reporter=verbose   ← 63 tests; falla → abort
+├── Step 0b: require('./lint-footguns.js')        ← 5 reglas; falla → abort
+├── Step 1: esbuild src/*.ts → js/*.js (minify)
+├── Step 2: concat → 8 bundles (core/inventario/pedidos/balance/reportes/clientes/envios/backup)
+├── Step 3: swap-bundles.js (index.html usa bundles en producción)
+└── Step 4: hash-sw.js (SHA-256 de assets → bumpa sw.js cache automáticamente)
+```
+
+---
 
 ## ✅ Sesión 23 (12 junio 2026) — Bugfixes audit S23, commits `0ad629e` `083809d`
 
