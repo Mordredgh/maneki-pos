@@ -269,6 +269,7 @@ mostrarEstadoAlmacenamiento()
 - ❌ NO parsear `JSON.parse()` la tabla `store` de Supabase sin try/catch — es JSON string
 - ❌ NO usar `prompt()` / `confirm()` / `alert()` nativos — usar `showPrompt()` / `showConfirm()` / `manekiToast()`
 - ❌ NO usar el nombre `_fechaLocal` en ningún módulo — colisiona con función de ui-extras (renombrar a `_fechaStr` u otro)
+- ❌ NO quitar un elemento de un array relacional (`incomes`/`expenses`/`salesHistory`/`pedidos`/`pedidosFinalizados`/`clients`) con `X = X.filter(...)` o `X.splice(...)` y solo llamar a `save*()` — los `save*` usan **upsert y NO borran** la fila en Supabase, así que reaparece al recargar (balance descuadrado / venta fantasma). Acompaña SIEMPRE el filtro/splice con su `delete*` de `db.ts` (`deleteIncomeFromDB` · `deleteIncomesByFolio` · `deleteExpenseFromDB` · `deleteSalesHistoryEntry` · `deletePedidoActivo` · `deletePedidoFinalizado` · `deleteClientFromDB`) o un `.delete()` directo de Supabase. El linter `upsert-sin-delete` (Step 0b) **rompe el build** si falta. Clase de bug recurrente S18/S24/S25/S26 — ver [[project_upsert_delete_incomes]].
 
 ---
 
@@ -617,11 +618,13 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | U3 | ⛔ UX | Pedidos vencidos (entrega < hoy, no finalizado/cancelado) con `border-left:3px #dc2626` en ambas vistas + badge ⛔ en la compacta (antes sin ningún indicador). | `pedidos-1-views.ts` |
 | U4 | 📲 NTH | Desglose "Me deben": link WhatsApp por cliente (recordatorio de saldo con teléfono del pedido) + botón "Copiar desglose" (clipboard con fallback execCommand). | `dashboard.ts` |
 
-### Nota: la clase de bug F1/B5 sigue viva — candidata a regla de lint
+### Nota: la clase de bug F1/B5 — ✅ ahora guardada por el linter
 
-`eliminarVentaHistorial` confirma que el patrón "quitar de array local sin DELETE en BD" reaparece
-en flujos nuevos. Ver [[project_upsert_delete_incomes]]. Considerar una regla de footgun que detecte
-`Array = Array.filter`/`.splice` sobre tablas relacionales sin un `delete*` cercano.
+`eliminarVentaHistorial` confirmó que el patrón "quitar de array local sin DELETE en BD" reaparece
+en flujos nuevos (4 sesiones: S18/S24/S25/S26). Ver [[project_upsert_delete_incomes]]. **Resuelto a
+nivel guardrail:** se añadió la regla `upsert-sin-delete` a `scripts/lint-footguns.js` (Step 0b) que
+rompe el build si una reasignación `X = X.filter(`/`X.splice(` sobre un array relacional no lleva un
+`delete*` (o `.delete()`) en su ventana de contexto. Detalle en la tabla del guardrail más abajo.
 
 ### Estado de `npm run build:check` (tsc strict)
 
@@ -702,9 +705,10 @@ Corre automáticamente en `node scripts/build.js`. Si detecta una regla, **abort
 | `dialogo-nativo` | `confirm(` / `alert(` / `prompt(` sin `showConfirm`/`showPrompt`/`window.` cerca | `showConfirm()` / `showPrompt()` |
 | `nombre-global-prohibido` | nombre `_fechaLocal` en cualquier archivo | renombrar a `_fechaStr` u otro |
 | `esbuild-iife` | `--format=iife` o `--global-name` en scripts | nunca usar en este proyecto |
+| `upsert-sin-delete` | `X = X.filter(` / `X.splice(` sobre array relacional (`incomes`/`expenses`/`salesHistory`/`pedidos`/`pedidosFinalizados`/`clients`, con o sin `window.`) sin un `delete*` cerca | acompañar con `deleteIncomeFromDB` / `deleteIncomesByFolio` / `deleteExpenseFromDB` / `deleteSalesHistoryEntry` / `deletePedidoActivo` / `deletePedidoFinalizado` / `deleteClientFromDB` o `.delete()` directo |
 
 - **Salta comentarios** (`//`, `*`, `/*`)
-- **Ventana de contexto ±1 línea** para fallbacks multilinea guardados
+- **Ventana de contexto ±1 línea** por defecto para fallbacks multilinea guardados; las reglas pueden ampliarla con `windowBack`/`windowFwd` (p.ej. `upsert-sin-delete` mira 8 atrás / 12 adelante, porque el `delete*` casi siempre va varias líneas DESPUÉS del filtro). El backref `\2` exige el mismo array a ambos lados del `=`, así una lectura `const ids = salesHistory.filter(...)` no dispara. El `delete*` puede ser un helper de `db.ts`, un `.delete()` de Supabase, o el id acumulado en un `_ids*` para borrado en lote.
 - **Escape hatch:** añadir `// footgun-ok: <razón>` al final de la línea
 
 El linter detectó 2 bugs reales que el audit S24 había pasado por alto:
