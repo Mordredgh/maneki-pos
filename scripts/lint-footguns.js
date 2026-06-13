@@ -2,7 +2,7 @@
  * lint-footguns.js — Guardrail anti-bugs recurrentes de Maneki POS.
  *
  * Cada regla corresponde a una CLASE de bug que ha vuelto a aparecer en
- * auditorías (S20-S24). El objetivo no es "ser más cuidadosos" — es que el
+ * auditorías (S18-S26). El objetivo no es "ser más cuidadosos" — es que el
  * build TRUENE automáticamente cuando un footgun conocido regresa, lo detecte
  * un humano o no.
  *
@@ -25,7 +25,11 @@ const SRC = path.join(ROOT, 'src');
 
 // ── Reglas ──────────────────────────────────────────────────────────────────
 // match: regex que marca una línea sospechosa.
-// allow: (opcional) si la línea TAMBIÉN cumple esto, es un uso legítimo → se ignora.
+// allow: (opcional) si el CONTEXTO alrededor de la línea TAMBIÉN cumple esto, es
+//        un uso legítimo → se ignora. El contexto es ±1 línea por defecto.
+// windowBack/windowFwd: (opcional) líneas de contexto hacia atrás/adelante para el
+//        test de `allow` (default 1 y 1). Útil cuando el "antídoto" (p.ej. el DELETE
+//        que acompaña a un filter) vive varias líneas más abajo, no justo al lado.
 // onlyIn: (opcional) archivos donde el patrón SÍ es legítimo (se ignora ahí).
 // hint: qué usar en su lugar.
 const RULES = [
@@ -52,6 +56,28 @@ const RULES = [
     match: /\b_fechaLocal\b/,
     hint: '_fechaLocal colisiona con helpers existentes. Usa _fechaHoy().',
   },
+  {
+    // "upsert no elimina" — la clase de bug más recurrente (S18, S24, S25, S26).
+    // saveIncomes/saveExpenses/saveSalesHistory/savePedidos*/saveClients usan upsert,
+    // que NUNCA borra filas. Si quitas un elemento del array relacional LOCAL
+    // (X = X.filter(...) o X.splice(...)) y solo llamas al save*, la fila sigue en
+    // Supabase y reaparece al recargar → balance descuadrado / venta fantasma.
+    id: 'upsert-sin-delete',
+    // Reasignación `X = X.filter(` (con/sin window.) o `X.splice(` sobre un array
+    // relacional. \2 obliga a que el mismo array esté a ambos lados del `=`
+    // (así `const ids = salesHistory.filter(...)` —una lectura— NO dispara).
+    match: /\b(window\.)?(pedidosFinalizados|pedidos|incomes|expenses|salesHistory|clients)\s*(?:=\s*(?:window\.)?\2\s*\.filter|\.splice)\s*\(/,
+    // Uso legítimo: hay un DELETE que acompaña al filtro/splice en el contexto:
+    //   · un helper de borrado de db.ts (deleteIncomeFromDB, deletePedidoActivo, …)
+    //   · un .delete() directo de Supabase (db.from('incomes').delete())
+    //   · el id se acumuló en un array _ids* para borrado en lote más abajo
+    //     (p.ej. _idsFinalizadosLote.push(id) → forEach(deletePedidoActivo) al final).
+    allow: /delete(IncomesByFolio|IncomeFromDB|ExpenseFromDB|SalesHistoryEntry|PedidoActivo|PedidoFinalizado|ClientFromDB)\b|\.delete\s*\(|_ids\w*\.push\s*\(/,
+    // El DELETE casi siempre va DESPUÉS del filtro → ventana sesgada hacia adelante.
+    windowBack: 8,
+    windowFwd: 12,
+    hint: 'Quitaste un elemento de un array relacional (incomes/expenses/salesHistory/pedidos/pedidosFinalizados/clients) del estado LOCAL, pero save*() usa upsert y NO borra la fila en Supabase → reaparece al recargar (balance descuadrado / venta fantasma). Acompaña el filter/splice con su delete de db.ts: deleteIncomeFromDB · deleteIncomesByFolio · deleteExpenseFromDB · deleteSalesHistoryEntry · deletePedidoActivo · deletePedidoFinalizado · deleteClientFromDB. Bug clase S18/S24/S25/S26.',
+  },
 ];
 
 // Reglas que escanean scripts de build / package.json (config, no src).
@@ -74,12 +100,19 @@ function scan(files, rules, label) {
       const trimmed = line.trim();
       if (/^(\/\/|\*|\/\*)/.test(trimmed)) return;          // línea de comentario → no es código
       if (/\/\/\s*footgun-ok/.test(line)) return;           // escape consciente por línea
-      // Ventana de contexto: el fallback guardado de un ternario multilínea pone el
-      // helper (showConfirm / _fechaHoy) en la línea de arriba — míralo también.
-      const ctx = [lines[i - 1], line, lines[i + 1]].filter(Boolean).join('\n');
       for (const r of rules) {
         if (!r.match.test(line)) continue;
-        if (r.allow && r.allow.test(ctx)) continue;
+        if (r.allow) {
+          // Ventana de contexto para el escape legítimo. Por defecto ±1 línea (el
+          // fallback guardado de un ternario multilínea pone showConfirm/_fechaHoy
+          // en la línea de arriba). Reglas que necesitan ver más lejos —p.ej. el
+          // DELETE que acompaña a un filter/splice varias líneas abajo— amplían la
+          // ventana con windowBack/windowFwd.
+          const back = r.windowBack || 1;
+          const fwd  = r.windowFwd  || 1;
+          const ctx  = lines.slice(Math.max(0, i - back), i + fwd + 1).join('\n');
+          if (r.allow.test(ctx)) continue;
+        }
         if (r.onlyIn && r.onlyIn.includes(base)) continue;
         hits.push({ rule: r, file: rel, line: i + 1, text: trimmed });
       }

@@ -2,8 +2,9 @@
 
 > **Última actualización:** 13 junio 2026 — Sesión 26 (auditoría S26: 1 bug ghost + 4 fixes menores + 4 mejoras UI/UX)
 > **Sin pendientes de código.** App estable. Guardrails activos: lint pre-build + vitest (65 tests) en Step 0.
-> **Versión app:** 2.6.2 | **SW hash:** maneki-8dc0726dcf | **Branch:** fresh-start → master
+> **Versión app:** 2.6.2 | **SW hash:** maneki-7675793bda | **Branch:** fresh-start → master
 > **Fix visual (post-S26):** hover de kanban sin `rotate(0.25deg)` — eliminaba el anti-aliasing que veía "sombreados" los renglones internos de las cards (maneki-premium.css).
+> **Fix fecha (post-S26):** widget "próximas temporadas" — Día del Padre ahora se calcula dinámico (3er domingo de junio, helper `_nthWeekday`), antes hardcodeado `dia:15` (solo válido en 2025; 2026 = 21 jun). dashboard.ts.
 
 ---
 

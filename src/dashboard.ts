@@ -1483,6 +1483,15 @@ function _renderWidgetTemporadas() {
     const hoy = new Date();
     const year = hoy.getFullYear();
 
+    // N-ésimo <weekday> de un mes (weekday: 0=domingo … 6=sábado). Devuelve el día del mes.
+    // Para fechas MOVIBLES como el Día del Padre (3er domingo de junio en México) que
+    // cambian de día cada año — hardcodear el día las deja mal casi siempre.
+    const _nthWeekday = (y: number, mes: number, weekday: number, n: number): number => {
+        const primerDia = new Date(y, mes, 1).getDay();
+        const offset = (weekday - primerDia + 7) % 7;
+        return 1 + offset + (n - 1) * 7;
+    };
+
     const temporadas = [
         { nombre: 'Día de Reyes',          emoji: '👑', mes: 0,  dia: 6  },
         { nombre: 'Día de la Candelaria',  emoji: '🕯️', mes: 1,  dia: 2  },
@@ -1496,7 +1505,7 @@ function _renderWidgetTemporadas() {
         { nombre: 'Día de la Enfermera',   emoji: '🩺', mes: 4,  dia: 12 },
         { nombre: 'Día del Maestro',       emoji: '📚', mes: 4,  dia: 15 },
         { nombre: 'Día del Estudiante',    emoji: '🎒', mes: 4,  dia: 23 },
-        { nombre: 'Día del Padre',         emoji: '👔', mes: 5,  dia: 15 },
+        { nombre: 'Día del Padre',         emoji: '👔', mes: 5,  dia: 21, diaFn: (y: number) => _nthWeekday(y, 5, 0, 3) }, // 3er domingo de junio (movible)
         { nombre: 'Graduaciones',          emoji: '🎓', mes: 5,  dia: 20 },
         { nombre: 'Día del Orgullo LGBT+', emoji: '🏳️‍🌈', mes: 5,  dia: 28 },
         { nombre: 'Día del Ingeniero',     emoji: '⚙️', mes: 6,  dia: 1  },
@@ -1519,8 +1528,10 @@ function _renderWidgetTemporadas() {
 
     // Ordenar las 3 próximas temporadas
     const proximas: any[] = temporadas.map(t => {
-        let fecha = new Date(year, t.mes, t.dia);
-        if (fecha < hoy) fecha = new Date(year + 1, t.mes, t.dia);
+        // Fechas movibles: si la temporada define diaFn, se calcula el día para el año en uso.
+        const _diaPara = (y: number) => (typeof (t as any).diaFn === 'function' ? (t as any).diaFn(y) : t.dia);
+        let fecha = new Date(year, t.mes, _diaPara(year));
+        if (fecha < hoy) fecha = new Date(year + 1, t.mes, _diaPara(year + 1));
         const diff = Math.ceil((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
         return { ...t, fecha, diasRestantes: diff };
     }).sort((a, b) => a.diasRestantes - b.diasRestantes).slice(0, 3);
