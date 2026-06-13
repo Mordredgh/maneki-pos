@@ -10,6 +10,13 @@
 
 > ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
 
+### v2.6.0 (12 junio 2026)
+- 🎨 Token de oro unificado: #C5A572 (144 usos) reemplazado por #C5973B (--mk-g500 canónico) en 22 archivos
+- 🔲 Botones de toolbar en inventario usan clase mk-btn-primary en vez de gradiente inline
+- 💬 Diálogos nativos confirm()/alert()/prompt() reemplazados por showConfirm() del design system
+- 🔧 Lead time de proveedor usa mini-modal propio (_mkEditLeadTime) en vez de prompt() nativo
+- 🎯 7 section-headers migrados de emoji HTML-entity a íconos FA SVG del sistema local
+
 ### v2.5.0 (12 junio 2026)
 - 🔧 Auditoría S23: 8 bugs corregidos y mejoras de estabilidad
 - 🎨 10 íconos faltantes añadidos al sistema de íconos SVG (botones ya no aparecen en blanco)
@@ -523,6 +530,29 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | ⭐ | Micro-pulido (empty states, alertas, sombras, aria) | Medio | Bajo |
 
 ---
+
+## ✅ Sesión 24 (12 junio 2026) — Mejoras UI/UX D1-D4, commit `c7c7e95`
+
+| Cambio | Fix | Archivos |
+|--------|-----|---------|
+| D1 | Token de oro #C5A572 → #C5973B (--mk-g500 canónico) en 24 archivos (22 src/ + css/styles.css + index.html) | 22 src/*.ts, css/styles.css, index.html |
+| D2 | Botones de toolbar en inventory-5: `style="background:linear-gradient(...)"` → `class="mk-btn-primary"` | src/inventory-5.ts |
+| D3a | `invBulkEliminar()`: 2× `confirm()` → `await showConfirm()` con fallback | src/inventory-5.ts |
+| D3b | `deleteQuote()` else-branch: `confirm()` eliminado (path principal ya usaba showConfirm) | src/pedidos-1-extra.ts |
+| D3c | `backup.ts`: `alert()` → `manekiToastExport()` sin fallback nativo | src/backup.ts |
+| D3d | `prompt()` lead time → `_mkEditLeadTime(id, dias)`: mini-modal inline sin bloqueante | src/inventory-4.ts |
+| D4 | 7 section-headers: `&#NNNNN;` emoji → `<i class="fas fa-*">` del sistema SVG local | index.html |
+
+### Mapeo D4 (emojis → íconos)
+| Sección | Emoji antes | Ícono FA |
+|---------|-------------|---------|
+| Cotizaciones | &#128203; (📋) | fa-clipboard-list |
+| Inventario | &#128230; (📦) | fa-box |
+| Clientes | &#128150; (💖) | fa-users |
+| Categorías | &#127991; (🏷) | fa-tag |
+| Equipos/ROI | &#9881; (⚙) | fa-tools |
+| Pedidos por Encargo | &#128236; (📬) | fa-shopping-bag |
+| Configuración | &#9881; (⚙) | fa-cog |
 
 ## ✅ Sesión 23 (12 junio 2026) — Bugfixes audit S23, commits `0ad629e` `083809d`
 
