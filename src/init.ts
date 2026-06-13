@@ -576,17 +576,18 @@
     // #13 CHANGELOG — "¿Qué hay de nuevo?" al actualizar versión
     // ══════════════════════════════════════════════════════════════
     (function _changelog() {
-        const MK_VERSION = '2.2.0';
+        const MK_VERSION = (window as any).MK?.version || '2.5.0';
         const KEY = 'mk_last_seen_version';
         const lastSeen = localStorage.getItem(KEY);
         if (lastSeen === MK_VERSION) return;
 
         const changes = [
-            { icon: '⚡', text: 'Carga más rápida — scripts agrupados en bundles, una sola petición al abrir la app' },
-            { icon: '📦', text: 'Inventario sin lag — búsqueda y filtros con render incremental, no congela la pantalla' },
-            { icon: '🔄', text: 'Actualización automática — el SW detecta cambios y muestra aviso para recargar' },
-            { icon: '🧮', text: 'Disponibilidad de materias primas con caché — abre pedidos al instante' },
-            { icon: '📱', text: 'Sidebar y botones corregidos en móvil — ya no se bloqueaban los clicks' }
+            { icon: '🎨', text: 'Íconos SVG corregidos — botones que aparecían en blanco ya muestran su ícono' },
+            { icon: '🧹', text: 'Limpiar movimientos ahora borra también la tabla en la nube, no solo el caché local' },
+            { icon: '💰', text: 'El campo de costo se limpia al cambiar de producto en el ajuste de stock' },
+            { icon: '📊', text: 'El costo promedio ponderado ya queda guardado en el historial de costos del producto' },
+            { icon: '🔍', text: 'Productos eliminados muestran "(producto eliminado)" en movimientos en lugar de nombre vacío' },
+            { icon: '⚡', text: 'Consultas de movimientos de stock más rápidas gracias a nuevo índice en la base de datos' }
         ];
 
         setTimeout(() => {
