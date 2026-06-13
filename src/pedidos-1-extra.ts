@@ -156,22 +156,34 @@ function eliminarPedido(id) {
         savePedidos();
 
         // FIX: Limpiar abonos/anticipos del balance que pertenecían a este pedido
+        // F1-S25: saveIncomes() es upsert-only → además del filtro local hay que borrar
+        // las filas en Supabase o reaparecen al recargar (income fantasma que descuadra balance).
         const folioElim = pedidoAEliminar.folio || pedidoAEliminar.id;
         if (window.incomes && folioElim) {
             const antes = window.incomes.length;
             window.incomes = window.incomes.filter(i =>
                 !(i.folioOrigen === folioElim || i.pedidoId === String(id))
             );
-            if (window.incomes.length < antes) saveIncomes();
+            if (window.incomes.length < antes) {
+                saveIncomes();
+                if (typeof (window as any).deleteIncomesByFolio === 'function') (window as any).deleteIncomesByFolio(folioElim, id);
+            }
         }
 
         // FIX: Limpiar historial de ventas POS del pedido
+        // F1-S25: saveSalesHistory() es upsert-only → borrar también las filas en BD.
         if (window.salesHistory && folioElim) {
             const antes = window.salesHistory.length;
+            const _shElim = window.salesHistory.filter(s => (s.folio === folioElim || s.pedidoId === String(id)));
             window.salesHistory = window.salesHistory.filter(s =>
                 !(s.folio === folioElim || s.pedidoId === String(id))
             );
-            if (window.salesHistory.length < antes) saveSalesHistory();
+            if (window.salesHistory.length < antes) {
+                saveSalesHistory();
+                if (typeof (window as any).deleteSalesHistoryEntry === 'function') {
+                    _shElim.forEach((s: any) => (window as any).deleteSalesHistoryEntry(s.id));
+                }
+            }
         }
         try {
             await db.from('orders').delete().eq('id', String(id));

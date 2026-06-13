@@ -582,12 +582,11 @@
         if (lastSeen === MK_VERSION) return;
 
         const changes = [
-            { icon: '🎨', text: 'Íconos SVG corregidos — botones que aparecían en blanco ya muestran su ícono' },
-            { icon: '🧹', text: 'Limpiar movimientos ahora borra también la tabla en la nube, no solo el caché local' },
-            { icon: '💰', text: 'El campo de costo se limpia al cambiar de producto en el ajuste de stock' },
-            { icon: '📊', text: 'El costo promedio ponderado ya queda guardado en el historial de costos del producto' },
-            { icon: '🔍', text: 'Productos eliminados muestran "(producto eliminado)" en movimientos en lugar de nombre vacío' },
-            { icon: '⚡', text: 'Consultas de movimientos de stock más rápidas gracias a nuevo índice en la base de datos' }
+            { icon: '💰', text: 'Balance más confiable — al reactivar o eliminar un pedido, sus cobros se borran también de la nube y ya no reaparecen descuadrando el balance' },
+            { icon: '🧾', text: 'Al reactivar un pedido se limpian sus cobros de "abono" del historial de ventas — sin ventas fantasma' },
+            { icon: '⚡', text: 'Balance se actualiza más fluido cuando llegan cambios desde otro dispositivo' },
+            { icon: '🛡️', text: 'Gastos sin folio interno ya se guardan siempre sin riesgo de duplicarse' },
+            { icon: '✅', text: 'Más pruebas automáticas que protegen el balance contra errores de doble conteo' }
         ];
 
         setTimeout(() => {

@@ -416,18 +416,21 @@ async function _applyRTDesktopConDatos(key, fresh) {
     } else if (key === 'pedidosFinalizados') {
         _rtInPlace(window.pedidosFinalizados, fresh);
         if (typeof renderHistorialPedidos === 'function') renderHistorialPedidos();
-        if (typeof renderBalance === 'function') renderBalance();
+        // F3-S25: usar window.renderBalance (debounced 200ms). El símbolo bare es la
+        // función original sin debounce — un flush RT que toque varias tablas dispara
+        // múltiples re-renders completos de Balance seguidos.
+        if (typeof (window as any).renderBalance === 'function') (window as any).renderBalance();
     } else if (key === 'salesHistory') {
         _rtInPlace(window.salesHistory, fresh);
         if (typeof renderSalesHistory === 'function') renderSalesHistory();
-        if (typeof renderBalance === 'function') renderBalance();
+        if (typeof (window as any).renderBalance === 'function') (window as any).renderBalance();
         if (typeof updateDashboard === 'function') updateDashboard();
     } else if (key === 'incomes') {
         _rtInPlace(window.incomes, fresh);
-        if (typeof renderBalance === 'function') renderBalance();
+        if (typeof (window as any).renderBalance === 'function') (window as any).renderBalance();
     } else if (key === 'expenses') {
         _rtInPlace(window.expenses, fresh);
-        if (typeof renderBalance === 'function') renderBalance();
+        if (typeof (window as any).renderBalance === 'function') (window as any).renderBalance();
     }
 }
 
@@ -1167,7 +1170,7 @@ function saveProducts() {
     })();
 }
 function saveClients() {
-    (async () => {
+    return (async () => {
 
         // Tabla relacional
         try {
@@ -1187,7 +1190,7 @@ function saveClients() {
 }
 // ── saveSalesHistory — escribe en public.sales_history ──
 function saveSalesHistory() {
-    (async () => {
+    return (async () => {
         // Persistir en tabla relacional public.sales_history
         try {
             const _tsSaveSH = new Date().toISOString();
@@ -1217,7 +1220,7 @@ function saveSalesHistory() {
 }
 function saveQuotes()        { (async () => { await sbSave('quotes', quotes); })(); }
 function saveIncomes() {
-    (async () => {
+    return (async () => {
 
         try {
             const rows = (window.incomes||[]).map(i => {
@@ -1236,15 +1239,19 @@ function saveIncomes() {
     })();
 }
 function saveExpenses() {
-    (async () => {
+    return (async () => {
 
         try {
-            const rows = (window.expenses||[]).map(e => ({
-                id: e.id != null ? e.id : undefined, concept: e.concept||e.concepto||null,
-                amount: Number(e.amount||e.monto)||0, date: e.date||e.fecha||null,
-                category: e.category||e.categoria||null, etiqueta: e.etiqueta||null,
-                notas: e.notas||null, from_payable: e.fromPayable===true
-            }));
+            const rows = (window.expenses||[]).map(e => {
+                // Garantizar id antes del upsert (onConflict:'id' requiere id uniforme) — igual que saveIncomes
+                if (e.id == null) e.id = (typeof mkId === 'function' ? mkId() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+                return {
+                    id: String(e.id), concept: e.concept||e.concepto||null,
+                    amount: Number(e.amount||e.monto)||0, date: e.date||e.fecha||null,
+                    category: e.category||e.categoria||null, etiqueta: e.etiqueta||null,
+                    notas: e.notas||null, from_payable: e.fromPayable===true
+                };
+            });
             if (rows.length && db) await db.from('expenses').upsert(rows,{onConflict:'id'}).catch(e=>console.warn('[expenses]',e));
         } catch(e){ console.warn('[saveExpenses] Error al guardar en Supabase:', e?.message); }
     })();
@@ -1410,3 +1417,44 @@ async function deleteSalesHistoryEntry(id: string): Promise<void> {
     } catch(e) { console.error('deleteSalesHistoryEntry excepción:', e); }
 }
 (window as any).deleteSalesHistoryEntry = deleteSalesHistoryEntry;
+
+// ── deleteIncomeFromDB — borra UN income de public.incomes por id ──
+// F1-S25: saveIncomes() usa upsert y NUNCA borra filas. Al quitar un income del array
+// local (reactivar/eliminar pedido) hay que borrar la fila o reaparece al recargar.
+async function deleteIncomeFromDB(id: string): Promise<void> {
+    if (id == null) return;
+    try {
+        const { error } = await db.from('incomes').delete().eq('id', String(id));
+        if (error) console.error('deleteIncomeFromDB error:', error);
+    } catch(e) { console.error('deleteIncomeFromDB excepción:', e); }
+}
+(window as any).deleteIncomeFromDB = deleteIncomeFromDB;
+
+// ── deleteIncomesByFolio — borra de public.incomes todos los abonos/cobros de un pedido ──
+// F1-S25: usado al reactivar/eliminar un pedido — los incomes ligados van por folio_origen
+// (abono, cobro al entregar) o por pedido_id. Evita el income fantasma que descuadra el balance.
+async function deleteIncomesByFolio(folio: string, pedidoId?: string): Promise<void> {
+    if (!db) return;
+    try {
+        if (folio) {
+            const { error } = await db.from('incomes').delete().eq('folio_origen', folio);
+            if (error) console.error('deleteIncomesByFolio (folio) error:', error);
+        }
+        if (pedidoId) {
+            const { error } = await db.from('incomes').delete().eq('pedido_id', String(pedidoId));
+            if (error) console.error('deleteIncomesByFolio (pedidoId) error:', error);
+        }
+    } catch(e) { console.error('deleteIncomesByFolio excepción:', e); }
+}
+(window as any).deleteIncomesByFolio = deleteIncomesByFolio;
+
+// ── deleteExpenseFromDB — borra UN expense de public.expenses por id ──
+// F1-S25: mismo patrón que deleteIncomeFromDB para gastos.
+async function deleteExpenseFromDB(id: string): Promise<void> {
+    if (id == null) return;
+    try {
+        const { error } = await db.from('expenses').delete().eq('id', String(id));
+        if (error) console.error('deleteExpenseFromDB error:', error);
+    } catch(e) { console.error('deleteExpenseFromDB excepción:', e); }
+}
+(window as any).deleteExpenseFromDB = deleteExpenseFromDB;

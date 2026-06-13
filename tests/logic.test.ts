@@ -626,14 +626,16 @@ describe('descontarVariantePT', () => {
 // salesHistory y incomes acumulaban entradas duplicadas → doble conteo en reportes.
 //
 // Lógica extraída (sin efectos secundarios de DB ni toasts):
-//   a) quitar de salesHistory el registro con folio===p.folio y type==='pedido'
+//   a) F2-S25: quitar de salesHistory los registros folio===p.folio con type 'pedido' O 'abono'
 //   b) filtrar incomes quitando los de folioOrigen===p.folio o type==='cobro_entrega'
 //   c) revertir totalPurchases del cliente
+//   d) F1-S25: devolver el PLAN de borrados en BD (dbDeletes) que el flujo real debe emitir,
+//      porque saveIncomes()/saveSalesHistory() son upsert-only y no borran filas.
 function limpiarAlReactivar(p: any, state: { salesHistory: any[]; incomes: any[]; clients: any[] }) {
-  // a) salesHistory
-  const shIdx = state.salesHistory.findIndex(s => s.folio === p.folio && s.type === 'pedido');
-  const shIdEliminado = shIdx !== -1 ? state.salesHistory[shIdx].id : null;
-  if (shIdx !== -1) state.salesHistory.splice(shIdx, 1);
+  // a) salesHistory — F2: 'pedido' y 'abono' (cobro al entregar) del mismo folio
+  const shAEliminar = state.salesHistory.filter(s => s.folio === p.folio && (s.type === 'pedido' || s.type === 'abono'));
+  const shIdsEliminados = shAEliminar.map(s => s.id);
+  state.salesHistory = state.salesHistory.filter(s => !shIdsEliminados.includes(s.id));
 
   // b) incomes
   const incomesAntes = state.incomes.length;
@@ -651,7 +653,13 @@ function limpiarAlReactivar(p: any, state: { salesHistory: any[]; incomes: any[]
     cli.totalPurchases = Math.max(0, (Number(cli.totalPurchases) || 0) - Number(p.total || 0));
   }
 
-  return { shIdEliminado, incomesEliminados, clienteActualizado: !!cli };
+  // d) F1: el flujo real DEBE borrar estas filas en Supabase (upsert no las quita)
+  const dbDeletes = {
+    salesHistoryIds: shIdsEliminados,
+    incomesByFolio: incomesEliminados > 0 ? p.folio : null,
+  };
+
+  return { shIdsEliminados, incomesEliminados, clienteActualizado: !!cli, dbDeletes };
 }
 
 describe('reactivarPedido cleanup (C1)', () => {
@@ -670,20 +678,44 @@ describe('reactivarPedido cleanup (C1)', () => {
     expect(state.salesHistory[0].folio).toBe('PE-011');  // el otro queda intacto
   });
 
-  it('C1: entradas de salesHistory de tipo abono/anticipo NO se tocan', () => {
+  it('F2-S25: salesHistory type:pedido Y type:abono se eliminan; anticipo permanece', () => {
     const state = {
       salesHistory: [
         { id: 'sh-1', folio: 'PE-010', type: 'pedido', total: 1000 },
-        { id: 'sh-2', folio: 'PE-010', type: 'abono',  total: 300 },
-        { id: 'sh-3', folio: 'PE-010', type: 'anticipo', total: 200 },
+        { id: 'sh-2', folio: 'PE-010', type: 'abono',  total: 300 },  // cobro al entregar → F2 lo quita
+        { id: 'sh-3', folio: 'PE-010', type: 'anticipo', total: 200 }, // anticipo NO se toca
       ],
       incomes: [],
       clients: [],
     };
-    limpiarAlReactivar({ folio: 'PE-010', total: 1000 }, state);
-    // Solo el type:'pedido' se elimina; abonos/anticipos permanecen
-    expect(state.salesHistory).toHaveLength(2);
-    expect(state.salesHistory.every(s => s.type !== 'pedido')).toBe(true);
+    const r = limpiarAlReactivar({ folio: 'PE-010', total: 1000 }, state);
+    expect(state.salesHistory).toHaveLength(1);
+    expect(state.salesHistory[0].type).toBe('anticipo');
+    // F1: ambos ids (pedido + abono) deben programarse para borrado en BD
+    expect(r.dbDeletes.salesHistoryIds.sort()).toEqual(['sh-1', 'sh-2']);
+  });
+
+  it('F1-S25: el plan dbDeletes incluye el folio cuando se quitaron incomes', () => {
+    const state = {
+      salesHistory: [{ id: 'sh-1', folio: 'PE-010', type: 'pedido' }],
+      incomes: [{ id: 'i-1', amount: 600, folioOrigen: 'PE-010' }],
+      clients: [],
+    };
+    const r = limpiarAlReactivar({ folio: 'PE-010', total: 1000 }, state);
+    // Sin este DELETE en BD, el income reaparece al recargar y descuadra el balance (anula C1)
+    expect(r.dbDeletes.incomesByFolio).toBe('PE-010');
+    expect(r.dbDeletes.salesHistoryIds).toContain('sh-1');
+  });
+
+  it('F1-S25: sin incomes removidos, dbDeletes.incomesByFolio es null', () => {
+    const state = {
+      salesHistory: [],
+      incomes: [{ id: 'i-9', amount: 100, folioOrigen: 'PE-999' }], // otro pedido
+      clients: [],
+    };
+    const r = limpiarAlReactivar({ folio: 'PE-010', total: 1000 }, state);
+    expect(r.dbDeletes.incomesByFolio).toBeNull();
+    expect(state.incomes).toHaveLength(1);
   });
 
   it('C1: incomes con folioOrigen del pedido se eliminan', () => {

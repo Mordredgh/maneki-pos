@@ -1234,23 +1234,34 @@ function reactivarPedido(id) {
         // BUG C1 FIX: limpiar salesHistory, incomes y totalPurchases antes de reactivar
         // para evitar doble conteo si el pedido se vuelve a finalizar.
 
-        // a) Eliminar el registro de salesHistory type:'pedido' generado al finalizar
+        // a) Eliminar los registros de salesHistory generados al finalizar/cobrar.
+        // F2-S25: incluir type:'abono' (cobro al entregar) además de type:'pedido' — antes
+        // solo se limpiaba 'pedido' y el 'abono' quedaba como venta fantasma local y en BD.
         if (Array.isArray(window.salesHistory)) {
-            const _shIdx = window.salesHistory.findIndex((s: any) => s.folio === p.folio && s.type === 'pedido');
-            if (_shIdx !== -1) {
-                const _shId = window.salesHistory[_shIdx].id;
-                window.salesHistory.splice(_shIdx, 1);
-                if (typeof deleteSalesHistoryEntry === 'function') deleteSalesHistoryEntry(_shId);
+            const _shAEliminar = window.salesHistory.filter((s: any) =>
+                s.folio === p.folio && (s.type === 'pedido' || s.type === 'abono')
+            );
+            if (_shAEliminar.length) {
+                const _idsAEliminar = new Set(_shAEliminar.map((s: any) => s.id));
+                window.salesHistory = window.salesHistory.filter((s: any) => !_idsAEliminar.has(s.id));
+                if (typeof deleteSalesHistoryEntry === 'function') {
+                    _shAEliminar.forEach((s: any) => deleteSalesHistoryEntry(s.id));
+                }
             }
         }
 
-        // b) Eliminar el income de "cobro al entregar" si existe (buscar por folioOrigen o type cobro_entrega)
+        // b) Eliminar los incomes ligados al pedido (abono + cobro al entregar van por folioOrigen).
+        // F1-S25: saveIncomes() es upsert-only; sin el DELETE explícito el income fantasma
+        // reaparece al recargar y vuelve a descuadrar el balance (anulaba el fix C1).
         if (Array.isArray(window.incomes)) {
             const _incomesBefore = window.incomes.length;
             window.incomes = window.incomes.filter((inc: any) =>
                 inc.folioOrigen !== p.folio && !(inc.type === 'cobro_entrega' && inc.folio === p.folio)
             );
-            if (window.incomes.length !== _incomesBefore && typeof saveIncomes === 'function') saveIncomes();
+            if (window.incomes.length !== _incomesBefore) {
+                if (typeof saveIncomes === 'function') saveIncomes();
+                if (typeof (window as any).deleteIncomesByFolio === 'function') (window as any).deleteIncomesByFolio(p.folio, p.id);
+            }
         }
 
         // c) Invalidar caché de ventas

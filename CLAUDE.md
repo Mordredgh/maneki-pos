@@ -1,14 +1,21 @@
 # Maneki POS — Web App (Coolify)
 
-> **Última actualización:** 13 junio 2026 — Sesión 24 (auditoría dual + guardrail de build + 63 tests, commits `befa834`…`d7c163d`)
-> **Sin pendientes de código.** App estable. Guardrails activos: lint pre-build + vitest en Step 0.
-> **Versión app:** 2.6.0 | **SW hash:** maneki-9144be65ae | **Branch:** fresh-start → master
+> **Última actualización:** 13 junio 2026 — Sesión 25 (auditoría S25: 5 fixes de integridad/Supabase/rendimiento)
+> **Sin pendientes de código.** App estable. Guardrails activos: lint pre-build + vitest (65 tests) en Step 0.
+> **Versión app:** 2.6.1 | **SW hash:** maneki-abc391dc59 | **Branch:** fresh-start → master
 
 ---
 
 ## Changelog del Programa
 
 > ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
+
+### v2.6.1 (13 junio 2026) — Auditoría S25 (integridad Supabase + rendimiento)
+- 🐛 F1: ingresos/ventas fantasma — reactivar/eliminar pedido ahora borra los incomes y salesHistory de Supabase (antes solo del array local; `saveIncomes/saveSalesHistory` son upsert-only y reaparecían al recargar, descuadrando el balance y anulando el fix C1)
+- 🐛 F2: reactivar pedido limpia también el salesHistory `type:'abono'` (cobro al entregar), no solo `type:'pedido'` — sin ventas fantasma acumuladas
+- ⚡ F3: handlers realtime usan `window.renderBalance` (debounced 200ms) en vez del símbolo bare sin debounce — evita hasta 4 re-renders completos de Balance por flush RT
+- 🛡️ F4: `saveExpenses` genera `mkId()` si falta el id (igual que `saveIncomes`) — evita upsert con id undefined/duplicado
+- 🔧 F5: `saveIncomes/saveExpenses/saveClients/saveSalesHistory` ahora retornan Promise awaitable
 
 ### v2.6.0 (12 junio 2026) — Auditoría Dual S24
 **Bugs críticos (Agentes 1+2+3):**
@@ -580,6 +587,39 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | Equipos/ROI | &#9881; (⚙) | fa-tools |
 | Pedidos por Encargo | &#128236; (📬) | fa-shopping-bag |
 | Configuración | &#9881; (⚙) | fa-cog |
+
+## ✅ Sesión 25 (13 junio 2026) — Auditoría profunda: integridad Supabase + rendimiento (v2.6.1)
+
+> Auditoría enfocada en el patrón "upsert no elimina" y rendimiento de realtime.
+> Hallazgo central: el fix C1 de S24 tenía una fuga de persistencia que lo revertía al recargar.
+
+| ID | Severidad | Fix | Archivos |
+|----|-----------|-----|---------|
+| F1 | 🔴 Crítico | Ingresos/ventas fantasma: `reactivarPedido` y `eliminarPedido` quitaban incomes/salesHistory del array local pero `saveIncomes/saveSalesHistory` son **upsert-only** → reaparecían al recargar y descuadraban el balance (anulaba C1). Se añadieron `deleteIncomesByFolio(folio, pedidoId)`, `deleteIncomeFromDB(id)`, `deleteExpenseFromDB(id)` en db.ts y se llaman tras el filtro local. | `db.ts`, `pedidos-2.ts`, `pedidos-1-extra.ts` |
+| F2 | 🟠 Medio | `reactivarPedido` solo limpiaba salesHistory `type:'pedido'`; el `type:'abono'` (cobro al entregar) quedaba como venta fantasma. Ahora limpia ambos + `deleteSalesHistoryEntry` por cada id. | `pedidos-2.ts` |
+| F3 | 🟠 Medio | Handlers RT llamaban al símbolo bare `renderBalance()` (sin debounce) en vez de `window.renderBalance` (debounced 200ms) → hasta 4 re-renders de Balance por flush consolidado. | `db.ts` |
+| F4 | 🟡 Bajo | `saveExpenses` enviaba `id: undefined` para gastos sin id (a diferencia de `saveIncomes` que genera `mkId()`). Ahora genera id antes del upsert. | `db.ts` |
+| F5 | 🟡 Bajo | `saveIncomes/saveExpenses/saveClients/saveSalesHistory` ahora `return` su Promise interna → awaitables. | `db.ts` |
+
+### Convención reforzada (S25)
+
+```javascript
+// PATRÓN UPSERT-DELETE (extiende S18 a incomes/expenses):
+// Al quitar un income/expense/sale del array local SIEMPRE emitir el DELETE en BD:
+//   deleteIncomesByFolio(folio, pedidoId)  → incomes ligados a un pedido (abono/cobro)
+//   deleteIncomeFromDB(id) / deleteExpenseFromDB(id) → fila individual
+//   deleteSalesHistoryEntry(id)            → sales_history
+// saveIncomes()/saveSalesHistory() son upsert-only — NUNCA borran filas.
+
+// RT RENDER: en db.ts usar window.renderBalance() (debounced), NO el bare renderBalance().
+```
+
+### Tests S25 (65 total, +2 vs S24)
+
+- `limpiarAlReactivar` ahora modela F2 (limpia 'pedido' Y 'abono') y devuelve `dbDeletes` (plan de borrado en BD).
+- Nuevos: `F1-S25 dbDeletes.incomesByFolio` incluye folio cuando se quitan incomes; es `null` si no; `F2-S25` ambos ids (pedido+abono) programados para borrado.
+
+---
 
 ## ✅ Sesión 24 — Parte 2 (13 junio 2026) — Bugs S24 (C1–C3, A1–A5, B1–B3) + Guardrail de build + 63 tests, commits `befa834`…`d7c163d`
 
