@@ -329,3 +329,146 @@ describe('calcularDisponibilidadDesdeMP', () => {
     expect(result.piezas).toBe(0);
   });
 });
+
+// ── renderBalance totals (source: balance.ts renderBalance) ────────────────────
+// ESPEJO de la lógica real de balance.ts. Si tocas las fórmulas allá, ACTUALIZA aquí.
+// Las reglas (y por qué existen):
+//  · totalIncomeManual = incomes SIN fromPOS y SIN folioOrigen.
+//      fromPOS:true ya se cuenta en totalPOS (ventas directas) — excluir evita doble conteo.
+//      folioOrigen (abono/anticipo) ya está dentro de p.total del pedido — excluir evita doble conteo.
+//  · totalPedidosFin = suma de p.total de pedidos finalizados. SIN filtrar por incomes (fix C3).
+//  · totalPOS = salesHistory que NO es pedido/abono/anticipo y NO está Cancelado.
+//  · totalExpenses = expenses SIN fromPayable (ya contado al pagar el payable).
+function calcBalanceTotals(state: any) {
+  const incomes = state.incomes || [];
+  const pedidosFinalizados = state.pedidosFinalizados || [];
+  const salesHistory = state.salesHistory || [];
+  const expenses = state.expenses || [];
+
+  const totalIncomeManual = incomes
+    .filter((i: any) => !i.fromPOS && !i.folioOrigen)
+    .reduce((s: number, i: any) => s + (Number(i.amount) || 0), 0);
+
+  const totalPedidosFin = pedidosFinalizados
+    .reduce((s: number, p: any) => s + Number(p.total || 0), 0);
+
+  const totalPOS = salesHistory
+    .filter((s: any) => s.type !== 'pedido' && s.type !== 'abono' && s.type !== 'anticipo' && s.method !== 'Cancelado')
+    .reduce((sum: number, s: any) => sum + Number(s.total || 0), 0);
+
+  const totalIncome = totalIncomeManual + totalPedidosFin + totalPOS;
+
+  const totalExpenses = expenses
+    .filter((e: any) => !e.fromPayable)
+    .reduce((s: number, e: any) => s + (Number(e.amount ?? e.monto) || 0), 0);
+
+  return { totalIncomeManual, totalPedidosFin, totalPOS, totalIncome, totalExpenses, balance: totalIncome - totalExpenses };
+}
+
+describe('calcBalanceTotals', () => {
+  it('empty state → todo en 0', () => {
+    const t = calcBalanceTotals({});
+    expect(t.totalIncome).toBe(0);
+    expect(t.totalExpenses).toBe(0);
+    expect(t.balance).toBe(0);
+  });
+
+  it('income manual se suma; fromPOS y folioOrigen se excluyen', () => {
+    const t = calcBalanceTotals({
+      incomes: [
+        { amount: 500 },                          // manual → cuenta
+        { amount: 300, fromPOS: true },           // ya en POS → no
+        { amount: 200, folioOrigen: 'PE-001' },   // abono de pedido → no
+      ],
+    });
+    expect(t.totalIncomeManual).toBe(500);
+  });
+
+  it('pedido finalizado cuenta su total una sola vez', () => {
+    const t = calcBalanceTotals({
+      pedidosFinalizados: [{ folio: 'PE-001', total: 1000 }, { folio: 'PE-002', total: 250 }],
+    });
+    expect(t.totalPedidosFin).toBe(1250);
+    expect(t.totalIncome).toBe(1250);
+  });
+
+  // ── REGRESIÓN C3 — el bug que hacía desaparecer ingresos ──────────────────────
+  // Antes: si un pedido finalizado tenía un income con folioOrigen (abono/anticipo),
+  // el filtro foliosEnIncomes lo excluía de totalPedidosFin, Y el income se excluía
+  // de totalIncomeManual por tener folioOrigen → el ingreso desaparecía de AMBOS.
+  it('C3: pedido finalizado CON abono registrado como income no desaparece ni se duplica', () => {
+    const t = calcBalanceTotals({
+      pedidosFinalizados: [{ folio: 'PE-077', total: 1500 }],
+      incomes: [
+        { amount: 600, folioOrigen: 'PE-077', concept: 'Abono pedido PE-077' }, // anticipo
+      ],
+    });
+    // El pedido aporta su total completo (1500) exactamente una vez.
+    expect(t.totalPedidosFin).toBe(1500);
+    // El abono NO se cuenta aparte (ya está dentro del 1500).
+    expect(t.totalIncomeManual).toBe(0);
+    // Ingreso total = 1500, ni perdido ni duplicado.
+    expect(t.totalIncome).toBe(1500);
+  });
+
+  it('C3 múltiples abonos sobre el mismo pedido siguen sin afectar el total', () => {
+    const t = calcBalanceTotals({
+      pedidosFinalizados: [{ folio: 'PE-077', total: 1500 }],
+      incomes: [
+        { amount: 500, folioOrigen: 'PE-077' },
+        { amount: 400, folioOrigen: 'PE-077' },
+        { amount: 600, folioOrigen: 'PE-077' },
+      ],
+    });
+    expect(t.totalIncome).toBe(1500);
+  });
+
+  it('ventas POS: excluye Cancelado y tipos pedido/abono/anticipo', () => {
+    const t = calcBalanceTotals({
+      salesHistory: [
+        { total: 100 },                       // venta directa → cuenta
+        { total: 50, method: 'Cancelado' },   // cancelada → no
+        { total: 999, type: 'pedido' },       // es pedido → no (ya en pedidosFinalizados)
+        { total: 80, type: 'abono' },         // abono → no
+        { total: 70, type: 'anticipo' },      // anticipo → no
+      ],
+    });
+    expect(t.totalPOS).toBe(100);
+  });
+
+  it('gastos: excluye los originados por un payable pagado (fromPayable)', () => {
+    const t = calcBalanceTotals({
+      expenses: [
+        { amount: 300 },                    // gasto normal
+        { monto: 150 },                     // campo legacy "monto"
+        { amount: 999, fromPayable: true }, // ya contado al pagar el payable → no
+      ],
+    });
+    expect(t.totalExpenses).toBe(450);
+  });
+
+  it('balance combina todas las fuentes correctamente', () => {
+    const t = calcBalanceTotals({
+      incomes: [{ amount: 1000 }, { amount: 500, fromPOS: true }],
+      pedidosFinalizados: [{ folio: 'PE-1', total: 2000 }],
+      salesHistory: [{ total: 800 }, { total: 100, method: 'Cancelado' }],
+      expenses: [{ amount: 700 }, { amount: 300, fromPayable: true }],
+    });
+    // ingresos = 1000 (manual) + 2000 (pedido) + 800 (POS) = 3800
+    // gastos   = 700
+    expect(t.totalIncome).toBe(3800);
+    expect(t.totalExpenses).toBe(700);
+    expect(t.balance).toBe(3100);
+  });
+
+  it('maneja números como string', () => {
+    const t = calcBalanceTotals({
+      pedidosFinalizados: [{ total: '1500' }],
+      incomes: [{ amount: '250' }],
+      expenses: [{ amount: '100' }],
+    });
+    expect(t.totalIncome).toBe(1750);
+    expect(t.totalExpenses).toBe(100);
+    expect(t.balance).toBe(1650);
+  });
+});
