@@ -114,6 +114,46 @@ function renderListaProduccion() {
         </div>`;
     }).join('');
 
+    // P9: resumen agrupado de materiales al final del panel
+    const _matMap: Record<string, {total:number; pedidos:string[]}> = {};
+    lista.forEach(p => {
+        (p.productosInventario || []).forEach(i => {
+            const nombre = (i.name || i.nombre || '').trim();
+            if (!nombre) return;
+            const key = nombre + (i.variante ? `|${i.variante}` : '');
+            if (!_matMap[key]) _matMap[key] = { total: 0, pedidos: [] };
+            _matMap[key].total += Number(i.quantity || i.cantidad || 1);
+            _matMap[key].pedidos.push(p.folio || String(p.id));
+        });
+    });
+    const _matEntries = Object.entries(_matMap).sort((a, b) => b[1].total - a[1].total);
+    let _matSummaryEl = document.getElementById('produccionResumenMateriales');
+    if (!_matSummaryEl) {
+        _matSummaryEl = document.createElement('div');
+        _matSummaryEl.id = 'produccionResumenMateriales';
+        container.insertAdjacentElement('afterend', _matSummaryEl);
+    }
+    if (_matSummaryEl) {
+        if (_matEntries.length === 0) {
+            _matSummaryEl.innerHTML = '';
+        } else {
+            const _escM = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+            _matSummaryEl.innerHTML = `
+                <div style="margin-top:14px;background:#f5f3ff;border:1px solid #ede9fe;border-radius:12px;padding:12px 14px;">
+                    <div style="font-size:.72rem;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">📦 Materiales necesarios (total agrupado)</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                        ${_matEntries.map(([key, {total, pedidos}]) => {
+                            const [nombre, variante] = key.split('|');
+                            return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#ede9fe;border-radius:99px;font-size:.72rem;color:#5b21b6;font-weight:600;" title="Pedidos: ${[...new Set(pedidos)].join(', ')}">
+                                ${_escM(nombre)}${variante?` <span style="font-weight:400;color:#7c3aed;">(${_escM(variante)})</span>`:''}
+                                <span style="background:#7c3aed;color:#fff;border-radius:99px;padding:0 6px;font-size:.68rem;font-weight:800;">×${total}</span>
+                            </span>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+        }
+    }
+
     const label = document.getElementById('produccionFechaLabel');
     if (label) label.textContent = `${lista.length} pedido${lista.length!==1?'s':''} activo${lista.length!==1?'s':''} · ${new Date().toLocaleDateString('es-MX', {weekday:'long',day:'numeric',month:'long'})}`;
 }

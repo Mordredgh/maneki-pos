@@ -439,6 +439,30 @@ function openPedidoStatusModal(id) {
     if (tlContainer && typeof _mkTimeline === 'function') {
         tlContainer.innerHTML = _mkTimeline(p.status || 'confirmado');
     }
+    // P10: mostrar saldo pendiente + fecha de entrega bajo el timeline
+    let _ctxBar = document.getElementById('_pedStatusCtx');
+    if (!_ctxBar) {
+        _ctxBar = document.createElement('div');
+        _ctxBar.id = '_pedStatusCtx';
+        _ctxBar.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 4px;';
+        (tlContainer || document.getElementById('pedidoStatusFolio')?.parentElement)?.insertAdjacentElement('afterend', _ctxBar);
+    }
+    if (_ctxBar) {
+        const _saldoCtx = typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : 0;
+        const _diasCtx  = typeof window.diasHastaEntrega === 'function' ? window.diasHastaEntrega(p.entrega||p.fechaEntrega) : null;
+        const _entregaLabel = p.entrega
+            ? (_diasCtx === null ? p.entrega : _diasCtx < 0 ? `⛔ Vencida (${Math.abs(_diasCtx)}d)` : _diasCtx === 0 ? '🔴 Hoy' : `📅 ${p.entrega} (${_diasCtx}d)`)
+            : '—';
+        _ctxBar.innerHTML = `
+            <div style="flex:1;min-width:120px;background:${_saldoCtx>0?'#fef2f2':'#f0fdf4'};border:1px solid ${_saldoCtx>0?'#fca5a5':'#bbf7d0'};border-radius:8px;padding:6px 10px;">
+                <div style="font-size:.62rem;color:#6b7280;font-weight:700;text-transform:uppercase;">Saldo pendiente</div>
+                <div style="font-size:.9rem;font-weight:800;color:${_saldoCtx>0?'#dc2626':'#16a34a'};">${_saldoCtx>0?'$'+_saldoCtx.toFixed(2):'✅ Pagado'}</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:#fff9f0;border:1px solid #f5e6cc;border-radius:8px;padding:6px 10px;">
+                <div style="font-size:.62rem;color:#6b7280;font-weight:700;text-transform:uppercase;">Fecha entrega</div>
+                <div style="font-size:.82rem;font-weight:700;color:${_diasCtx!==null&&_diasCtx<0?'#dc2626':'#92622A'};">${_entregaLabel}</div>
+            </div>`;
+    }
     openModal('pedidoStatusModal');
 }
 
@@ -774,14 +798,18 @@ function openAbonoPedido(id) {
     const _historialHTML = _pagosHist.length > 0 ? `
         <div style="margin-bottom:16px;background:#f9fafb;border-radius:12px;padding:12px;border:1px solid #e5e7eb;">
             <div style="font-size:.75rem;font-weight:700;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Pagos registrados</div>
-            ${_pagosHist.map(pg => `
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f3f4f6;">
-                    <div>
-                        <span style="font-size:.82rem;color:#374151;font-weight:600;">$${Number(pg.monto||pg.amount||0).toFixed(2)}</span>
-                        <span style="font-size:.72rem;color:#9ca3af;margin-left:6px;">${pg.metodo||pg.method||''}</span>
-                    </div>
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;font-size:.7rem;color:#9ca3af;font-weight:700;padding:0 0 4px;border-bottom:1px solid #e5e7eb;margin-bottom:4px;">
+                <span>Monto</span><span>Método</span><span>Fecha</span>
+            </div>
+            ${_pagosHist.map(pg => {
+                const _metodo = pg.metodo||pg.method||'—';
+                const _metodoColor = _metodo==='efectivo'||_metodo==='Efectivo'?'#16a34a':_metodo==='tarjeta'||_metodo==='Tarjeta'?'#2563eb':'#92622A';
+                return `<div style="display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;align-items:center;padding:5px 0;border-bottom:1px solid #f3f4f6;">
+                    <span style="font-size:.82rem;color:#374151;font-weight:600;">$${Number(pg.monto||pg.amount||0).toFixed(2)}</span>
+                    <span style="font-size:.7rem;font-weight:700;color:${_metodoColor};padding:1px 7px;border-radius:99px;background:${_metodoColor}18;">${_metodo}</span>
                     <span style="font-size:.72rem;color:#9ca3af;">${pg.fecha||pg.date||''}</span>
-                </div>`).join('')}
+                </div>`;
+            }).join('')}
             <div style="text-align:right;font-size:.78rem;font-weight:700;color:#059669;margin-top:6px;">
                 Total pagado: $${_pagosHist.reduce((s,pg)=>s+(Number(pg.monto||pg.amount||0)),0).toFixed(2)}
             </div>
@@ -1199,11 +1227,16 @@ function _cancelarSeleccionLote() {
 }
 window._cancelarSeleccionLote = _cancelarSeleccionLote;
 
-// ── Modo Compacto ──
+// ── Densidad Kanban (P5): cicla entre full → medium → compact ──
 function toggleKanbanCompacto() {
-    _kanbanCompacto = !_kanbanCompacto;
+    _kanbanCompacto = _kanbanCompacto === 'full' ? 'medium' : _kanbanCompacto === 'medium' ? 'compact' : 'full';
     const btn = document.getElementById('btnKanbanCompacto');
-    if (btn) { btn.style.background = _kanbanCompacto ? '#C5973B' : ''; btn.style.color = _kanbanCompacto ? 'white' : ''; }
+    if (btn) {
+        const _labels = { full: '☰ Vista', medium: '≡ Media', compact: '▪ Compacto' };
+        btn.textContent = _labels[_kanbanCompacto];
+        btn.style.background = _kanbanCompacto !== 'full' ? '#C5973B' : '';
+        btn.style.color = _kanbanCompacto !== 'full' ? 'white' : '';
+    }
     renderKanbanBoard();
 }
 

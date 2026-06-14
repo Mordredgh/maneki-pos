@@ -117,6 +117,115 @@ function abrirBulkPrecioModal() {
 }
 window.abrirBulkPrecioModal = abrirBulkPrecioModal;
 
+// I6: modal de ajuste masivo de stock (análogo al de precios)
+function abrirBulkStockModal() {
+    let modal = document.getElementById('bulkStockModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'bulkStockModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+        document.body.appendChild(modal);
+    }
+    const cats = [...new Set((window.products||[]).filter(p => p.tipo === 'materia_prima').map(p => p.category).filter(Boolean))];
+    const catOptions = cats.map(cid => {
+        const cat = (window.categories||[]).find(c => String(c.id) === String(cid));
+        return `<option value="${_esc(String(cid))}">${_esc(cat ? (cat.emoji ? cat.emoji+' '+cat.name : cat.name) : String(cid))}</option>`;
+    }).join('');
+    modal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;width:min(520px,95vw);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+        <div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#f0fdf4,#dcfce7);display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h2 style="font-size:1.1rem;font-weight:800;color:#15803d;margin:0;">📦 Ajuste masivo de stock</h2>
+                <p style="font-size:.75rem;color:#16a34a;margin:4px 0 0;">Suma o resta stock a múltiples materias primas</p>
+            </div>
+            <button onclick="document.getElementById('bulkStockModal').style.display='none'" style="width:32px;height:32px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1;">
+            <div>
+                <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Cantidad a ajustar</label>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="number" id="bulkStockCantidad" value="0" step="1"
+                        oninput="_bulkStockPreview()"
+                        style="width:100px;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:1rem;font-weight:700;text-align:center;">
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <span style="font-size:.75rem;color:#6b7280;">Positivo = suma · Negativo = resta</span>
+                        <div style="display:flex;gap:6px;">
+                            <button onclick="const el=document.getElementById('bulkStockCantidad');el.value=String(parseInt(el.value||'0')-1);_bulkStockPreview()" style="padding:3px 10px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;font-weight:700;">−</button>
+                            <button onclick="const el=document.getElementById('bulkStockCantidad');el.value=String(parseInt(el.value||'0')+1);_bulkStockPreview()" style="padding:3px 10px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;font-weight:700;">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">Categoría (opcional)</label>
+                <select id="bulkStockCat" onchange="_bulkStockPreview()"
+                    style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.85rem;outline:none;">
+                    <option value="">Todas las categorías</option>
+                    ${catOptions}
+                </select>
+            </div>
+            <div id="bulkStockPreviewList" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;max-height:220px;overflow-y:auto;padding:8px;">
+                <p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:16px;">Ajusta los parámetros para ver el resultado</p>
+            </div>
+        </div>
+        <div style="padding:16px 24px;border-top:1px solid #f3f4f6;display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="document.getElementById('bulkStockModal').style.display='none'" style="padding:8px 18px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;font-size:.85rem;cursor:pointer;">Cancelar</button>
+            <button onclick="_bulkStockPreview()" style="padding:8px 18px;border:none;border-radius:10px;background:#d1fae5;color:#065f46;font-size:.85rem;font-weight:700;cursor:pointer;">👁 Vista previa</button>
+            <button onclick="_bulkStockAplicar()" style="padding:8px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer;">✅ Aplicar</button>
+        </div>
+    </div>`;
+    modal.style.display = 'flex';
+    _bulkStockPreview();
+}
+window.abrirBulkStockModal = abrirBulkStockModal;
+
+function _bulkStockPreview() {
+    const cantidad = parseInt((document.getElementById('bulkStockCantidad') as HTMLInputElement)?.value || '0');
+    const catFiltro = (document.getElementById('bulkStockCat') as HTMLSelectElement)?.value || '';
+    const prods = (window.products || []).filter(p =>
+        p.tipo === 'materia_prima' && (!catFiltro || String(p.category) === catFiltro)
+    );
+    const list = document.getElementById('bulkStockPreviewList');
+    if (!list) return;
+    if (cantidad === 0) { list.innerHTML = '<p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:16px;">Ingresa una cantidad distinta de 0</p>'; return; }
+    list.innerHTML = `
+        <div style="font-size:.72rem;font-weight:700;color:#6b7280;margin-bottom:6px;">${prods.length} producto${prods.length!==1?'s':''} afectados:</div>
+        ${prods.slice(0, 20).map(p => {
+            const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0);
+            const nuevo = Math.max(0, stk + cantidad);
+            return `<div style="display:flex;justify-content:space-between;padding:5px 8px;border-bottom:1px solid #f3f4f6;font-size:.76rem;">
+                <span>${_esc(p.name)}</span>
+                <span>${stk} → <b style="color:${cantidad>0?'#16a34a':'#dc2626'}">${nuevo}</b></span>
+            </div>`;
+        }).join('')}
+        ${prods.length > 20 ? `<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:6px;">...y ${prods.length-20} más</p>` : ''}`;
+}
+(window as any)._bulkStockPreview = _bulkStockPreview;
+
+async function _bulkStockAplicar() {
+    const cantidad = parseInt((document.getElementById('bulkStockCantidad') as HTMLInputElement)?.value || '0');
+    const catFiltro = (document.getElementById('bulkStockCat') as HTMLSelectElement)?.value || '';
+    if (cantidad === 0) { manekiToastExport('Ingresa una cantidad distinta de 0', 'warn'); return; }
+    const prods = (window.products || []).filter(p =>
+        p.tipo === 'materia_prima' && (!catFiltro || String(p.category) === catFiltro)
+    );
+    if (prods.length === 0) { manekiToastExport('Sin productos para ajustar', 'warn'); return; }
+    const _gse = typeof getStockEfectivo === 'function' ? getStockEfectivo : (p: any) => parseInt(p.stock)||0;
+    prods.forEach(p => {
+        const antes = _gse(p);
+        p.stock = Math.max(0, antes + cantidad);
+        if (typeof registrarMovimiento === 'function') {
+            registrarMovimiento({ productoId: p.id, productoNombre: p.name, tipo: cantidad > 0 ? 'entrada' : 'merma', cantidad: Math.abs(cantidad), motivo: `Ajuste masivo ${cantidad > 0 ? '+' : ''}${cantidad}`, stockAntes: antes, stockDespues: p.stock });
+        }
+    });
+    if (typeof saveProducts === 'function') saveProducts();
+    renderInventoryTable();
+    document.getElementById('bulkStockModal').style.display = 'none';
+    manekiToastExport(`✅ Stock ajustado en ${prods.length} producto(s)`, 'ok');
+}
+(window as any)._bulkStockAplicar = _bulkStockAplicar;
+
 function _bulkPrecioGetAfectados() {
     const pct    = parseFloat(document.getElementById('bulkPrecioNum')?.value) || 0;
     const soloPT = document.getElementById('bulkPrecioSoloPT')?.checked || false;
@@ -236,15 +345,6 @@ function renderInventoryTable() {
     );
     (window as any)._invStockCache = _stockCache;
 
-    // D28: pre-cachear disponibilidad desde MP — evita O(n×m) find() por fila
-    const _pMap: Map<string, any> = window.productMap || new Map(allProducts.map(p => [String(p.id), p]));
-    const _dispCache: Map<string, any> = new Map();
-    for (const p of allProducts) {
-        if (p.mpComponentes && p.mpComponentes.length > 0) {
-            _dispCache.set(String(p.id), calcularDisponibilidadDesdeMP(p, _pMap, _stockCache));
-        }
-    }
-
     // Poblar filtro de proveedores cada vez que se renderiza
     if (typeof poblarFiltroProveedores === 'function') poblarFiltroProveedores();
 
@@ -335,6 +435,17 @@ function renderInventoryTable() {
     const pvs  = applyFilters(allProducts.filter(p => p.tipo === 'producto_variable'));
     const pts  = applyFilters(allProducts.filter(p => !p.tipo || p.tipo === 'producto' || p.tipo === 'producto_interno' || p.tipo === 'pack'));
 
+    // I1: _dispCache computado DESPUÉS de filtros — solo para productos que pasan el filtro
+    // (evitar O(n) de calcularDisponibilidadDesdeMP en productos no visibles)
+    const _filteredIds = new Set([...pts, ...pvs].map(p => String(p.id)));
+    const _pMap: Map<string, any> = window.productMap || new Map(allProducts.map(p => [String(p.id), p]));
+    const _dispCache: Map<string, any> = new Map();
+    for (const p of allProducts) {
+        if (p.mpComponentes && p.mpComponentes.length > 0 && _filteredIds.has(String(p.id))) {
+            _dispCache.set(String(p.id), calcularDisponibilidadDesdeMP(p, _pMap, _stockCache));
+        }
+    }
+
     // Ordenamiento
     function applySortInventory(list) {
         if (!window._invSortCol) return list;
@@ -364,9 +475,9 @@ function renderInventoryTable() {
             ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'🏭'}</span>`;
         let badge;
-        if      (stockEf === 0)                    badge = '<span class="badge-danger">Agotado</span>';
-        else if (stockEf <= (product.stockMin||5)) badge = '<span class="badge-warning">Bajo Stock</span>';
-        else                                        badge = '<span class="badge-success">Disponible</span>';
+        if      (stockEf === 0)                    badge = '<span class="badge-danger">🔴 Agotado</span>';
+        else if (stockEf <= (product.stockMin||5)) badge = '<span class="badge-warning">⚠️ Bajo Stock</span>';
+        else                                        badge = '<span class="badge-success">✅ Disponible</span>';
         const cat = (window.categories||[]).find(c => c.id === product.category);
         const catName = cat ? cat.name : (product.category||'');
         return `
@@ -400,24 +511,12 @@ function renderInventoryTable() {
             </td>
             <td class="px-4 py-3">${badge}</td>
             <td class="px-2 py-3">
-                <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                    <button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
-                    <button type="button" onclick="ajustarStock('${pid}')" title="Ajustar stock" aria-label="Ajustar stock"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📦</button>
-                    <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
-                    <button type="button" onclick="registrarMerma('${pid}')" title="Registrar merma/pérdida" aria-label="Registrar merma"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.25);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📉</button>
-                    ${product.proveedorUrl ? `<button type="button" onclick="window.open(this.dataset.url,'_blank')" data-url="${_esc(product.proveedorUrl)}" title="Abrir proveedor" aria-label="Abrir proveedor" style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🔗</button>` : ''}
-                    <button type="button" onclick="cambiarTipoProducto('${pid}')" title="Convertir a Producto Terminado" aria-label="Convertir tipo de producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→📦</button>
-                    <button type="button" onclick="abrirMovimientoProducto('${pid}')" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📈</button>
-                    <button type="button" onclick="archivarProducto('${pid}')" title="${product.activo===false?'Desarchivar producto (activar)':'Archivar producto (ocultar)'}" aria-label="Archivar/Desarchivar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(107,114,128,0.25);background:rgba(107,114,128,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">${product.activo===false?'🔓':'📁'}</button>
-                    <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
+                <div style="display:flex;gap:3px;align-items:center;">
+                    <button type="button" onclick="editProduct('${pid}')" title="Editar" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">✏️</button>
+                    <button type="button" onclick="ajustarStock('${pid}')" title="Ajustar stock" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">📦</button>
+                    <div style="position:relative;display:inline-block;">
+                        <button type="button" onclick="_invMpMenu(this,'${pid}',${!!product.proveedorUrl},'${product.activo===false?'desarchivar':'archivar'}')" title="Más acciones" style="width:30px;height:30px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;font-weight:700;color:#6b7280;">···</button>
+                    </div>
                 </div>
             </td>
         </tr>`;
@@ -496,18 +595,30 @@ function renderInventoryTable() {
             const _bgClr = _stEf === 0 ? '#fee2e2' : _stEf <= _stMin ? '#fef3c7' : '#d1fae5';
             stockCell = `<span style="padding:3px 12px;border-radius:8px;background:${_bgClr};color:${_clr};font-weight:700;font-size:.95rem;">${_stEf}</span>`;
             badgeCell = _stEf === 0
-                ? '<span style="background:#fee2e2;color:#ef4444;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">Agotado</span>'
+                ? '<span style="background:#fee2e2;color:#ef4444;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">🔴 Agotado</span>'
                 : _stEf <= _stMin
-                ? '<span style="background:#fef3c7;color:#f59e0b;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">Bajo Stock</span>'
-                : '<span style="background:#d1fae5;color:#10b981;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">Disponible</span>';
+                ? '<span style="background:#fef3c7;color:#f59e0b;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">⚠️ Bajo Stock</span>'
+                : '<span style="background:#d1fae5;color:#10b981;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">✅ Disponible</span>';
         }
 
-        const varsHTML = product.variants && product.variants.length > 0
-            ? product.variants.map(v => `
-                <span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;background:#f3f4f6;border-radius:8px;font-size:11px;margin:1px;">
-                    <b>${_esc(v.type)}:</b>${_mkColorDot(v.type,_esc(v.value))}
-                    <span style="background:#e0f2fe;color:#0369a1;padding:0 4px;border-radius:99px;font-weight:600;">${v.qty??0}</span>
-                </span>`).join('')
+        // I7: desglose de variantes con toggle expandir/colapsar
+        const _varKey = `_invVar_${pid}_open`;
+        const _varOpen = (window as any)[_varKey] === true;
+        const _hasVars = product.variants && product.variants.length > 0;
+        const varsHTML = _hasVars
+            ? `<div>
+                <button onclick="(()=>{window['_invVar_${pid}_open']=!window['_invVar_${pid}_open'];renderInventoryTable()})()" style="font-size:.68rem;color:#6b7280;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:99px;padding:2px 8px;cursor:pointer;font-weight:600;white-space:nowrap;">
+                    ${_varOpen ? '▲' : '▶'} ${product.variants.length} variante${product.variants.length!==1?'s':''}
+                </button>
+                ${_varOpen ? `<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">` +
+                    product.variants.map(v => `
+                    <div style="display:flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 0;">
+                        <span style="color:#6b7280;">${_esc(v.type)}:</span>
+                        ${_mkColorDot(v.type,_esc(v.value))}
+                        <span style="font-weight:600;color:#374151;">${_esc(v.value)}</span>
+                        <span style="background:#e0f2fe;color:#0369a1;padding:0 5px;border-radius:99px;font-weight:700;margin-left:2px;">${v.qty??0}</span>
+                    </div>`).join('') + `</div>` : ''}
+               </div>`
             : '<span class="text-xs text-gray-400">Sin variantes</span>';
 
         const c = Number(product.cost)||0, pr = Number(product.price)||0;
@@ -729,15 +840,19 @@ function renderInventoryTable() {
             </div>`;
         }
 
+        // I4: estado de colapso por sección, persiste en memory
+        const _colKey = `_invSec_${id}_collapsed`;
+        const _collapsed = (window as any)[_colKey] === true;
         return `
         <div style="margin-bottom:32px;border-radius:16px;overflow:hidden;border:1.5px solid ${titleColor}33;box-shadow:0 2px 12px ${titleColor}11;">
-            <!-- Header de sección -->
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:${titleBg};border-bottom:1.5px solid ${titleColor}33;">
+            <!-- Header de sección (clicable para colapsar) -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:${titleBg};border-bottom:${_collapsed?'none':'1.5px solid '+titleColor+'33'};cursor:pointer;" onclick="(()=>{const k='_invSec_${id}_collapsed';window[k]=!window[k];renderInventoryTable()})()">
                 <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:.85rem;color:${titleColor};transition:transform .2s;">${_collapsed?'▶':'▼'}</span>
                     <span style="font-size:1.1rem;font-weight:800;color:${titleColor};">${title}</span>
                     <span style="background:${titleColor};color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;">${total}</span>
                 </div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;" onclick="event.stopPropagation()">
                     ${extraBtnHTML || ''}
                     <button onclick="${btnOnclick}" class="mk-btn-primary"
                         style="padding:7px 16px;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
@@ -745,6 +860,7 @@ function renderInventoryTable() {
                     </button>
                 </div>
             </div>
+            ${_collapsed ? '' : `
             <!-- Tabla -->
             <div style="overflow-x:auto;background:#fff;">
                 <table style="width:100%;border-collapse:collapse;">
@@ -754,7 +870,7 @@ function renderInventoryTable() {
                     <tbody>${rowsHTML}</tbody>
                 </table>
             </div>
-            ${pagHTML}
+            ${pagHTML}`}
         </div>`;
     }
 
@@ -861,6 +977,7 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#faf5ff,#f5f3ff)',
             btnLabel: '+ Materia Prima',
             btnOnclick: 'injectMpModal();openAddMateriaPrimaModal()',
+            extraBtnHTML: `<button type="button" onclick="abrirBulkStockModal()" class="mk-toolbar-btn">📦 Ajustar stock masivo</button>`,
             products: mps,
             renderFila: renderFilaMP,
             headers: [
@@ -1084,6 +1201,35 @@ function invResetPage() {
 window.invResetPage = invResetPage;
 
 window.renderInventoryTable = renderInventoryTable;
+
+// I2: menú "···" para acciones secundarias en fila de materia prima
+function _invMpMenu(btn: HTMLElement, pid: string, hasProvUrl: boolean, archivarLabel: string) {
+    const _existing = document.getElementById('_invMpMenuDrop');
+    if (_existing) { _existing.remove(); if (_existing.dataset.pid === pid) return; }
+    const menu = document.createElement('div');
+    menu.id = '_invMpMenuDrop';
+    menu.dataset.pid = pid;
+    menu.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:172px;overflow:hidden;font-size:.78rem;';
+    const _btnStyle = (color: string, bg: string) => `style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:${color};text-align:left;" onmouseover="this.style.background='${bg}'" onmouseout="this.style.background='none'"`;
+    menu.innerHTML = `
+        <button onclick="registrarMerma('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#d97706','#fffbeb')}>📉 Registrar merma</button>
+        <button onclick="duplicarProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#7c3aed','#f5f3ff')}>📋 Duplicar</button>
+        <button onclick="cambiarTipoProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#b45309','#fef9c3')}>→📦 Convertir a PT</button>
+        <button onclick="abrirMovimientoProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#4338ca','#eef2ff')}>📈 Ver gráfica</button>
+        ${hasProvUrl ? `<button onclick="(()=>{const p=(window.products||[]).find(x=>String(x.id)==='${pid}');if(p?.proveedorUrl)window.open(p.proveedorUrl,'_blank');document.getElementById('_invMpMenuDrop')?.remove()})()" ${_btnStyle('#16a34a','#f0fdf4')}>🔗 Abrir proveedor</button>` : ''}
+        <hr style="margin:4px 0;border:none;border-top:1px solid #f3f4f6;">
+        <button onclick="archivarProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#6b7280','#f9fafb')}>📁 ${archivarLabel==='desarchivar'?'Desarchivar':'Archivar'}</button>
+        <button onclick="deleteProduct('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#dc2626','#fef2f2')}>🗑️ Eliminar</button>
+    `;
+    document.body.appendChild(menu);
+    const rect = btn.getBoundingClientRect();
+    menu.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+    menu.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 180) + 'px';
+    setTimeout(() => document.addEventListener('click', function _close(e) {
+        if (!menu.contains(e.target as Node)) { menu.remove(); document.removeEventListener('click', _close); }
+    }), 0);
+}
+(window as any)._invMpMenu = _invMpMenu;
 
 // FIX P-1: Debounce para búsqueda de inventario (300ms) — reduce renders mientras el usuario escribe
 let _inventorySearchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1557,6 +1703,7 @@ function _mkInvToolbarOnce() {
       <button type="button" onclick="mostrarDonutCategoria()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Valor de inventario por categoría"><i class="fas fa-chart-pie" style="margin-right:5px;"></i>Por categoría</button>
       <button type="button" onclick="sugerirStockMinimo()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Sugerir stock mínimo automático desde pedidos"><i class="fas fa-robot" style="margin-right:5px;"></i>Stock mínimo</button>
       <button type="button" onclick="abrirTendenciaInventario()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Gráfica de tendencia del valor de inventario"><i class="fas fa-chart-line" style="margin-right:5px;"></i>Tendencia</button>
+      <button type="button" onclick="abrirMovimientosRecientes()" class="mk-toolbar-btn" style="font-size:.78rem;padding:4px 10px;" title="Ver últimos movimientos de inventario"><i class="fas fa-history" style="margin-right:5px;"></i>Movimientos recientes</button>
     `;
     const filterInfo = document.getElementById('mkInvFilterInfo');
     if (filterInfo) filterInfo.parentElement!.insertBefore(btnRow, filterInfo);
@@ -2190,3 +2337,65 @@ function abrirTendenciaInventario() {
   _mkInvModal('mkTendenciaInv', '📈 Tendencia del Valor de Inventario', html, '640px');
 }
 (window as any).abrirTendenciaInventario = abrirTendenciaInventario;
+
+// ── I3: Panel de movimientos recientes globales ───────────────────────────────
+function abrirMovimientosRecientes() {
+  const _e = (typeof window._esc === 'function') ? window._esc : (s: any) => String(s || '');
+  const movs: any[] = [...(window.stockMovements || window.stockMovimientos || [])].slice(0, 50);
+
+  if (movs.length === 0) {
+    if (typeof manekiToastExport === 'function') manekiToastExport('Sin movimientos registrados aún', 'warn');
+    return;
+  }
+
+  const tipoColor: Record<string, string> = {
+    ajuste: '#6366f1', entrada: '#10b981', compra: '#10b981',
+    merma: '#ef4444', salida: '#ef4444', descuento: '#f59e0b',
+    produccion: '#f59e0b', conteo: '#3b82f6', ajuste_positivo: '#10b981'
+  };
+
+  const rows = movs.map(m => {
+    const partes = (m.fecha || '').split('T');
+    const fecha = partes[0] || '';
+    const hora = (partes[1] || '').substring(0, 5);
+    const tipo = (m.tipo || '').toLowerCase();
+    const diff = (m.stockDespues != null && m.stockAntes != null)
+      ? Number(m.stockDespues) - Number(m.stockAntes) : 0;
+    const esPos = diff > 0 || tipo.includes('entrada') || tipo.includes('compra') || tipo.includes('ajuste_positivo');
+    const cant = Number(m.cantidad) || Math.abs(diff) || 0;
+    const cantStr = esPos ? `<span style="color:#10b981;font-weight:700;">+${cant}</span>` : `<span style="color:#ef4444;font-weight:700;">−${cant}</span>`;
+    const tColor = tipoColor[tipo] || '#6b7280';
+    const tBadge = `<span style="display:inline-block;padding:1px 7px;border-radius:99px;background:${tColor}22;color:${tColor};font-size:.7rem;font-weight:700;">${_e(m.tipo || '—')}</span>`;
+    const productoLink = m.productoId
+      ? `<button onclick="abrirMovimientoProducto('${_e(String(m.productoId))}');document.getElementById('mkMovRecientes')?.closest('[id]')?.remove?.();" style="background:none;border:none;color:#6366f1;cursor:pointer;font-size:.8rem;padding:0;text-align:left;text-decoration:underline;text-underline-offset:2px;" title="Ver kardex completo">${_e(m.productoNombre || m.productoId)}</button>`
+      : `<span style="font-size:.8rem;">${_e(m.productoNombre || '—')}</span>`;
+    return `<tr style="border-bottom:1px solid #f3f4f6;">
+      <td style="padding:6px 10px;font-size:.78rem;white-space:nowrap;color:#374151;">${_e(fecha)} <span style="color:#9ca3af;font-size:.7rem;">${hora}</span></td>
+      <td style="padding:6px 10px;">${productoLink}</td>
+      <td style="padding:6px 10px;">${tBadge}</td>
+      <td style="padding:6px 10px;text-align:center;">${cantStr}</td>
+      <td style="padding:6px 10px;text-align:center;font-size:.78rem;color:#6b7280;">${m.stockDespues != null ? m.stockDespues : '—'}</td>
+      <td style="padding:6px 10px;font-size:.74rem;color:#9ca3af;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${_e(m.motivo || '')}">${_e(m.motivo || '')}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `
+    <p style="font-size:.78rem;color:#9ca3af;margin-bottom:10px;">Últimos ${movs.length} movimientos de inventario · Haz clic en el producto para ver su kardex completo</p>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:.8rem;">
+        <thead>
+          <tr style="background:#f9fafb;font-size:.72rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">
+            <th style="padding:7px 10px;text-align:left;">Fecha</th>
+            <th style="padding:7px 10px;text-align:left;">Producto</th>
+            <th style="padding:7px 10px;text-align:left;">Tipo</th>
+            <th style="padding:7px 10px;text-align:center;">Cant.</th>
+            <th style="padding:7px 10px;text-align:center;">Stock final</th>
+            <th style="padding:7px 10px;text-align:left;">Motivo</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  _mkInvModal('mkMovRecientes', '📋 Movimientos Recientes — Inventario', html, '820px');
+}
+(window as any).abrirMovimientosRecientes = abrirMovimientosRecientes;

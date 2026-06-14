@@ -12,6 +12,38 @@
 
 > ⚠️ **REGLA:** Actualizar esta sección en CADA deploy. Es el contenido que aparece en el modal "¿Qué hay de nuevo?" de la app. El número de versión vive en `MK.version` (`src/config.ts`) y en el texto del modal (`src/init.ts` o `index.html`).
 
+### v2.6.3 (13 junio 2026) — Auditoría S27 (Dashboard + Pedidos + Inventario)
+**Dashboard:**
+- 💰 D1: KPI ventas del mes usa `fmtMoney()` — enteros sin decimales, fracciones con 2
+- 📅 D2: Día más rentable filtra últimos 90 días (antes sin límite, inflaba con datos viejos)
+- 📊 D3: Widget mes vs anterior muestra ganancia neta (ventas − costos), no solo ventas
+- ✨ D4: KPI cards con efecto hover (translateY −2px + sombra) — micro-interacción premium
+- 🎨 D5: Widget de clima en paleta cálida dorada (antes azul frío)
+- 💵 D6: "Me deben" total formateado con `fmtMoney()`
+- 🔀 D7: Heatmap de pedidos con toggle Cantidad / Monto
+- 🛡️ D8: Fetch de clima con AbortController para cancelar peticiones anteriores
+**Pedidos:**
+- ⚡ P1: Saldo pendiente pre-calculado en mapa antes del render del kanban (sin recalcular por card)
+- 📅 P2: Fechas en tabla de pedidos en formato corto "12 jun" (antes YYYY-MM-DD)
+- ⋯ P3: Botones de acción en tabla compactados en menú "···" (menos ruido visual)
+- 🔍 P4: Búsqueda en historial de pedidos (ya estaba implementada)
+- 📐 P5: Vista kanban tri-estado: Full / Media / Compacta (antes solo Full o Compacto)
+- 💳 P6: Historial de pagos en grid 3 columnas con badge de método de pago con color
+- 🛑 P7: Guard que evita renderizar tabla de pedidos en vista kanban activa
+- 💰 P8: Totales de columna en tabla usan `fmtMoney()`
+- 🏭 P9: Resumen de materiales en lista de producción (total acumulado por materia prima)
+- ℹ️ P10: Barra contextual en modal de estado (saldo pendiente + días hasta entrega)
+**Inventario:**
+- 🔧 I1: `_dispCache` calculado solo para productos filtrados (antes recalculaba todos)
+- ⋯ I2: Menú "···" en filas de MP con acciones avanzadas (merma, duplicar, convertir, etc.)
+- 📋 I3: Panel "Movimientos recientes" global en toolbar de inventario (últimos 50 movimientos)
+- 🗂️ I4: Secciones de inventario colapsables (clic en header para expandir/colapsar)
+- 📝 I5: Comentario en `saveStockMovements` documenta el doble guardado intencional
+- 📦 I6: Ajuste masivo de stock para Materias Primas (bulk stock modal)
+- ▶ I7: Variantes de PT expandibles en tabla (antes siempre visibles, mucho ruido)
+- 🔴 I8: Lista de compras con modo "Necesitas ahora" vs "Pipeline completo"
+- 🏷️ I9: Badges de stock con emojis (🔴 Agotado, ⚠️ Bajo Stock, ✅ Disponible)
+
 ### v2.6.2 (13 junio 2026) — Auditoría S26 (bug ghost + UI/UX)
 **Bugs:**
 - 🐛 B5: eliminar venta del historial ahora emite DELETE en `sales_history` y `orders_finalizados` (eran upsert-only → la venta/pedido reaparecía al recargar). Misma clase F1 de S25.

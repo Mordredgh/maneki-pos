@@ -7,7 +7,7 @@ let _pedidoVistaActual = 'kanban';
 let _kanbanDragId = null;
 let _abonoPedidoMetodo = 'cash';
 let _pedidoStatusActualId = null;
-let _kanbanCompacto = false;
+let _kanbanCompacto: 'full' | 'medium' | 'compact' = 'full';
 
 // generarFolioPedido — llama la RPC atómica maneki_next_folio (SELECT...FOR UPDATE en Postgres).
 // Garantiza unicidad entre dispositivos. La RPC usa la key 'contador_PE' en la tabla store.

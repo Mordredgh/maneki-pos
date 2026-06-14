@@ -280,6 +280,14 @@ function renderKanbanBoard() {
         lista = lista.filter(p => (p.ocasion || '') === _kanbanOcasionFiltro);
     }
 
+    // P1: pre-computar saldo de todos los pedidos una sola vez evita llamar calcSaldoPendiente
+    // O(n) en cada card + O(n) en los totales de columna = O(2n) → O(n)
+    const _saldoPreMap: Map<string, number> = new Map();
+    if (typeof calcSaldoPendiente === 'function') {
+        (lista || []).forEach((p: any) => _saldoPreMap.set(String(p.id), Number(calcSaldoPendiente(p)) || 0));
+    }
+    (window as any)._kSaldoPreMap = _saldoPreMap;
+
     let totalVisible = 0;
     const _nsKanban = window._normSearch || (s => String(s||'').toLowerCase());
     cols.forEach(col => {
@@ -297,9 +305,9 @@ function renderKanbanBoard() {
             // N-KANBAN-003: badge de conteo con estilo consistente en todas las columnas
             badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:.7rem;font-weight:800;background:rgba(255,255,255,0.6);border-radius:9999px;margin-left:6px;color:inherit;';
         }
-        // Op5: totales en vivo por columna ($ + saldo pendiente)
+        // Op5: totales en vivo por columna — usar Map pre-computado (P1)
         const _totCol = items.reduce((s, p) => s + (Number(p.total) || 0), 0);
-        const _saldoCol = items.reduce((s, p) => s + (typeof calcSaldoPendiente === 'function' ? (Number(calcSaldoPendiente(p)) || 0) : 0), 0);
+        const _saldoCol = items.reduce((s, p) => s + ((window as any)._kSaldoPreMap?.get(String(p.id)) ?? (typeof calcSaldoPendiente === 'function' ? (Number(calcSaldoPendiente(p)) || 0) : 0)), 0);
         let totEl = document.getElementById('kTotal-' + col);
         if (!totEl && el.parentElement) {
             totEl = document.createElement('div');
@@ -309,9 +317,10 @@ function renderKanbanBoard() {
             el.parentElement.insertBefore(totEl, el);
         }
         if (totEl) {
+            const _fmt = typeof fmtMoney === 'function' ? fmtMoney : (v: number) => '$' + v.toLocaleString('es-MX');
             totEl.innerHTML = items.length
-                ? `<span>$${_totCol.toLocaleString('es-MX')}</span>` +
-                  (_saldoCol > 0.5 ? `<span style="color:#dc2626;">⏳ $${_saldoCol.toLocaleString('es-MX')}</span>` : '')
+                ? `<span>${_fmt(_totCol)}</span>` +
+                  (_saldoCol > 0.5 ? `<span style="color:#dc2626;">⏳ ${_fmt(_saldoCol)}</span>` : '')
                 : '';
         }
         const expandido = _kanbanExpandidos.has(col);
@@ -434,9 +443,17 @@ window._kanbanVerMas = function(col: string) {
 };
 
 const _statusLabel = s => ({confirmado:'✅ Confirmado',pago:'💰 Pagado',produccion:'🔧 Producción',envio:'📦 Envío',salida:'🚚 Salió',retirar:'🏪 Retirar',finalizado:'🎉 Listo',cancelado:'❌ Cancelado'})[s] || s;
+// P2: formatea "2025-06-13" → "13 jun" para columnas de fecha en tabla
+function _fmtFechaCorta(isoStr: string): string {
+    if (!isoStr || isoStr.length < 8) return isoStr || '';
+    const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const [, m, d] = isoStr.split('-').map(Number);
+    if (!m || !d) return isoStr;
+    return `${d} ${meses[m-1] || ''}`;
+}
 
 function kanbanCardHTML(p) {
-    const _saldo = calcSaldoPendiente(p);
+    const _saldo = (window as any)._kSaldoPreMap?.get(String(p.id)) ?? calcSaldoPendiente(p);
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     const entrega = p.entrega ? new Date(p.entrega + 'T00:00:00') : null;
     const diff = entrega ? Math.round((entrega - hoy) / 86400000) : null;
@@ -462,7 +479,7 @@ function kanbanCardHTML(p) {
         class="_kanban-check"
         title="Seleccionar para acción en lote">`;
 
-    if (_kanbanCompacto) {
+    if (_kanbanCompacto === 'compact') {
         return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex items-center gap-2"
             data-id="${p.id}" data-status="${p.status || 'confirmado'}"
             style="position:relative;${_bordeVencido}" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
@@ -475,6 +492,28 @@ function kanbanCardHTML(p) {
             <span class="text-xs ${_saldo>0?'text-red-500':'text-green-600'} font-bold whitespace-nowrap">$${_saldo.toFixed(0)}</span>
             <button onclick="openPedidoStatusModal('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-gray-100 hover:bg-amber-100 text-gray-500">⚡</button>
             <button onclick="eliminarPedido('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-500">🗑</button>
+        </div>`;
+    }
+    if (_kanbanCompacto === 'medium') {
+        // P5: vista intermedia — folio, cliente, saldo, entrega y estado sin imagen ni notas
+        return `<div class="kanban-card bg-white rounded-xl px-3 py-2.5 shadow-sm border select-none"
+            data-id="${p.id}" data-status="${p.status || 'confirmado'}"
+            style="position:relative;border-color:${_esVencido?'#fca5a5':'#f3f4f6'};${_bordeVencido}"
+            onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
+            draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
+            ${_checkboxHtml}
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px;">
+                <span style="font-size:.72rem;font-weight:800;color:#C5973B;">${_e(p.folio)}</span>
+                <span style="font-size:.7rem;font-weight:700;color:${_saldo>0?'#dc2626':'#16a34a'};">${_saldo>0?'$'+_saldo.toFixed(0):'✓'}</span>
+            </div>
+            <p style="font-size:.76rem;font-weight:600;color:#1f2937;margin:0 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_e(p.cliente)}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                ${alertaHtml || (p.entrega ? `<span style="font-size:.65rem;color:#9ca3af;">📅 ${p.entrega}</span>` : '<span></span>')}
+                <div style="display:flex;gap:3px;">
+                    <button onclick="openPedidoStatusModal('${p.id}')" style="font-size:.65rem;padding:2px 6px;border-radius:6px;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer;color:#6b7280;">⚡</button>
+                    <button onclick="openAbonoPedido('${p.id}')" style="font-size:.65rem;padding:2px 6px;border-radius:6px;background:#f0fdf4;border:1px solid #bbf7d0;cursor:pointer;color:#15803d;font-weight:700;">$</button>
+                </div>
+            </div>
         </div>`;
     }
     // NTH-05: badge de prioridad
@@ -593,10 +632,39 @@ function _inyectarBuscadorTabla() {
     tabla.prepend(bar);
 }
 
+// P3: menú "···" compacto en tabla — abre dropdown con acciones secundarias
+function _mkTblMenu(btn: HTMLElement, id: string) {
+    const _existing = document.getElementById('_mkTblMenuDrop');
+    if (_existing) { _existing.remove(); if (_existing.dataset.id === id) return; }
+    const _e = window._esc || ((s: any) => String(s||''));
+    const menu = document.createElement('div');
+    menu.id = '_mkTblMenuDrop';
+    menu.dataset.id = id;
+    menu.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px;overflow:hidden;font-size:.78rem;';
+    menu.innerHTML = `
+        <button onclick="openPedidoModal('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#374151;text-align:left;" onmouseover="this.style.background='#fef9f0'" onmouseout="this.style.background='none'">✏️ Editar pedido</button>
+        <button onclick="exportarPedidoPDF('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#1d4ed8;text-align:left;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='none'">📄 Descargar PDF</button>
+        <button onclick="duplicarPedido('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#7c3aed;text-align:left;" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='none'">⧉ Duplicar</button>
+        <hr style="margin:4px 0;border:none;border-top:1px solid #f3f4f6;">
+        <button onclick="eliminarPedido('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#dc2626;text-align:left;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">🗑 Eliminar</button>
+    `;
+    document.body.appendChild(menu);
+    const rect = btn.getBoundingClientRect();
+    const menuW = 164, menuH = 160;
+    menu.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+    menu.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - menuW - 8) + 'px';
+    setTimeout(() => document.addEventListener('click', function _close(e) {
+        if (!menu.contains(e.target as Node)) { menu.remove(); document.removeEventListener('click', _close); }
+    }), 0);
+}
+window._mkTblMenu = _mkTblMenu;
+
 function renderTablaPedidos() {
     _inyectarBuscadorTabla();
     const tbody = document.getElementById('pedidosTable');
     if (!tbody) return;
+    // P7: saltar cómputo de hash si la vista activa es kanban (evita trabajo innecesario)
+    if ((_pedidoVistaActual || 'kanban') === 'kanban') return;
     // P1: hash guard — saltar re-render si los datos no cambiaron (incluye valores de filtros activos)
     const _qHash = ((document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null)?.value || '') + ((document.getElementById('tablaFiltroPago') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('pedidoFechaDesde') as HTMLInputElement|null)?.value || '') + ((document.getElementById('pedidoFechaHasta') as HTMLInputElement|null)?.value || '');
     const _tHash = (window.pedidos||[]).length + '_' + (window.pedidos||[]).reduce((s,p)=>s+Number(p.total||0)+Number(p.resta||0),0).toFixed(0) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash;
@@ -713,8 +781,8 @@ function renderTablaPedidos() {
                 <p class="truncate">${_et(p.concepto)||'—'}</p>
                 ${_dir ? `<p class="truncate mt-1" style="color:#7c3aed;">📍 ${_et(_dir)}</p>` : ''}
             </td>
-            <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.fechaPedido)||''}">${_et((p.fechaPedido||'').split('T')[0].split(' ')[0])||'—'}</span></td>
-            <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.entrega)||''}">${_et((p.entrega||'').split('T')[0].split(' ')[0])||'—'}</span></td>
+            <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.fechaPedido)||''}">${_fmtFechaCorta((p.fechaPedido||'').split('T')[0].split(' ')[0])||'—'}</span></td>
+            <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.entrega)||''}">${_fmtFechaCorta((p.entrega||'').split('T')[0].split(' ')[0])||'—'}</span></td>
             <td class="px-4 py-3 text-xs leading-snug">
                 <div class="text-gray-500">Total: <span class="font-bold text-gray-800">$${Number(p.total||0).toFixed(2)}</span></div>
                 <div class="text-gray-500">Anticipo: <span class="font-semibold text-green-700">$${Number(p.anticipo||0).toFixed(2)}</span></div>
@@ -722,13 +790,12 @@ function renderTablaPedidos() {
             </td>
             <td class="px-4 py-3 text-xs">${statusLabel[(p.status||'').toLowerCase()]||p.status||'—'}</td>
             <td class="px-4 py-3">
-                <div class="flex gap-1 flex-wrap">
-                    <button onclick="openPedidoStatusModal('${p.id}')" class="px-2 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600 hover:bg-amber-50">Estado</button>
-                    <button onclick="openPedidoModal('${p.id}')" class="px-2 py-1 rounded-lg bg-amber-50 text-xs text-amber-700">✏️</button>
-                    <button onclick="openAbonoPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-green-50 text-xs text-green-700">$</button>
-                    <button onclick="exportarPedidoPDF('${p.id}')" class="px-2 py-1 rounded-lg bg-blue-50 text-xs text-blue-700" title="Descargar PDF">📄</button>
-                    <button onclick="duplicarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-purple-50 text-xs text-purple-600" title="Duplicar">⧉</button>
-                    <button onclick="eliminarPedido('${p.id}')" class="px-2 py-1 rounded-lg bg-red-50 text-xs text-red-600">🗑</button>
+                <div style="display:flex;gap:4px;align-items:center;">
+                    <button onclick="openPedidoStatusModal('${p.id}')" title="Cambiar estado" style="padding:4px 8px;border-radius:8px;background:#f3f4f6;border:1px solid #e5e7eb;font-size:.75rem;font-weight:600;color:#374151;cursor:pointer;white-space:nowrap;">⚡ Estado</button>
+                    <button onclick="openAbonoPedido('${p.id}')" title="Registrar abono" style="padding:4px 8px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;font-size:.75rem;font-weight:700;color:#15803d;cursor:pointer;">$</button>
+                    <div style="position:relative;display:inline-block;" class="_mk-tbl-menu-wrap">
+                        <button onclick="_mkTblMenu(this,'${p.id}')" title="Más acciones" style="padding:4px 7px;border-radius:8px;background:#fff;border:1px solid #e5e7eb;font-size:.8rem;color:#6b7280;cursor:pointer;font-weight:700;">···</button>
+                    </div>
                 </div>
             </td>
         </tr>`;}).join('');

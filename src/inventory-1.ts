@@ -121,8 +121,10 @@ window._kitComponentes         = window._kitComponentes         ?? [];
 
 // ── Historial de movimientos ───────────────────────────────────────────────
 function saveStockMovements() {
-    // Guardar en SQLite + Supabase (mismo canal que el resto de los datos)
-    window.stockMovimientos = window.stockMovements; // mantener ambas referencias sincronizadas
+    // Sincronizar alias y persistir en clave KV (para offline via sbLoad).
+    // La escritura relacional a stock_movements ocurre en registrarMovimiento()
+    // como insert atómico — estas dos rutas son complementarias, no duplicadas.
+    window.stockMovimientos = window.stockMovements;
     sbSave('stockMovimientos', window.stockMovements);
 }
 
@@ -231,14 +233,24 @@ function _normVariante(v) {
 window._normVariante = _normVariante;
 
 // ── Lista de compras automática ──────────────────────────────────────────────
-function mostrarListaCompras(esRerender) {
+// I8: modo "ahora" = producción activa + entrega ≤7 días; "pipeline" = todos los pendientes
+let _listaComprasModo: 'ahora' | 'pipeline' = 'ahora';
+function mostrarListaCompras(esRerender?) {
     // Resetear checkboxes solo en apertura fresca (no en re-renders por toggle)
     if (!esRerender) window._listaComprasChecked = {};
-    // Pedidos que aún no han sido descontados del inventario
     const estadosPendientes = ['confirmado', 'pago', 'produccion', 'envio', 'salida', 'retirar'];
-    const pedidosPendientes = (window.pedidos || []).filter(p =>
-        estadosPendientes.includes(p.status) && !p.inventarioDescontado
-    );
+    const _hoyLC = new Date(); _hoyLC.setHours(0,0,0,0);
+    const _fin7LC = new Date(_hoyLC); _fin7LC.setDate(_fin7LC.getDate() + 7);
+    const pedidosPendientes = (window.pedidos || []).filter(p => {
+        if (!estadosPendientes.includes(p.status) || p.inventarioDescontado) return false;
+        if (_listaComprasModo === 'ahora') {
+            if (p.status === 'produccion' || p.status === 'salida' || p.status === 'retirar') return true;
+            if (!p.entrega) return false;
+            const fe = new Date(p.entrega + 'T00:00:00');
+            return fe >= _hoyLC && fe <= _fin7LC;
+        }
+        return true; // pipeline: todos los pendientes
+    });
 
     // Acumular necesidades por producto+variante
     const necesidades = {};
@@ -288,13 +300,20 @@ function mostrarListaCompras(esRerender) {
     const content = document.getElementById('listaComprasContent');
     if (!content) return;
 
+    // I8: toggle Ahora / Pipeline en la parte superior
+    const _modeToggleHtml = `
+        <div style="display:flex;gap:0;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:12px;font-size:.78rem;">
+            <button onclick="_listaComprasModo='ahora';mostrarListaCompras(true)" style="flex:1;padding:7px 0;border:none;cursor:pointer;font-weight:700;background:${_listaComprasModo==='ahora'?'#C5973B':'#fff'};color:${_listaComprasModo==='ahora'?'#fff':'#6b7280'};">🔥 Necesitas ahora</button>
+            <button onclick="_listaComprasModo='pipeline';mostrarListaCompras(true)" style="flex:1;padding:7px 0;border:none;cursor:pointer;font-weight:700;background:${_listaComprasModo==='pipeline'?'#C5973B':'#fff'};color:${_listaComprasModo==='pipeline'?'#fff':'#6b7280'};">📋 Pipeline completo</button>
+        </div>`;
+
     if (resultado.length === 0) {
-        content.innerHTML = '<p style="color:#9ca3af;text-align:center;padding:32px 0;font-size:.875rem;">No hay pedidos activos con materiales asignados.</p>';
+        content.innerHTML = _modeToggleHtml + '<p style="color:#9ca3af;text-align:center;padding:32px 0;font-size:.875rem;">No hay pedidos activos con materiales asignados.</p>';
     } else {
         const faltantes = resultado.filter(r => r.faltan > 0);
         const suficientes = resultado.filter(r => r.faltan === 0);
 
-        let html = '';
+        let html = _modeToggleHtml;
 
         if (faltantes.length > 0) {
             const totalEstimado = faltantes.reduce((s, r) => s + r.costoTotal, 0);
@@ -444,6 +463,7 @@ function mostrarListaCompras(esRerender) {
     openModal('listaComprasModal');
 }
 window.mostrarListaCompras = mostrarListaCompras;
+window._listaComprasModo = _listaComprasModo;
 
 // Sincroniza el campo stock del producto con la suma de sus variantes
 function syncStockFromVariants(product) {

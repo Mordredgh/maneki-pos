@@ -63,7 +63,7 @@ const _csp = (p: any): number => typeof (window as any).calcSaldoPendiente === '
                             <p class="text-gray-500 text-xs truncate">${_esc(p.concepto || '')}</p>
                         </div>
                         <div class="text-right shrink-0">
-                            <p class="text-sm font-bold text-gray-800">$${Number(p.total||0).toFixed(2)}</p>
+                            <p class="text-sm font-bold text-gray-800">${fmtMoney(Number(p.total||0))}</p>
                             ${Number(saldo)>0 ? `<p class="text-xs font-semibold" style="color:#ea580c;">💸 Pendiente: $${saldo}</p>` : '<p class="text-xs text-green-600 font-semibold">✅ Pagado</p>'}
                             <p class="text-xs text-gray-400">${_esc(p.entrega)}</p>
                         </div>
@@ -226,7 +226,7 @@ function _updateDashboardImpl() {
     const mesAnteriorStr = `${fechaPrevMes.getFullYear()}-${String(fechaPrevMes.getMonth() + 1).padStart(2, '0')}`;
     const _ayerD = new Date(now); _ayerD.setDate(_ayerD.getDate() - 1);
     const _ayer = `${_ayerD.getFullYear()}-${String(_ayerD.getMonth()+1).padStart(2,'0')}-${String(_ayerD.getDate()).padStart(2,'0')}`;
-    let todaySales = 0, totalSales = 0, totalCosts = 0, monthlySales = 0, ventasMesActual = 0, ventasMesAnterior = 0, _ventasAyer = 0;
+    let todaySales = 0, totalSales = 0, totalCosts = 0, costsMesAnterior = 0, monthlySales = 0, ventasMesActual = 0, ventasMesAnterior = 0, _ventasAyer = 0;
     // Una sola pasada sobre salesHistory — calcula KPIs de hoy, mes actual, mes anterior y ayer.
     for (const s of (salesHistory || [])) {
         if (s.method === 'Cancelado') continue;
@@ -236,7 +236,7 @@ function _updateDashboardImpl() {
         if (d === today)                        todaySales     += t;
         else if (d === _ayer)                   _ventasAyer    += t;
         if (d.startsWith(mesActualStr))       { totalSales += t; totalCosts += (s.products || []).reduce((a: number, p: any) => a + ((p.costoAlVender ?? p.cost ?? 0) * (p.quantity || 1)), 0); monthlySales += t; ventasMesActual += t; }
-        else if (d.startsWith(mesAnteriorStr))  ventasMesAnterior += t;
+        else if (d.startsWith(mesAnteriorStr)){ ventasMesAnterior += t; costsMesAnterior += (s.products || []).reduce((a: number, p: any) => a + ((p.costoAlVender ?? p.cost ?? 0) * (p.quantity || 1)), 0); }
     }
     // Pedidos finalizados — usar p.total como fuente de verdad (igual que balance.js)
     for (const p of (window.pedidosFinalizados || [])) {
@@ -248,7 +248,7 @@ function _updateDashboardImpl() {
         if (fecha === today)                           { todaySales  += monto; }
         else if (fecha === _ayer)                      { _ventasAyer += monto; }
         if (fecha.startsWith(mesActualStr))          { totalSales += monto; totalCosts += costo; monthlySales += monto; ventasMesActual += monto; }
-        else if (fecha.startsWith(mesAnteriorStr))     ventasMesAnterior += monto;
+        else if (fecha.startsWith(mesAnteriorStr))   { ventasMesAnterior += monto; costsMesAnterior += costo; }
     }
     const netProfit = totalSales - totalCosts;
     // NTH-02: cargar meta mensual desde storeConfig la primera vez (persistente)
@@ -265,7 +265,7 @@ function _updateDashboardImpl() {
     const monthSalesEl = document.getElementById('dashMonthSales');
     if (goalBar) goalBar.style.width = goalPct + '%';
     if (goalPctEl) goalPctEl.textContent = goalPct + '% de tu meta mensual';
-    if (monthSalesEl) monthSalesEl.textContent = '$' + monthlySales.toFixed(2);
+    if (monthSalesEl) monthSalesEl.textContent = fmtMoney(monthlySales);
 
     // ── Stock bajo + Predictivo — una sola pasada O(n) ──
     const _gse = typeof getStockEfectivo === 'function' ? getStockEfectivo : (p: any) => p.stock || 0;
@@ -459,6 +459,30 @@ function _updateDashboardImpl() {
         el._mkLast = val;
         animarNumero(el, prev ?? val, val, prev === null || prev === val ? 0 : 500, '$', '');
     };
+    // D4: inyectar hover/transition en tarjetas KPI una sola vez
+    if (!document.getElementById('_mkKpiHoverStyles')) {
+        const _kpiSt = document.createElement('style');
+        _kpiSt.id = '_mkKpiHoverStyles';
+        _kpiSt.textContent = `
+            #dailySales, #netProfit, #accountsReceivable, #dashActivePedidos {
+                transition: transform .15s ease, box-shadow .15s ease;
+            }
+            #dailySales:hover, #netProfit:hover, #accountsReceivable:hover { color: var(--mk-gold-500, #C9933A) !important; }
+            [id="dailySales"], [id="netProfit"], [id="accountsReceivable"], [id="dashActivePedidos"] {
+                transition: color .15s ease;
+            }
+        `;
+        const _kpiCards = [ds, np, ar, ap].map(el => el?.closest('.kpi-card, [class*="rounded-xl"], [class*="card"], [style*="border-radius"]') as HTMLElement | null);
+        _kpiCards.forEach(card => {
+            if (card && !card.dataset.mkKpiHover) {
+                card.dataset.mkKpiHover = '1';
+                card.style.transition = 'transform .15s ease, box-shadow .15s ease';
+                card.addEventListener('mouseenter', () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 6px 20px rgba(0,0,0,0.1)'; });
+                card.addEventListener('mouseleave', () => { card.style.transform = ''; card.style.boxShadow = ''; });
+            }
+        });
+        document.head.appendChild(_kpiSt);
+    }
     _kpiAnim(ds, todaySales);
     if (np) {
         _kpiAnim(np, netProfit);
@@ -649,24 +673,36 @@ function _updateDashboardImpl() {
         const barPct = ventasMesAnterior > 0 ? Math.min(100, Math.round((ventasMesActual / ventasMesAnterior) * 100)) : 0;
         const mesActualNombre = now.toLocaleDateString('es-MX', { month: 'long' });
         const mesAnteriorNombre = fechaPrevMes.toLocaleDateString('es-MX', { month: 'long' });
+        const _ganActual   = ventasMesActual   - totalCosts;
+        const _ganAnterior = ventasMesAnterior - costsMesAnterior;
+        const _ganDiffPct  = _ganAnterior > 0 ? Math.round(((_ganActual - _ganAnterior) / _ganAnterior) * 100) : null;
+        const _ganTrend    = _ganDiffPct === null ? '' : _ganDiffPct >= 0
+            ? `<span style="color:#16a34a;font-size:.65rem;font-weight:700;">▲${_ganDiffPct}%</span>`
+            : `<span style="color:#dc2626;font-size:.65rem;font-weight:700;">▼${Math.abs(_ganDiffPct)}%</span>`;
         mesVsAnteriorEl.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
                 <span style="font-size:.72rem;color:#6b7280;text-transform:capitalize;">${mesActualNombre}</span>
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="font-size:1rem;font-weight:900;color:#1e40af;">$${ventasMesActual.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+                    <span style="font-size:1rem;font-weight:900;color:#1e40af;">${fmtMoney(ventasMesActual)}</span>
                     ${trend}
                 </div>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                 <span style="font-size:.72rem;color:#9ca3af;text-transform:capitalize;">${mesAnteriorNombre}</span>
-                <span style="font-size:.82rem;font-weight:600;color:#9ca3af;">$${ventasMesAnterior.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+                <span style="font-size:.82rem;font-weight:600;color:#9ca3af;">${fmtMoney(ventasMesAnterior)}</span>
             </div>
             ${ventasMesAnterior > 0 ? `
-            <div style="background:#dbeafe;border-radius:99px;height:6px;overflow:hidden;">
+            <div style="background:#dbeafe;border-radius:99px;height:5px;overflow:hidden;margin-bottom:8px;">
                 <div style="background:#3b82f6;height:100%;border-radius:99px;width:${barPct}%;transition:width .6s ease;"></div>
+            </div>` : ''}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+                <span style="font-size:.68rem;color:#15803d;font-weight:700;">💰 Ganancia neta</span>
+                <div style="display:flex;align-items:center;gap:5px;">
+                    <span style="font-size:.78rem;font-weight:800;color:${_ganActual>=0?'#15803d':'#dc2626'};">${fmtMoney(_ganActual)}</span>
+                    ${_ganTrend}
+                </div>
             </div>
-            <p style="font-size:.65rem;color:#93c5fd;margin-top:4px;text-align:right;">${barPct}% del mes anterior</p>
-            ` : '<p style="font-size:.7rem;color:#93c5fd;text-align:center;padding-top:8px;">Sin historial del mes anterior</p>'}`;
+            ${ventasMesAnterior > 0 ? '' : '<p style="font-size:.7rem;color:#9ca3af;text-align:center;padding-top:6px;">Sin historial del mes anterior</p>'}`;
     }
 
     // ── Material más usado ──
@@ -728,9 +764,11 @@ function _renderDiaMasRentable() {
     const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
     const totales = [0,0,0,0,0,0,0];
     const fechasVistas = [new Set(),new Set(),new Set(),new Set(),new Set(),new Set(),new Set()];
+    const _hace90 = new Date(); _hace90.setDate(_hace90.getDate() - 90);
+    const _hace90str = `${_hace90.getFullYear()}-${String(_hace90.getMonth()+1).padStart(2,'0')}-${String(_hace90.getDate()).padStart(2,'0')}`;
     const fuentes = [
-        ...(window.salesHistory||[]).filter(s => s.date && s.method !== 'Cancelado' && s.type !== 'anticipo' && s.type !== 'abono'),
-        ...(window.pedidosFinalizados||[]).map(p => ({ date:(p.fechaFinalizado||p.fecha||'').split('T')[0], total:p.total }))
+        ...(window.salesHistory||[]).filter(s => s.date && s.date >= _hace90str && s.method !== 'Cancelado' && s.type !== 'anticipo' && s.type !== 'abono'),
+        ...(window.pedidosFinalizados||[]).filter(p => (p.fechaFinalizado||p.fecha||'').split('T')[0] >= _hace90str).map(p => ({ date:(p.fechaFinalizado||p.fecha||'').split('T')[0], total:p.total }))
     ];
     fuentes.forEach(s => {
         if (!s.date) return;
@@ -1045,7 +1083,7 @@ function renderResumenDia() {
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">para entregar hoy</p>
                 </div>
                 <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
-                    <p style="font-size:1.1rem;font-weight:900;color:#dc2626;margin:0;">$${totalPorCobrar.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
+                    <p style="font-size:1.1rem;font-weight:900;color:#dc2626;margin:0;">${fmtMoney(totalPorCobrar)}</p>
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">por cobrar</p>
                 </div>
                 ${sinFecha > 0 ? `<div style="background:#fef9c3;border-radius:12px;padding:10px 12px;border:1px solid #fde68a;">
@@ -1379,6 +1417,7 @@ window.checkGastosInusuales = checkGastosInusuales;
 // WIDGET DE CLIMA — OpenMeteo (gratis, sin API key)
 // ══════════════════════════════════════════════════════════════
 let _climaCache: {data: any, ts: number} | null = null;
+let _climaAbort: AbortController | null = null;
 async function renderWidgetClima() {
     let card = document.getElementById('widgetClima');
     if (!card) {
@@ -1402,13 +1441,18 @@ async function renderWidgetClima() {
     </div>`;
 
     try {
+        // Cancelar fetch previo si la sección cambió antes de que terminara
+        if (_climaAbort) { _climaAbort.abort(); }
+        _climaAbort = new AbortController();
         // Coordenadas Monterrey, NL
-        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.6866&longitude=-100.3161&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMonterrey&forecast_days=1');
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.6866&longitude=-100.3161&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMonterrey&forecast_days=1', { signal: _climaAbort.signal });
         if (!res.ok) throw new Error('API error');
         const data = await res.json();
         _climaCache = { data, ts: Date.now() };
+        _climaAbort = null;
         _renderClimaHTML(card, data);
-    } catch(e) {
+    } catch(e: any) {
+        if (e?.name === 'AbortError') return; // navegación antes de que terminara el fetch
         // H50: fallback visible cuando falla la API del clima
         card.innerHTML = `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:8px;">
             <span style="font-size:1.1rem;">🌤</span>
@@ -1455,13 +1499,13 @@ function _renderClimaHTML(card: HTMLElement, data: any) {
     const viento = Math.round(cur.windspeed_10m);
 
     card.innerHTML = `
-        <div style="background:linear-gradient(135deg,#EFF6FF,#F0F9FF);border:1px solid #BFDBFE;border-radius:14px;padding:12px 14px;">
+        <div style="background:linear-gradient(135deg,#FFF9F0,#FFF5E6);border:1px solid #F5E6CC;border-radius:14px;padding:12px 14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <span style="font-size:2rem;line-height:1;">${icon}</span>
                     <div>
-                        <p style="font-size:1.4rem;font-weight:800;color:#1E40AF;margin:0;line-height:1;">${temp}°C</p>
-                        <p style="font-size:.7rem;color:#3B82F6;margin:1px 0 0;">${desc} · Monterrey</p>
+                        <p style="font-size:1.4rem;font-weight:800;color:#92622A;margin:0;line-height:1;">${temp}°C</p>
+                        <p style="font-size:.7rem;color:#C5973B;margin:1px 0 0;">${desc} · Monterrey</p>
                     </div>
                 </div>
                 <div style="text-align:right;">
@@ -1582,32 +1626,39 @@ window._getSaturacionFecha = _getSaturacionFecha;
 // ══════════════════════════════════════════════════════════════
 // N-VIZ-003: Heatmap de pedidos por día y hora
 // ══════════════════════════════════════════════════════════════
+let _heatmapModo: 'count' | 'amount' = 'count';
 function renderHeatmapPedidos(): void {
     const el = document.getElementById('dashHeatmapWidget');
     if (!el) return;
 
     const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
     const bloques = ['6–9','9–12','12–15','15–18','18–21','21+'];
-    const grid: number[][] = Array.from({length: 7}, () => new Array(6).fill(0));
+    const gridCount: number[][] = Array.from({length: 7}, () => new Array(6).fill(0));
+    const gridAmount: number[][] = Array.from({length: 7}, () => new Array(6).fill(0));
 
-    // Fuentes: pedidos (fechaCreacion) + salesHistory (date + hour si existe)
-    const fuentes = [
-        ...(window.pedidos || []).map((p: any) => p.fechaCreacion || p.fecha),
-        ...(window.pedidosFinalizados || []).map((p: any) => p.fechaCreacion || p.fechaFinalizado || p.fecha),
-        ...(window.salesHistory || []).map((s: any) => s.createdAt || (s.date ? s.date + 'T12:00:00' : null)),
-    ].filter(Boolean);
-
-    fuentes.forEach((ts: string) => {
+    // Fuentes: pedidos + salesHistory
+    const fuentesPedidos = [
+        ...(window.pedidos || []).map((p: any) => ({ ts: p.fechaCreacion || p.fecha, monto: Number(p.total||0) })),
+        ...(window.pedidosFinalizados || []).map((p: any) => ({ ts: p.fechaCreacion || p.fechaFinalizado || p.fecha, monto: Number(p.total||0) })),
+    ];
+    const fuentesSales = (window.salesHistory || []).map((s: any) => ({
+        ts: s.createdAt || (s.date ? s.date + 'T12:00:00' : null),
+        monto: Number(s.total||0)
+    }));
+    [...fuentesPedidos, ...fuentesSales].forEach(({ ts, monto }) => {
+        if (!ts) return;
         try {
             const d = new Date(ts);
             if (isNaN(d.getTime())) return;
             const dia = d.getDay();
             const hora = d.getHours();
             const bloque = hora < 6 ? 5 : hora < 9 ? 0 : hora < 12 ? 1 : hora < 15 ? 2 : hora < 18 ? 3 : hora < 21 ? 4 : 5;
-            grid[dia][bloque]++;
+            gridCount[dia][bloque]++;
+            gridAmount[dia][bloque] += monto;
         } catch(_) {}
     });
 
+    const grid = _heatmapModo === 'amount' ? gridAmount : gridCount;
     const maxVal = Math.max(...grid.flat(), 1);
     const bg = (v: number) => {
         const t = v / maxVal;
@@ -1618,21 +1669,31 @@ function renderHeatmapPedidos(): void {
         return 'rgba(197,151,59,0.85)';
     };
     const fg = (v: number) => v / maxVal > 0.5 ? '#5c3a00' : '#6b7280';
+    const fmt = (v: number) => _heatmapModo === 'amount'
+        ? (v >= 1000 ? '$' + (v/1000).toFixed(1) + 'k' : v > 0 ? '$' + v.toFixed(0) : '')
+        : (v > 0 ? String(v) : '');
 
     // FIX-UI: altura fija en vez de aspect-ratio:1 — en pantallas anchas los
     // cuadros crecían enormes y el heatmap dominaba el dashboard
     el.innerHTML = `
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+            <div style="display:inline-flex;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;font-size:.65rem;">
+                <button onclick="_heatmapModo='count';renderHeatmapPedidos()" style="padding:3px 10px;cursor:pointer;background:${_heatmapModo==='count'?'#C5973B':'#fff'};color:${_heatmapModo==='count'?'#fff':'#6b7280'};border:none;font-weight:600;font-size:.65rem;">Pedidos</button>
+                <button onclick="_heatmapModo='amount';renderHeatmapPedidos()" style="padding:3px 10px;cursor:pointer;background:${_heatmapModo==='amount'?'#C5973B':'#fff'};color:${_heatmapModo==='amount'?'#fff':'#6b7280'};border:none;font-weight:600;font-size:.65rem;">Montos</button>
+            </div>
+        </div>
         <div style="display:grid;grid-template-columns:36px repeat(6,minmax(0,1fr));gap:2px;font-size:.62rem;max-width:520px;">
             <div></div>
             ${bloques.map(b => `<div style="text-align:center;color:#9ca3af;font-weight:700;padding-bottom:2px;">${b}</div>`).join('')}
             ${dias.map((dia, d) => `
                 <div style="color:#6b7280;font-weight:700;display:flex;align-items:center;">${dia}</div>
                 ${grid[d].map((v, b) => `
-                    <div title="${v} registros" style="height:26px;border-radius:4px;background:${bg(v)};display:flex;align-items:center;justify-content:center;color:${fg(v)};font-weight:${v>0?'700':'400'}">
-                        ${v > 0 ? v : ''}
+                    <div title="${gridCount[d][b]} pedidos · $${gridAmount[d][b].toFixed(0)}" style="height:26px;border-radius:4px;background:${bg(v)};display:flex;align-items:center;justify-content:center;color:${fg(v)};font-weight:${v>0?'700':'400'};font-size:.58rem;">
+                        ${fmt(v)}
                     </div>
                 `).join('')}
             `).join('')}
         </div>`;
 }
 window.renderHeatmapPedidos = renderHeatmapPedidos;
+window._heatmapModo = _heatmapModo;
