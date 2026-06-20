@@ -140,7 +140,7 @@ function renderEquiposGrid() {
 
         // MEJ-4: barra de progreso metaMensual
         // Calcular recuperado este mes (suma de pagos del mes actual en historialPagos)
-        const mesActual = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+        const mesActual = _fechaHoy().substring(0, 7);
         const recuperadoMes = (eq.historialPagos || [])
             .filter(h => h.fecha && h.fecha.startsWith(mesActual))
             .reduce((s, h) => s + Number(h.monto || 0), 0);
@@ -248,8 +248,7 @@ function _registrarPagoEquipo(eqId, monto, concepto, pedidoId, folio) {
     const idx = equipos.findIndex(e => e.id === eqId);
     if (idx === -1) return;
     if (!equipos[idx].historialPagos) equipos[idx].historialPagos = [];
-    const fecha = (typeof window._fechaHoy === 'function') ? window._fechaHoy()
-        : (()=>{const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
+    const fecha = _fechaHoy();
     const entrada = {
         id: Date.now(),
         fecha,
@@ -424,7 +423,7 @@ function confirmarRoiEquipos() {
 
     // Save to historial
     roiHistorial.push({
-        fecha: (typeof _fechaHoy === 'function') ? _fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})(),
+        fecha: _fechaHoy(),
         folio: pedido.folio,
         pedidoId: pedido.id,
         equiposIds,
@@ -503,7 +502,7 @@ function confirmarRoiManual() {
     saveEquipos();
 
     roiHistorial.push({
-        fecha: window._fechaHoy ? window._fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})(),
+        fecha: _fechaHoy(),
         folio: '__manual__',
         concepto,
         pedidoId: null,

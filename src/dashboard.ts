@@ -837,7 +837,7 @@ function _renderAtencionHoy() {
     if (items.length === 0) {
         el.innerHTML = '<span class="text-green-600 text-sm">✅ Todo en orden por hoy</span>';
     } else {
-        el.innerHTML = items.map(i => `<div class="text-sm py-1 border-b border-gray-100">${typeof _esc === 'function' ? _esc(i) : i}</div>`).join('');
+        el.innerHTML = items.map(i => `<div class="text-sm py-1 border-b border-gray-100">${_esc(i)}</div>`).join('');
     }
 }
 window._renderAtencionHoy = _renderAtencionHoy;

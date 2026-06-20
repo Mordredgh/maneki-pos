@@ -61,8 +61,6 @@
         ? `<img src="${logoBase64}" style="height:72px;object-fit:contain;margin-bottom:8px;" alt="Maneki Store">`
         : `<div style="font-size:2rem;">🐱</div>`;
 
-    const _esc = typeof window._esc==='function'?window._esc:(s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
-
     const notasHtml = p.notas ? `
         <div style="margin:20px 0;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
             <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">📝 Notas</div>
@@ -370,7 +368,7 @@ async function duplicarPedido(id) {
                   || (window.pedidosFinalizados || []).find(p => String(p.id) === String(id));
     if (!original) return;
     const nuevoId = mkId();
-    const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+    const hoy = _fechaHoy();
     const copia = {
         ...original,
         id: nuevoId,
@@ -439,7 +437,7 @@ async function exportarPedidoPDF(id) {
     const items = (p.productosInventario||[]).filter(it=>it.id!=='libre');
     const storeName = window.storeConfig?.name||'Maneki Store';
     const storePhone = window.storeConfig?.phone||'';
-    const _e = typeof _esc==='function'?_esc:(s=>String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    const _e = _esc;
 
     const itemsHtml = items.length>0
         ? items.map(it=>{
@@ -1070,7 +1068,7 @@ function _mostrarGaleriaPtEnPedido(prod) {
         ? prod.imageUrls
         : prod.imageUrl ? [prod.imageUrl] : [];
     if (urls.length === 0) { galDiv.innerHTML = ''; return; }
-    const _e = typeof _esc === 'function' ? _esc : (s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const _e = _esc;
     // SEC-2: data-foto-url escapado con _esc, sin onclick inline con URL del usuario
     galDiv.innerHTML = '<div style="font-size:.72rem;color:#92400e;font-weight:700;margin-bottom:6px;">🖼️ Fotos del producto ('+urls.length+')</div>'
         + '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">'
@@ -1113,7 +1111,7 @@ function renderCalendarioPedidos() {
         const items  = porFecha[fecha] || [];
         celdas += '<div style="min-height:80px;border:1px solid #f3f4f6;border-radius:10px;padding:6px;background:'+(esHoy?'#fef9f0':'#fff')+';'+(esHoy?'border-color:#C5973B;border-width:2px;':'')+';">'
             + '<div style="font-size:.75rem;font-weight:'+(esHoy?'800':'600')+';color:'+(esHoy?'#92400e':'#374151')+';margin-bottom:3px;">'+d+(esHoy?' 📍':'')+'</div>'
-            + items.slice(0,3).map(p => {var _e=typeof _esc==='function'?_esc:function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};return '<div onclick="openPedidoModal(\''+p.id+'\')" style="font-size:.65rem;background:'+(calcSaldoPendiente(p)>0?'#fef2f2':'#f0fdf4')+';color:'+(calcSaldoPendiente(p)>0?'#991b1b':'#166534')+';border-radius:4px;padding:2px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+_e(p.cliente)+' — '+_e(p.concepto)+'">'+_e(p.folio)+' '+_e(p.cliente)+'</div>';}).join('')
+            + items.slice(0,3).map(p => {const _e=_esc;return '<div onclick="openPedidoModal(\''+p.id+'\')" style="font-size:.65rem;background:'+(calcSaldoPendiente(p)>0?'#fef2f2':'#f0fdf4')+';color:'+(calcSaldoPendiente(p)>0?'#991b1b':'#166534')+';border-radius:4px;padding:2px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+_e(p.cliente)+' — '+_e(p.concepto)+'">'+_e(p.folio)+' '+_e(p.cliente)+'</div>';}).join('')
             + (items.length > 3 ? '<div style="font-size:.6rem;color:#9ca3af;text-align:center;">+'+(items.length-3)+' más</div>' : '')
             + '</div>';
     }
@@ -1183,7 +1181,7 @@ function checkAlertasCobro() {
     sub.textContent = pendientes.length + ' pedido' + (pendientes.length > 1 ? 's' : '') + ' con saldo pendiente'
         + (vencidos > 0 ? ' \u00b7 ' + vencidos + ' vencido' + (vencidos > 1 ? 's' : '') : '');
 
-    const _e = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;'));
+    const _e = _esc;
     lista.innerHTML = pendientes.map(p => {
         const _saldoAlert = calcSaldoPendiente(p);
         const fe = new Date(p.entrega + 'T00:00:00');
@@ -1244,7 +1242,7 @@ function imprimirEtiquetaPedido(id) {
     const anticipo  = Number(p.anticipo || 0).toFixed(2);
     const resta     = calcSaldoPendiente(p).toFixed(2);
     // FIX-6: usar _fechaHoy() para evitar UTC shift; reformatear a dd/mm/yyyy para mostrar
-    const _hoyISO = typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+    const _hoyISO = _fechaHoy();
     const fechaImpresion = _hoyISO.split('-').reverse().join('/');
 
     const _ee = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1397,8 +1395,8 @@ function imprimirOrdenProduccion() {
         if (typeof manekiToastExport === 'function') manekiToastExport('Sin pedidos en producción hoy', 'warn');
         return;
     }
-    const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
-    const _e = (typeof window._esc === 'function') ? window._esc : (s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const hoy = _fechaHoy();
+    const _e = _esc;
     const statusLabel = (s: string) => ({pago:'💰 Pagado',produccion:'🔧 Producción',salida:'🚚 Salió'})[s] || s;
     const filas = pedidos.map(p => {
         const items = (p.productosInventario || []).map((it: any) =>

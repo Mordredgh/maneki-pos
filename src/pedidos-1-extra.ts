@@ -79,13 +79,13 @@ function renderListaProduccion() {
 
         const prods = p.productosInventario && p.productosInventario.length > 0
             ? p.productosInventario.map(i => {
-                const _escProd = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+                const _escProd = _esc;
                 const varLabel = i.variante ? ` <span style="font-size:.7rem;color:#7c3aed;">(${_escProd((()=>{const p=i.variante.indexOf(':');if(p===-1)return i.variante;const t=i.variante.slice(0,p).trim(),val=i.variante.slice(p+1).trim();return t+': '+(typeof _mkColorDot==='function'?_mkColorDot(t,val):val);})())})</span>` : '';
                 return `<span class="inline-block px-2 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-xs mr-1 mb-1">${_escProd(i.name || i.nombre || '')}${varLabel} ×${i.quantity||1}</span>`;
               }).join('')
             : '';
         const ganancia = p.costoMateriales > 0 ? `<span class="text-xs text-green-600 font-semibold ml-2">💰 Ganancia: $${(p.total - p.costoMateriales).toFixed(2)}</span>` : '';
-        const _escP = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+        const _escP = _esc;
 
         return `<div class="${urgBg} border rounded-xl p-4 flex gap-4 items-start">
             <div class="text-xl font-bold text-gray-300 w-8 text-center flex-shrink-0">${idx+1}</div>
@@ -137,7 +137,7 @@ function renderListaProduccion() {
         if (_matEntries.length === 0) {
             _matSummaryEl.innerHTML = '';
         } else {
-            const _escM = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+            const _escM = _esc;
             _matSummaryEl.innerHTML = `
                 <div style="margin-top:14px;background:#f5f3ff;border:1px solid #ede9fe;border-radius:12px;padding:12px 14px;">
                     <div style="font-size:.72rem;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">📦 Materiales necesarios (total agrupado)</div>
@@ -406,7 +406,7 @@ function _migrarAnticiposLegacy() {
             id: typeof mkId === 'function' ? mkId() : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2)),
             tipo: 'anticipo',
             monto: anticipo,
-            fecha: p.fechaPedido || (typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0]),
+            fecha: p.fechaPedido || (_fechaHoy()),
             hora: '00:00',
             metodo: 'efectivo',
             nota: 'Anticipo migrado automáticamente'
@@ -622,8 +622,8 @@ function _guardarCotizacion() {
         concepto: notas,
         products: _quoteProductos.map(p => ({...p})),
         total,
-        date: typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0],
-        fecha: typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0],
+        date: _fechaHoy(),
+        fecha: _fechaHoy(),
         convertedToPedido: false,
     };
     if (!(window as any).quotes) (window as any).quotes = [];
@@ -884,7 +884,7 @@ function abrirWAMasivoRetirar() {
 
 // ─── CIERRE DE CAJA DEL DÍA ─────────────────────────────────────────────────
 function abrirCierreCaja() {
-    const hoy = (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const hoy = _fechaHoy();
     const _e = (window as any)._esc || ((s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
 
     // Cobros del día: ingresos registrados hoy con pedidoId o folioOrigen

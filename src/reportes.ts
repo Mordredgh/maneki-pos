@@ -699,7 +699,7 @@ function _setReportDatePreset(key: string) {
     let desde = '', hasta = '';
     if (key === 'mes') {
         desde = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-        hasta = typeof _fechaHoy === 'function' ? _fechaHoy() : now.toISOString().split('T')[0];
+        hasta = _fechaHoy();
     } else if (key === 'mesAnterior') {
         const mp = new Date(now.getFullYear(), now.getMonth()-1, 1);
         const mf = new Date(now.getFullYear(), now.getMonth(), 0);
@@ -708,10 +708,10 @@ function _setReportDatePreset(key: string) {
     } else if (key === '3meses') {
         const d3 = new Date(now.getFullYear(), now.getMonth()-2, 1);
         desde = `${d3.getFullYear()}-${String(d3.getMonth()+1).padStart(2,'0')}-01`;
-        hasta = typeof _fechaHoy === 'function' ? _fechaHoy() : now.toISOString().split('T')[0];
+        hasta = _fechaHoy();
     } else if (key === 'anio') {
         desde = `${now.getFullYear()}-01-01`;
-        hasta = typeof _fechaHoy === 'function' ? _fechaHoy() : now.toISOString().split('T')[0];
+        hasta = _fechaHoy();
     }
     const d = document.getElementById('reporteFechaDesde') as HTMLInputElement|null;
     const h = document.getElementById('reporteFechaHasta') as HTMLInputElement|null;
@@ -1240,7 +1240,7 @@ function descargarReporteVentas() {
     const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url; a.download = `Reporte_Ventas_Maneki_${typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().split('T')[0]}.csv`;
+    a.href = url; a.download = `Reporte_Ventas_Maneki_${_fechaHoy()}.csv`;
     a.click(); URL.revokeObjectURL(url);
 }
 window.descargarReporteVentas = descargarReporteVentas;
@@ -1362,7 +1362,7 @@ window.setAnalisisPeriodo = setAnalisisPeriodo;
 
 function getAnalisisFechas() {
     const hoy = new Date();
-    const _fh = typeof _fechaHoy === 'function' ? _fechaHoy : () => hoy.toISOString().split('T')[0];
+    const _fh = _fechaHoy;
     const hoyStr = _fh();
     if (analisisPeriodoActual === 'mes') {
         const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);

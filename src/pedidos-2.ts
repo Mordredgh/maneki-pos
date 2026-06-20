@@ -496,7 +496,7 @@ async function setPedidoStatus(status) {
                 );
                 if (_cobrar) {
                     const _cobroId = mkId();
-                    const _fechaHoyStr = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+                    const _fechaHoyStr = _fechaHoy();
                     if (!window.pedidos[idx].pagos) window.pedidos[idx].pagos = [];
                     window.pedidos[idx].pagos.push({
                         id: _cobroId, tipo: 'abono', monto: _saldoACobrar,
@@ -763,7 +763,7 @@ async function setPedidoStatus(status) {
         if (!window.pedidos[idx].historialEstados) window.pedidos[idx].historialEstados = [];
         window.pedidos[idx].historialEstados.push({
             estado: status,
-            fecha: (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0],
+            fecha: _fechaHoy(),
             hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'})
         });
         savePedidos();
@@ -815,11 +815,11 @@ function openAbonoPedido(id) {
             </div>
         </div>` : '';
     document.getElementById('abonoPedidoInfo').innerHTML = `
-        <p><b>Cliente:</b> ${typeof _esc==='function'?_esc(p.cliente):p.cliente}</p>
-        <p><b>Folio:</b> ${typeof _esc==='function'?_esc(p.folio):p.folio}</p>
+        <p><b>Cliente:</b> ${_esc(p.cliente)}</p>
+        <p><b>Folio:</b> ${_esc(p.folio)}</p>
         <p><b>Total:</b> $${Number(p.total||0).toFixed(2)}</p>
         <p><b>Anticipo:</b> $${Number(p.anticipo||0).toFixed(2)}</p>
-        <p class="font-bold text-red-600"><b>Saldo:</b> $${(typeof calcSaldoPendiente === 'function' ? calcSaldoPendiente(p) : Math.max(0, Number(p.total||0) - Number(p.anticipo||0))).toFixed(2)}</p>
+        <p class="font-bold text-red-600"><b>Saldo:</b> $${calcSaldoPendiente(p).toFixed(2)}</p>
         ${_historialHTML}`;
     document.getElementById('abonoPedidoMonto').value = '';
     document.getElementById('abonoPedidoNota').value = '';
@@ -1036,7 +1036,7 @@ async function kanbanDrop(event, newStatus) {
         if (!window.pedidos[idx].historialEstados) window.pedidos[idx].historialEstados = [];
         window.pedidos[idx].historialEstados.push({
             estado: newStatus,
-            fecha: typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0],
+            fecha: _fechaHoy(),
             hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'})
         });
         const _pedidoMovidoId = _kanbanDragId;
@@ -1119,7 +1119,7 @@ window._actualizarBarraLote = _actualizarBarraLote;
 function _aplicarCambioLote() {
     const nuevoStatus = document.getElementById('_kanbanLoteStatus')?.value;
     if (!nuevoStatus) return;
-    const _fecha = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const _fecha = _fechaHoy();
     let cambiados = 0;
     let finalizados = 0;
     const _idsFinalizadosLote: string[] = [];
@@ -1256,13 +1256,13 @@ function reactivarPedido(id) {
 
     const p = fuente === 'finalizados' ? window.pedidosFinalizados[idx] : window.pedidos[idx];
     showConfirm(
-        `¿Reactivar el pedido <strong>${typeof _esc==='function'?_esc(p.folio||p.id):p.folio||p.id}</strong> de <strong>${typeof _esc==='function'?_esc(p.cliente||'—'):p.cliente||'—'}</strong>?<br><small style="color:#6b7280;">Volverá al kanban como "Confirmado".</small>`,
+        `¿Reactivar el pedido <strong>${_esc(p.folio||p.id)}</strong> de <strong>${_esc(p.cliente||'—')}</strong>?<br><small style="color:#6b7280;">Volverá al kanban como "Confirmado".</small>`,
         '↩ Reactivar pedido'
     ).then(ok => {
         if (!ok) return;
         if (!window.pedidos) window.pedidos = [];
 
-        const _fecha = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
+        const _fecha = _fechaHoy();
 
         // BUG C1 FIX: limpiar salesHistory, incomes y totalPurchases antes de reactivar
         // para evitar doble conteo si el pedido se vuelve a finalizar.
@@ -1524,7 +1524,7 @@ function renderHistorialPedidos() {
             info.style.cssText = 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:-4px 0 12px;';
             bloque.insertAdjacentElement('afterend', info);
         }
-        const _e = (s: any) => (typeof _esc === 'function' ? _esc(s) : String(s));
+        const _e = _esc;
         const _statusLbl: Record<string,string> = { finalizado: '✅ Finalizado', cancelado: '❌ Cancelado' };
         const chips: string[] = [];
         if (q) chips.push(`<span class="mk-filter-chip">Buscar: ${_e(q)}<button data-tip="Quitar" onclick="_mkHistClear('cliente')">✕</button></span>`);
@@ -1681,7 +1681,7 @@ function mostrarResumenMensual() {
 
 (function autoResumenMensual() {
     if (new Date().getDate() !== 1) return;
-    const key = 'maneki_resumen_' + (typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().split('T')[0]).substring(0,7);
+    const key = 'maneki_resumen_' + _fechaHoy().substring(0,7);
     try {
         if (localStorage.getItem(key)) return;
         setTimeout(() => {
@@ -2083,7 +2083,7 @@ function _sugerirResenaGoogle(pedido: any) {
     const waUrl = tel ? `https://wa.me/${tel}?text=${msg}` : `https://wa.me/?text=${msg}`;
     setTimeout(() => {
         manekiToastExport(
-            `✨ <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="color:#C5973B;font-weight:700;text-decoration:underline;">¡Pide tu reseña a ${typeof _esc==='function'?_esc(nombre):nombre}! →</a>`,
+            `✨ <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="color:#C5973B;font-weight:700;text-decoration:underline;">¡Pide tu reseña a ${_esc(nombre)}! →</a>`,
             'ok'
         );
     }, 1200);
@@ -2306,8 +2306,8 @@ window.cerrarHojaRuta = cerrarHojaRuta;
 function renderHojaRuta() {
     const el = document.getElementById('_mkHojaRutaContent');
     if (!el) return;
-    const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0];
-    const _e = typeof _esc === 'function' ? _esc : (s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const hoy = _fechaHoy();
+    const _e = _esc;
 
     const pedidosHoy = (window.pedidos || [])
         .filter((p: any) => p.entrega === hoy)

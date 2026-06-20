@@ -86,7 +86,7 @@ function openPedidoModal(id) {
     if (selRow) selRow.classList.add('hidden');
 
     // FIX-6: usar _fechaHoy() para evitar UTC shift
-    const hoy = typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{ const _d=new Date(); return `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`; })();
+    const hoy = _fechaHoy();
     const _entrega = new Date(hoy + 'T12:00:00'); // parsear desde fecha local evita UTC shift
     _entrega.setDate(_entrega.getDate() + 7);
     const entregaStr = `${_entrega.getFullYear()}-${String(_entrega.getMonth()+1).padStart(2,'0')}-${String(_entrega.getDate()).padStart(2,'0')}`;
@@ -669,7 +669,7 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
                 id: mkId(),
                 tipo: 'anticipo',
                 monto: anticipo,
-                fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : (()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })()),
+                fecha: _fechaHoy(),
                 hora: new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
                 metodo: 'efectivo', nota: 'Anticipo inicial'
             }] : [],

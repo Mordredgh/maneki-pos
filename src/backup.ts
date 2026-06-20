@@ -62,7 +62,7 @@ function exportarBackupJSON() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Maneki_Backup_${(typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0]}.json`;
+    a.download = `Maneki_Backup_${_fechaHoy()}.json`;
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -91,7 +91,7 @@ async function exportarBackupComprimido() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Maneki_Backup_${(typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0]}.json.gz`;
+        a.download = `Maneki_Backup_${_fechaHoy()}.json.gz`;
         a.click();
         URL.revokeObjectURL(url);
         manekiToastExport(`📦 Backup comprimido: ${originalMB}MB → ${sizeMB}MB (${Math.round((1 - blob.size / jsonFinal.length) * 100)}% menos)`, 'ok');

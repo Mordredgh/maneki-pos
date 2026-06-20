@@ -58,7 +58,7 @@ if (typeof window.showSection === 'undefined') {
     };
     const esColor = t => /color|colour|color\s*\/\s*tono/i.test(t||'');
     window._mkColorDot = function(tipo, valor) {
-        const _e = typeof _esc==='function'?_esc:(s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+        const _e = _esc;
         if (!esColor(tipo)) return `<span style="font-weight:600;">${_e(valor)}</span>`;
         const key = (valor||'').toLowerCase().trim();
         const css = COLORES[key];
@@ -133,7 +133,7 @@ function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motiv
     const _movIso = new Date().toISOString();
     window.stockMovements.unshift({
         id:             _movId,
-        fecha:          (typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().split('T')[0]) + 'T' + new Date().toLocaleTimeString('es-MX'),
+        fecha:          _fechaHoy() + 'T' + new Date().toLocaleTimeString('es-MX'),
         productoId, productoNombre, tipo, cantidad,
         motivo:         motivo || '',
         stockAntes, stockDespues
@@ -157,16 +157,6 @@ function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motiv
     }
 }
 window.registrarMovimiento = registrarMovimiento;
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-// BUG-NEW-11 FIX: no re-declarar _esc con const — causa SyntaxError si db.js
-// ya la declaró en el mismo scope global. Usar guard typeof en su lugar.
-if (typeof _esc === 'undefined') {
-    window._esc = function(str) {
-        if (str == null) return '';
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
-    };
-}
 
 function _genId() {
     return 'p' + mkId().replace(/-/g, '');
@@ -648,7 +638,7 @@ function exportarInventarioCSV() {
     const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url; a.download = `inventario_${typeof _fechaHoy==='function'?_fechaHoy():new Date().toISOString().slice(0,10)}.csv`;
+    a.href = url; a.download = `inventario_${_fechaHoy()}.csv`;
     a.click(); URL.revokeObjectURL(url);
     manekiToastExport('📥 Inventario exportado como CSV', 'ok');
 }
@@ -759,7 +749,7 @@ function invInlineEditPrice(id, td) {
         const nv = parseFloat(input.value);
         if (!isNaN(nv) && nv >= 0 && nv !== prev) {
             if (!product.historialPrecios) product.historialPrecios = [];
-            product.historialPrecios.push({ precio: prev, fecha: typeof _fechaHoy==='function' ? _fechaHoy() : new Date().toISOString().split('T')[0] });
+            product.historialPrecios.push({ precio: prev, fecha: _fechaHoy() });
             product.price = nv;
             if (typeof saveProducts === 'function') saveProducts();
             if (typeof manekiToastExport === 'function') manekiToastExport(`Precio actualizado: ${product.name} → $${nv.toFixed(2)}`, 'ok');
@@ -1433,7 +1423,7 @@ async function _aplicarBulkPrecios() {
         const nuevo = Math.max(0.01, _calcBulkPrecio(Number(p.price), tipo, valor));
         // Guardar en historial de precios si existe
         if (!p.historialPrecios) p.historialPrecios = [];
-        p.historialPrecios.push({ precio: Number(p.price), fecha: (typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0]), motivo: `Bulk: ${label}` });
+        p.historialPrecios.push({ precio: Number(p.price), fecha: _fechaHoy(), motivo: `Bulk: ${label}` });
         p.price = parseFloat(nuevo.toFixed(2));
     });
 

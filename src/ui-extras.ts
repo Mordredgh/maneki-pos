@@ -1,12 +1,4 @@
-﻿// Guard: _esc puede estar definida globalmente por otro módulo,
-// pero definimos una local por si este archivo carga antes
-if (typeof _esc !== 'function') {
-    window._esc = function(s) {
-        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    };
-}
-
-// ── FIX: clearAllData nunca había sido definida ───────────────
+﻿// ── FIX: clearAllData nunca había sido definida ───────────────
 function clearAllData() {
     showConfirm('Esto eliminará productos, ventas, pedidos, clientes y todo el historial. Esta acción NO se puede deshacer.', '⚠️ ¿Borrar TODOS los datos?').then(ok1 => {
     if (!ok1) return;
@@ -393,7 +385,7 @@ function manekiToastExport(msg, tipo) {
 
     const toast = document.createElement('div');
     toast.className = `mk-toast ${t}`;
-    const _escT = typeof window._esc==='function'?window._esc:(s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    const _escT = _esc;
     toast.innerHTML = `
         <div class="mk-toast-icon">${icon}</div>
         <div class="mk-toast-body">
@@ -886,7 +878,7 @@ function mkMostrarUndoHint(descripcion: string) {
         hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9997;background:#1F2937;color:#fff;padding:8px 16px;border-radius:10px;font-size:.78rem;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .3s;white-space:nowrap;';
         document.body.appendChild(hint);
     }
-    hint.innerHTML = `<span>↩️ ${typeof _esc === 'function' ? _esc(descripcion) : descripcion}</span><kbd onclick="_mkUndo()" style="background:#374151;border:1px solid #4B5563;border-radius:5px;padding:2px 7px;font-size:.72rem;cursor:pointer;font-family:inherit;">Ctrl+Z</kbd>`;
+    hint.innerHTML = `<span>↩️ ${_esc(descripcion)}</span><kbd onclick="_mkUndo()" style="background:#374151;border:1px solid #4B5563;border-radius:5px;padding:2px 7px;font-size:.72rem;cursor:pointer;font-family:inherit;">Ctrl+Z</kbd>`;
     hint.style.opacity = '1';
     hint.style.display = 'flex';
     _undoToastTimer = setTimeout(() => {
@@ -1025,7 +1017,7 @@ function _mkRenderCmdk(q: string) {
     _mkCmdkFiltered = !term ? _mkCmdkCommands
         : _mkCmdkCommands.filter(c => (c.label + ' ' + c.keys + ' ' + c.group).toLowerCase().includes(term));
     if (_mkCmdkFiltered.length === 0) {
-        list.innerHTML = `<div class="mk-cmdk-empty">Sin resultados para “${typeof _esc==='function'?_esc(q):q}”</div>`;
+        list.innerHTML = `<div class=”mk-cmdk-empty”>Sin resultados para “${_esc(q)}”</div>`;
         return;
     }
     let html = ''; let lastGroup = '';

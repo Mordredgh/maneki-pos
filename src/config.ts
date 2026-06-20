@@ -823,7 +823,7 @@ Object.defineProperties(window.MK, {
     storeConfig:        { get: () => window.storeConfig || {} },
 
     // Helpers
-    fechaHoy:    { get: () => typeof _fechaHoy === 'function' ? _fechaHoy() : new Date().toISOString().split('T')[0] },
+    fechaHoy:    { get: () => _fechaHoy() },
     esc:         { get: () => window._esc || (s => String(s||'')) },
     saldo:       { get: () => window.calcSaldoPendiente || (p => Math.max(0, Number(p.total||0) - Number(p.anticipo||0))) },
     stockOf:     { get: () => window.getStockEfectivo || (p => p.stock || 0) },

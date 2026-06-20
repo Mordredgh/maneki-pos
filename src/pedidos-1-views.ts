@@ -443,14 +443,6 @@ window._kanbanVerMas = function(col: string) {
 };
 
 const _statusLabel = s => ({confirmado:'✅ Confirmado',pago:'💰 Pagado',produccion:'🔧 Producción',envio:'📦 Envío',salida:'🚚 Salió',retirar:'🏪 Retirar',finalizado:'🎉 Listo',cancelado:'❌ Cancelado'})[s] || s;
-// P2: formatea "2025-06-13" → "13 jun" para columnas de fecha en tabla
-function _fmtFechaCorta(isoStr: string): string {
-    if (!isoStr || isoStr.length < 8) return isoStr || '';
-    const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-    const [, m, d] = isoStr.split('-').map(Number);
-    if (!m || !d) return isoStr;
-    return `${d} ${meses[m-1] || ''}`;
-}
 
 function kanbanCardHTML(p) {
     const _saldo = (window as any)._kSaldoPreMap?.get(String(p.id)) ?? calcSaldoPendiente(p);
@@ -468,8 +460,7 @@ function kanbanCardHTML(p) {
         else if (diff === 1) alertaHtml = '<span class="text-xs font-bold text-amber-600">🟡 Mañana</span>';
         else if (diff === 2) alertaHtml = '<span class="text-xs font-bold text-amber-600">🟡 2 días</span>';
     }
-    // BUG-PED-005 FIX: XSS en campos de usuario — _esc() sanitiza antes de insertar en innerHTML
-    const _e = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+    const _e = _esc;
     // MEJORA 4: checkbox de selección en lote (visible on-hover)
     const _isSelected = window._kanbanSeleccionados && window._kanbanSeleccionados.has(String(p.id));
     const _checkboxHtml = `<input type="checkbox" ${_isSelected ? 'checked' : ''}
@@ -528,7 +519,7 @@ function kanbanCardHTML(p) {
         ? `<img src="${_thumbUrl}" onclick="abrirFotoReferencia('${p.id}')" class="w-full h-14 object-cover rounded-lg mb-1 cursor-pointer" onerror="this.style.display='none'" alt="Ref">`
         : '';
     // MEJORA 3: alerta visual de pedido retrasado
-    const _hoyStr = (typeof _fechaHoy === 'function') ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const _hoyStr = _fechaHoy();
     const _retrasado = p.entrega && p.entrega < _hoyStr && !['finalizado','cancelado','retirar','salida'].includes(p.status||'');
     const _retrasadoHTML = _retrasado
         ? `<div style="background:#fee2e2;border-radius:8px;padding:3px 8px;margin-bottom:4px;font-size:.72rem;font-weight:700;color:#dc2626;">
@@ -636,7 +627,7 @@ function _inyectarBuscadorTabla() {
 function _mkTblMenu(btn: HTMLElement, id: string) {
     const _existing = document.getElementById('_mkTblMenuDrop');
     if (_existing) { _existing.remove(); if (_existing.dataset.id === id) return; }
-    const _e = window._esc || ((s: any) => String(s||''));
+    const _e = _esc;
     const menu = document.createElement('div');
     menu.id = '_mkTblMenuDrop';
     menu.dataset.id = id;
@@ -735,7 +726,7 @@ function renderTablaPedidos() {
         confirmado:'✅ Confirmado', pago:'💰 Pago', produccion:'🔧 Producción',
         envio:'📦 Envío', salida:'🚚 Salió', retirar:'🏪 Retirar'
     };
-    const _et = window._esc || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+    const _et = _esc;
     // N-EMPTY-002: empty states con y sin filtros activos
     const _hayFiltros = q || _fp || _fu || desde || hasta || _pedidoFiltroActivo !== 'todos';
     if (page.length === 0) {
@@ -861,7 +852,7 @@ function _renderFiltrosActivosBadges() {
     _badgeContainer.style.display = 'flex';
 
     // Renderizar un badge por cada filtro activo + botón limpiar todo
-    const _esc2 = window._esc || ((s: string) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    const _esc2 = _esc;
     _badgeContainer.innerHTML = filtrosActivos.map((f, i) =>
         `<span data-badge-idx="${i}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600;background:#FFF9F0;color:#92622A;border:1px solid #e8d5b0;cursor:pointer;" title="Quitar filtro" onclick="window._quitarFiltroBadge(${i})">
             ${_esc2(f.label)} <span style="font-size:.7rem;opacity:.7;">✕</span>

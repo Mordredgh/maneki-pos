@@ -1254,7 +1254,7 @@ function renderMovimientos() {
     if (tipoFiltro) movs = movs.filter(m => (m.tipo||'') === tipoFiltro);
 
     // B3: Resumen visual por tipo — sólo movimientos de hoy
-    const hoy = _fechaHoy ? _fechaHoy() : new Date().toISOString().split('T')[0];
+    const hoy = _fechaHoy();
     const movsHoy = (window.stockMovements || []).filter(m => {
         try { const f=new Date(m.fecha); return f.getFullYear()+'-'+('0'+(f.getMonth()+1)).slice(-2)+'-'+('0'+f.getDate()).slice(-2) === hoy; } catch(e) { return false; }
     });
@@ -1810,7 +1810,7 @@ function _mkInvModal(id: string, titulo: string, contenidoHtml: string, ancho = 
 function abrirConteoFisico() {
   const prods = (window.products || []).filter((p: any) => p.tipo !== 'servicio' && p.activo !== false);
   if (!prods.length) { if (typeof manekiToastExport==='function') manekiToastExport('Sin productos para contar','warn'); return; }
-  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  const _e = _esc;
   const filas = prods.map((p: any, i: number) => {
     const st = typeof getStockEfectivo==='function' ? getStockEfectivo(p) : (Number(p.stock)||0);
     return `<tr style="${i%2?'background:#f9fafb':''}">
@@ -1875,7 +1875,7 @@ function abrirReabastecimiento() {
     return st <= (Number(p.stockMin) || 5);
   });
   if (!bajos.length) { if (typeof manekiToastExport==='function') manekiToastExport('✅ Sin productos bajo stock mínimo','ok'); return; }
-  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  const _e = _esc;
   // Agrupar por proveedor
   const grupos: Record<string, any[]> = {};
   bajos.forEach((p: any) => {
@@ -1946,7 +1946,7 @@ function abrirReabastecimiento() {
 
 // ── 3. Donut chart: valor por categoría ─────────────
 function mostrarDonutCategoria() {
-  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  const _e = _esc;
   const catMap: Record<string, number> = {};
   (window.products || []).forEach((p: any) => {
     if (p.tipo==='servicio'||p.activo===false) return;
@@ -2010,7 +2010,7 @@ function mostrarDonutCategoria() {
 
 // ── 4. Stock mínimo sugerido desde consumo de pedidos ──
 function sugerirStockMinimo() {
-  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  const _e = _esc;
   // Calcular consumo de los últimos 60 días desde pedidos finalizados
   const hace60 = new Date(); hace60.setDate(hace60.getDate()-60);
   const consumo: Record<string, number> = {};
@@ -2108,7 +2108,7 @@ function archivarProducto(pid: string) {
 (window as any).archivarProducto = archivarProducto;
 
 function abrirMovimientoProducto(pid: string) {
-  const _e = (typeof window._esc==='function') ? window._esc : (s: any) => String(s||'');
+  const _e = _esc;
   const prod = (window.products||[]).find((p: any) => String(p.id) === String(pid));
   if (!prod) { if (typeof manekiToastExport==='function') manekiToastExport('Producto no encontrado','warn'); return; }
 
@@ -2340,7 +2340,7 @@ function abrirTendenciaInventario() {
 
 // ── I3: Panel de movimientos recientes globales ───────────────────────────────
 function abrirMovimientosRecientes() {
-  const _e = (typeof window._esc === 'function') ? window._esc : (s: any) => String(s || '');
+  const _e = _esc;
   const movs: any[] = [...(window.stockMovements || window.stockMovimientos || [])].slice(0, 50);
 
   if (movs.length === 0) {
