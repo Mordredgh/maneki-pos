@@ -299,6 +299,9 @@ function editProduct(id) {
                 if (track) track.style.background = chk.checked ? '#10b981' : '#d1d5db';
                 if (thumb) thumb.style.transform  = chk.checked ? 'translateX(22px)' : 'translateX(0)';
             }
+            // Cargar descripción para tienda online
+            const descInput = document.getElementById('ptDescripcionWeb') as HTMLTextAreaElement;
+            if (descInput) descInput.value = p.descripcionWeb || '';
             const title=document.querySelector('#ptModal h3');
             if(title) title.textContent='✏️ Editar Producto Terminado';
             const btn=document.getElementById('ptSubmitBtn');

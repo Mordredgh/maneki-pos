@@ -1158,6 +1158,7 @@ function saveProducts() {
                 is_kit:           p.isKit            === true,
                 activo:           p.activo !== false,
                 publicar_tienda:  p.publicarTienda   === true,
+                description:      p.descripcionWeb   || null,
                 updated_at:       new Date().toISOString()
             }));
             const { error } = await db.from('products').upsert(rows, { onConflict: 'id' });

@@ -176,6 +176,15 @@
                 </div>
             </div>
 
+            <!-- DESCRIPCIÓN PARA WEB -->
+            <div>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">🌐 Descripción para tienda online <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+                <textarea id="ptDescripcionWeb" rows="2" placeholder="Ej: Taza personalizada con foto y nombre, ideal para regalo. Incluye diseño gratis."
+                    style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;resize:vertical;box-sizing:border-box;"
+                    onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+                <p style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Aparece bajo el nombre del producto en manekistore.com.mx</p>
+            </div>
+
             <!-- PUBLICAR EN TIENDA -->
             <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1.5px solid #6ee7b7;border-radius:14px;">
                 <div>
@@ -681,6 +690,7 @@ async function guardarProductoTerminado() {
         const imageUrls = [...(window._ptGaleriaUrls || [])];
 
         const publicarTienda = document.getElementById('ptPublicarTienda')?.checked ?? false;
+        const descripcionWeb = (document.getElementById('ptDescripcionWeb') as HTMLTextAreaElement)?.value?.trim() || '';
         const cat = (window.categories||[]).find(c=>c.id===catId);
         const finalSku = sku || generateSKU(catId);
         const tags = [...(window._ptTagsActuales||[])];
@@ -713,6 +723,7 @@ async function guardarProductoTerminado() {
                 tags, sku:finalSku,
                 mpComponentes: mpComps,
                 publicarTienda,
+                descripcionWeb,
                 image: cat ? cat.emoji : window.products[idx].image,
                 imageUrl: window.currentProductImage || window.products[idx].imageUrl,
                 imageUrls: imageUrls.length > 0 ? imageUrls : (window.products[idx].imageUrls || []),
@@ -756,6 +767,7 @@ async function guardarProductoTerminado() {
                 stockMin, tags, sku:finalSku,
                 mpComponentes: mpComps,
                 publicarTienda,
+                descripcionWeb,
                 image: cat ? cat.emoji : '📦',
                 imageUrl: window.currentProductImage||null,
                 imageUrls: imageUrls,
