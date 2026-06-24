@@ -302,6 +302,19 @@ function editProduct(id) {
             // Cargar descripción para tienda online
             const descInput = document.getElementById('ptDescripcionWeb') as HTMLTextAreaElement;
             if (descInput) descInput.value = p.descripcionWeb || '';
+            // Cargar ocasiones seleccionadas
+            const ocIds = ['cumpleanos','san-valentin','bodas-xv','graduaciones','empresarial','navidad'];
+            ocIds.forEach(id => {
+                const chkOc = document.getElementById(`ptOc_${id}`) as HTMLInputElement;
+                const lblOc = document.getElementById(`ptOcLabel_${id}`);
+                if (chkOc) {
+                    chkOc.checked = Array.isArray(p.ocasiones) && p.ocasiones.includes(id);
+                    if (lblOc) {
+                        lblOc.style.borderColor = chkOc.checked ? '#C5973B' : '#e5e7eb';
+                        lblOc.style.background  = chkOc.checked ? '#fdf8f0' : '';
+                    }
+                }
+            });
             const title=document.querySelector('#ptModal h3');
             if(title) title.textContent='✏️ Editar Producto Terminado';
             const btn=document.getElementById('ptSubmitBtn');

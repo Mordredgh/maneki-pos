@@ -185,6 +185,26 @@
                 <p style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Aparece bajo el nombre del producto en manekistore.com.mx</p>
             </div>
 
+            <!-- OCASIONES -->
+            <div>
+                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:10px;">🎉 Ocasiones <span style="font-weight:400;color:#9ca3af;">(para filtrar en tienda)</span></label>
+                <div id="ptOcasionesGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    ${[
+                        {id:'cumpleanos',  emoji:'🎂', label:'Cumpleaños'},
+                        {id:'san-valentin',emoji:'💕', label:'San Valentín'},
+                        {id:'bodas-xv',   emoji:'💍', label:'Bodas y XV años'},
+                        {id:'graduaciones',emoji:'🎓', label:'Graduaciones'},
+                        {id:'empresarial', emoji:'🏢', label:'Empresarial'},
+                        {id:'navidad',     emoji:'🎄', label:'Navidad y Año Nuevo'},
+                    ].map(o => `
+                        <label id="ptOcLabel_${o.id}" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;font-size:.82rem;font-weight:500;color:#374151;transition:all .15s;">
+                            <input type="checkbox" id="ptOc_${o.id}" value="${o.id}" style="accent-color:#C5973B;width:15px;height:15px;cursor:pointer;"
+                                onchange="(function(el){var lbl=document.getElementById('ptOcLabel_${o.id}');lbl.style.borderColor=el.checked?'#C5973B':'#e5e7eb';lbl.style.background=el.checked?'#fdf8f0':''})(this)">
+                            ${o.emoji} ${o.label}
+                        </label>`).join('')}
+                </div>
+            </div>
+
             <!-- PUBLICAR EN TIENDA -->
             <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1.5px solid #6ee7b7;border-radius:14px;">
                 <div>
@@ -691,6 +711,8 @@ async function guardarProductoTerminado() {
 
         const publicarTienda = document.getElementById('ptPublicarTienda')?.checked ?? false;
         const descripcionWeb = (document.getElementById('ptDescripcionWeb') as HTMLTextAreaElement)?.value?.trim() || '';
+        const ocasiones: string[] = ['cumpleanos','san-valentin','bodas-xv','graduaciones','empresarial','navidad']
+            .filter(id => (document.getElementById(`ptOc_${id}`) as HTMLInputElement)?.checked);
         const cat = (window.categories||[]).find(c=>c.id===catId);
         const finalSku = sku || generateSKU(catId);
         const tags = [...(window._ptTagsActuales||[])];
@@ -724,6 +746,7 @@ async function guardarProductoTerminado() {
                 mpComponentes: mpComps,
                 publicarTienda,
                 descripcionWeb,
+                ocasiones,
                 image: cat ? cat.emoji : window.products[idx].image,
                 imageUrl: window.currentProductImage || window.products[idx].imageUrl,
                 imageUrls: imageUrls.length > 0 ? imageUrls : (window.products[idx].imageUrls || []),
@@ -768,6 +791,7 @@ async function guardarProductoTerminado() {
                 mpComponentes: mpComps,
                 publicarTienda,
                 descripcionWeb,
+                ocasiones,
                 image: cat ? cat.emoji : '📦',
                 imageUrl: window.currentProductImage||null,
                 imageUrls: imageUrls,

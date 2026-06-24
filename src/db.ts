@@ -1159,6 +1159,7 @@ function saveProducts() {
                 activo:           p.activo !== false,
                 publicar_tienda:  p.publicarTienda   === true,
                 description:      p.descripcionWeb   || null,
+                ocasiones:        p.ocasiones        || [],
                 updated_at:       new Date().toISOString()
             }));
             const { error } = await db.from('products').upsert(rows, { onConflict: 'id' });
