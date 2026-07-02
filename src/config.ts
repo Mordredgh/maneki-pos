@@ -5,6 +5,14 @@ function _fechaHoy() {
 }
 window._fechaHoy = _fechaHoy;
 
+// ── Stubs para globals de envios.ts (bundle lazy-loaded aparte) ──
+// initApp() asigna envioAnillos/ENVIO_BASE.lat antes de que envios.bundle.js
+// cargue (solo se carga al entrar a la sección Envíos) -> ReferenceError.
+// Se declaran aqui (core.bundle) para que existan desde el arranque; envios.ts
+// usa 'var x = x || valor' al declararlas para no pisar el valor ya cargado.
+var envioAnillos = [];
+var ENVIO_BASE = { lat: 25.7002136, lng: -100.3303952 };
+
 // ============== HISTORIAL DE CLIENTE ==============
 
 function openClientHistory(clientId) {

@@ -5,12 +5,16 @@
 // ── Configuración base ──
 // ENVIO_BASE: se puede configurar desde Configuración > Dirección base
 // Por defecto: José Manuel Herrera 2103, Garza Nieto, MTY
-var ENVIO_BASE = { lat: 25.7002136, lng: -100.3303952 };
+// ENVIO_BASE ya se declara en config.ts (core bundle, carga antes que este
+// bundle lazy) -- reusar el valor si initApp ya lo trajo/actualizo, no pisarlo.
+var ENVIO_BASE = (typeof ENVIO_BASE !== 'undefined' && ENVIO_BASE) ? ENVIO_BASE : { lat: 25.7002136, lng: -100.3303952 };
 // Se actualiza en initApp si storeConfig tiene coordenadas guardadas
 const ANILLOS_COLORS = ['#EF4444','#F97316','#EAB308','#22C55E','#3B82F6','#8B5CF6','#EC4899'];
 
 // ── Storage de anillos ──
-var envioAnillos = [];
+// idem: envioAnillos ya se declara en config.ts; si initApp ya cargo los
+// datos reales de Supabase, no reemplazarlos por un array vacio aqui.
+var envioAnillos = (typeof envioAnillos !== 'undefined' && envioAnillos) ? envioAnillos : [];
 
 function guardarAnillosStorage() {
     sbSave('envioAnillos', envioAnillos);

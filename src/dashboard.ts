@@ -1035,18 +1035,8 @@ function _toggleSyncBanner(offline) {
 }
 window._toggleSyncBanner = _toggleSyncBanner;
 
-// ── MEJ-NEW-2: Resumen del día (card de bienvenida) ──────────────────────────
+// ── MEJ-NEW-2: Resumen rápido de pedidos (el saludo/fecha ya los muestra el hero .mk-dash-hero) ──
 function renderResumenDia() {
-    const now  = new Date();
-    const hora = now.getHours();
-    const saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches';
-
-    const fechaStr = now.toLocaleDateString('es-MX', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-    });
-    // Capitalizar primera letra
-    const fechaCap = fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1);
-
     const hoy = (typeof window._fechaHoy === 'function') ? window._fechaHoy() : (() => {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -1063,34 +1053,24 @@ function renderResumenDia() {
 
     const sinFecha = pedidosActivos.filter(p => !p.entrega && !p.fechaEntrega).length;
 
-    const nombreTienda = window.storeConfig?.name || window.storeConfig?.storeName || window.storeName || 'Bicho Capricho';
-
     const html = `
-        <div id="resumenDia" style="background:linear-gradient(135deg,#fff9f0 0%,#fffbf5 100%);border:1.5px solid #f5e6cc;border-radius:18px;padding:20px 22px;margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-                <div>
-                    <h2 style="font-size:1.15rem;font-weight:800;color:#1f2937;margin:0;">${saludo}, ${nombreTienda} 🐛</h2>
-                    <p style="font-size:.8rem;color:#9ca3af;margin:2px 0 0;">${fechaCap}</p>
-                </div>
+        <div id="resumenDia" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;">
+            <div class="mk-card" style="padding:12px 14px;cursor:pointer;" onclick="showSection('pedidos')" title="Ver pedidos">
+                <p style="font-size:1.4rem;font-weight:900;color:#6b3f92;margin:0;">${nActivos}</p>
+                <p class="mk-kpi-label" style="margin-top:2px;">pedidos activos</p>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;">
-                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;cursor:pointer;transition:box-shadow .15s;" class="hover:shadow-md" onclick="showSection('pedidos')" title="Ver pedidos">
-                    <p style="font-size:1.4rem;font-weight:900;color:#FFD166;margin:0;">${nActivos}</p>
-                    <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">pedidos activos</p>
-                </div>
-                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;cursor:pointer;transition:box-shadow .15s;" class="hover:shadow-md" onclick="showSection('pedidos');typeof setPedidoFiltro==='function'&&setPedidoFiltro('entregado')" title="Ver entregas de hoy">
-                    <p style="font-size:1.4rem;font-weight:900;color:#f97316;margin:0;">${nHoy}</p>
-                    <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">para entregar hoy</p>
-                </div>
-                <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;">
-                    <p style="font-size:1.1rem;font-weight:900;color:#dc2626;margin:0;">${fmtMoney(totalPorCobrar)}</p>
-                    <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">por cobrar</p>
-                </div>
-                ${sinFecha > 0 ? `<div style="background:#fef9c3;border-radius:12px;padding:10px 12px;border:1px solid #fde68a;">
-                    <p style="font-size:1.4rem;font-weight:900;color:#b45309;margin:0;">${sinFecha}</p>
-                    <p style="font-size:.7rem;color:#92400e;margin:2px 0 0;">sin fecha de entrega</p>
-                </div>` : ''}
+            <div class="mk-card" style="padding:12px 14px;cursor:pointer;" onclick="showSection('pedidos');typeof setPedidoFiltro==='function'&&setPedidoFiltro('entregado')" title="Ver entregas de hoy">
+                <p style="font-size:1.4rem;font-weight:900;color:#8a6510;margin:0;">${nHoy}</p>
+                <p class="mk-kpi-label" style="margin-top:2px;">para entregar hoy</p>
             </div>
+            <div class="mk-card" style="padding:12px 14px;">
+                <p style="font-size:1.1rem;font-weight:900;color:#b8305a;margin:0;">${fmtMoney(totalPorCobrar)}</p>
+                <p class="mk-kpi-label" style="margin-top:2px;">por cobrar</p>
+            </div>
+            ${sinFecha > 0 ? `<div class="mk-card" style="padding:12px 14px;border-color:rgba(255,209,102,0.4);">
+                <p style="font-size:1.4rem;font-weight:900;color:#8a6510;margin:0;">${sinFecha}</p>
+                <p class="mk-kpi-label" style="margin-top:2px;">sin fecha de entrega</p>
+            </div>` : ''}
         </div>`;
 
     // Actualizar si ya existe, o inyectar antes del primer contenido del dashboard
@@ -1119,25 +1099,25 @@ function renderAccesosRapidos() {
     if (document.getElementById('accesosRapidos')) return; // No duplicar
 
     const acciones = [
-        { emoji: '➕', label: 'Nuevo Pedido',     fn: () => { if (typeof openPedidoModal === 'function') openPedidoModal(); else manekiToastExport('Módulo no cargado', 'warn'); } },
-        { emoji: '📦', label: 'Inventario',       fn: () => { if (typeof showSection === 'function') showSection('inventario'); } },
-        { emoji: '💰', label: 'Registrar Cobro',  fn: () => { if (typeof openIncomeModal === 'function') openIncomeModal(); else if (typeof showSection === 'function') showSection('balance'); } },
-        { emoji: '📊', label: 'Reportes',         fn: () => { if (typeof showSection === 'function') showSection('reportes'); } },
-        { emoji: '👤', label: 'Clientes',         fn: () => { if (typeof showSection === 'function') showSection('clientes'); } },
+        { icon: 'fa-plus',              label: 'Nuevo Pedido',     fn: () => { if (typeof openPedidoModal === 'function') openPedidoModal(); else manekiToastExport('Módulo no cargado', 'warn'); } },
+        { icon: 'fa-box',               label: 'Inventario',       fn: () => { if (typeof showSection === 'function') showSection('inventario'); } },
+        { icon: 'fa-hand-holding-usd',  label: 'Registrar Cobro',  fn: () => { if (typeof openIncomeModal === 'function') openIncomeModal(); else if (typeof showSection === 'function') showSection('balance'); } },
+        { icon: 'fa-chart-bar',         label: 'Reportes',         fn: () => { if (typeof showSection === 'function') showSection('reportes'); } },
+        { icon: 'fa-users',             label: 'Clientes',         fn: () => { if (typeof showSection === 'function') showSection('clientes'); } },
     ];
 
     const container = document.createElement('div');
     container.id = 'accesosRapidos';
     container.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;padding:12px 16px;margin-bottom:16px;';
 
-    acciones.forEach((a, i) => {
+    acciones.forEach((a) => {
         const btn = document.createElement('button');
-        btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;min-height:64px;background:#fff;border:1.5px solid #f3f4f6;border-radius:14px;cursor:pointer;font-family:inherit;transition:border-color .15s,box-shadow .15s;';
-        btn.innerHTML = `<span style="font-size:1.5rem;line-height:1;">${a.emoji}</span><span style="font-size:.68rem;font-weight:700;color:#374151;text-align:center;line-height:1.2;">${a.label}</span>`;
+        btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;min-height:64px;background:#fff;border:1.5px solid var(--bd-subtle,#f3f4f6);border-radius:var(--r-md,14px);cursor:pointer;font-family:var(--font-body,inherit);transition:border-color .15s var(--ease-out-quart,ease),box-shadow .15s var(--ease-out-quart,ease);';
+        btn.innerHTML = `<i class="fas ${a.icon}" style="font-size:1.25rem;color:#8a6510;"></i><span style="font-size:.68rem;font-weight:700;color:var(--tx-secondary,#374151);text-align:center;line-height:1.2;">${a.label}</span>`;
         btn.title = a.label;
         btn.addEventListener('click', a.fn);
-        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#FFD166'; btn.style.boxShadow = '0 2px 8px rgba(197,165,114,.18)'; });
-        btn.addEventListener('mouseleave', () => { btn.style.borderColor = '#f3f4f6'; btn.style.boxShadow = ''; });
+        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#FFD166'; btn.style.boxShadow = 'var(--sh-sm)'; });
+        btn.addEventListener('mouseleave', () => { btn.style.borderColor = 'var(--bd-subtle,#f3f4f6)'; btn.style.boxShadow = ''; });
         container.appendChild(btn);
     });
 
