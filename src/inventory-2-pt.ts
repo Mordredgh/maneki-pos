@@ -429,7 +429,7 @@ function filtrarMpSelector() {
             ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" style="width:32px;height:32px;object-fit:cover;border-radius:6px;">`
             : `<span style="font-size:1.4rem;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">${p.image||(esSvc?'⚙️':'🏭')}</span>`;
         const infoExtra = esSvc
-            ? `<div style="font-size:.72rem;color:#6d28d9;font-weight:600;">⚙️ Servicio · $${Number(p.cost||0).toFixed(2)}/uso</div>`
+            ? `<div style="font-size:.72rem;color:#7d4fa3;font-weight:600;">⚙️ Servicio · $${Number(p.cost||0).toFixed(2)}/uso</div>`
             : `<div style="font-size:.72rem;color:#6b7280;">Stock: ${p.stock||0} · Costo: $${Number(p.cost||0).toFixed(2)}</div>`;
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:${yaAgregado?'#f0fdf4':'#fff'};border:1.5px solid ${yaAgregado?'#6ee7b7':'#e5e7eb'};cursor:pointer;transition:all .1s;"
             onclick="seleccionarMpPt('${String(p.id).replace(/'/g,"\\'")}')">

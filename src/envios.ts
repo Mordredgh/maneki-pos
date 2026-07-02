@@ -9,7 +9,7 @@
 // bundle lazy) -- reusar el valor si initApp ya lo trajo/actualizo, no pisarlo.
 var ENVIO_BASE = (typeof ENVIO_BASE !== 'undefined' && ENVIO_BASE) ? ENVIO_BASE : { lat: 25.7002136, lng: -100.3303952 };
 // Se actualiza en initApp si storeConfig tiene coordenadas guardadas
-const ANILLOS_COLORS = ['#EF4444','#F97316','#EAB308','#22C55E','#3B82F6','#8B5CF6','#EC4899'];
+const ANILLOS_COLORS = ['#EF4444','#F97316','#EAB308','#22C55E','#3B82F6','#9669c4','#EC4899'];
 
 // ── Storage de anillos ──
 // idem: envioAnillos ya se declara en config.ts; si initApp ya cargo los
@@ -57,7 +57,7 @@ function switchQuoteTab(tab) {
         tabEnvios.classList.remove('hidden');
         btnE.style.cssText = 'background:#FFD166;color:white;padding:10px 24px;border-radius:12px;font-size:0.875rem;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;';
         btnP.style.cssText = 'background:transparent;color:#6B7280;padding:10px 24px;border-radius:12px;font-size:0.875rem;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;';
-        headerBtns.innerHTML = `<button onclick="abrirConfigAnillos()" class="px-5 py-3 rounded-xl text-white font-semibold flex items-center gap-2" style="background:linear-gradient(135deg,#9669c4,#6D28D9)"><i class="fas fa-sliders-h"></i> Configurar Anillos</button>`;
+        headerBtns.innerHTML = `<button onclick="abrirConfigAnillos()" class="px-5 py-3 rounded-xl text-white font-semibold flex items-center gap-2" style="background:linear-gradient(135deg,#9669c4,#7d4fa3)"><i class="fas fa-sliders-h"></i> Configurar Anillos</button>`;
         setTimeout(() => { initMapaCoberturaView(); renderTablaAnillos(); initAutocompleteEnvio(); }, 200);
     }
 }

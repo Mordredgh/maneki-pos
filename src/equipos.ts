@@ -136,7 +136,7 @@ function renderEquiposGrid() {
         const invertida = pctRecuperado >= 100;
 
         const barColorInv = invertida ? '#10B981' : '#FFD166';
-        const barColorMeta = pctMeta >= 100 ? '#10B981' : '#8B5CF6';
+        const barColorMeta = pctMeta >= 100 ? '#10B981' : '#9669c4';
 
         // MEJ-4: barra de progreso metaMensual
         // Calcular recuperado este mes (suma de pagos del mes actual en historialPagos)

@@ -574,9 +574,9 @@ function filtrarProductosPedido() {
             ? (() => { const t=(p.tablaPreciosVariable||[]).slice().sort((a,b)=>a.cantidadMin-b.cantidadMin); return t.length ? t.map(r=>`${r.cantidadMin}=$${Number(r.precio).toFixed(0)}`).join(' / ') : 'Precio variable'; })()
             : p.price ? `$${Number(p.price).toFixed(2)}` : (p.cost ? `Costo: $${Number(p.cost).toFixed(2)}` : '');
         const tipoLabel = esSvc
-            ? `<span style="font-size:.65rem;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:99px;font-weight:700;">⚙️ Serv</span>`
+            ? `<span style="font-size:.65rem;background:#f6ecff;color:#7d4fa3;padding:1px 6px;border-radius:99px;font-weight:700;">⚙️ Serv</span>`
             : esMp
-            ? `<span style="font-size:.65rem;background:#ede9fe;color:#9669c4;padding:1px 6px;border-radius:99px;font-weight:700;">MP</span>`
+            ? `<span style="font-size:.65rem;background:#f6ecff;color:#9669c4;padding:1px 6px;border-radius:99px;font-weight:700;">MP</span>`
             : esPV
             ? `<span style="font-size:.65rem;background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:99px;font-weight:700;">🎯 Var</span>`
             : `<span style="font-size:.65rem;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;font-weight:700;">PT</span>`;

@@ -50,7 +50,7 @@
 
 /* Diseño — lila */
 .mk-pill-disenio {
-  background: #EDE5F8;
+  background: #ecd9ff;
   color: #4E3470;
   border: 1px solid rgba(155,123,196,.2);
 }
@@ -143,7 +143,7 @@
   background: radial-gradient(ellipse at top right, #9669c4 0%, transparent 70%);
 }
 #pedidos-section .mk-section-header .mk-sh-text h2 { color: #4E3470 !important; }
-#pedidos-section .mk-section-header .mk-sh-text p  { color: #6B4A8E !important; }
+#pedidos-section .mk-section-header .mk-sh-text p  { color: #7d4fa3 !important; }
 #pedidos-section .mk-sh-icon { color: #9669c4; }
 
 /* Inventario — blue-indigo */
@@ -233,7 +233,7 @@
   border: 1px solid rgba(139,92,246,.16);
 }
 #categorias-section .mk-section-header .mk-sh-text h2 { color: #4c1d95 !important; }
-#categorias-section .mk-section-header .mk-sh-text p  { color: #6d28d9 !important; }
+#categorias-section .mk-section-header .mk-sh-text p  { color: #7d4fa3 !important; }
 #categorias-section .mk-sh-icon { color: #9669c4; }
 
 /* Dark mode — section headers */
@@ -304,7 +304,7 @@ body.dark #configuracion-section .mk-section-header .mk-sh-text h2 { color: #D6D
 
 /* Columna: Diseño — lila */
 .kanban-col[data-estado="disenio"] .kanban-col-header {
-  background: linear-gradient(90deg, #EDE5F8, #D8C4EE20);
+  background: linear-gradient(90deg, #ecd9ff, #c29fdf20);
   color: #4E3470;
   border-bottom-color: rgba(155,123,196,.15);
 }

@@ -1119,7 +1119,7 @@ function _busquedaOverlayRender(q) {
 
     if (pedidosFiltrados.length > 0) {
         hayResultados = true;
-        const statusColors = { pendiente:'#f59e0b', confirmado:'#3b82f6', produccion:'#8b5cf6', finalizado:'#10b981', cancelado:'#ef4444' };
+        const statusColors = { pendiente:'#f59e0b', confirmado:'#3b82f6', produccion:'#9669c4', finalizado:'#10b981', cancelado:'#ef4444' };
         html += `<div style="padding:6px 12px; font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #f3f4f6">📦 Pedidos</div>`;
         pedidosFiltrados.forEach((p, i) => {
             const color = statusColors[p.status] || '#6b7280';

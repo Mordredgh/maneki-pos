@@ -555,10 +555,10 @@ const themes = {
     },
     morado: {
         primary: '#9669c4',
-        primaryDark: '#6D28D9',
+        primaryDark: '#7d4fa3',
         primaryLight: '#F5F3FF',
-        secondary: '#C4B5FD',
-        secondaryLight: '#EDE9FE',
+        secondary: '#c29fdf',
+        secondaryLight: '#f6ecff',
         accent: '#9669c4',
         sidebarBg: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8FF 100%)',
         borderColor: '#9669c4'

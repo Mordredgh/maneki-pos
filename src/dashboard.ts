@@ -636,7 +636,7 @@ function _updateDashboardImpl() {
         finalizado:'Finalizado', cancelado:'Cancelado'
     };
     const estadosColor = {
-        confirmado:'#3b82f6', pago:'#f59e0b', produccion:'#8b5cf6',
+        confirmado:'#3b82f6', pago:'#f59e0b', produccion:'#9669c4',
         envio:'#06b6d4', salida:'#10b981', retirar:'#f97316',
         finalizado:'#6b7280', cancelado:'#ef4444'
     };
@@ -722,7 +722,7 @@ function _updateDashboardImpl() {
             materialTopEl.innerHTML = '<p style="color:#9ca3af;font-size:.75rem;text-align:center;padding:16px 0;">Sin datos de pedidos finalizados</p>';
         } else {
             const maxVal = topMateriales[0][1];
-            const colores = ['#8b5cf6','#a78bfa','#c4b5fd','#ddd6fe','#ede9fe'];
+            const colores = ['#9669c4','#ab84d1','#c29fdf','#dfbfff','#f6ecff'];
             materialTopEl.innerHTML = topMateriales.map(([nombre, cnt], i) => {
                 const pct = Math.round((cnt / maxVal) * 100);
                 return `

@@ -418,7 +418,7 @@ function packFiltrarMP() {
             ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" style="width:30px;height:30px;object-fit:cover;border-radius:6px;">`
             : `<span style="font-size:1.2rem;">${p.image || '🏭'}</span>`;
         const tipoBadge = p.tipo === 'servicio'
-            ? `<span style="font-size:10px;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:99px;">Servicio</span>`
+            ? `<span style="font-size:10px;background:#f6ecff;color:#7d4fa3;padding:1px 6px;border-radius:99px;">Servicio</span>`
             : `<span style="font-size:10px;background:#f0fdf4;color:#15803d;padding:1px 6px;border-radius:99px;">MP</span>`;
         return `<div onclick="packSeleccionarMP('${String(p.id)}')"
             style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;"
@@ -428,7 +428,7 @@ function packFiltrarMP() {
                 <div style="font-size:.85rem;font-weight:700;color:#1a0533;">${_esc(p.name)}</div>
                 <div style="display:flex;gap:4px;align-items:center;margin-top:2px;">${tipoBadge}<span style="font-size:.75rem;color:#9ca3af;">Costo: $${Number(p.cost||0).toFixed(2)} / ${_esc(p.unidad||'pza')}</span></div>
             </div>
-            <span style="font-size:11px;background:#ede9fe;color:#6d28d9;padding:2px 8px;border-radius:99px;">+ Agregar</span>
+            <span style="font-size:11px;background:#f6ecff;color:#7d4fa3;padding:2px 8px;border-radius:99px;">+ Agregar</span>
         </div>`;
     }).join('');
 }
@@ -510,8 +510,8 @@ function packRenderMpDirectos() {
                         <span style="position:absolute;left:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.75rem;">$</span>
                         <input type="number" min="0" step="0.01" value="${Number(m.costoCustom).toFixed(2)}"
                             onchange="packActualizarCostoMP('${m.id}', this.value)"
-                            style="width:72px;padding:4px 6px 4px 16px;border:1.5px solid #ddd6fe;border-radius:8px;font-size:.82rem;outline:none;"
-                            onfocus="this.style.borderColor='#9669c4'" onblur="this.style.borderColor='#ddd6fe'">
+                            style="width:72px;padding:4px 6px 4px 16px;border:1.5px solid #dfbfff;border-radius:8px;font-size:.82rem;outline:none;"
+                            onfocus="this.style.borderColor='#9669c4'" onblur="this.style.borderColor='#dfbfff'">
                     </div>
                 </div>
                 <button type="button" onclick="packQuitarMP('${m.id}')"

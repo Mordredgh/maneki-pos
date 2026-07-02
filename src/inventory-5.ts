@@ -538,12 +538,12 @@ function renderInventoryTable() {
                 <div>
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ''}
-                    ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;">${_esc(t)}</span>`).join('')}</div>` : ''}
+                    ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#f6ecff;color:#7d4fa3;border:1px solid #dfbfff;">${_esc(t)}</span>`).join('')}</div>` : ''}
                 </div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
-            <td class="px-4 py-3 text-right" style="font-size:.95rem;font-weight:700;color:#6d28d9;">$${Number(product.cost||0).toFixed(2)}</td>
-            <td class="px-4 py-3"><span style="font-size:11px;background:#ede9fe;color:#6d28d9;padding:3px 10px;border-radius:99px;font-weight:700;">Sin stock</span></td>
+            <td class="px-4 py-3 text-right" style="font-size:.95rem;font-weight:700;color:#7d4fa3;">$${Number(product.cost||0).toFixed(2)}</td>
+            <td class="px-4 py-3"><span style="font-size:11px;background:#f6ecff;color:#7d4fa3;padding:3px 10px;border-radius:99px;font-weight:700;">Sin stock</span></td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;">
                     <button onclick="openServicioModal('${pid}')" title="Editar"
@@ -997,8 +997,8 @@ function renderInventoryTable() {
         {
             id: 'svc',
             title: '⚙️ Servicios y Consumibles',
-            titleColor: '#6d28d9',
-            titleBg: 'linear-gradient(135deg,#f5f3ff,#ede9fe)',
+            titleColor: '#7d4fa3',
+            titleBg: 'linear-gradient(135deg,#f5f3ff,#f6ecff)',
             btnLabel: '+ Nuevo Servicio',
             btnOnclick: 'injectSvcModal();openServicioModal()',
             products: svcs,
@@ -1957,7 +1957,7 @@ function mostrarDonutCategoria() {
   });
   const entries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
   const total = entries.reduce((s,[,v])=>s+v, 0);
-  const colors = ['#FFD166','#9669c4','#10b981','#3b82f6','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#f97316','#14b8a6'];
+  const colors = ['#FFD166','#9669c4','#10b981','#3b82f6','#f59e0b','#ef4444','#06b6d4','#9669c4','#f97316','#14b8a6'];
   const filas = entries.map(([cat, val], i) => {
     const pct = total > 0 ? (val/total*100).toFixed(1) : '0';
     return `<tr>

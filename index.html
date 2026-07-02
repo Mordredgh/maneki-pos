@@ -566,7 +566,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <section id="bienvenida-section" class="hidden" style="min-height:100vh; background:#faf9f7; position:relative; overflow-y:auto;">
 
-    <div style="background:linear-gradient(135deg,#9B7BC4 0%,#C4A8E0 60%,#F2A97E 100%);padding:28px 32px 56px;position:relative;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#1c4f32 0%,#2c6a45 52%,#163e28 100%);padding:28px 32px 56px;position:relative;overflow:hidden;">
 
         <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.1) 0%,transparent 70%);pointer-events:none;"></div>
         <div style="position:absolute;bottom:-30px;left:20%;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.07) 0%,transparent 70%);pointer-events:none;"></div>
@@ -619,8 +619,8 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
 
             <div class="mk-card mk-kpi clickable" data-action="showSection" data-arg="balance" style="animation:fadeUp 0.4s 0.34s ease both;opacity:0;">
-                <div class="mk-kpi-blob" style="background:#FF6B9D;"></div>
-                <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#FF6B9D,#e11d74);box-shadow:0 4px 14px rgba(255,107,157,.4);">
+                <div class="mk-kpi-blob" style="background:#FFB4C8;"></div>
+                <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#FFB4C8,#e0567e);box-shadow:0 4px 14px rgba(255,180,200,.4);">
                     <i class="fas fa-hand-holding-usd" style="color:white;"></i>
                 </div>
                 <p class="mk-kpi-label">Me deben</p>
@@ -632,9 +632,9 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="mk-card" style="padding:18px 20px;margin-bottom:14px;animation:fadeUp 0.4s 0.42s ease both;opacity:0;">
             <div style="display:flex;align-items:center;justify-content:between;margin-bottom:12px;">
                 <div style="flex:1;">
-                    <p style="font-size:.72rem;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.08em;">🚨 Entregas pendientes hoy</p>
+                    <p style="font-size:.72rem;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.08em;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;color:#dc2626;"></i>Entregas pendientes hoy</p>
                 </div>
-                <button type="button" data-action="showSection" data-arg="pedidos" style="font-size:.68rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;margin-left:auto;">Ver todos →</button>
+                <button type="button" data-action="showSection" data-arg="pedidos" style="font-size:.68rem;font-weight:700;color:#9669c4;background:none;border:none;cursor:pointer;margin-left:auto;">Ver todos →</button>
             </div>
             <div id="mornUrgentList">
                 <p style="font-size:.78rem;color:#9ca3af;text-align:center;padding:12px 0;">✅ Sin entregas urgentes para hoy</p>
@@ -645,11 +645,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p style="font-size:.68rem;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Acceso rápido</p>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
                 <button type="button" data-action="showSection" data-arg="pedidos" class="mk-quick-access-btn mk-qa-pedidos" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;">
-                    <div style="font-size:1.4rem;margin-bottom:6px;">📋</div>
+                    <div style="font-size:1.4rem;margin-bottom:6px;color:#8a6510;"><i class="fas fa-clipboard-list"></i></div>
                     <p style="font-size:.72rem;font-weight:700;color:#374151;">Pedidos</p>
                 </button>
                 <button type="button" data-action="showSection" data-arg="clientes" class="mk-quick-access-btn mk-qa-clientes" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;">
-                    <div style="font-size:1.4rem;margin-bottom:6px;">👥</div>
+                    <div style="font-size:1.4rem;margin-bottom:6px;color:#8a6510;"><i class="fas fa-users"></i></div>
                     <p style="font-size:.72rem;font-weight:700;color:#374151;">Clientes</p>
                 </button>
             </div>
@@ -717,7 +717,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                         <div class="space-y-4">
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                <h3 class="text-lg font-bold text-gray-800 mb-4">🏍️ Cotizar Envío</h3>
+                                <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-motorcycle" style="margin-right:6px;color:#8a6510;"></i>Cotizar Envío</h3>
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección de destino</label>
@@ -758,7 +758,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-bold text-gray-800">⚙️ Mis Tarifas por Anillo</h3>
+                                    <h3 class="text-lg font-bold text-gray-800"><i class="fas fa-cog" style="margin-right:6px;color:#8a6510;"></i>Mis Tarifas por Anillo</h3>
                                     <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold">
                                         <i class="fas fa-sliders-h mr-1"></i> Configurar en mapa
                                     </button>
@@ -771,7 +771,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" style="min-height:80px;">
                             <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-                                <h3 class="font-bold text-gray-700 text-sm">🗺️ Mapa de cobertura</h3>
+                                <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marker-alt" style="margin-right:6px;color:#8a6510;"></i>Mapa de cobertura</h3>
                                 <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#FFD166">
                                     <i class="fas fa-edit mr-1"></i> Editar anillos
                                 </button>
@@ -790,17 +790,15 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2 flex-wrap">
 
-                        <!-- ── + Agregar ▾ ── -->
+                        <!-- ── + Agregar ▾ (primaria) ── -->
                         <div style="position:relative;">
-                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before"
-                                class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:linear-gradient(135deg,#7d4fa3,#ab84d1);">
+                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before" class="mk-btn-primary">
                                 <i class="fas fa-plus"></i> Agregar <span style="font-size:.7rem;opacity:.8;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
                                 <button type="button" data-action="openPtModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-box w-4 text-center" style="color:#7d4fa3;"></i> Producto Terminado</button>
                                 <button type="button" data-action="openVariableProductModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-palette w-4 text-center" style="color:#0284c7;"></i> Producto Variable</button>
-                                <button type="button" data-action="openMpModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-industry w-4 text-center" style="color:#6d28d9;"></i> Materia Prima</button>
+                                <button type="button" data-action="openMpModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-industry w-4 text-center" style="color:#7d4fa3;"></i> Materia Prima</button>
                                 <button type="button" data-action="openSvcModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-cog w-4 text-center" style="color:#6b7280;"></i> Servicio</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
                                 <label class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold cursor-pointer">
@@ -812,18 +810,14 @@ input:focus, select:focus, textarea:focus, button:focus {
                         </div>
 
                         <!-- ── Lista de compras (siempre visible) ── -->
-                        <button type="button" data-action="mostrarListaCompras"
-                                class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:linear-gradient(135deg,#f59e0b,#d97706)">
-                            <i class="fas fa-shopping-cart"></i> Lista de compras
+                        <button type="button" data-action="mostrarListaCompras" class="mk-toolbar-btn">
+                            <i class="fas fa-shopping-cart mk-tb-ico"></i> Lista de compras
                         </button>
 
                         <!-- ── Reportes ▾ ── -->
                         <div style="position:relative;">
-                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before"
-                                class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:linear-gradient(135deg,#f59e0b,#92400e);">
-                                <i class="fas fa-chart-bar"></i> Reportes <span style="font-size:.7rem;opacity:.8;">▾</span>
+                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before" class="mk-toolbar-btn">
+                                <i class="fas fa-chart-bar mk-tb-ico"></i> Reportes <span style="font-size:.7rem;opacity:.8;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:180px;padding:6px;">
                                 <button type="button" data-action="abrirReporteRentabilidad" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-chart-bar"></i> Rentabilidad</button>
@@ -834,10 +828,8 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                         <!-- ── Herramientas ▾ ── -->
                         <div style="position:relative;">
-                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before"
-                                class="px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
-                                style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;">
-                                <i class="fas fa-cog"></i> Herramientas <span style="font-size:.7rem;opacity:.7;">▾</span>
+                            <button type="button" data-action="_mkToggleDropdown" data-pass-el="before" class="mk-toolbar-btn">
+                                <i class="fas fa-cog mk-tb-ico"></i> Herramientas <span style="font-size:.7rem;opacity:.7;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
                                 <button type="button" data-action="toggleMovimientosInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history w-4 text-center" style="color:#7d4fa3;"></i> Movimientos de stock</button>
@@ -855,7 +847,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <div id="movimientosPanel" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-gray-800 text-lg">📋 Historial de Movimientos</h3>
+                        <h3 class="font-bold text-gray-800 text-lg"><i class="fas fa-clipboard-list" style="margin-right:6px;color:#8a6510;"></i>Historial de Movimientos</h3>
                         <div class="flex gap-2 flex-wrap">
                             <input type="text" id="movBuscar" placeholder="Filtrar movimientos..." data-oninput="_mkDebounceMov"
                                 class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none">
@@ -868,7 +860,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <option value="entrada">Entradas</option>
                                 <option value="salida">Salidas</option>
                             </select>
-                            <button type="button" data-action="limpiarMovimientosInventario" class="px-3 py-2 rounded-xl text-sm text-red-500 border border-red-200 hover:bg-red-50">🗑️ Limpiar</button>
+                            <button type="button" data-action="limpiarMovimientosInventario" class="px-3 py-2 rounded-xl text-sm text-red-500 border border-red-200 hover:bg-red-50"><i class="fas fa-trash" style="margin-right:4px;"></i>Limpiar</button>
                         </div>
                     </div>
                     <div id="movimientosLista" class="space-y-2 max-h-96 overflow-y-auto"></div>
@@ -920,17 +912,13 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="max-w-6xl mx-auto">
 
                 <!-- Header + navegación de mes -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Balance</h2>
-                        <p class="text-sm text-gray-400">Tu dinero de un vistazo</p>
-                    </div>
+                <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
+                    <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-balance-scale"></i></div><div class="mk-sh-text"><h2>Balance</h2><p>Tu dinero de un vistazo</p></div></div>
                     <div class="flex items-center gap-2">
                     <button type="button" onclick="typeof abrirCorteCaja==='function'?abrirCorteCaja():manekiToastExport('Cargando...','warn')"
-                            class="px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
-                            style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;"
+                            class="mk-toolbar-btn"
                             title="Corte de caja del día">
-                        <i class="fas fa-cash-register"></i> <span class="hidden sm:inline">Corte de caja</span>
+                        <i class="fas fa-cash-register mk-tb-ico" style="color:#10B981;"></i> <span class="hidden sm:inline">Corte de caja</span>
                     </button>
                     <div class="flex items-center gap-1 bg-white rounded-xl border border-gray-200 px-1 py-1">
                         <button type="button" data-action="cambiarMesBalance" data-arg="-1" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">‹</button>
@@ -970,22 +958,10 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- 4 KPIs acumulados — barra compacta -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                    <div class="bg-white rounded-xl p-4 border border-gray-100">
-                        <p class="text-xs text-gray-400 mb-1">Ingresos totales</p>
-                        <p class="text-xl font-bold text-green-700" id="totalIncome">$0</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-4 border border-gray-100">
-                        <p class="text-xs text-gray-400 mb-1">Egresos totales</p>
-                        <p class="text-xl font-bold text-red-600" id="totalExpenses">$0</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-4 border border-gray-100">
-                        <p class="text-xs text-gray-400 mb-1">Por cobrar</p>
-                        <p class="text-xl font-bold text-blue-700" id="totalReceivables">$0</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-4 border border-gray-100">
-                        <p class="text-xs text-gray-400 mb-1">Por pagar</p>
-                        <p class="text-xl font-bold text-orange-600" id="totalPayables">$0</p>
-                    </div>
+                    <div class="mk-card" style="padding:16px;"><p class="mk-kpi-label">Ingresos totales</p><p class="mk-kpi-value" style="font-size:1.3rem;color:#10B981;margin-top:4px;" id="totalIncome">$0</p></div>
+                    <div class="mk-card" style="padding:16px;"><p class="mk-kpi-label">Egresos totales</p><p class="mk-kpi-value" style="font-size:1.3rem;color:#EF4444;margin-top:4px;" id="totalExpenses">$0</p></div>
+                    <div class="mk-card" style="padding:16px;"><p class="mk-kpi-label">Por cobrar</p><p class="mk-kpi-value" style="font-size:1.3rem;color:#9669c4;margin-top:4px;" id="totalReceivables">$0</p></div>
+                    <div class="mk-card" style="padding:16px;"><p class="mk-kpi-label">Por pagar</p><p class="mk-kpi-value" style="font-size:1.3rem;color:#8a6510;margin-top:4px;" id="totalPayables">$0</p></div>
                 </div>
 
                 <!-- Ingresos y Egresos -->
@@ -1059,10 +1035,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-users"></i></div><div class="mk-sh-text"><h2>Clientes</h2><p>Tus clientes m&#225;s especiales</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2">
-                        <button type="button" data-action="manekiExportar" data-arg="clientes"
-                                class="px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background: linear-gradient(135deg,#10B981,#059669)">
-                            <i class="fas fa-file-excel"></i> Exportar Excel
+                        <button type="button" data-action="manekiExportar" data-arg="clientes" class="mk-toolbar-btn">
+                            <i class="fas fa-file-excel mk-tb-ico" style="color:#10B981;"></i> Exportar Excel
                         </button>
                         <button type="button" data-action="openAddClientModal"
                                 class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
@@ -1074,7 +1048,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <!-- N9: Panel RFM -->
                 <div class="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-sm font-bold text-gray-800">🎯 Segmentación RFM</h3>
+                        <h3 class="text-sm font-bold text-gray-800"><i class="fas fa-trophy" style="margin-right:6px;color:#8a6510;"></i>Segmentación RFM</h3>
                         <span class="text-xs text-gray-400">Recencia · Frecuencia · Monto</span>
                     </div>
                     <div id="rfmPanelWrapper"></div>
@@ -1168,14 +1142,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="max-w-6xl mx-auto">
 
                 <!-- Header -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Análisis de Productos</h2>
-                        <p class="text-sm text-gray-400">Descubre qué productos generan más valor</p>
-                    </div>
+                <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
+                    <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-trophy"></i></div><div class="mk-sh-text"><h2>Análisis de Productos</h2><p>Descubre qué productos generan más valor</p></div></div>
                     <button type="button" data-action="exportarAnalisisCSV" data-tip="Descarga un archivo .csv con el ranking completo de productos para abrirlo en Excel"
-                            class="px-4 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
-                        Exportar CSV
+                            class="mk-toolbar-btn">
+                        <i class="fas fa-file-excel mk-tb-ico" style="color:#10B981;"></i> Exportar CSV
                     </button>
                 </div>
 
@@ -1360,12 +1331,9 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="max-w-6xl mx-auto">
 
                 <!-- Header -->
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Reportes</h2>
-                        <p class="text-sm text-gray-400 mt-1">Estadisticas detalladas de tu negocio</p>
-                    </div>
-                    <button type="button" data-action="descargarReporteVentas" class="px-4 py-2 rounded-xl text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">Descargar CSV</button>
+                <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
+                    <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-chart-line"></i></div><div class="mk-sh-text"><h2>Reportes</h2><p>Estadísticas detalladas de tu negocio</p></div></div>
+                    <button type="button" data-action="descargarReporteVentas" class="mk-toolbar-btn"><i class="fas fa-file-download mk-tb-ico"></i> Descargar CSV</button>
                 </div>
 
                 <!-- Resumen del mes -->
@@ -1438,7 +1406,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <!-- N6: Comparativa año a año -->
                 <div class="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-sm font-bold text-gray-800">📅 Año a año</h3>
+                        <h3 class="text-sm font-bold text-gray-800"><i class="fas fa-calendar-alt" style="margin-right:6px;color:#8a6510;"></i>Año a año</h3>
                         <span id="anioAnioResumen" class="text-xs text-gray-400"></span>
                     </div>
                     <div style="height:200px;position:relative;"><canvas id="comparativaAnioChart"></canvas></div>
@@ -1553,8 +1521,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div id="equipoTabPanel-roi" class="hidden">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-gray-700">📊 Avance ROI por Equipo</h3>
-                    <button type="button" data-action="renderGraficaROI" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold">🔄 Actualizar</button>
+                    <h3 class="text-xl font-bold text-gray-700"><i class="fas fa-chart-bar" style="margin-right:6px;color:#8a6510;"></i>Avance ROI por Equipo</h3>
+                    <button type="button" data-action="renderGraficaROI" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold"><i class="fas fa-sync-alt" style="margin-right:4px;"></i>Actualizar</button>
                 </div>
                 <canvas id="roiBarChart" height="100"></canvas>
             </div>
@@ -1888,7 +1856,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <button type="button" data-action="selectTheme" data-arg="morado" data-theme="morado"
              class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
             <div class="flex gap-2 mb-2">
-                <div class="w-6 h-6 rounded-full" style="background:#7C3AED;"></div>
+                <div class="w-6 h-6 rounded-full" style="background:#7d4fa3;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#C4B5FD;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#F5F3FF;"></div>
             </div>
@@ -2079,7 +2047,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                   </div>
 
                   <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                    <p class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-lock mr-2 -dk" style="color:#C4A8E0;"></i>Cambiar PIN de acceso</p>
+                    <p class="text-sm font-bold text-gray-700 mb-3"><i class="fas fa-lock mr-2 -dk" style="color:#ab84d1;"></i>Cambiar PIN de acceso</p>
                     <form data-prevent-submit data-submit-action="cambiarPIN" autocomplete="on" class="grid grid-cols-3 gap-2">
                       <input type="password" id="pinActual" name="pin-actual" maxlength="8" placeholder="PIN actual"
                              class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none text-center font-mono" autocomplete="current-password">
@@ -2087,7 +2055,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                              class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none text-center font-mono" autocomplete="new-password">
                       <button type="submit"
                               class="px-3 py-2 rounded-xl text-white text-sm font-bold"
-                              style="background:linear-gradient(135deg,#9B7BC4,#C4A8E0)">
+                              style="background:linear-gradient(135deg,#9669c4,#ab84d1)">
                         Cambiar
                       </button>
                     </form>
@@ -2459,7 +2427,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <button type="button" data-action="selectEditColor" data-arg="#FFD166" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#FFD166" data-color="#FFD166"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#10B981" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#3B82F6" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></button>
-                    <button type="button" data-action="selectEditColor" data-arg="#8B5CF6" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#9669c4" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#9669c4" data-color="#9669c4"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#EF4444" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EF4444" data-color="#EF4444"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#F59E0B" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#F59E0B" data-color="#F59E0B"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#EC4899" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></button>
@@ -2519,7 +2487,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <button type="button" data-action="selectCategoryColor" data-arg="#FFD166" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#FFD166" data-color="#FFD166"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#10B981" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#3B82F6" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></button>
-                        <button type="button" data-action="selectCategoryColor" data-arg="#8B5CF6" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#9669c4" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#9669c4" data-color="#9669c4"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#EF4444" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EF4444" data-color="#EF4444"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#F59E0B" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#F59E0B" data-color="#F59E0B"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#EC4899" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></button>
@@ -2745,7 +2713,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="grid grid-cols-3 gap-2">
                     <button type="button" data-action="selectAbonoPedidoMethod" data-arg="cash" data-pass-el="before" class="abono-ped-btn border-2 rounded-xl py-3 flex flex-col items-center" style="border-color:#FFD166;background:#FFF9F0;"><i class="fas fa-money-bill-wave text-green-600 text-xl mb-1"></i><p class="text-xs font-semibold">Efectivo</p></button>
                     <button type="button" data-action="selectAbonoPedidoMethod" data-arg="card" data-pass-el="before" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-credit-card text-blue-600 text-xl mb-1"></i><p class="text-xs font-semibold">Tarjeta</p></button>
-                    <button type="button" data-action="selectAbonoPedidoMethod" data-arg="transfer" data-pass-el="before" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-exchange-alt  text-xl mb-1" style="color:#C4A8E0;"></i><p class="text-xs font-semibold">Transfer.</p></button>
+                    <button type="button" data-action="selectAbonoPedidoMethod" data-arg="transfer" data-pass-el="before" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-exchange-alt  text-xl mb-1" style="color:#ab84d1;"></i><p class="text-xs font-semibold">Transfer.</p></button>
                 </div>
             </div>
             <div>
@@ -3201,7 +3169,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <button type="button" data-action="exportarBackupJSON" class="w-full py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2" style="background:#4CAF50;">
                     <i class="fas fa-download"></i> Descargar Backup JSON
                 </button>
-                <button type="button" data-action="exportarBackupComprimido" class="w-full py-2 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 mt-2" style="background:#7C3AED;">
+                <button type="button" data-action="exportarBackupComprimido" class="w-full py-2 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 mt-2" style="background:#7d4fa3;">
                     📦 Backup Comprimido (.gz) — más ligero
                 </button>
             </div>

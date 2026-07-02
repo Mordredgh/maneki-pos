@@ -5,7 +5,7 @@
 
            NOTA CSS: maneki-premium.css sobreescribe el sidebar (#sidebar)
            vía ID specificity (> class). Variables en conflicto:
-             --mk-purple-500: aquí #9669c4 (lila pastel) vs premium #7C3AED (morado intenso)
+             --mk-purple-500: aquí #9669c4 (Uva oficial) vs premium #7d4fa3 (morado intenso)
            El sidebar usa los valores de maneki-premium.css, el resto de la app usa los de aquí.
         ══════════════════════════════════════════════════ */
         /* BUG #11 FIX: @import eliminado — fuentes ya cargadas vía <link> arriba,

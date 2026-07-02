@@ -407,7 +407,7 @@ function initTopProductosChart(ventasCache?: any[]) {
                 datasets: [{
                     label: 'Ingresos ($)',
                     data: nuevosData,
-                    backgroundColor: '#8B5CF6',
+                    backgroundColor: '#9669c4',
                     borderRadius: 6
                 }]
             },
@@ -938,7 +938,7 @@ function initCategoryChart() {
         ctx.fillText(categoryChartMode==='inventario' ? 'Sin productos en inventario' : 'Sin ventas registradas', canvas.width/2, canvas.height/2);
         return;
     }
-    const defColors = ['#FFD166','#10B981','#3B82F6','#8B5CF6','#EF4444','#F59E0B','#EC4899','#06B6D4'];
+    const defColors = ['#FFD166','#10B981','#3B82F6','#9669c4','#EF4444','#F59E0B','#EC4899','#06B6D4'];
     const chartColors = labels.map((lbl, i) => {
         const cat = (window.categories||[]).find(c => c.name === lbl);
         return (cat && cat.color) ? cat.color : defColors[i % defColors.length];

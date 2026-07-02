@@ -199,7 +199,7 @@ function injectMpModal() {
                         </div>
                     </div>
                     <!-- Resultado: costo por unidad calculado -->
-                    <div id="mpCostoUnidadBox" style="background:#ede9fe;border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+                    <div id="mpCostoUnidadBox" style="background:#f6ecff;border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
                         <div>
                             <div style="font-size:.72rem;color:#9669c4;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Costo por unidad</div>
                             <div style="font-size:1.4rem;font-weight:800;color:#5b21b6;" id="mpCostoUnidadResult">$0.00</div>
@@ -240,7 +240,7 @@ function injectMpModal() {
                             onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"
                             onkeydown="if(event.key==='Enter'){event.preventDefault();agregarVarianteMp();}">
                         <button type="button" onclick="agregarVarianteMp()"
-                            style="padding:8px 16px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;">+ Agregar</button>
+                            style="padding:8px 16px;background:linear-gradient(135deg,#6366f1,#9669c4);color:#fff;border:none;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;">+ Agregar</button>
                     </div>
                     <!-- Accesos rápidos de tipos comunes -->
                     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
@@ -257,7 +257,7 @@ function injectMpModal() {
                     <div id="mpVariantesList" style="display:flex;flex-direction:column;gap:6px;">
                         <span style="font-size:.8rem;color:#9ca3af;font-style:italic;">Sin variantes agregadas</span>
                     </div>
-                    <div id="mpVariantesStockTotal" style="display:none;margin-top:10px;padding:8px 12px;background:#ede9fe;border-radius:10px;font-size:.82rem;font-weight:700;color:#5b21b6;text-align:center;"></div>
+                    <div id="mpVariantesStockTotal" style="display:none;margin-top:10px;padding:8px 12px;background:#f6ecff;border-radius:10px;font-size:.82rem;font-weight:700;color:#5b21b6;text-align:center;"></div>
                 </div>
             </div>
 
@@ -388,7 +388,7 @@ function injectSvcModal() {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Ícono</label>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-                    ${_SVC_EMOJIS.map(e=>`<button type="button" onclick="document.getElementById('svcEmoji').value='${e}';document.querySelectorAll('.svc-emoji-btn').forEach(b=>b.style.background='#f3f4f6');this.style.background='#ede9fe';" class="svc-emoji-btn" style="width:38px;height:38px;border-radius:10px;border:1px solid #e5e7eb;background:#f3f4f6;font-size:1.3rem;cursor:pointer;">${e}</button>`).join('')}
+                    ${_SVC_EMOJIS.map(e=>`<button type="button" onclick="document.getElementById('svcEmoji').value='${e}';document.querySelectorAll('.svc-emoji-btn').forEach(b=>b.style.background='#f3f4f6');this.style.background='#f6ecff';" class="svc-emoji-btn" style="width:38px;height:38px;border-radius:10px;border:1px solid #e5e7eb;background:#f3f4f6;font-size:1.3rem;cursor:pointer;">${e}</button>`).join('')}
                 </div>
                 <input type="hidden" id="svcEmoji" value="⚙️">
             </div>
@@ -415,7 +415,7 @@ function injectSvcModal() {
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none focus:border-indigo-400"></textarea>
             </div>
 
-            <button type="submit" class="w-full py-3 rounded-xl text-white font-bold text-base" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);">
+            <button type="submit" class="w-full py-3 rounded-xl text-white font-bold text-base" style="background:linear-gradient(135deg,#7d4fa3,#9669c4);">
                 💾 Guardar Servicio
             </button>
         </form>
@@ -447,7 +447,7 @@ function openServicioModal(editId) {
             document.getElementById('svcNotas').value = p.notas || '';
             // Marcar emoji activo
             document.querySelectorAll('.svc-emoji-btn').forEach(b => {
-                if (b.textContent === (p.image || '⚙️')) b.style.background = '#ede9fe';
+                if (b.textContent === (p.image || '⚙️')) b.style.background = '#f6ecff';
             });
         }
     }
@@ -533,7 +533,7 @@ function mpCalcCostoUnidad() {
         if (costoHidden) costoHidden.value = costoUnidad.toFixed(4);
         // Color según el resultado
         const box = document.getElementById('mpCostoUnidadBox');
-        if (box) box.style.background = '#ede9fe';
+        if (box) box.style.background = '#f6ecff';
     } else {
         if (resultEl) resultEl.textContent = '$0.00';
         if (costoHidden) costoHidden.value = '';

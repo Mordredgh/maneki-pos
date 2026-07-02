@@ -431,7 +431,7 @@
         // Color determinístico basado en el nombre
         let hash = 0;
         for (let i=0; i<n.length; i++) hash = n.charCodeAt(i) + ((hash<<5)-hash);
-        const colors = ['#FFD166','#9669c4','#F2A97E','#10b981','#3b82f6','#ef4444','#f59e0b','#06b6d4','#8b5cf6','#ec4899'];
+        const colors = ['#FFD166','#9669c4','#F2A97E','#10b981','#3b82f6','#ef4444','#f59e0b','#06b6d4','#9669c4','#ec4899'];
         const bg = colors[Math.abs(hash) % colors.length];
         return `<span class="mk-avatar" style="background:${bg}">${initials}</span>`;
     };
