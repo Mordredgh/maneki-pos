@@ -391,11 +391,25 @@ mostrarEstadoAlmacenamiento()
 const { data } = await supabase.from('store').select('*').eq('key', 'storeConfig').maybeSingle();
 const config = JSON.parse(data.value); // ← obligatorio el JSON.parse()
 
-// Keys activas en tabla store:
-// storeConfig, folioCounter, stockMovimientos, gastosRecurrentes,
-// ingresosRecurrentes, notas, quotes, equipos, roiHistorial, roiConfig,
-// envioAnillos, backupMeta, categories (en migración)
+// Keys activas en tabla store (sin tabla relacional propia — store ES la fuente de verdad):
+// storeConfig, folioCounter, gastosRecurrentes, ingresosRecurrentes, notas,
+// quotes, equipos, roiHistorial, roiConfig, backupMeta, abonos, payables, receivables
 ```
+
+⚠️ **Clase de bug recurrente: desincronización lectura/escritura `store` vs tabla relacional.**
+`sbLoad(key, def)` intenta PRIMERO la tabla relacional listada en `_RELATIONAL_TABLES` (db.ts) —
+si esa tabla tiene ≥ `min` filas, la usa y **nunca** consulta `store`. Si el `save*()` de ese key
+sigue escribiendo solo en `store` (via el helper genérico `sbSave()`), los cambios se guardan en
+un lugar que la app nunca vuelve a leer y **desaparecen al recargar**, aunque el toast diga
+"guardado exitosamente" y el dato se vea bien hasta el próximo refresh.
+
+Causa raíz confirmada 2 veces:
+- Sesión previa (incomes/expenses): escritura relacional OK, pero `sbLoad` leía del `store` vacío. Fix: agregarlos a `_RELATIONAL_TABLES`.
+- **Sesión 30 (2 julio 2026, categories):** al revés — `categories` YA estaba en `_RELATIONAL_TABLES` (lectura correcta), pero `saveCategories()` seguía escribiendo solo en `store.categories` via `sbSave()` genérico. Cualquier categoría creada/editada se guardaba en el blob muerto; al recargar, `sbLoad` traía las 12 filas viejas de la tabla `categories` sin la nueva. Fix: `saveCategories()` ahora hace `upsert` directo en `public.categories`, y se agregó `deleteCategoryFromDB()` (el patrón `upsert-sin-delete` de la regla de lint aplica igual aquí).
+
+**Regla:** si un key aparece en `_RELATIONAL_TABLES`, su `save*()` DEBE escribir directo en esa tabla (patrón de `saveProducts`/`saveClients`/`saveIncomes`/`saveExpenses`/`saveCategories`), nunca via `sbSave()` genérico. Si un `save*()` usa `sbSave()`, su key NO debe estar en `_RELATIONAL_TABLES` (o hay que migrarlo, como se hizo con categories).
+
+🔎 **Pendiente de revisar (mismo patrón, no confirmado si tiene el bug):** `saveStockMovimientos()` en db.ts todavía usa `sbSave('stockMovimientos', ...)` genérico, pero `stockMovimientos` SÍ está en `_RELATIONAL_TABLES` apuntando a `stock_movements` (340 filas). Si se reporta que un movimiento de stock "desaparece" o el historial de movimientos no cuadra, sospechar primero de esto — mismo fix que categories.
 
 ### Supabase RLS
 - La anon key es pública en el código JS (split en 3 partes como ofuscamiento básico)
