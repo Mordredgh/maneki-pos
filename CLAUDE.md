@@ -1,10 +1,73 @@
-# Maneki POS — Web App (Coolify)
+# Bicho Capricho POS — Web App (Coolify)
 
-> **Última actualización:** 13 junio 2026 — Sesión 26 (auditoría S26: 1 bug ghost + 4 fixes menores + 4 mejoras UI/UX)
+> **Última actualización:** 2 julio 2026 — Sesión 28 (rebrand completo Maneki → Bicho Capricho + rediseño visual total de las 15 secciones + GSAP)
 > **Sin pendientes de código.** App estable. Guardrails activos: lint pre-build + vitest (65 tests) en Step 0.
-> **Versión app:** 2.6.2 | **SW hash:** maneki-7675793bda | **Branch:** fresh-start → master
-> **Fix visual (post-S26):** hover de kanban sin `rotate(0.25deg)` — eliminaba el anti-aliasing que veía "sombreados" los renglones internos de las cards (maneki-premium.css).
-> **Fix fecha (post-S26):** widget "próximas temporadas" — Día del Padre ahora se calcula dinámico (3er domingo de junio, helper `_nthWeekday`), antes hardcodeado `dia:15` (solo válido en 2025; 2026 = 21 jun). dashboard.ts.
+> **Nombre anterior del proyecto:** Maneki Store / Maneki POS. El repo, algunos paths y variables internas (`maneki*`, `MK.*`, `manekiToast*`) conservan el nombre viejo a propósito — son identificadores internos, no marca visible. Ver regla en "NO HACER" más abajo.
+> **Versión app:** 2.6.2 | **Branch:** fresh-start → master
+> **Sistema de diseño:** ver sección **"🎨 Sistema de Diseño — Bicho Capricho"** más abajo antes de tocar cualquier CSS/HTML — define paleta, tipografía, filosofía Restrained, y qué NO tocar.
+
+---
+
+## 🎨 Sistema de Diseño — Bicho Capricho
+
+> Fuente única de tokens: **`maneki-premium.css`** (`:root`, máxima especificidad). Cualquier color/tipografía/spacing nuevo se define ahí, no inline suelto en `index.html` o en los `src/*.ts`.
+
+### Paleta oficial (única fuente de verdad — no inventar variantes)
+
+| Nombre | Hex | Uso |
+|---|---|---|
+| Bosque | `#1c4f32` | texto primario, hero oscuro (sidebar dark mode, dashboard hero, bienvenida hero) |
+| Lavanda | `#dfbfff` | acento claro, superficies lila |
+| Uva | `#9669c4` | acento morado principal (reemplaza CUALQUIER morado/violeta viejo) |
+| Lima | `#c3ec9f` | (uso puntual, poco usado en UI actual) |
+| Oliva | `#678d47` | (uso puntual) |
+| Mantequilla | `#FFD166` | color de marca principal — botones primarios, active states, acentos dorados (reemplaza el "dorado" `#C5973B`/`#C9933A` de la era Maneki) |
+| Rosa | `#FFB4C8` | acento cálido (KPIs "Me deben", badges) |
+| Crema | `#F8F4EC` | fondo general de la app |
+
+Escala derivada de Mantequilla (tokens `--mk-g*` en `maneki-premium.css`): `#FFDD85`, `#FFE8B0`, `#FFF1D2`, `#FFF6E0`, oscuros `#8a6510`/`#6b4a00` para texto sobre fondo claro.
+Escala derivada de Uva/Lavanda (tokens `--mk-p*`): `#7d4fa3`, `#ab84d1`, `#c29fdf`, `#ecd9ff`, `#f6ecff`.
+
+**Colores que NO son de marca y si aparecen son residuo — reemplazar por la tabla de arriba:** cualquier `#7C3AED`/`#8B5CF6`/`#A855F7`/`#6D28D9`/`#9B7BC4`/`#C4A8E0`/`#1A0533` (morado/violeta viejo de Maneki), `#C5973B`/`#C9933A`/`#E8B84B` (dorado viejo de Maneki).
+
+### Tipografía
+
+- `Nunito` — cuerpo, labels, tablas, todo el texto funcional (`var(--font-body)`)
+- `Fredoka One` — SOLO 1-2 momentos de marca por vista: saludo del hero, nombre de tienda en sidebar (`var(--font-brand)`). No usar en botones, labels, ni texto denso.
+- `DM Mono` — números tabulares puntuales (kbd hints, shortcuts)
+
+### Filosofía: Restrained por defecto, Committed solo donde se gana
+
+Síntesis aplicada en toda la Sesión 28 (viene de `impeccable` registro "product" + guía de marca):
+
+- **Superficies de tarea** (tablas, kanban, formularios, listas): paleta neutra + 1 acento. Nada de "cada card su propio gradiente pastel" — eso es ruido, no personalidad. El color vive en el ícono/badge, no en el fondo de la tarjeta entera.
+- **Chrome + momentos de marca** (sidebar, hero del dashboard/bienvenida, celebraciones tipo confetti): aquí sí vive la calidez "juguetona" de Bicho Capricho — colores más saturados, Fredoka One, motion con más presencia.
+- **Un solo botón primario por toolbar** (relleno Mantequilla, clase `.mk-btn-primary`), el resto son botones neutros ghost (clase `.mk-toolbar-btn` + ícono con `.mk-tb-ico`). Antes cada toolbar tenía 4-7 botones con gradientes distintos compitiendo — deuda documentada desde la Sesión 13 y nunca resuelta hasta la Sesión 28.
+- **Nada de emoji como ícono de UI.** El proyecto tiene un sistema de íconos SVG local offline (`src/icons.ts` / `window.ManekiIcons`) que auto-convierte cualquier `<i class="fas fa-nombre-icono">` a SVG inline — usar eso, no `🎯`/`📋`/`💰` como prefijo de un título o botón. Emoji está bien dentro de mensajes de WhatsApp/toasts como acento de tono, no como ícono funcional.
+- **Nada de "gradient text"** (`background-clip:text` con degradado) — usar color sólido. El nombre "Bicho Capricho" en el sidebar usaba esto con degradado dorado; se cambió a Bosque sólido.
+- **Nada de acento de borde lateral** (`border-left:3px` decorativo, o un `::before` de 3px de ancho simulándolo) en cards/kanban/list-items — patrón considerado "AI slop" (impeccable `absolute bans`). El indicador de item activo del sidebar usaba esto; ahora es un `#sidebarIndicator` tipo pill que GSAP anima detrás del item activo.
+- **Motion:** 150-300ms, easing sin rebote (`--ease-out-quart/quint/expo` en vez de `--spring`/bounce) para transiciones funcionales. Un solo "hero moment" por vista (la entrada escalonada del hero del dashboard), no coreografía en cada carga de sección. Siempre respetar `prefers-reduced-motion` — hay una regla global en `maneki-premium.css` que ya lo hace, y el hero del dashboard usa `gsap.matchMedia()` explícito.
+
+### GSAP
+
+Integrado vía CDN (`cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js`, ya permitido por el CSP existente), cargado `defer` antes de `DOMContentLoaded`/`initApp()`. Usos actuales:
+- `_mkMoveSidebarIndicator(btn)` (`design-system.ts`) — desliza el `#sidebarIndicator` al item activo del sidebar, llamado desde `showSection()` en `navigation.ts`.
+- `_mkAnimateDashboardHero()` (`design-system.ts`) — entrada escalonada del hero del dashboard (`[data-hero-stagger]`), disparada SOLO al entrar a la sección `dashboard` (no en cada refresh de datos).
+
+No se usó GSAP para el drag-and-drop del kanban ni para modales — el CSS existente (`mkModalIn`, `mkKanbanMoved`) ya cumple, y tocar el drag-and-drop es alto riesgo (ver "Áreas frágiles" abajo).
+
+### Patrón de toolbar (aplicar a cualquier sección nueva)
+
+```html
+<button class="mk-btn-primary"><i class="fas fa-plus"></i> Acción principal</button>
+<button class="mk-toolbar-btn"><i class="fas fa-icon mk-tb-ico"></i> Acción secundaria</button>
+```
+
+### Qué NO tocar (decisiones deliberadas de la Sesión 28)
+
+- **Selector de "Tema de colores" en Configuración** (Dorado/Rosa/Violeta/Esmeralda/Azul/Coral): es una feature real donde el usuario elige un tema alterno para su tienda — el swatch violeta ahí es una opción legítima, no un residuo de marca. No "corregir" sus colores.
+- **Diccionario de nombres de color en `inventory-1.ts`** (línea ~27: `morado`/`violeta`/`lila`/`lavanda` → hex): el propósito es que el nombre coincida con el color real, no representar la marca. No remapear a la paleta oficial.
+- **Template denso de la tarjeta kanban individual** (`kanbanCardHTML` en `pedidos-1-views.ts`): usa emojis como indicadores de estado compactos (🔴 hoy, 🟡 mañana, ⛔ vencido) — es información funcional glanceable, no decoración. El drag-and-drop es un área con múltiples bugs históricos (ver changelog Sesión 20/18) — no se tocó por relación riesgo/beneficio.
 
 ---
 
@@ -302,6 +365,11 @@ mostrarEstadoAlmacenamiento()
 - ❌ NO usar `prompt()` / `confirm()` / `alert()` nativos — usar `showPrompt()` / `showConfirm()` / `manekiToast()`
 - ❌ NO usar el nombre `_fechaLocal` en ningún módulo — colisiona con función de ui-extras (renombrar a `_fechaStr` u otro)
 - ❌ NO quitar un elemento de un array relacional (`incomes`/`expenses`/`salesHistory`/`pedidos`/`pedidosFinalizados`/`clients`) con `X = X.filter(...)` o `X.splice(...)` y solo llamar a `save*()` — los `save*` usan **upsert y NO borran** la fila en Supabase, así que reaparece al recargar (balance descuadrado / venta fantasma). Acompaña SIEMPRE el filtro/splice con su `delete*` de `db.ts` (`deleteIncomeFromDB` · `deleteIncomesByFolio` · `deleteExpenseFromDB` · `deleteSalesHistoryEntry` · `deletePedidoActivo` · `deletePedidoFinalizado` · `deleteClientFromDB`) o un `.delete()` directo de Supabase. El linter `upsert-sin-delete` (Step 0b) **rompe el build** si falta. Clase de bug recurrente S18/S24/S25/S26 — ver [[project_upsert_delete_incomes]].
+- ❌ NO renombrar identificadores internos `maneki*`/`Maneki*`/`MK.*` (`mkId`, `mkHandleError`, `manekiToast*`, `ManekiStoreConfig`, `window.ManekiIcons`, nombres de archivo `maneki-premium.css`, repo `maneki-pos`, etc.) al hacer trabajo de marca/diseño — son identificadores internos sin impacto visual, no texto de marca. El rebrand a Bicho Capricho (Sesión 28) tocó SOLO texto visible al usuario y colores/tipografía; el código interno se queda con el nombre viejo a propósito (parche pequeño > renombrar todo el proyecto).
+- ❌ NO usar morado/violeta genérico (`#7C3AED`/`#8B5CF6`/`#A855F7`/`#6D28D9`/`#9B7BC4` y similares) ni "dorado" viejo (`#C5973B`/`#C9933A`/`#E8B84B`) en CSS/HTML nuevo — usar la paleta oficial Bicho Capricho (ver sección "🎨 Sistema de Diseño" al inicio de este archivo). Ambos eran el acento de marca de la era Maneki y aparecen reintroducidos fácilmente por copy-paste de patrones viejos.
+- ❌ NO usar emoji como ícono funcional de UI (prefijo de título, botón, badge de estado) — usar `<i class="fas fa-nombre">` (sistema SVG local, `src/icons.ts`). Emoji sí está bien dentro de mensajes de WhatsApp/toasts como tono.
+- ❌ NO usar `background-clip:text` con degradado ("gradient text") en nombres/títulos — color sólido.
+- ❌ NO usar acento de borde lateral decorativo (`border-left:3px` o `::before` simulándolo) en cards/list-items/kanban — patrón "AI slop" descartado en Sesión 28. Para estado activo/seleccionado usar fondo completo (pill) o el patrón `#sidebarIndicator` (GSAP) ya existente.
 
 ---
 
@@ -633,6 +701,73 @@ Los filtros no muestran qué está activo ni cuántos resultados hay.
 | Equipos/ROI | &#9881; (⚙) | fa-tools |
 | Pedidos por Encargo | &#128236; (📬) | fa-shopping-bag |
 | Configuración | &#9881; (⚙) | fa-cog |
+
+## ✅ Sesión 28 (2 julio 2026) — Rebrand Bicho Capricho + Rediseño visual total + GSAP
+
+> Sesión más grande del proyecto hasta ahora en alcance de diseño. Dos partes: (1) terminar
+> el rebrand Maneki→Bicho Capricho que 2 sesiones anteriores habían dejado a medias
+> (colores/nombre en la superficie pero morado y "Maneki" seguían por todos lados en
+> `src/*.ts`), y (2) rediseño visual completo de las 15 secciones + sistema de motion GSAP,
+> **sin tocar lógica/Supabase/RLS/nombres internos `maneki*`** salvo 2 bugs explícitamente
+> autorizados por el usuario. Ver la sección **"🎨 Sistema de Diseño — Bicho Capricho"** al
+> inicio de este archivo para las reglas permanentes que salieron de esta sesión.
+
+### Parte 0 — Terminar el rebrand (heredado de 2 sesiones previas incompletas)
+
+| Hallazgo | Fix |
+|---|---|
+| ~40+ residuos de morado/violeta viejo (`#7C3AED`/`#8B5CF6`/`#6D28D9`/`#9B7BC4`/`#1A0533` y variantes de mayúsculas) | Barrido completo en `index.html`, los 4 `css/*.css`, y 15+ `src/*.ts` → Uva/Lavanda oficiales |
+| Texto "Maneki" seguía en 16 archivos `src/*.ts` (banners de consola, nombre default de `storeConfig`, plantillas de WhatsApp, tickets/PDFs, modal "¿Qué hay de nuevo?") | Reemplazado a "Bicho Capricho" en todos los strings visibles; protegidos explícitamente `ManekiStoreConfig` (tipo) y `window.ManekiIcons` (API interna) — esos NO se tocan |
+| **RLS de Supabase rota** — otra sesión (trabajando en la web pública, mismo proyecto Supabase `hoqcrljgmamaumtdrtzi`) cerró la escritura `anon` en `store` y `products` para proteger la web, sin saber que el POS usa la `anon key` para TODO (nunca hace login `authenticated`) | Migración `restore_anon_write_store_products_for_pos` — restaura políticas de escritura `anon` en ambas tablas. El POS ya está detrás de Basic Auth de nginx, así que el riesgo real no cambió vs. antes de esta sesión |
+| Contraste insuficiente en `.mk-kpi-label` (~3.46:1, bajo WCAG AA 4.5:1) + una regla duplicada en `css/styles.css` que ganaba la cascada y anulaba el primer fix | `#5c7568` en ambos archivos (~5:1) |
+| `maneki-premium.css` sin query param de cache-busting (a diferencia de los otros 3 CSS) — causaba que el navegador sirviera una copia vieja tras cada deploy | `?v=4.1` agregado al `<link>` |
+
+### Parte 1 — Sistema de diseño base + GSAP (Fase 1: Sidebar + Topbar + Dashboard)
+
+- Tokens ampliados en `maneki-premium.css`: spacing scale (`--sp-*`), z-index nombrado (`--z-dropdown/sticky/modal/toast/tooltip`), curvas de motion sin rebote (`--ease-out-quart/quint/expo`), `prefers-reduced-motion` global
+- GSAP integrado vía CDN, `defer`, antes de `initApp()` — ver detalle en la sección de diseño arriba
+- Sidebar: `#sidebarIndicator` (pill animado con GSAP) reemplaza el acento de borde lateral; nombre de marca de degradado a color sólido Bosque
+- Dashboard: hero con entrada escalonada GSAP (`data-hero-stagger`), KPIs re-coloreados a paleta oficial, quitados fondos degradados decorativos de los widgets
+
+### Parte 2 — 2 bugs corregidos (autorizados explícitamente por el usuario, fuera del alcance original "solo diseño")
+
+| Bug | Causa raíz | Fix |
+|---|---|---|
+| `ReferenceError: envioAnillos is not defined` en cada carga de `initApp()` | `envios.ts` declara `envioAnillos`/`ENVIO_BASE` pero vive en su propio bundle lazy-loaded (`envios.bundle.js`), separado de `core.bundle.js` donde corre `initApp()` — asignaba antes de que existiera | Declaradas también en `config.ts` (core bundle); `envios.ts` usa `var x = x || valor` al declarar para no pisar los datos reales ya cargados cuando el usuario navega a Envíos después |
+| Dashboard mostraba el saludo/fecha duplicado: el hero nuevo Y el widget `#resumenDia` (preexistente) pintaban cada uno su propio "Buenos días, Bicho Capricho" | `renderResumenDia()` (`dashboard.ts`) ya no dibuja saludo/fecha (el hero los muestra), solo la grilla de 3-4 stats de pedidos (info que el hero no tiene); `renderAccesosRapidos()` con íconos SVG en vez de emoji |
+
+### Parte 3 — Fases 2-11: rediseño de las 15 secciones restantes
+
+Patrón idéntico aplicado a Pedidos/Kanban, Inventario, Balance, Clientes, Categorías, Análisis
+de Productos, Reportes, Equipos/ROI, Configuración, Cotizaciones, y Bienvenida (pantalla que
+se muestra en CADA carga antes de navegar — tenía el hero completo todavía en degradado
+morado→lavanda→durazno, nunca tocado en 2 sesiones de rebrand previas):
+
+- 1 botón primario (`.mk-btn-primary`) + resto neutro (`.mk-toolbar-btn`) por toolbar
+- Tarjetas de stats → `.mk-card` + `.mk-kpi-label`
+- Headers de sección → `.mk-section-header`
+- Emoji-como-ícono → SVG del sistema local (`<i class="fas fa-x">`)
+- Paletas de Chart.js (`reportes.ts`, `balance.ts`, `equipos.ts`, `envios.ts`) con violeta viejo → Uva
+
+**Clientes, Categorías y Análisis de Productos ya estaban mayormente limpios** — una sesión
+anterior de rebrand los había cubierto parcialmente; solo se completaron detalles sueltos.
+
+### Verificación
+
+Cada fase: `node scripts/build.js` (65 tests + lint-footguns) → commit → push → deploy Coolify
+→ verificación visual en producción vía `claude-in-chrome` (Basic Auth) con pestaña limpia
+(SW/caché desregistrados) — screenshots, `read_console_messages` sin errores, contraste
+verificado con `getComputedStyle`. El bug `ANILLOS_COLORS already declared` que apareció en
+consola durante la verificación de Fase 2 era un artefacto de un script de prueba manual
+inyectado en esa pestaña (force-load de `envios.bundle.js` para testear el guard), NO un bug
+real — confirmado con una pestaña nueva sin ese historial.
+
+### Commits de la sesión (orden cronológico, todos en `fresh-start`)
+
+Rebrand nombre/paleta inicial (2 sesiones previas a esta) → esta sesión: fix RLS Supabase →
+limpieza texto "Maneki" en `src/*.ts` → Fase 1 (sistema+Sidebar+Topbar+Dashboard) → fix
+contraste `.mk-kpi-label` → fix cascada `css/styles.css` + cache-busting → Fase 2 (Pedidos) →
+fix 2 bugs (envioAnillos + resumenDia) → Fases 3-11 + barrido final de morado.
 
 ## ✅ Sesión 26 (13 junio 2026) — Auditoría profunda + mejoras UI/UX (v2.6.2)
 
@@ -1172,14 +1307,16 @@ nginx -t && systemctl reload nginx
 
 ## Información del Proyecto
 
+> ⚠️ **Nota de marca vs. infraestructura:** la app se llama "Bicho Capricho POS" para el usuario final (nombre, colores, tipografía — Sesión 28), pero el repo, dominio, VPS y proyecto Supabase **siguen con el nombre `maneki`** — son identificadores de infraestructura, no se renombraron (renombrar dominio/repo es una operación aparte, no pedida). No confundir "la app ya no dice Maneki en ningún lado" con "la infraestructura se renombró".
+
 | Campo | Valor |
 |-------|-------|
 | Proyecto local | `F:\PROYECTOS\MANEKI ECOSISTEMA\mi-punto-de-venta` |
 | GitHub | https://github.com/Mordredgh/maneki-pos.git |
 | Web (Coolify) | https://pos.manekistore.com.mx |
 | VPS | 195.26.247.101 |
-| Auth | nginx Basic Auth (host-level, no en contenedor) |
-| Supabase | https://hoqcrljgmamaumtdrtzi.supabase.co |
+| Auth | nginx Basic Auth (host-level, no en contenedor), usuario `manekimaster` |
+| Supabase | https://hoqcrljgmamaumtdrtzi.supabase.co — ⚠️ **compartido con la web pública de Bicho Capricho** (proyecto Lovable/React aparte). Cambios de RLS en tablas que el POS usa (`store`, `products`, y potencialmente otras) afectan a ambos consumidores de la misma `anon key`. Ver Sesión 28 para el incidente donde otra sesión cerró `anon` en `store`/`products` para proteger la web y rompió el guardado del POS. |
 | Coolify UI | http://195.26.247.101:8000 |
 
 ---
