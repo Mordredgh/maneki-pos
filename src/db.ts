@@ -1017,7 +1017,30 @@ function sbSaveConFeedback(key, data, nombreAmigable) {
     })();
 }
 
-function saveCategories()  { return sbSave('categories', categories); }
+// ── saveCategories — escribe en public.categories (tabla relacional) ──
+// R3-S30 FIX: antes escribía solo en store.categories via sbSave(), pero sbLoad()
+// lee de la tabla relacional 'categories' primero (tiene min:1 fila configurado en
+// _RELATIONAL_TABLES) — cualquier categoría creada/editada se perdía al recargar
+// porque nunca llegaba a la tabla que realmente se lee.
+function saveCategories() {
+    return (async () => {
+        try {
+            const rows = categories.map(c => ({
+                id: String(c.id), name: c.name || '',
+                emoji: c.emoji || '📦', color: c.color || '#FFD166'
+            }));
+            if (rows.length && db) await db.from('categories').upsert(rows, { onConflict: 'id' });
+        } catch(e) { console.warn('[saveCategories] Error al guardar en Supabase:', (e as any)?.message); throw e; }
+    })();
+}
+// ── deleteCategoryFromDB — borra de public.categories al eliminar categoría ──
+async function deleteCategoryFromDB(id: string): Promise<void> {
+    try {
+        const { error } = await db.from('categories').delete().eq('id', String(id));
+        if (error) console.error('deleteCategoryFromDB error:', error);
+    } catch(e) { console.error('deleteCategoryFromDB excepción:', e); }
+}
+(window as any).deleteCategoryFromDB = deleteCategoryFromDB;
 let stockMovimientos = [];
 function saveStockMovimientos() { (async () => { await sbSave('stockMovimientos', stockMovimientos); })(); }
 

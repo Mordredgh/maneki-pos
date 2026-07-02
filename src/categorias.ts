@@ -118,9 +118,9 @@
             showConfirm(`La categoría "${cat ? cat.name : 'esta categoría'}" será eliminada permanentemente.`, '⚠️ Eliminar categoría').then(ok => {
                 if (!ok) return;
                 categories = categories.filter(c => c.id !== categoryId);
-                saveCategories();
                 renderCategoriesGrid();
                 updateCategorySelects();
+                if (typeof window.deleteCategoryFromDB === 'function') window.deleteCategoryFromDB(categoryId);
             });
         }
         
