@@ -72,9 +72,9 @@
             document.getElementById('addCategoryForm').reset();
         }
         
-        document.getElementById('addCategoryForm').addEventListener('submit', function(e) {
+        document.getElementById('addCategoryForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const name = document.getElementById('categoryName').value;
             const emoji = document.getElementById('categoryEmoji').value;
             // BUG-NEW-13 FIX: el slug puede colisionar si dos categorías tienen nombres similares
@@ -96,12 +96,16 @@
             };
             
             categories.push(newCategory);
-            saveCategories();
             renderCategoriesGrid();
             updateCategorySelects();
-            closeAddCategoryModal();
-            
-            manekiToastExport('✅ Categoría creada exitosamente', 'ok');
+            try {
+                await saveCategories();
+                if (typeof window._mkModalSaved === 'function') window._mkModalSaved('addCategoryModal');
+                closeAddCategoryModal();
+                manekiToastExport('✅ Categoría creada exitosamente', 'ok');
+            } catch (err) {
+                manekiToastExport('❌ No se pudo guardar la categoría en la nube. Revisa tu conexión e intenta de nuevo.', 'err');
+            }
         });
         
         function deleteCategory(categoryId) {
@@ -182,7 +186,7 @@
 
         function filterEditEmojis(value) { renderEditEmojiGrid(value); }
 
-        function saveEditCategory() {
+        async function saveEditCategory() {
             const id = document.getElementById('editCategoryId').value;
             const name = document.getElementById('editCategoryName').value.trim();
             const emoji = document.getElementById('editCategoryEmoji').value || '📦';
@@ -195,12 +199,17 @@
             categories[idx].color = color;
             // Update emoji on all products in this category
             products.forEach(p => { if (p.category === id && !p.imageUrl) p.image = emoji; });
-            saveCategories();
-            saveProducts();
             renderCategoriesGrid();
             updateCategorySelects();
-            closeEditCategoryModal();
-            manekiToastExport('✅ Categoría actualizada', 'ok');
+            saveProducts();
+            try {
+                await saveCategories();
+                if (typeof window._mkModalSaved === 'function') window._mkModalSaved('editCategoryModal');
+                closeEditCategoryModal();
+                manekiToastExport('✅ Categoría actualizada', 'ok');
+            } catch (err) {
+                manekiToastExport('❌ No se pudo guardar la categoría en la nube. Revisa tu conexión e intenta de nuevo.', 'err');
+            }
         }
 
         function updateCategorySelects() {

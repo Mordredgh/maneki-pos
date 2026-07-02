@@ -1017,7 +1017,7 @@ function sbSaveConFeedback(key, data, nombreAmigable) {
     })();
 }
 
-function saveCategories()  { (async () => { await sbSave('categories', categories); })(); }
+function saveCategories()  { return sbSave('categories', categories); }
 let stockMovimientos = [];
 function saveStockMovimientos() { (async () => { await sbSave('stockMovimientos', stockMovimientos); })(); }
 
