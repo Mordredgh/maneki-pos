@@ -953,21 +953,6 @@ tbody tr:hover {
   border-radius: 99px;
 }
 
-/* ── #7 DASHBOARD CARDS — glassmorphism ── */
-.mk-card, .kpi-card, [class*="rounded-xl"][class*="shadow"],
-#dashboard-section .rounded-2xl, #dashboard-section .rounded-xl {
-  background: rgba(255,255,255,0.72) !important;
-  backdrop-filter: blur(12px) saturate(1.2) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.2) !important;
-  border: 1px solid rgba(255,209,102,0.08) !important;
-  transition: transform 0.2s var(--snap), box-shadow 0.2s ease !important;
-}
-.mk-card:hover, .kpi-card:hover,
-#dashboard-section .rounded-2xl:hover, #dashboard-section .rounded-xl:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--sh-md) !important;
-}
-
 /* ── #8 BOTONES DE ACCIÓN — micro-animaciones ── */
 button[onclick*="openPedidoModal"], button[onclick*="openAbonoPedido"],
 button[onclick*="duplicarPedido"], button[onclick*="eliminarPedido"],
