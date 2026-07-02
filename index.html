@@ -2096,11 +2096,11 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="flex gap-2 mb-2">
   <button type="button" id="tipoBtnProducto" data-action="setTipoProducto" data-arg="producto"
     class="flex-1 py-2 rounded-xl text-sm font-semibold border-2 border-amber-400 bg-amber-50 text-amber-800">
-    📦 Producto Terminado
+    <i class="fas fa-box"></i> Producto Terminado
   </button>
   <button type="button" id="tipoBtnMateria" data-action="setTipoProducto" data-arg="materia"
     class="flex-1 py-2 rounded-xl text-sm font-semibold border-2 border-gray-200 text-gray-500">
-    🏭 Materia Prima
+    <i class="fas fa-industry"></i> Materia Prima
   </button>
 </div>
 <input type="hidden" id="productTipo" value="producto">
@@ -2130,7 +2130,7 @@ input:focus, select:focus, textarea:focus, button:focus {
           </div>
           <div class="flex gap-2">
             <input type="text" id="tagCustomInput" placeholder="Agregar tag personalizado..." class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
-            <button type="button" data-action="agregarTagCustom" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#FFD166">+ Agregar</button>
+            <button type="button" data-action="agregarTagCustom" class="mk-toolbar-btn"><i class="fas fa-plus mk-tb-ico"></i> Agregar</button>
           </div>
           <div class="flex flex-wrap gap-1 mt-2" id="tagsSeleccionados"></div>
           <input type="hidden" id="productTags">
@@ -2227,7 +2227,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <option value="">-- Seleccionar componente --</option>
               </select>
               <input type="number" id="kitComponentCantidad" value="1" min="1" class="w-16 px-2 py-2 border border-gray-200 rounded-xl text-sm">
-              <button type="button" data-action="agregarComponenteKit" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#FFD166">+ Agregar</button>
+              <button type="button" data-action="agregarComponenteKit" class="mk-toolbar-btn"><i class="fas fa-plus mk-tb-ico"></i> Agregar</button>
             </div>
             <div id="kitComponentesList" class="space-y-1"></div>
             <input type="hidden" id="productKitComponentes">
@@ -2714,7 +2714,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div id="pedidoProductoSelNombre" class="font-semibold text-sm text-gray-800"></div>
         <div id="pedidoProductoSelPrecio" class="text-xs text-amber-700"></div>
       </div>
-      <button type="button" data-action="limpiarSeleccionProductoPedido" class="text-gray-400 hover:text-red-400 text-lg">✕</button>
+      <button type="button" data-action="limpiarSeleccionProductoPedido" class="text-gray-400 hover:text-red-400 text-lg"><i class="fas fa-xmark"></i></button>
     </div>
 
     <div id="pedidoVarianteRow" class="hidden mt-2">
@@ -2728,9 +2728,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         class="w-20 px-3 py-2 border border-gray-200 rounded-xl outline-none text-sm">
       <input type="number" id="pedidoProductoPrecio" placeholder="Precio $" step="0.01" min="0"
         class="w-28 px-3 py-2 border border-amber-300 rounded-xl outline-none text-sm font-semibold text-amber-800" style="background:#fffbeb">
-      <button type="button" data-action="agregarProductoPedido"
-        class="flex-1 py-2 text-white rounded-xl font-semibold text-sm" style="background:#FFD166">
-        + Agregar al pedido
+      <button type="button" data-action="agregarProductoPedido" class="mk-btn-primary" style="flex:1;justify-content:center;">
+        <i class="fas fa-plus"></i> Agregar al pedido
       </button>
     </div>
   </div>
@@ -2739,7 +2738,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   <div id="pedidoProductosList" class="space-y-2 max-h-40 overflow-y-auto"></div>
   <!-- Precio libre: visible solo cuando no hay productos del inventario -->
   <div id="pedidoPrecioLibreRow" class="mt-3 flex items-center gap-3 p-3 bg-amber-50 border-2 border-amber-300 rounded-xl">
-    <span class="text-amber-700 text-lg">💵</span>
+    <span class="text-amber-700 text-lg"><i class="fas fa-money-bill-wave"></i></span>
     <div class="flex-1">
       <label class="text-sm font-bold text-amber-800 block mb-0.5">Precio personalizado</label>
       <p class="text-xs text-gray-400 mt-0.5">Reemplaza el precio calculado automáticamente</p>
@@ -2752,7 +2751,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   <!-- Sección de Empaques -->
   <div id="pedidoEmpaquesSection" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
     <div class="flex items-center gap-2 mb-2">
-      <span class="text-sm font-bold text-blue-800">📦 Empaques</span>
+      <span class="text-sm font-bold text-blue-800"><i class="fas fa-box"></i> Empaques</span>
       <span class="text-xs text-blue-500">(bolsas, cajas — no afectan el precio)</span>
     </div>
     <div class="flex gap-2 mb-2">
@@ -2761,9 +2760,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       </select>
       <input type="number" id="pedidoEmpaquesCantidad" value="1" min="1"
              class="w-16 px-2 py-2 border border-blue-200 rounded-lg text-sm outline-none text-center">
-      <button type="button" data-action="agregarEmpaquePedido"
-              class="px-3 py-2 rounded-lg text-sm font-bold text-white"
-              style="background:#3b82f6;">+ Agregar</button>
+      <button type="button" data-action="agregarEmpaquePedido" class="mk-toolbar-btn"><i class="fas fa-plus mk-tb-ico"></i> Agregar</button>
     </div>
     <div id="pedidoEmpaquesList" class="space-y-1"></div>
   </div>
@@ -2793,11 +2790,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-1">Notas adicionales</label>
               <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
-                <button type="button" data-action="pedidoInsertarTemplate" data-arg="🎁 Como regalo" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">🎁 Regalo</button>
-                <button type="button" data-action="pedidoInsertarTemplate" data-arg="💌 Incluir tarjeta con mensaje" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">💌 Con tarjeta</button>
-                <button type="button" data-action="pedidoInsertarTemplate" data-arg="⚡ URGENTE" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #fca5a5;background:#fef2f2;cursor:pointer;color:#b91c1c;">⚡ Urgente</button>
-                <button type="button" data-action="pedidoInsertarTemplate" data-arg="📱 Coordinar entrega por WhatsApp" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">📱 WhatsApp</button>
-                <button type="button" data-action="pedidoInsertarTemplate" data-arg="🏪 Recoger en tienda" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;">🏪 Recoger tienda</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="🎁 Como regalo" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;"><i class="fas fa-gift"></i> Regalo</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="💌 Incluir tarjeta con mensaje" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;"><i class="fas fa-envelope"></i> Con tarjeta</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="⚡ URGENTE" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #fca5a5;background:#fef2f2;cursor:pointer;color:#b91c1c;"><i class="fas fa-bolt"></i> Urgente</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="📱 Coordinar entrega por WhatsApp" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                <button type="button" data-action="pedidoInsertarTemplate" data-arg="🏪 Recoger en tienda" style="font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;"><i class="fas fa-store"></i> Recoger tienda</button>
               </div>
               <textarea id="pedidoNotas" rows="2" placeholder="Instrucciones especiales, colores, tamaños, etc." class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none resize-none"></textarea>
             </div>
@@ -2805,9 +2802,9 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Prioridad</label>
                 <div class="flex gap-2">
-                    <button type="button" data-action="setPedidoPrioridad" data-arg="alta" data-pass-el="after" id="btnPrioAlta" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-gray-200 text-gray-500 hover:border-red-300">🔺 Alta</button>
+                    <button type="button" data-action="setPedidoPrioridad" data-arg="alta" data-pass-el="after" id="btnPrioAlta" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-gray-200 text-gray-500 hover:border-red-300"><i class="fas fa-arrow-up"></i> Alta</button>
                     <button type="button" data-action="setPedidoPrioridad" data-arg="normal" data-pass-el="after" id="btnPrioNormal" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-amber-300 bg-amber-50 text-amber-700">Normal</button>
-                    <button type="button" data-action="setPedidoPrioridad" data-arg="baja" data-pass-el="after" id="btnPrioBaja" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-gray-200 text-gray-500 hover:border-gray-300">🔻 Baja</button>
+                    <button type="button" data-action="setPedidoPrioridad" data-arg="baja" data-pass-el="after" id="btnPrioBaja" class="btn-prio flex-1 py-2 rounded-xl border-2 text-sm font-semibold border-gray-200 text-gray-500 hover:border-gray-300"><i class="fas fa-arrow-down"></i> Baja</button>
                 </div>
                 <input type="hidden" id="pedidoPrioridad" value="normal">
             </div>
@@ -2815,7 +2812,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="px-8 py-4 border-t border-gray-100 flex-shrink-0">
-            <button type="button" data-action="_mkSubmitPedidoForm" class="w-full py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2" style="background:#FFD166;">
+            <button type="button" data-action="_mkSubmitPedidoForm" class="mk-btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:1rem;">
                 <i class="fas fa-save"></i> <span id="pedidoSubmitBtn">Guardar Pedido</span>
             </button>
         </div>
