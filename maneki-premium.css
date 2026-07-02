@@ -376,7 +376,8 @@ input::placeholder, textarea::placeholder {
   font-weight: 700 !important;
   letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
-  color: var(--tx-muted) !important;
+  /* #7a8f80 (--tx-muted) da ~3.46:1 sobre blanco — bajo el minimo 4.5:1 (texto en negrita 10px no es "texto grande" para WCAG) */
+  color: #5c7568 !important;
 }
 
 /* ─────────────────────────────────────────────────────────────────────
