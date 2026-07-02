@@ -224,7 +224,7 @@ Protected by nginx Basic Auth (usuario: manekimaster).
 | Source | TypeScript en `src/*.ts`, compilado con esbuild a `js/*.js` |
 | DB Remota | Supabase (fuente de verdad, realtime, RLS) |
 | Cache Local | localStorage (fallback básico) |
-| CSS | Tailwind v3 build purgado 32.6KB (`css/tailwind.css`) + `styles.css` + `ui-redesign.css` + `responsive.css` + `maneki-premium.css` |
+| CSS | Tailwind v3 build purgado 32.6KB (`css/tailwind.css`) + `css/app.css` (consolidado) + `maneki-premium.css` (tokens) |
 | Icons | `js/icons.js` (SVG propio, sin Font Awesome) |
 | PWA | `manifest.json` + `sw.js` (Service Worker v2.3.2) — 38 archivos cacheados |
 | Deploy | `git push github fresh-start:master` → Coolify auto-deploy |
@@ -260,9 +260,7 @@ js/
   whatsapp.js           — Templates de mensajes WhatsApp
   ui-extras.js          — Modales, toast, undo, exportar Excel, clearAllData
 css/
-  styles.css            — Paleta Cream+Dorado+Lila, tokens CSS, sidebar light
-  ui-redesign.css       — Status pills, mejoras UI
-  responsive.css        — Media queries desktop/tablet/mobile/XS
+  app.css               — Consolidado (Sesión 29): ex styles.css + ui-redesign.css + responsive.css, cascada preservada en ese orden
   tailwind.css          — Build purgado 32.6 KB (NO usar CDN)
 src/                    — Fuentes TypeScript (compilar con esbuild --minify)
 types/maneki.d.ts       — Definiciones de tipos globales
