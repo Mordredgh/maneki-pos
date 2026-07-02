@@ -1029,7 +1029,13 @@ function saveCategories() {
                 id: String(c.id), name: c.name || '',
                 emoji: c.emoji || '📦', color: c.color || '#FFD166'
             }));
-            if (rows.length && db) await db.from('categories').upsert(rows, { onConflict: 'id' });
+            if (!rows.length) return;
+            if (!db) throw new Error('Sin conexión a Supabase');
+            // BUG R3-S30b: el primer fix no revisaba {error} de la respuesta — un error
+            // del servidor (constraint, RLS, etc.) se tragaba en silencio y el caller
+            // creía que había guardado bien.
+            const { error } = await db.from('categories').upsert(rows, { onConflict: 'id' });
+            if (error) throw error;
         } catch(e) { console.warn('[saveCategories] Error al guardar en Supabase:', (e as any)?.message); throw e; }
     })();
 }
