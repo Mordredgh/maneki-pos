@@ -586,44 +586,48 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;" id="morningKpiGrid">
 
-            <div class="mk-card mk-kpi" style="background:linear-gradient(135deg,#fffbf5,#fff8ed);animation:fadeUp 0.4s 0.1s ease both;opacity:0;">
-                <div class="mk-kpi-blob" style="background:#FFD166;"></div>
-                <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#FFD166,#FFDD85);box-shadow:0 4px 14px rgba(255,209,102,.4);">
-                    <i class="fas fa-store" style="color:white;"></i>
+            <div class="mk-card mk-kpi mk-kpi-v2 kpi-amber" style="padding:16px;animation:fadeUp 0.4s 0.1s ease both;opacity:0;">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="mk-kpi-label" style="margin:0;">Ventas hoy</p>
+                    <div class="mk-kpi-icon-sm" style="background:rgba(255,209,102,0.14);">
+                        <i class="fas fa-store" style="color:#c99a1e;font-size:.82rem;"></i>
+                    </div>
                 </div>
-                <p class="mk-kpi-label">Ventas hoy</p>
                 <h3 class="mk-kpi-value privacy-target" id="mornDailySales" style="color:#92400e;">$0</h3>
-                <p class="mk-kpi-sub" id="mornSalesSub" style="color:#b45309;font-size:.67rem;">cargando...</p>
+                <p class="mk-kpi-sub" id="mornSalesSub" style="color:#9ca3af;font-size:.67rem;margin-top:4px;">cargando...</p>
             </div>
 
-            <div class="mk-card mk-kpi clickable" data-action="showSection" data-arg="pedidos" style="animation:fadeUp 0.4s 0.18s ease both;opacity:0;" id="mornUrgentCard">
-                <div class="mk-kpi-blob" style="background:#ef4444;"></div>
-                <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 14px rgba(239,68,68,.4);">
-                    <i class="fas fa-fire" style="color:white;"></i>
+            <div class="mk-card mk-kpi mk-kpi-v2 kpi-red clickable" data-action="showSection" data-arg="pedidos" style="padding:16px;animation:fadeUp 0.4s 0.18s ease both;opacity:0;" id="mornUrgentCard">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="mk-kpi-label" style="margin:0;">Entregas hoy</p>
+                    <div class="mk-kpi-icon-sm" style="background:rgba(239,68,68,0.12);">
+                        <i class="fas fa-fire" style="color:#ef4444;font-size:.82rem;"></i>
+                    </div>
                 </div>
-                <p class="mk-kpi-label">Entregas HOY</p>
                 <h3 class="mk-kpi-value" id="mornUrgentCount" style="color:#991b1b;">0</h3>
-                <p class="mk-kpi-sub" style="color:#b91c1c;font-size:.67rem;">ver pedidos →</p>
+                <p class="mk-kpi-sub" style="color:#9ca3af;font-size:.67rem;margin-top:4px;">ver pedidos →</p>
             </div>
 
-            <div class="mk-card mk-kpi clickable" data-action="showSection" data-arg="inventory" style="animation:fadeUp 0.4s 0.26s ease both;opacity:0;">
-                <div class="mk-kpi-blob" style="background:#f59e0b;"></div>
-                <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 14px rgba(245,158,11,.4);">
-                    <i class="fas fa-box-open" style="color:white;"></i>
+            <div class="mk-card mk-kpi mk-kpi-v2 kpi-orange clickable" data-action="showSection" data-arg="inventory" style="padding:16px;animation:fadeUp 0.4s 0.26s ease both;opacity:0;">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="mk-kpi-label" style="margin:0;">Stock crítico</p>
+                    <div class="mk-kpi-icon-sm" style="background:rgba(245,158,11,0.12);">
+                        <i class="fas fa-box-open" style="color:#b45309;font-size:.82rem;"></i>
+                    </div>
                 </div>
-                <p class="mk-kpi-label">Stock crítico</p>
                 <h3 class="mk-kpi-value" id="mornLowStock" style="color:#92400e;">0</h3>
-                <p class="mk-kpi-sub" style="color:#b45309;font-size:.67rem;">productos bajo mínimo</p>
+                <p class="mk-kpi-sub" style="color:#9ca3af;font-size:.67rem;margin-top:4px;">productos bajo mínimo</p>
             </div>
 
-            <div class="mk-card mk-kpi clickable" data-action="showSection" data-arg="balance" style="animation:fadeUp 0.4s 0.34s ease both;opacity:0;">
-                <div class="mk-kpi-blob" style="background:#FFB4C8;"></div>
-                <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#FFB4C8,#e0567e);box-shadow:0 4px 14px rgba(255,180,200,.4);">
-                    <i class="fas fa-hand-holding-usd" style="color:white;"></i>
+            <div class="mk-card mk-kpi mk-kpi-v2 kpi-rose clickable" data-action="showSection" data-arg="balance" style="padding:16px;animation:fadeUp 0.4s 0.34s ease both;opacity:0;">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="mk-kpi-label" style="margin:0;">Me deben</p>
+                    <div class="mk-kpi-icon-sm" style="background:rgba(255,180,200,0.18);">
+                        <i class="fas fa-hand-holding-usd" style="color:#b8305a;font-size:.82rem;"></i>
+                    </div>
                 </div>
-                <p class="mk-kpi-label">Me deben</p>
                 <h3 class="mk-kpi-value privacy-target" id="mornReceivable" style="color:#9d174d;">$0</h3>
-                <p class="mk-kpi-sub" style="color:#be185d;font-size:.67rem;">cobrar →</p>
+                <p class="mk-kpi-sub" style="color:#9ca3af;font-size:.67rem;margin-top:4px;">cobrar →</p>
             </div>
         </div>
 
@@ -1826,75 +1830,6 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <div class="space-y-6">
-
-<div>
-    <label class="block text-sm font-semibold text-gray-700 mb-3">Tema de colores</label>
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="themeSelector">
-
-        <button type="button" data-action="selectTheme" data-arg="dorado" data-theme="dorado"
-             class="theme-option text-left rounded-xl p-4 border-2 border-yellow-400 bg-yellow-50 transition-all">
-            <div class="flex gap-2 mb-2">
-                <div class="w-6 h-6 rounded-full" style="background:#FFD166;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#D8BFD8;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#FFF9F0;"></div>
-            </div>
-            <p class="text-xs font-semibold text-gray-700">✨ Dorado (default)</p>
-        </button>
-
-        <button type="button" data-action="selectTheme" data-arg="rosas" data-theme="rosas"
-             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
-            <div class="flex gap-2 mb-2">
-                <div class="w-6 h-6 rounded-full" style="background:#E91E8C;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#FFB6C1;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#FFF0F5;"></div>
-            </div>
-            <p class="text-xs font-semibold text-gray-700">🌸 Rosa intenso</p>
-        </button>
-
-        <button type="button" data-action="selectTheme" data-arg="morado" data-theme="morado"
-             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
-            <div class="flex gap-2 mb-2">
-                <div class="w-6 h-6 rounded-full" style="background:#7d4fa3;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#C4B5FD;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#F5F3FF;"></div>
-            </div>
-            <p class="text-xs font-semibold text-gray-700">💜 Violeta</p>
-        </button>
-
-        <button type="button" data-action="selectTheme" data-arg="verde" data-theme="verde"
-             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
-            <div class="flex gap-2 mb-2">
-                <div class="w-6 h-6 rounded-full" style="background:#059669;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#A7F3D0;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#ECFDF5;"></div>
-            </div>
-            <p class="text-xs font-semibold text-gray-700">🌿 Esmeralda</p>
-        </button>
-
-        <button type="button" data-action="selectTheme" data-arg="azul" data-theme="azul"
-             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
-            <div class="flex gap-2 mb-2">
-                <div class="w-6 h-6 rounded-full" style="background:#2563EB;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#BFDBFE;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#EFF6FF;"></div>
-            </div>
-            <p class="text-xs font-semibold text-gray-700">🔵 Azul océano</p>
-        </button>
-
-        <button type="button" data-action="selectTheme" data-arg="coral" data-theme="coral"
-             class="theme-option text-left rounded-xl p-4 border-2 border-gray-200 bg-white transition-all">
-            <div class="flex gap-2 mb-2">
-                <div class="w-6 h-6 rounded-full" style="background:#F97316;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#FED7AA;"></div>
-                <div class="w-6 h-6 rounded-full" style="background:#FFF7ED;"></div>
-            </div>
-            <p class="text-xs font-semibold text-gray-700">🪸 Coral</p>
-        </button>
-
-    </div>
-</div>
-
-<hr class="border-gray-100">
 
 <input type="hidden" id="configEmoji" value="🐛">
 <div>

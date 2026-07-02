@@ -1815,6 +1815,8 @@ body.dark [style*="border-bottom:1px solid #f3f4f6"] { border-color: rgba(255,25
 .mk-kpi-v2.kpi-green::before  { background: linear-gradient(90deg, #047857, #059669, #10B981, #34D399); }
 .mk-kpi-v2.kpi-purple::before { background: linear-gradient(90deg, #6b3f92, #9669c4, #ab84d1, #dfbfff); }
 .mk-kpi-v2.kpi-rose::before   { background: linear-gradient(90deg, #b8305a, #e0567e, #FFB4C8, #ffd4e0); }
+.mk-kpi-v2.kpi-red::before    { background: linear-gradient(90deg, #991b1b, #ef4444, #f87171, #fca5a5); }
+.mk-kpi-v2.kpi-orange::before { background: linear-gradient(90deg, #b45309, #f59e0b, #fbbf24, #fcd34d); }
 
 /* Small icon container */
 .mk-kpi-icon-sm {

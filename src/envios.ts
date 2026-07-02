@@ -514,7 +514,7 @@ function redrawMapaConfig() {
         'mostrarResumenDia','descargarReporteVentas','exportarAnalisisCSV',
         'setAnalisisPeriodo','renderTopClientes','limpiarFiltroFechas',
         // Config / Tema
-        'saveStoreConfig','selectTheme','toggleDarkMode','refrescarPagina',
+        'saveStoreConfig','toggleDarkMode','refrescarPagina',
         'removeLogo','togglePrivacidad',
         // Backup
         'abrirModalBackup','cerrarBackupModal','exportarBackupJSON',

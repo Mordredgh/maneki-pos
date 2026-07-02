@@ -210,7 +210,6 @@ function saveStoreConfig() {
         footer:   document.getElementById('configFooter').value || 'Gracias por tu compra!',
         logo:     storeLogo || storeConfig.logo || null,
         logoMode: 'image',
-        theme:    storeConfig.theme || 'dorado',
         address:  (document.getElementById('configAddress') || {}).value || storeConfig.address || '',
         // Feature 2: Chat IDs de Telegram para alertas de stock
         telegramChatId1: (document.getElementById('configTelegramChatId1') || {}).value?.trim() || storeConfig.telegramChatId1 || '',
@@ -648,7 +647,6 @@ async function initApp() {
 
         // ── UI sin DOM pesado — ejecutar primero ──
         renderNotas();
-        loadThemeUI();
         loadLogoUI();
         updateSidebarLogo();
         loadStoreConfigUI();
