@@ -616,6 +616,14 @@ span.badge-vip {
   transition: transform 0.2s var(--spring), box-shadow 0.2s ease, border-color 0.15s ease !important;
   background: white;
 }
+/* R3-S32: acento de color por estado arriba de la tarjeta — mismos colores que columnas/pills */
+.kanban-card { border-top: 3.5px solid transparent !important; }
+.mk-kanban-card-confirmado { border-top-color: #6B7280 !important; }
+.mk-kanban-card-pago       { border-top-color: #10B981 !important; }
+.mk-kanban-card-produccion { border-top-color: #3B82F6 !important; }
+.mk-kanban-card-envio      { border-top-color: #9669c4 !important; }
+.mk-kanban-card-salida     { border-top-color: #F97316 !important; }
+.mk-kanban-card-retirar    { border-top-color: #0D9488 !important; }
 .kanban-card:hover {
   /* S26: sin rotate — una micro-rotación fraccionaria activaba anti-aliasing
      sub-pixel que hacía ver "sombreados"/borrosos los renglones internos
@@ -1802,6 +1810,24 @@ body.dark [style*="border-bottom:1px solid #f3f4f6"] { border-color: rgba(255,25
 .mk-kpi-v2.kpi-rose::before   { background: linear-gradient(90deg, #b8305a, #e0567e, #FFB4C8, #ffd4e0); }
 .mk-kpi-v2.kpi-red::before    { background: linear-gradient(90deg, #991b1b, #ef4444, #f87171, #fca5a5); }
 .mk-kpi-v2.kpi-orange::before { background: linear-gradient(90deg, #b45309, #f59e0b, #fbbf24, #fcd34d); }
+
+/* ── R3-S32: header de página editorial — kicker + título, reemplaza el
+   banner de gradiente por sección para dar más aire y jerarquía tipográfica ── */
+.mk-page-header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+.mk-page-kicker { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mk-p500); margin: 0 0 4px; }
+.mk-page-title { font-family: 'Fredoka One', 'Nunito', sans-serif; font-size: 1.65rem; font-weight: 400; color: var(--tx-primary); margin: 0; letter-spacing: -0.01em; }
+.mk-page-sub { font-size: 0.8rem; color: var(--tx-muted); margin: 3px 0 0; }
+.mk-page-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ── R3-S32: KPI sólida — la métrica principal de la vista lleva color de marca
+   solido en vez de fondo blanco+texto de color, para anclar la jerarquía visual ── */
+.mk-kpi-solid {
+  background: linear-gradient(135deg, #1c4f32 0%, #2c6a45 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 22px rgba(28,79,50,0.22) !important;
+}
+.mk-kpi-solid .mk-kpi-label { color: rgba(255,255,255,0.65) !important; }
+.mk-kpi-solid .mk-kpi-value { color: #fff !important; }
 
 /* Small icon container */
 .mk-kpi-icon-sm {

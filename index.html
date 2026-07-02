@@ -1561,10 +1561,12 @@ input:focus, select:focus, textarea:focus, button:focus {
 <section id="pedidos-section" class="p-4 md:p-8 hidden">
     <div class="max-w-full mx-auto">
 
-        <!-- Fila 1: título + badge de count -->
-        <div class="flex items-center gap-3 mb-3">
-            <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-shopping-bag"></i></div><div class="mk-sh-text"><h2>Pedidos por Encargo</h2><p>Gestiona cada encargo de tus clientes</p></div></div>
-            <span id="pedidosCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(255,209,102,0.15);color:#8a6510;">0</span>
+        <!-- Fila 1: título editorial + badge de count -->
+        <div class="mk-page-header">
+            <div>
+                <p class="mk-page-kicker">Pedidos por encargo</p>
+                <h1 class="mk-page-title">Gestiona cada encargo <span id="pedidosCountBadge" style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 8px;border-radius:99px;background:rgba(150,105,196,0.12);color:#7d4fa3;font-size:.85rem;font-weight:700;font-family:'Nunito',sans-serif;vertical-align:middle;margin-left:6px;">0</span></h1>
+            </div>
         </div>
         <!-- Fila 2: acciones / vista -->
         <div class="flex flex-wrap items-center gap-2 mb-6">
@@ -1607,7 +1609,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="mk-card" style="padding:18px 20px;"><p class="mk-kpi-label">Activos</p><h3 class="mk-kpi-value" style="font-size:1.5rem;color:#1c4f32;margin-top:4px;" id="pedidosActivos">0</h3></div>
+            <div class="mk-card mk-kpi-solid" style="padding:18px 20px;"><p class="mk-kpi-label">Activos</p><h3 class="mk-kpi-value" style="font-size:1.5rem;margin-top:4px;" id="pedidosActivos">0</h3></div>
             <div class="mk-card" style="padding:18px 20px;"><p class="mk-kpi-label">Por Cobrar</p><h3 class="mk-kpi-value" style="font-size:1.5rem;color:#b8305a;margin-top:4px;" id="pedidosPorCobrar">$0</h3></div>
             <div class="mk-card" style="padding:18px 20px;"><p class="mk-kpi-label">Anticipo Cobrado</p><h3 class="mk-kpi-value" style="font-size:1.5rem;color:#10B981;margin-top:4px;" id="pedidosAnticipos">$0</h3></div>
             <div class="mk-card" style="padding:18px 20px;"><p class="mk-kpi-label">Este Mes</p><h3 class="mk-kpi-value" style="font-size:1.5rem;color:#8a6510;margin-top:4px;" id="pedidosMes">0</h3></div>
