@@ -86,17 +86,19 @@ function renderBalanceMensual() {
     if (el('balMesGastos')) el('balMesGastos').textContent = '$' + totalGastos.toFixed(2);
     if (el('balMesGastosN')) el('balMesGastosN').textContent = gastosMes.length + ' gastos';
     if (el('balMesNeto')) el('balMesNeto').textContent = '$' + neto.toFixed(2);
+    // R3-S33: hero sólido — verde bosque si el mes es positivo, rojo sólido si es negativo.
+    // Texto siempre blanco/translúcido sobre fondo sólido (antes: fondo pastel + texto de color).
     const _bgHero = el('balMesNetoBg');
     if (_bgHero) {
-        _bgHero.style.background = neto >= 0 ? '#f0fdf4' : '#fef2f2';
-        _bgHero.style.borderColor = neto >= 0 ? '#bbf7d0' : '#fecaca';
+        _bgHero.style.background = neto >= 0
+            ? 'linear-gradient(135deg,#1c4f32 0%,#2c6a45 100%)'
+            : 'linear-gradient(135deg,#991b1b 0%,#b91c1c 100%)';
+        _bgHero.style.boxShadow = neto >= 0
+            ? '0 8px 22px rgba(28,79,50,.22)'
+            : '0 8px 22px rgba(153,27,27,.22)';
     }
-    const _netoColor = neto >= 0 ? '#166534' : '#dc2626';
-    const _labelColor = neto >= 0 ? '#15803d' : '#dc2626';
-    const _subColor = neto >= 0 ? '#16a34a' : '#ef4444';
-    if (el('balMesNetoLabel')) { el('balMesNetoLabel').textContent = 'Neto del mes'; el('balMesNetoLabel').style.color = _labelColor; }
-    if (el('balMesNeto')) el('balMesNeto').style.color = _netoColor;
-    if (el('balMesNetoSub')) { el('balMesNetoSub').textContent = neto >= 0 ? 'Mes positivo' : 'Mes negativo'; el('balMesNetoSub').style.color = _subColor; }
+    if (el('balMesNetoLabel')) el('balMesNetoLabel').textContent = 'Neto del mes';
+    if (el('balMesNetoSub')) el('balMesNetoSub').textContent = neto >= 0 ? 'Mes positivo' : 'Mes negativo';
 
     // FEATURE-2: Anticipos de pedidos activos cobrados en el mes
     _renderAnticiposPedidosActivos(mesStr);

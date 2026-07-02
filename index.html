@@ -668,7 +668,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <section id="quotes-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
-                <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-clipboard-list"></i></div><div class="mk-sh-text"><h2>Cotizaciones</h2><p>Genera presupuestos para tus clientes</p></div></div>
+                <div class="mk-page-header"><div><p class="mk-page-kicker">Ventas</p><h1 class="mk-page-title">Cotizaciones</h1><p class="mk-page-sub">Genera presupuestos para tus clientes</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2" id="quotesHeaderButtons">
                         <button type="button" data-action="openQuoteModal"
@@ -692,7 +692,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div id="tabContentProductos">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="mk-card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table id="quotesTableEl" class="w-full">
                             <thead class="bg-gray-50 border-b border-gray-200">
@@ -718,7 +718,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                         <div class="space-y-4">
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <div class="mk-card p-6">
                                 <h3 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-motorcycle" style="margin-right:6px;color:#8a6510;"></i>Cotizar Envío</h3>
                                 <div class="space-y-4">
                                     <div>
@@ -758,7 +758,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 </div>
                             </div>
 
-                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <div class="mk-card p-6">
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-lg font-bold text-gray-800"><i class="fas fa-cog" style="margin-right:6px;color:#8a6510;"></i>Mis Tarifas por Anillo</h3>
                                     <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold">
@@ -771,7 +771,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" style="min-height:80px;">
+                        <div class="mk-card overflow-hidden" style="min-height:80px;">
                             <div class="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marker-alt" style="margin-right:6px;color:#8a6510;"></i>Mapa de cobertura</h3>
                                 <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#FFD166">
@@ -788,7 +788,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <section id="inventory-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
-                <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-box"></i></div><div class="mk-sh-text"><h2>Inventario</h2><p>Gestiona tu stock de productos</p></div></div>
+                <div class="mk-page-header"><div><p class="mk-page-kicker">Catálogo</p><h1 class="mk-page-title">Inventario</h1><p class="mk-page-sub">Gestiona tu stock de productos</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2 flex-wrap">
 
@@ -914,7 +914,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- Header + navegación de mes -->
                 <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
-                    <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-balance-scale"></i></div><div class="mk-sh-text"><h2>Balance</h2><p>Tu dinero de un vistazo</p></div></div>
+                    <div class="mk-page-header" style="margin-bottom:0;"><div><p class="mk-page-kicker">Finanzas</p><h1 class="mk-page-title">Balance</h1><p class="mk-page-sub">Tu dinero de un vistazo</p></div></div>
                     <div class="flex items-center gap-2">
                     <button type="button" onclick="typeof abrirCorteCaja==='function'?abrirCorteCaja():manekiToastExport('Cargando...','warn')"
                             class="mk-toolbar-btn"
@@ -929,29 +929,29 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
                 </div>
 
-                <!-- Neto del mes — héroe principal -->
-                <div class="rounded-2xl p-6 mb-6 border" id="balMesNetoBg" style="background:#f0fdf4;border-color:#bbf7d0;">
+                <!-- Neto del mes — héroe principal, sólido -->
+                <div class="rounded-2xl p-6 mb-6" id="balMesNetoBg" style="background:linear-gradient(135deg,#1c4f32 0%,#2c6a45 100%);box-shadow:0 8px 22px rgba(28,79,50,.22);">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider mb-1" id="balMesNetoLabel" style="color:#15803d;">Neto del mes</p>
-                            <p class="text-4xl font-extrabold" id="balMesNeto" style="color:#166534;">$0.00</p>
-                            <p class="text-sm mt-1" id="balMesNetoSub" style="color:#16a34a;"></p>
+                            <p class="text-xs font-semibold uppercase tracking-wider mb-1" id="balMesNetoLabel" style="color:rgba(255,255,255,.65);letter-spacing:.1em;">Neto del mes</p>
+                            <p class="text-4xl font-extrabold" id="balMesNeto" style="color:#fff;">$0.00</p>
+                            <p class="text-sm mt-1" id="balMesNetoSub" style="color:rgba(255,255,255,.75);"></p>
                         </div>
                         <div class="flex flex-wrap gap-6 md:gap-8">
                             <div class="text-center">
-                                <p class="text-xs text-gray-400 mb-0.5">Ventas</p>
-                                <p class="text-lg font-bold text-gray-700" id="balMesVentas">$0</p>
-                                <p class="text-xs text-gray-400" id="balMesVentasN">0 ventas</p>
+                                <p class="text-xs mb-0.5" style="color:rgba(255,255,255,.55);">Ventas</p>
+                                <p class="text-lg font-bold" style="color:#fff;" id="balMesVentas">$0</p>
+                                <p class="text-xs" style="color:rgba(255,255,255,.55);" id="balMesVentasN">0 ventas</p>
                             </div>
                             <div class="text-center">
-                                <p class="text-xs text-gray-400 mb-0.5">Pedidos</p>
-                                <p class="text-lg font-bold text-gray-700" id="balMesPedidos">$0</p>
-                                <p class="text-xs text-gray-400" id="balMesPedidosN">0 pedidos</p>
+                                <p class="text-xs mb-0.5" style="color:rgba(255,255,255,.55);">Pedidos</p>
+                                <p class="text-lg font-bold" style="color:#fff;" id="balMesPedidos">$0</p>
+                                <p class="text-xs" style="color:rgba(255,255,255,.55);" id="balMesPedidosN">0 pedidos</p>
                             </div>
                             <div class="text-center">
-                                <p class="text-xs text-gray-400 mb-0.5">Gastos</p>
-                                <p class="text-lg font-bold text-red-600" id="balMesGastos">$0</p>
-                                <p class="text-xs text-gray-400" id="balMesGastosN">0 gastos</p>
+                                <p class="text-xs mb-0.5" style="color:rgba(255,255,255,.55);">Gastos</p>
+                                <p class="text-lg font-bold" style="color:#ffb4a8;" id="balMesGastos">$0</p>
+                                <p class="text-xs" style="color:rgba(255,255,255,.55);" id="balMesGastosN">0 gastos</p>
                             </div>
                         </div>
                     </div>
@@ -968,7 +968,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <!-- Ingresos y Egresos -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
 
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Ingresos</h3>
                             <button type="button" data-action="openIncomeModal" class="w-8 h-8 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 flex items-center justify-center text-lg transition-colors">+</button>
@@ -978,7 +978,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="space-y-2 max-h-80 overflow-y-auto" id="incomeList"></div>
                     </div>
 
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Egresos</h3>
                             <div class="flex gap-1.5">
@@ -999,7 +999,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <!-- CxC y CxP -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Cuentas por Cobrar</h3>
                             <button type="button" data-action="openReceivableModal" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center text-lg transition-colors">+</button>
@@ -1020,7 +1020,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Cuentas por Pagar</h3>
                             <button type="button" data-action="openPayableModal" class="w-8 h-8 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center text-lg transition-colors">+</button>
@@ -1033,7 +1033,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <section id="clientes-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
-                <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-users"></i></div><div class="mk-sh-text"><h2>Clientes</h2><p>Tus clientes m&#225;s especiales</p></div></div>
+                <div class="mk-page-header"><div><p class="mk-page-kicker">Relaciones</p><h1 class="mk-page-title">Clientes</h1><p class="mk-page-sub">Tus clientes m&#225;s especiales</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2">
                         <button type="button" data-action="manekiExportar" data-arg="clientes" class="mk-toolbar-btn">
@@ -1047,7 +1047,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <!-- N9: Panel RFM -->
-                <div class="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+                <div class="mk-card p-5 mb-6">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-sm font-bold text-gray-800"><i class="fas fa-trophy" style="margin-right:6px;color:#8a6510;"></i>Segmentación RFM</h3>
                         <span class="text-xs text-gray-400">Recencia · Frecuencia · Monto</span>
@@ -1057,7 +1057,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <!-- Stat-bar compacta — horizontal -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-wrap items-center gap-0 mb-6 overflow-hidden">
+                <div class="mk-card flex flex-wrap items-center gap-0 mb-6 overflow-hidden">
                     <div class="flex items-center gap-3 px-5 py-3 flex-1 min-w-[160px]">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,209,102,0.18);">
                             <i class="fas fa-users text-sm" style="color:#FFD166;"></i>
@@ -1089,7 +1089,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="mk-card overflow-hidden">
                     <div class="p-6 border-b border-gray-200">
                         <div class="relative">
                             <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -1123,7 +1123,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="max-w-5xl mx-auto">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
-                        <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-tag"></i></div><div class="mk-sh-text"><h2>Categor&#237;as</h2><p>Organiza tus productos</p></div></div>
+                        <div class="mk-page-header"><div><p class="mk-page-kicker">Catálogo</p><h1 class="mk-page-title">Categor&#237;as</h1><p class="mk-page-sub">Organiza tus productos</p></div></div>
                         <p class="text-gray-600 mt-1">Administra las categorías de tus productos</p>
                     </div>
                     <button type="button" data-action="openAddCategoryModal"
@@ -1144,7 +1144,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
-                    <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-trophy"></i></div><div class="mk-sh-text"><h2>Análisis de Productos</h2><p>Descubre qué productos generan más valor</p></div></div>
+                    <div class="mk-page-header" style="margin-bottom:0;"><div><p class="mk-page-kicker">Inteligencia</p><h1 class="mk-page-title">Análisis de productos</h1><p class="mk-page-sub">Descubre qué productos generan más valor</p></div></div>
                     <button type="button" data-action="exportarAnalisisCSV" data-tip="Descarga un archivo .csv con el ranking completo de productos para abrirlo en Excel"
                             class="mk-toolbar-btn">
                         <i class="fas fa-file-excel mk-tb-ico" style="color:#10B981;"></i> Exportar CSV
@@ -1333,12 +1333,12 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
-                    <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-chart-line"></i></div><div class="mk-sh-text"><h2>Reportes</h2><p>Estadísticas detalladas de tu negocio</p></div></div>
+                    <div class="mk-page-header" style="margin-bottom:0;"><div><p class="mk-page-kicker">Inteligencia</p><h1 class="mk-page-title">Reportes</h1><p class="mk-page-sub">Estadísticas detalladas de tu negocio</p></div></div>
                     <button type="button" data-action="descargarReporteVentas" class="mk-toolbar-btn"><i class="fas fa-file-download mk-tb-ico"></i> Descargar CSV</button>
                 </div>
 
                 <!-- Resumen del mes -->
-                <div class="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+                <div class="mk-card p-5 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <p class="text-xs text-gray-400 mb-3 font-semibold uppercase tracking-wider">Este mes</p>
@@ -1369,11 +1369,11 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- Charts row: Top productos + Categoria -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <h3 class="text-base font-bold text-gray-800 mb-3">Mas vendidos</h3>
                         <div id="topProductsList" class="space-y-2"></div>
                     </div>
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <div class="flex gap-2 mb-3">
                             <button type="button" data-action="switchCategoryTab" data-arg="inventario" id="tabCatInventario" class="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Inventario</button>
                             <button type="button" data-action="switchCategoryTab" data-arg="ventas" id="tabCatVentas" class="px-3 py-1 rounded-lg text-xs font-semibold bg-white text-gray-500 border border-gray-200">Ventas</button>
@@ -1385,15 +1385,15 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- Secondary charts: Comparativa + Top Productos + Top Clientes -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-2">
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <h3 class="text-sm font-bold text-gray-800 mb-3">Últimos 6 meses</h3>
                         <div style="height:200px;position:relative;"><canvas id="comparativaMesesChart"></canvas></div>
                     </div>
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <h3 class="text-sm font-bold text-gray-800 mb-3">Top productos del mes</h3>
                         <div style="height:200px;position:relative;"><canvas id="topProductosChart"></canvas></div>
                     </div>
-                    <div class="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div class="mk-card p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-sm font-bold text-gray-800">Top clientes</h3>
                             <button type="button" data-action="renderTopClientes" class="text-xs text-gray-400 hover:text-amber-600">&#8634;</button>
@@ -1405,7 +1405,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div id="ticketPromedioStatsWrapper" class="mb-6"></div>
 
                 <!-- N6: Comparativa año a año -->
-                <div class="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+                <div class="mk-card p-5 mb-6">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-sm font-bold text-gray-800"><i class="fas fa-calendar-alt" style="margin-right:6px;color:#8a6510;"></i>Año a año</h3>
                         <span id="anioAnioResumen" class="text-xs text-gray-400"></span>
@@ -1416,7 +1416,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <!-- Historial de ventas -->
-                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div class="mk-card overflow-hidden">
                     <div class="p-5 border-b border-gray-100">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-base font-bold text-gray-800">Historial de ventas</h3>
@@ -1465,7 +1465,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-tools"></i></div><div class="mk-sh-text"><h2>Equipos / ROI</h2><p>Controla tus herramientas e inversiones</p></div></div>
+                <div class="mk-page-header"><div><p class="mk-page-kicker">Operación</p><h1 class="mk-page-title">Equipos / ROI</h1><p class="mk-page-sub">Controla tus herramientas e inversiones</p></div></div>
                 <p class="text-gray-500 text-sm mt-1">Lleva control de cuánto has recuperado de cada equipo</p>
             </div>
             <div class="flex gap-2 flex-wrap">
@@ -1493,7 +1493,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <!-- Tab: Equipos -->
         <div id="equipoTabPanel-equipos">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 flex flex-wrap items-center gap-4">
+            <div class="mk-card p-5 mb-6 flex flex-wrap items-center gap-4">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-percentage text-amber-500 text-xl"></i>
                     <div>
@@ -1520,7 +1520,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <!-- Tab: Avance ROI -->
         <div id="equipoTabPanel-roi" class="hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div class="mk-card p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold text-gray-700"><i class="fas fa-chart-bar" style="margin-right:6px;color:#8a6510;"></i>Avance ROI por Equipo</h3>
                     <button type="button" data-action="renderGraficaROI" class="text-xs px-3 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-semibold"><i class="fas fa-sync-alt" style="margin-right:4px;"></i>Actualizar</button>
@@ -1531,7 +1531,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <!-- Tab: Historial -->
         <div id="equipoTabPanel-historial" class="hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="mk-card overflow-hidden">
                 <table class="w-full text-sm">
                     <thead><tr class="border-b border-gray-100 bg-gray-50">
                         <th class="px-4 py-3 text-left text-gray-500 font-semibold">Pedido</th>
@@ -1752,7 +1752,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                   <option value="">📁 Mis filtros...</option>
                 </select>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+            <div class="mk-card overflow-hidden">
                 <div class="overflow-x-auto">
                     <table id="pedidosTableEl" class="w-full">
                         <thead class="bg-gray-50 border-b"><tr>
@@ -1819,13 +1819,13 @@ input:focus, select:focus, textarea:focus, button:focus {
     <template id="configuracion-section-tpl">
     <div class="max-w-3xl mx-auto">
         <div class="mb-8">
-            <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-cog"></i></div><div class="mk-sh-text"><h2>Configuraci&#243;n</h2><p>Personaliza tu experiencia Bicho Capricho</p></div></div>
+            <div class="mk-page-header"><div><p class="mk-page-kicker">Sistema</p><h1 class="mk-page-title">Configuraci&#243;n</h1><p class="mk-page-sub">Personaliza tu experiencia Bicho Capricho</p></div></div>
             <p class="text-gray-600">Personaliza los datos que aparecen en tickets y cotizaciones</p>
         </div>
 
         <!-- Vista previa ahora es inline junto a los campos -->
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div class="mk-card p-8">
             <div class="space-y-6">
 
 <input type="hidden" id="configEmoji" value="🐛">
