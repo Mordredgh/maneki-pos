@@ -192,7 +192,7 @@ function _inyectarBtnExport(containerId, chartVarName, fileName) {
         'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
         'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
         'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);" ' +
-        '>📥</button>';
+        '><i class="fas fa-download"></i></button>';
     // Ensure container has position:relative for absolute positioning
     var parent = container.parentElement;
     if (parent && getComputedStyle(parent).position === 'static') {
@@ -270,7 +270,7 @@ function initComparativaMeses(ventasCache?: any[]) {
                 'title="Exportar como PNG" ' +
                 'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
                 'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
-                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-download"></i></button>'
             );
         }
         var summaryEl = document.getElementById('mejorPeorMes');
@@ -441,7 +441,7 @@ function initTopProductosChart(ventasCache?: any[]) {
                 'title="Exportar como PNG" ' +
                 'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
                 'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
-                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-download"></i></button>'
             );
         }
     }
@@ -563,7 +563,7 @@ function initMargenCategoriaChart() {
             'title="Exportar como PNG" ' +
             'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
             'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
-            'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+            'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-download"></i></button>'
         );
     }
 }
@@ -970,7 +970,7 @@ function initCategoryChart() {
                 'title="Exportar como PNG" ' +
                 'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
                 'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
-                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+                'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-download"></i></button>'
             );
         }
     }
@@ -1073,8 +1073,8 @@ function renderSalesHistory() {
                 <td class="px-6 py-3"><span class="text-sm ${mc}">${sale.method||'-'}</span></td>
                 <td class="px-6 py-3 text-gray-800 font-bold">$${Number(sale.total||0).toFixed(2)}</td>
                 <td class="px-6 py-3 text-center flex gap-2 justify-center">
-                    <button onclick="abrirDetalleSaleById('${sale.id}')" style="background:#F5EDD8;border:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:16px;" title="Ver detalle">👁️</button>
-                    <button onclick="eliminarVentaHistorial('${sale.id}')" style="background:#FEE2E2;border:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:16px;" title="Eliminar">🗑️</button>
+                    <button onclick="abrirDetalleSaleById('${sale.id}')" style="background:#F5EDD8;border:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:14px;" title="Ver detalle"><i class="fas fa-eye"></i></button>
+                    <button onclick="eliminarVentaHistorial('${sale.id}')" style="background:#FEE2E2;border:none;cursor:pointer;padding:6px 12px;border-radius:8px;font-size:14px;" title="Eliminar"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>`;
         }).join('');
@@ -1214,7 +1214,7 @@ function initChart() {
                     'title="Exportar como PNG" ' +
                     'style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.9);' +
                     'border:1px solid #E5E7EB;border-radius:8px;padding:4px 8px;cursor:pointer;' +
-                    'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📥</button>'
+                    'font-size:14px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-download"></i></button>'
                 );
             }
         }

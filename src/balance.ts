@@ -325,8 +325,8 @@ function _renderExportarBalanceBtn(mesStr) {
         if (!labelEl) return;
         btn = document.createElement('button');
         btn.id = 'btnExportarBalance';
-        btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors';
-        btn.innerHTML = '📥 Exportar mes';
+        btn.className = 'mk-toolbar-btn';
+        btn.innerHTML = '<i class="fas fa-download mk-tb-ico"></i> Exportar mes';
         labelEl.parentElement.appendChild(btn);
     }
     btn.onclick = () => exportarBalanceMesCSV(mesStr);
@@ -486,7 +486,7 @@ function renderRecurrentesPanel() {
         const diaStr = gr.dia ? `<span class="text-xs text-gray-400 ml-1">(día ${gr.dia})</span>` : '';
         return `<div class="flex justify-between items-center py-1">
             <span class="text-xs text-amber-800 font-semibold">${_escBal(gr.concept)} — $${Number(gr.amount).toFixed(2)}/mes ${diaStr}</span>
-            <button onclick="eliminarRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">✕</button>
+            <button onclick="eliminarRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs"><i class="fas fa-xmark"></i></button>
         </div>`;
     }).join('');
 }
@@ -530,7 +530,7 @@ function renderIngresosRecurrentesPanel() {
         const diaStr = ir.dia ? `<span class="text-xs text-gray-400 ml-1">(día ${ir.dia})</span>` : '';
         return `<div class="flex justify-between items-center py-1">
             <span class="text-xs text-green-800 font-semibold">${_escBal(ir.concept)} — $${Number(ir.amount).toFixed(2)}/mes ${diaStr}</span>
-            <button onclick="eliminarIngresoRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs">🗑️ Eliminar</button>
+            <button onclick="eliminarIngresoRecurrente(${i})" class="text-red-400 hover:text-red-600 text-xs"><i class="fas fa-trash"></i> Eliminar</button>
         </div>`;
     }).join('');
 }

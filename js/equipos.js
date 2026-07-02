@@ -72,7 +72,7 @@
             <div style="margin-top:10px;border-top:1px solid #f3f4f6;padding-top:8px;">
                 <button onclick="_togglePagosEquipo('${e.id}')"
                         style="font-size:.72rem;color:#6b7280;background:none;border:1px solid #e5e7eb;border-radius:8px;padding:3px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                    \u{1F4CB} Ver pagos <span id="pagosCount_${e.id}" style="background:#f3f4f6;border-radius:99px;padding:1px 6px;">${e.historialPagos.length}</span>
+                    <i class="fas fa-list"></i> Ver pagos <span id="pagosCount_${e.id}" style="background:#f3f4f6;border-radius:99px;padding:1px 6px;">${e.historialPagos.length}</span>
                 </button>
                 <div id="pagosHistorial_${e.id}" style="display:none;margin-top:8px;">${y}</div>
             </div>

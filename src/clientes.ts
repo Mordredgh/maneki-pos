@@ -176,7 +176,7 @@ window._rfmVerSegmento = function(segKey: string) {
     panel.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px 6px;border-bottom:1px solid #f3f4f6">
             <span style="font-weight:700;font-size:.9rem;color:${seg.color}">${seg.emoji} ${seg.label} — ${entries.length} cliente${entries.length!==1?'s':''}</span>
-            <button onclick="document.getElementById('rfmDetallePanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.1rem">✕</button>
+            <button onclick="document.getElementById('rfmDetallePanel').style.display='none'" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.1rem"><i class="fas fa-xmark"></i></button>
         </div>
         <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse">
@@ -893,8 +893,8 @@ function _mkCliRenderInfo() {
     shown = shown.filter(c => _mkCliNorm(c.name).includes(qn) || _mkCliNorm(c.email||'').includes(qn) || String(c.phone||c.telefono||'').includes(qn));
   }
   const chips: string[] = [];
-  if (q) chips.push(`<span class="mk-filter-chip">Buscar: ${_esc(q)}<button data-tip="Quitar" onclick="_mkCliClearSearch()">✕</button></span>`);
-  if (tag) chips.push(`<span class="mk-filter-chip">Filtro: ${_esc(_MK_CLI_TAG_LABEL[tag] || tag)}<button data-tip="Quitar" onclick="_mkCliClearTag()">✕</button></span>`);
+  if (q) chips.push(`<span class="mk-filter-chip">Buscar: ${_esc(q)}<button data-tip="Quitar" onclick="_mkCliClearSearch()"><i class="fas fa-xmark"></i></button></span>`);
+  if (tag) chips.push(`<span class="mk-filter-chip">Filtro: ${_esc(_MK_CLI_TAG_LABEL[tag] || tag)}<button data-tip="Quitar" onclick="_mkCliClearTag()"><i class="fas fa-xmark"></i></button></span>`);
   let html = `<span class="mk-result-count">Mostrando <b>${shown.length}</b> de ${total} cliente${total !== 1 ? 's' : ''}</span>`;
   if (chips.length)
     html += `<div class="mk-filter-chips">${chips.join('')}<button class="mk-filter-clear" onclick="_mkCliClearSearch();_mkCliClearTag();">Limpiar todo</button></div>`;
@@ -1032,10 +1032,9 @@ window._ejecutarFusion = _ejecutarFusion;
         btn.id = '_mkBtnFusionarClientes';
         btn.type = 'button';
         btn.title = 'Fusionar clientes duplicados';
-        btn.textContent = '🔀 Fusionar duplicados';
-        btn.style.cssText = 'padding:6px 14px;border-radius:10px;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#374151;transition:border-color .15s;margin-left:8px;';
-        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#FFD166'; btn.style.color = '#FFD166'; });
-        btn.addEventListener('mouseleave', () => { btn.style.borderColor = '#d1d5db'; btn.style.color = '#374151'; });
+        btn.innerHTML = '<i class="fas fa-code-branch"></i> Fusionar duplicados';
+        btn.className = 'mk-toolbar-btn';
+        btn.style.cssText = 'margin-left:8px;';
         btn.addEventListener('click', () => abrirFusionarClientes());
         addBtn.insertAdjacentElement('afterend', btn);
     };
