@@ -1,16 +1,36 @@
 ﻿// ============== CATEGORIES MODULE ==============
-        
+
+        // R3-S30: íconos 3D propios de Bicho Capricho para la grid de categorías.
+        // Solo cubre la vista visual (tarjetas de Categorías) — cat.emoji se sigue usando
+        // en dropdowns, tickets y demás contextos de solo texto en toda la app.
+        const CATEGORY_ICON_MAP = {
+            'tazas': 'tazas', 'llaveros': 'llaveros', 'peluches': 'peluches', 'otros': 'otros',
+            'ropaytextiles': 'ropa-y-textiles', 'cajasregalo': 'cajas-de-regalo',
+            'vasosytumblers': 'vasos-y-tumblers', 'velas': 'velas', 'setsypacks': 'sets-y-packs',
+            'cuadrosyarte': 'cuadros-y-arte', 'stickers': 'stickers', 'papeleria': 'papeleria',
+        };
+        function _catIconSlug(name) {
+            const norm = String(name || '').toLowerCase()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[^a-z0-9]/g, '');
+            return CATEGORY_ICON_MAP[norm] || null;
+        }
+
         function renderCategoriesGrid() {
             const grid = document.getElementById('categoriesGrid');
             grid.innerHTML = categories.map(category => {
                 const productCount = products.filter(p => p.category === category.id).length;
                 const escColor = _esc(category.color || '#FFD166');
                 const escCatId = _esc(category.id);
+                const iconSlug = _catIconSlug(category.name);
+                const iconHtml = iconSlug
+                    ? `<img src="img/categorias/${iconSlug}.webp" alt="" style="width:34px;height:34px;object-fit:contain;">`
+                    : _esc(category.emoji);
                 // Use data-catid attribute to avoid JS injection from special chars in category.id
                 return `
                     <div class="category-card bg-white p-6 rounded-2xl shadow-sm border-2 transition-all hover:shadow-md" style="border-color: ${escColor}20; border-top: 4px solid ${escColor}">
                         <div class="flex items-start justify-between mb-4">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style="background: ${escColor}20">${_esc(category.emoji)}</div>
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style="background: ${escColor}20">${iconHtml}</div>
                             <div class="flex gap-1">
                                 <button data-catid="${escCatId}" data-cataction="edit" class="cat-action-btn p-1.5 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-50 transition-colors" title="Editar categoría">
                                     <i class="fas fa-edit text-sm"></i>
