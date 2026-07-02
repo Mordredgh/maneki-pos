@@ -7,22 +7,20 @@ function setVistaPedidos(vista) {
     const btnK    = document.getElementById('btnVistaKanban');
     const btnT    = document.getElementById('btnVistaTabla');
     const btnC    = document.getElementById('btnVistaCalendario');
-    const activo  = '#FFD166';
-    const inactivo = '';
     // ocultar todo
     [kanban, tabla, cal].forEach(el => el && el.classList.add('hidden'));
-    [btnK, btnT, btnC].forEach(b => { if (b) { b.style.background = inactivo; b.style.color = '#6B7280'; } });
+    [btnK, btnT, btnC].forEach(b => b && b.classList.remove('active'));
     if (vista === 'kanban') {
         kanban && kanban.classList.remove('hidden');
-        if (btnK) { btnK.style.background = activo; btnK.style.color = 'white'; }
+        if (btnK) btnK.classList.add('active');
     } else if (vista === 'calendario') {
         cal && cal.classList.remove('hidden');
-        if (btnC) { btnC.style.background = activo; btnC.style.color = 'white'; }
+        if (btnC) btnC.classList.add('active');
         if (typeof renderCalendarioPedidos === 'function') renderCalendarioPedidos();
         return;
     } else {
         tabla && tabla.classList.remove('hidden');
-        if (btnT) { btnT.style.background = activo; btnT.style.color = 'white'; }
+        if (btnT) btnT.classList.add('active');
     }
     renderPedidosTable();
 }
@@ -31,10 +29,8 @@ function setVistaPedidos(vista) {
 function filterPedidos(status, btn) {
     _pedidoFiltroActivo = status;
     _pedidosTablePage = 1;
-    document.querySelectorAll('.pedido-filter').forEach(b => {
-        b.style.borderColor = '#E5E7EB'; b.style.background = 'white'; b.style.color = '#4B5563';
-    });
-    if (btn) { btn.style.borderColor = '#FFD166'; btn.style.background = '#FFF9F0'; btn.style.color = '#FFD166'; }
+    document.querySelectorAll('.mk-filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
     renderTablaPedidos();
 }
 
@@ -562,20 +558,20 @@ function kanbanCardHTML(p) {
         </div>
         ${diff !== null ? `<div class="kanban-urgency-bar ${diff < 0 ? 'urgency-overdue' : diff === 0 ? 'urgency-urgent' : diff <= 2 ? 'urgency-soon' : 'urgency-ok'}" style="width:${diff < 0 ? 100 : Math.max(8, Math.min(100, 100 - (diff / 14 * 100)))}%;margin-bottom:4px;"></div>` : ''}
         <div class="flex flex-col gap-1">
-            <button onclick="openPedidoStatusModal('${p.id}')" class="w-full text-xs py-1 rounded-lg border border-gray-200 hover:bg-gray-50 font-semibold text-gray-600">⚡ Estado</button>
+            <button onclick="openPedidoStatusModal('${p.id}')" class="mk-mini-btn" style="width:100%;"><i class="fas fa-bolt"></i> Estado</button>
             <div class="flex gap-1 items-center" style="position:relative;">
-            <button onclick="openPedidoModal('${p.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-amber-50 text-xs text-amber-600">✏️</button>
-            <button onclick="openAbonoPedido('${p.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs text-green-600">$</button>
-            <button onclick="abrirWhatsAppPedido('${p.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-green-50 text-xs" style="color:#25D366"><i class="fab fa-whatsapp"></i></button>
-            <button onclick="eliminarPedido('${p.id}')" class="flex-1 py-1 rounded-lg border border-gray-200 hover:bg-red-50 text-xs text-red-500">🗑</button>
+            <button onclick="openPedidoModal('${p.id}')" class="mk-mini-btn" style="flex:1;" title="Editar"><i class="fas fa-pen"></i></button>
+            <button onclick="openAbonoPedido('${p.id}')" class="mk-mini-btn success" style="flex:1;" title="Registrar abono"><i class="fas fa-dollar-sign"></i></button>
+            <button onclick="abrirWhatsAppPedido('${p.id}')" class="mk-mini-btn success" style="flex:1;" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
+            <button onclick="eliminarPedido('${p.id}')" class="mk-mini-btn danger" style="flex:1;" title="Eliminar"><i class="fas fa-trash"></i></button>
             <div style="position:relative;">
-                <button onclick="(function(btn){var m=btn.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);})(this)" class="px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-100 text-xs text-gray-500 font-bold" title="Más acciones">⋯</button>
-                <div style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 -4px 24px rgba(0,0,0,0.13);min-width:140px;padding:4px;">
-                    <button onclick="abrirFotoReferencia('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 rounded-lg text-gray-700">📷 Fotos ref.${(p.referenciasUrls||[]).length ? ' ('+((p.referenciasUrls||[]).length)+')' : p.referenciaUrl ? ' (1)' : ''}</button>
-                    <button onclick="duplicarPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">⧉ Duplicar</button>
-                    <button onclick="generarTicketPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 rounded-lg text-gray-700">🖨️ Imprimir ticket</button>
-                    <button onclick="exportarPedidoPDF('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700">📄 Descargar PDF</button>
-                    <button onclick="imprimirEtiquetaPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700">🏷️ Etiqueta</button>
+                <button onclick="(function(btn){var m=btn.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);})(this)" class="mk-mini-btn" title="Más acciones"><i class="fas fa-ellipsis"></i></button>
+                <div style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 -4px 24px rgba(0,0,0,0.13);min-width:150px;padding:4px;">
+                    <button onclick="abrirFotoReferencia('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 rounded-lg text-gray-700"><i class="fas fa-image mr-1.5" style="width:12px;"></i> Fotos ref.${(p.referenciasUrls||[]).length ? ' ('+((p.referenciasUrls||[]).length)+')' : p.referenciaUrl ? ' (1)' : ''}</button>
+                    <button onclick="duplicarPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700"><i class="fas fa-clone mr-1.5" style="width:12px;"></i> Duplicar</button>
+                    <button onclick="generarTicketPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 rounded-lg text-gray-700"><i class="fas fa-print mr-1.5" style="width:12px;"></i> Imprimir ticket</button>
+                    <button onclick="exportarPedidoPDF('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700"><i class="fas fa-file-pdf mr-1.5" style="width:12px;"></i> Descargar PDF</button>
+                    <button onclick="imprimirEtiquetaPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700"><i class="fas fa-tag mr-1.5" style="width:12px;"></i> Etiqueta</button>
                 </div>
             </div>
             </div>
@@ -722,9 +718,14 @@ function renderTablaPedidos() {
     if (_pedidosTablePage > totalPages) _pedidosTablePage = totalPages;
     const start = (_pedidosTablePage - 1) * _PEDIDOS_PER_PAGE;
     const page = lista.slice(start, start + _PEDIDOS_PER_PAGE);
+    // R3-S31: mismos colores que columnas del kanban y pills de filtro — icono en vez de emoji
     const statusLabel = {
-        confirmado:'✅ Confirmado', pago:'💰 Pago', produccion:'🔧 Producción',
-        envio:'📦 Envío', salida:'🚚 Salió', retirar:'🏪 Retirar'
+        confirmado: '<span class="mk-status-pill" style="--pill-c:#374151;--pill-bg:#F3F4F6;"><i class="fas fa-check"></i> Confirmado</span>',
+        pago:       '<span class="mk-status-pill" style="--pill-c:#065f46;--pill-bg:#D1FAE5;"><i class="fas fa-dollar-sign"></i> Pago</span>',
+        produccion: '<span class="mk-status-pill" style="--pill-c:#1e40af;--pill-bg:#DBEAFE;"><i class="fas fa-wrench"></i> Producción</span>',
+        envio:      '<span class="mk-status-pill" style="--pill-c:#7d4fa3;--pill-bg:#ecd9ff;"><i class="fas fa-box"></i> Envío</span>',
+        salida:     '<span class="mk-status-pill" style="--pill-c:#9a3412;--pill-bg:#FFEDD5;"><i class="fas fa-truck"></i> Salió</span>',
+        retirar:    '<span class="mk-status-pill" style="--pill-c:#134e4a;--pill-bg:#CCFBF1;"><i class="fas fa-store"></i> Retirar</span>',
     };
     const _et = _esc;
     // N-EMPTY-002: empty states con y sin filtros activos
@@ -782,10 +783,10 @@ function renderTablaPedidos() {
             <td class="px-4 py-3 text-xs">${statusLabel[(p.status||'').toLowerCase()]||p.status||'—'}</td>
             <td class="px-4 py-3">
                 <div style="display:flex;gap:4px;align-items:center;">
-                    <button onclick="openPedidoStatusModal('${p.id}')" title="Cambiar estado" style="padding:4px 8px;border-radius:8px;background:#f3f4f6;border:1px solid #e5e7eb;font-size:.75rem;font-weight:600;color:#374151;cursor:pointer;white-space:nowrap;">⚡ Estado</button>
-                    <button onclick="openAbonoPedido('${p.id}')" title="Registrar abono" style="padding:4px 8px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;font-size:.75rem;font-weight:700;color:#15803d;cursor:pointer;">$</button>
+                    <button onclick="openPedidoStatusModal('${p.id}')" title="Cambiar estado" class="mk-mini-btn"><i class="fas fa-bolt"></i> Estado</button>
+                    <button onclick="openAbonoPedido('${p.id}')" title="Registrar abono" class="mk-mini-btn success"><i class="fas fa-dollar-sign"></i></button>
                     <div style="position:relative;display:inline-block;" class="_mk-tbl-menu-wrap">
-                        <button onclick="_mkTblMenu(this,'${p.id}')" title="Más acciones" style="padding:4px 7px;border-radius:8px;background:#fff;border:1px solid #e5e7eb;font-size:.8rem;color:#6b7280;cursor:pointer;font-weight:700;">···</button>
+                        <button onclick="_mkTblMenu(this,'${p.id}')" title="Más acciones" class="mk-mini-btn"><i class="fas fa-ellipsis"></i></button>
                     </div>
                 </div>
             </td>

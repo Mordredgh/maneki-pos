@@ -475,9 +475,9 @@ function renderInventoryTable() {
             ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'🏭'}</span>`;
         let badge;
-        if      (stockEf === 0)                    badge = '<span class="badge-danger">🔴 Agotado</span>';
-        else if (stockEf <= (product.stockMin||5)) badge = '<span class="badge-warning">⚠️ Bajo Stock</span>';
-        else                                        badge = '<span class="badge-success">✅ Disponible</span>';
+        if      (stockEf === 0)                    badge = '<span class="badge-danger"><i class="fas fa-circle-xmark"></i> Agotado</span>';
+        else if (stockEf <= (product.stockMin||5)) badge = '<span class="badge-warning"><i class="fas fa-triangle-exclamation"></i> Bajo Stock</span>';
+        else                                        badge = '<span class="badge-success"><i class="fas fa-circle-check"></i> Disponible</span>';
         const cat = (window.categories||[]).find(c => c.id === product.category);
         const catName = cat ? cat.name : (product.category||'');
         return `
@@ -512,10 +512,10 @@ function renderInventoryTable() {
             <td class="px-4 py-3">${badge}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;align-items:center;">
-                    <button type="button" onclick="editProduct('${pid}')" title="Editar" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">✏️</button>
+                    <button type="button" onclick="editProduct('${pid}')" title="Editar" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;"><i class="fas fa-pen"></i></button>
                     <button type="button" onclick="ajustarStock('${pid}')" title="Ajustar stock" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">📦</button>
                     <div style="position:relative;display:inline-block;">
-                        <button type="button" onclick="_invMpMenu(this,'${pid}',${!!product.proveedorUrl},'${product.activo===false?'desarchivar':'archivar'}')" title="Más acciones" style="width:30px;height:30px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;font-weight:700;color:#6b7280;">···</button>
+                        <button type="button" onclick="_invMpMenu(this,'${pid}',${!!product.proveedorUrl},'${product.activo===false?'desarchivar':'archivar'}')" title="Más acciones" style="width:30px;height:30px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;font-weight:700;color:#6b7280;"><i class="fas fa-ellipsis"></i></button>
                     </div>
                 </div>
             </td>
@@ -547,9 +547,9 @@ function renderInventoryTable() {
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;">
                     <button onclick="openServicioModal('${pid}')" title="Editar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>
                     <button onclick="deleteProduct('${pid}')" title="Eliminar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -595,10 +595,10 @@ function renderInventoryTable() {
             const _bgClr = _stEf === 0 ? '#fee2e2' : _stEf <= _stMin ? '#fef3c7' : '#d1fae5';
             stockCell = `<span style="padding:3px 12px;border-radius:8px;background:${_bgClr};color:${_clr};font-weight:700;font-size:.95rem;">${_stEf}</span>`;
             badgeCell = _stEf === 0
-                ? '<span style="background:#fee2e2;color:#ef4444;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">🔴 Agotado</span>'
+                ? '<span style="background:#fee2e2;color:#ef4444;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;"><i class="fas fa-circle-xmark"></i> Agotado</span>'
                 : _stEf <= _stMin
-                ? '<span style="background:#fef3c7;color:#f59e0b;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">⚠️ Bajo Stock</span>'
-                : '<span style="background:#d1fae5;color:#10b981;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;">✅ Disponible</span>';
+                ? '<span style="background:#fef3c7;color:#f59e0b;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;"><i class="fas fa-triangle-exclamation"></i> Bajo Stock</span>'
+                : '<span style="background:#d1fae5;color:#10b981;padding:2px 10px;border-radius:8px;font-size:.75rem;font-weight:700;"><i class="fas fa-circle-check"></i> Disponible</span>';
         }
 
         // I7: desglose de variantes con toggle expandir/colapsar
@@ -666,22 +666,22 @@ function renderInventoryTable() {
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     ${product.tipo === 'pack'
                         ? `<button type="button" onclick="openPackModal('${pid}')" title="Editar Pack" aria-label="Editar pack"
-                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>`
+                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>`
                         : `<button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar producto"
-                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>`
+                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>`
                     }
                     <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>
                     ${product.tipo !== 'pack' ? `<button type="button" onclick="cambiarTipoProducto('${pid}')" title="Convertir a Materia Prima" aria-label="Convertir tipo de producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ''}
                     ${product.movimientos && product.movimientos.length ? `<button type="button" onclick="verMovimientosProducto('${pid}')" title="Ver movimientos de stock (${product.movimientos.length})" aria-label="Ver movimientos de stock"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>` : ''}
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>` : ''}
                     <button type="button" onclick="abrirMovimientoProducto('${pid}')" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📈</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-chart-line"></i></button>
                     <button type="button" onclick="archivarProducto('${pid}')" title="${product.activo===false?'Desarchivar producto (activar)':'Archivar producto (ocultar)'}" aria-label="Archivar/Desarchivar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(107,114,128,0.25);background:rgba(107,114,128,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">${product.activo===false?'🔓':'📁'}</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(107,114,128,0.25);background:rgba(107,114,128,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">${product.activo===false?'<i class="fas fa-lock-open"></i>':'<i class="fas fa-box-archive"></i>'}</button>
                     <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -774,11 +774,11 @@ function renderInventoryTable() {
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     <button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar servicio"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>
                     <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar servicio"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>
                     <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar servicio"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;

@@ -1920,6 +1920,62 @@ body.dark .mk-dash-meta-card {
 .mk-toolbar-btn:hover .mk-tb-ico { opacity: 1; }
 body.dark .mk-toolbar-btn { background: rgba(255,255,255,0.05) !important; color: #cbd5e1 !important; border-color: rgba(255,255,255,0.1) !important; }
 
+/* ── R3-S31: grupo de pestañas de vista (Kanban/Tabla/Calendario) ── */
+.mk-view-tabs {
+  display: inline-flex; gap: 3px; padding: 3px;
+  background: rgba(28,79,50,0.04); border-radius: 14px;
+}
+.mk-view-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 11px; border: none; cursor: pointer;
+  font-weight: 700; font-size: 0.8rem; color: var(--tx-muted);
+  background: transparent; transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+.mk-view-tab:hover { color: var(--tx-secondary); }
+.mk-view-tab.active {
+  background: var(--sf-white) !important; color: var(--mk-g700) !important;
+  box-shadow: var(--sh-xs) !important;
+}
+.mk-view-tab i { font-size: 0.78rem; opacity: 0.85; }
+
+/* ── R3-S31: pills de filtro por estado — reemplaza rounded-full border-2 genérico ── */
+.mk-filter-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 99px; cursor: pointer;
+  font-weight: 700; font-size: 0.78rem; white-space: nowrap;
+  border: 1.5px solid var(--bd-soft); background: var(--sf-white); color: var(--tx-secondary);
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+.mk-filter-pill:hover { border-color: var(--mk-g400); color: var(--mk-g700); }
+.mk-filter-pill.active {
+  border-color: var(--pill-c, var(--mk-g500)); color: var(--pill-c, var(--mk-g700));
+  background: var(--pill-bg, rgba(255,209,102,0.12)); box-shadow: var(--sh-xs);
+}
+.mk-filter-pill i { font-size: 0.72rem; }
+
+/* ── R3-S31: badge de estado con color — reemplaza emoji+texto en tablas/kanban ── */
+.mk-status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: 0.68rem; font-weight: 800; white-space: nowrap;
+  background: var(--pill-bg, #F3F4F6); color: var(--pill-c, #6B7280);
+}
+.mk-status-pill i { font-size: 0.6rem; }
+
+/* ── R3-S31: mini-botón de acción para filas de tabla / tarjetas kanban ── */
+.mk-mini-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 4px 9px; border-radius: 8px; cursor: pointer;
+  font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+  border: 1px solid var(--bd-soft); background: var(--sf-white); color: var(--tx-secondary);
+  transition: border-color 0.14s ease, color 0.14s ease, transform 0.14s var(--snap);
+}
+.mk-mini-btn:hover { border-color: var(--mk-g400); color: var(--mk-g700); transform: translateY(-1px); }
+.mk-mini-btn.success { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25); color: #0d7a55; }
+.mk-mini-btn.success:hover { border-color: #10B981; color: #0d7a55; }
+.mk-mini-btn.danger { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.2); color: #b91c1c; }
+.mk-mini-btn.danger:hover { border-color: #EF4444; color: #b91c1c; }
+
 /* Chip de datos neutro (SKU/categoría como sub-etiqueta) */
 .mk-chip {
   display: inline-flex; align-items: center; gap: 4px;

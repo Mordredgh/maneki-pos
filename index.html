@@ -847,7 +847,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
 
-                <div id="movimientosPanel" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div id="movimientosPanel" class="hidden mk-card p-6 mb-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-gray-800 text-lg"><i class="fas fa-clipboard-list" style="margin-right:6px;color:#8a6510;"></i>Historial de Movimientos</h3>
                         <div class="flex gap-2 flex-wrap">
@@ -862,7 +862,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <option value="entrada">Entradas</option>
                                 <option value="salida">Salidas</option>
                             </select>
-                            <button type="button" data-action="limpiarMovimientosInventario" class="px-3 py-2 rounded-xl text-sm text-red-500 border border-red-200 hover:bg-red-50"><i class="fas fa-trash" style="margin-right:4px;"></i>Limpiar</button>
+                            <button type="button" data-action="limpiarMovimientosInventario" class="mk-toolbar-btn danger"><i class="fas fa-trash mk-tb-ico"></i>Limpiar</button>
                         </div>
                     </div>
                     <div id="movimientosLista" class="space-y-2 max-h-96 overflow-y-auto"></div>
@@ -875,9 +875,8 @@ input:focus, select:focus, textarea:focus, button:focus {
       data-oninput="_mkDebounceInv"
       class="pl-9 pr-4 py-2 w-full border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
   </div>
-  <button type="button" data-action="_abrirQRScanner" title="Escanear código de barras / QR"
-      class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-amber-50 hover:border-amber-300 transition-colors shrink-0">
-      <i class="fas fa-barcode"></i><span class="hidden sm:inline">Escanear</span>
+  <button type="button" data-action="_abrirQRScanner" title="Escanear código de barras / QR" class="mk-toolbar-btn shrink-0">
+      <i class="fas fa-barcode mk-tb-ico"></i><span class="hidden sm:inline">Escanear</span>
   </button>
   <select id="inventoryTipoFilter" data-change="renderInventoryTable"
   class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
@@ -1569,19 +1568,15 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <!-- Fila 2: acciones / vista -->
         <div class="flex flex-wrap items-center gap-2 mb-6">
-            <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
-                <button type="button" id="btnVistaKanban" data-action="setVistaPedidos" data-arg="kanban"
-                    class="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-                    style="background:#FFD166; color:white;">
-                    <i class="fas fa-columns mr-1"></i> Kanban
+            <div class="mk-view-tabs">
+                <button type="button" id="btnVistaKanban" data-action="setVistaPedidos" data-arg="kanban" class="mk-view-tab active">
+                    <i class="fas fa-columns"></i> Kanban
                 </button>
-                <button type="button" id="btnVistaTabla" data-action="setVistaPedidos" data-arg="tabla"
-                    class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
-                    <i class="fas fa-table mr-1"></i> Tabla
+                <button type="button" id="btnVistaTabla" data-action="setVistaPedidos" data-arg="tabla" class="mk-view-tab">
+                    <i class="fas fa-table"></i> Tabla
                 </button>
-                <button type="button" id="btnVistaCalendario" data-action="setVistaPedidos" data-arg="calendario"
-                    class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-500">
-                    <i class="fas fa-calendar-alt mr-1"></i> Calendario
+                <button type="button" id="btnVistaCalendario" data-action="setVistaPedidos" data-arg="calendario" class="mk-view-tab">
+                    <i class="fas fa-calendar-alt"></i> Calendario
                 </button>
             </div>
             <button type="button" data-action="toggleListaProduccion" id="btnListaProduccion" class="mk-toolbar-btn">
@@ -1734,13 +1729,13 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div id="vistaTabla" class="hidden">
             <div class="flex flex-wrap gap-2 mb-4">
-                <button type="button" data-action="filterPedidos" data-arg="todos" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 cursor-pointer" style="border-color:#FFD166;background:#FFF9F0;color:#FFD166;">Todos</button>
-                <button type="button" data-action="filterPedidos" data-arg="confirmado" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">✅ Confirmado</button>
-                <button type="button" data-action="filterPedidos" data-arg="pago" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">💰 Pago</button>
-                <button type="button" data-action="filterPedidos" data-arg="produccion" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🔧 Producción</button>
-                <button type="button" data-action="filterPedidos" data-arg="envio" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">📦 Envío</button>
-                <button type="button" data-action="filterPedidos" data-arg="salida" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🚚 Salió</button>
-                <button type="button" data-action="filterPedidos" data-arg="retirar" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🏪 Retirar</button>
+                <button type="button" data-action="filterPedidos" data-arg="todos" data-pass-el="after" class="mk-filter-pill active" style="--pill-c:#8a6510;--pill-bg:rgba(255,209,102,0.15);"><i class="fas fa-layer-group"></i> Todos</button>
+                <button type="button" data-action="filterPedidos" data-arg="confirmado" data-pass-el="after" class="mk-filter-pill" style="--pill-c:#374151;--pill-bg:#F3F4F6;"><i class="fas fa-check"></i> Confirmado</button>
+                <button type="button" data-action="filterPedidos" data-arg="pago" data-pass-el="after" class="mk-filter-pill" style="--pill-c:#065f46;--pill-bg:#D1FAE5;"><i class="fas fa-dollar-sign"></i> Pago</button>
+                <button type="button" data-action="filterPedidos" data-arg="produccion" data-pass-el="after" class="mk-filter-pill" style="--pill-c:#1e40af;--pill-bg:#DBEAFE;"><i class="fas fa-wrench"></i> Producción</button>
+                <button type="button" data-action="filterPedidos" data-arg="envio" data-pass-el="after" class="mk-filter-pill" style="--pill-c:#7d4fa3;--pill-bg:#ecd9ff;"><i class="fas fa-box"></i> Envío</button>
+                <button type="button" data-action="filterPedidos" data-arg="salida" data-pass-el="after" class="mk-filter-pill" style="--pill-c:#9a3412;--pill-bg:#FFEDD5;"><i class="fas fa-truck"></i> Salió</button>
+                <button type="button" data-action="filterPedidos" data-arg="retirar" data-pass-el="after" class="mk-filter-pill" style="--pill-c:#134e4a;--pill-bg:#CCFBF1;"><i class="fas fa-store"></i> Retirar</button>
                 <input type="date" id="pedidoFechaDesde" data-change="renderPedidosTable"
                     class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none"
                     title="Fecha de entrega desde">
