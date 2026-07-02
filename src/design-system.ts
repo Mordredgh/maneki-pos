@@ -783,7 +783,7 @@ function _onReady() {
 if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', _onReady);
 else _onReady();
 
-console.log('%c🐱 Maneki Premium v4.1 ·', 'color:#FFDD85;font-weight:800;font-size:12px;',
+console.log('%c🐛 Bicho Capricho Premium v4.1 ·', 'color:#FFDD85;font-weight:800;font-size:12px;',
             'Glassmorphism · Sound · Particles · Workers · Morph · InvPatch ✓');
 
 })();

@@ -1681,7 +1681,7 @@ window.manekiUndoToast = manekiUndoToast;
     overlay.innerHTML = `
         <img src="logo.png" alt="" style="height:64px;object-fit:contain;opacity:.85" onerror="this.style.display='none'">
         <div class="mk-loading-spinner"></div>
-        <p style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:#9ca3af;font-weight:500" id="mk-loading-text">Cargando Maneki Store...</p>`;
+        <p style="font-family:'Fredoka One',serif;font-size:1.1rem;color:#9ca3af;font-weight:500" id="mk-loading-text">Cargando Bicho Capricho...</p>`;
     if (document.body) document.body.appendChild(overlay);
     else document.addEventListener('DOMContentLoaded', () => document.body.appendChild(overlay));
 

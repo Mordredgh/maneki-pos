@@ -175,8 +175,8 @@ function switchHistoryTab(tab) {
 
 // ============== STORE CONFIG ==============
 let storeConfig: ManekiStoreConfig = {
-    emoji:    '🐱',
-    name:     'Maneki Store',
+    emoji:    '🐛',
+    name:     'Bicho Capricho',
     slogan:   'Regalos Personalizados',
     phone:    '',
     facebook: '',
@@ -194,7 +194,7 @@ function saveStoreConfig() {
     storeConfig = {
         ...storeConfig,   // preserva claves existentes (telegramBotToken, baseLat, baseLng, googleReviewLink, etc.)
         emoji:    document.getElementById('configEmoji').value,
-        name:     document.getElementById('configName').value || 'Maneki Store',
+        name:     document.getElementById('configName').value || 'Bicho Capricho',
         slogan:   document.getElementById('configSlogan').value,
         phone:    document.getElementById('configPhone').value,
         facebook: document.getElementById('configFacebook').value,
@@ -248,7 +248,7 @@ function updateSidebarLogo() {
     } else {
         const span = document.createElement('span');
         span.style.fontSize = '30px';
-        span.textContent = storeConfig.emoji || '🐱';
+        span.textContent = storeConfig.emoji || '🐛';
         c.innerHTML = '';
         c.appendChild(span);
     }
@@ -272,7 +272,7 @@ function renderBienvenida() {
         } else {
             const span = document.createElement('span');
             span.style.fontSize = '28px';
-            span.textContent = storeConfig.emoji || '🐱';
+            span.textContent = storeConfig.emoji || '🐛';
             lc.appendChild(span);
         }
     }
@@ -280,7 +280,7 @@ function renderBienvenida() {
     const elSet = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
     elSet('welcomeGreeting',  saludo);
     elSet('welcomeDate',      now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }));
-    elSet('welcomeStoreName', storeConfig.name || 'Maneki Store');
+    elSet('welcomeStoreName', storeConfig.name || 'Bicho Capricho');
     elSet('welcomeTime',      now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }));
 
     if (!window._bienvenidaClock) {
@@ -344,11 +344,11 @@ function updateStorePreview() {
     if (storeConfig.logoMode === 'image' && typeof storeLogo !== 'undefined' && storeLogo) {
         pe.innerHTML = `<img src="${typeof _validateImgUrl==='function'?_validateImgUrl(storeLogo):storeLogo}" alt="Logo de la tienda" style="width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;margin:0 auto;">`;
     } else {
-        pe.textContent = (document.getElementById('configEmoji')||{}).value || '🐱';
+        pe.textContent = (document.getElementById('configEmoji')||{}).value || '🐛';
     }
     const pn = document.getElementById('previewName');
     const ps = document.getElementById('previewSlogan');
-    if (pn) pn.textContent = (document.getElementById('configName')||{}).value || 'Maneki Store';
+    if (pn) pn.textContent = (document.getElementById('configName')||{}).value || 'Bicho Capricho';
     if (ps) ps.textContent = (document.getElementById('configSlogan')||{}).value || '';
     const phone = (document.getElementById('configPhone')||{}).value || '';
     const fb    = (document.getElementById('configFacebook')||{}).value || '';
@@ -794,7 +794,7 @@ async function initApp() {
                     if (typeof _setupRealtime === 'function') _setupRealtime();
                     // Migrar datos locales a tablas relacionales si están vacías
                     if (typeof _migrateToRelationalIfEmpty === 'function') _migrateToRelationalIfEmpty();
-                    if ((window as any).MK_DEBUG) console.log('Maneki - Supabase OK + Realtime activo');
+                    if ((window as any).MK_DEBUG) console.log('Bicho Capricho - Supabase OK + Realtime activo');
                 });
             });
         });

@@ -21,7 +21,7 @@ const _WA_PROMOS = [
     '🎨 ¿Sabías que personalizamos casi cualquier cosa? ¡Escríbenos sin compromiso!',
     '🛍️ Mira todo nuestro catálogo en: www.manekistore.com.mx',
 ];
-const _WA_FB = 'facebook.com/ManekiPrints';
+const _WA_FB = 'facebook.com/BichoCaprichoPrints';
 
 function _waFooter() {
     const key = 'maneki_wa_promo_idx';
@@ -73,7 +73,7 @@ function _waMensajes(p) {
         confirmacion:
 `¡Hola ${nombre}! 👋
 
-Te escribimos de *Maneki Store* 🐱 para confirmarte tu pedido:
+Te escribimos de *Bicho Capricho* 🐛 para confirmarte tu pedido:
 
 📋 Folio: *${folio}*
 📦 Concepto: ${concepto}${listaProductos}
@@ -88,7 +88,7 @@ ${footer}`,
         recordatorio:
 `¡Hola ${nombre}! 🔔
 
-Solo un recordatorio de *Maneki Store* 🐱:
+Solo un recordatorio de *Bicho Capricho* 🐛:
 
 Tu pedido *${folio}* tiene fecha de entrega el *${entrega}*.
 ${resta > 0 ? `\n💳 Recuerda que tienes un saldo pendiente de *$${resta.toFixed(2)}*.\n` : ''}
@@ -98,7 +98,7 @@ ${footer}`,
         entrega:
 `¡Hola ${nombre}! 📦
 
-¡Buenas noticias! Tu pedido de *Maneki Store* 🐱 ya está *listo para entregarse*:
+¡Buenas noticias! Tu pedido de *Bicho Capricho* 🐛 ya está *listo para entregarse*:
 
 📋 Folio: *${folio}*
 📦 ${concepto}
@@ -109,7 +109,7 @@ ${footer}`,
         cobro:
 `¡Hola ${nombre}! 💳
 
-Te escribimos de *Maneki Store* 🐱 sobre tu pedido *${folio}*:
+Te escribimos de *Bicho Capricho* 🐛 sobre tu pedido *${folio}*:
 
 💰 Total del pedido: *$${total.toFixed(2)}*
 ✅ Ya abonado: *$${anticipo.toFixed(2)}*
@@ -122,7 +122,7 @@ ${footer}`,
         produccion:
 `¡Hola ${nombre}! 🔨
 
-Queremos avisarte que tu pedido de *Maneki Store* 🐱 ya entró en *producción*:
+Queremos avisarte que tu pedido de *Bicho Capricho* 🐛 ya entró en *producción*:
 
 📋 Folio: *${folio}*
 📦 ${concepto}
@@ -135,7 +135,7 @@ ${footer}`,
         pagoRecibido:
 `¡Hola ${nombre}! ✅
 
-Confirmamos que recibimos tu pago en *Maneki Store* 🐱:
+Confirmamos que recibimos tu pago en *Bicho Capricho* 🐛:
 
 📋 Folio: *${folio}*
 💵 Abono registrado: *$${montoUltimoPago.toFixed(2)}*
@@ -147,7 +147,7 @@ ${footer}`,
         seguimiento:
 `¡Hola ${nombre}! 📊
 
-Aquí te compartimos una actualización de tu pedido en *Maneki Store* 🐱:
+Aquí te compartimos una actualización de tu pedido en *Bicho Capricho* 🐛:
 
 📋 Folio: *${folio}*
 📦 Concepto: ${concepto}
@@ -161,12 +161,12 @@ ${footer}`,
         gracias:
 `¡Hola ${nombre}! 🙏
 
-Muchas gracias por confiar en *Maneki Store* 🐱 para tu pedido *${folio}*.
+Muchas gracias por confiar en *Bicho Capricho* 🐛 para tu pedido *${folio}*.
 
 Esperamos que lo hayas disfrutado mucho. 💛
 Si tienes cualquier comentario o necesitas algo más, aquí estamos siempre.
 
-¡Fue un placer atenderte! 🐱✨
+¡Fue un placer atenderte! 🐛✨
 ${footer}`,
     };
 }

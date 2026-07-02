@@ -12,7 +12,7 @@
                     ? (window as any).manekiToastExport
                     : null;
                 if (toastFn) {
-                    toastFn('🐱 App actualizada — recarga para aplicar cambios', 'ok');
+                    toastFn('🐛 App actualizada — recarga para aplicar cambios', 'ok');
                 }
                 // G43: Banner persistente de actualización (además del toast efímero)
                 let banner = document.getElementById('swUpdateBanner') as HTMLElement | null;
@@ -38,7 +38,7 @@
             setTimeout(() => {
                 const toastFn = typeof (window as any).manekiToastExport === 'function'
                     ? (window as any).manekiToastExport : null;
-                if (toastFn) toastFn('📲 Instala Maneki como app para acceso rápido — <a onclick="(window._installPrompt&&window._installPrompt.prompt());localStorage.setItem(\'mk_install_dismissed\',\'1\')" style="cursor:pointer;text-decoration:underline;font-weight:600;">Instalar</a> · <a onclick="localStorage.setItem(\'mk_install_dismissed\',\'1\')" style="cursor:pointer;opacity:.7;">Ahora no</a>', 'ok');
+                if (toastFn) toastFn('📲 Instala Bicho Capricho como app para acceso rápido — <a onclick="(window._installPrompt&&window._installPrompt.prompt());localStorage.setItem(\'mk_install_dismissed\',\'1\')" style="cursor:pointer;text-decoration:underline;font-weight:600;">Instalar</a> · <a onclick="localStorage.setItem(\'mk_install_dismissed\',\'1\')" style="cursor:pointer;opacity:.7;">Ahora no</a>', 'ok');
             }, 4000);
         }
     });
@@ -92,7 +92,7 @@
         supaEl.style.border = '1px solid rgba(255,209,102,0.12)';
     }
 
-    console.log('%c🐱 Maneki Store Premium v4.1', 'color:#FFDD85;font-size:14px;font-weight:800;');
+    console.log('%c🐛 Bicho Capricho Premium v4.1', 'color:#FFDD85;font-size:14px;font-weight:800;');
     console.log('%cDesign System cargado correctamente.', 'color:#ab84d1;font-size:11px;');
 
     // ══════════════════════════════════════════════════════════════
@@ -175,7 +175,7 @@
         }
         const name = _sectionNames[section] || section;
         const _safeName = typeof _esc === 'function' ? _esc(name) : name.replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-        bc.innerHTML = `<span style="opacity:.5">🐱</span><span class="bc-sep">›</span><span class="bc-current">${_safeName}</span>`;
+        bc.innerHTML = `<span style="opacity:.5">🐛</span><span class="bc-sep">›</span><span class="bc-current">${_safeName}</span>`;
     };
 
     // ══════════════════════════════════════════════════════════════
@@ -545,7 +545,7 @@
                 { target: '[data-section="inventory"]', title: '📦 Inventario', text: 'Controla tus productos, materias primas y stock en tiempo real.' },
                 { target: '[data-section="balance"]', title: '💰 Balance', text: 'Registra ingresos, gastos y ve cuánto te deben tus clientes.' },
                 { target: '[data-section="clientes"]', title: '👥 Clientes', text: 'Tu base de datos de clientes con historial de pedidos y estadísticas.' },
-                { target: '#mk-help-fab', title: '⌨️ Atajos', text: 'Presiona ? en cualquier momento para ver los atajos de teclado. ¡Bienvenido a Maneki!' }
+                { target: '#mk-help-fab', title: '⌨️ Atajos', text: 'Presiona ? en cualquier momento para ver los atajos de teclado. ¡Bienvenido a Bicho Capricho!' }
             ];
             let current = 0;
             const ov = document.createElement('div');
@@ -596,9 +596,9 @@
             modal.innerHTML = `
                 <div style="background:#fff;border-radius:20px;max-width:420px;width:calc(100% - 32px);padding:28px;box-shadow:0 25px 60px rgba(0,0,0,0.25);max-height:80vh;overflow-y:auto;">
                     <div style="text-align:center;margin-bottom:16px;">
-                        <span style="font-size:2.5rem;">🐱</span>
+                        <span style="font-size:2.5rem;">🐛</span>
                         <h2 style="font-size:1.2rem;font-weight:800;color:#1F2937;margin:8px 0 4px;">¿Qué hay de nuevo?</h2>
-                        <p style="font-size:.78rem;color:#9CA3AF;">Maneki POS v${MK_VERSION}</p>
+                        <p style="font-size:.78rem;color:#9CA3AF;">Bicho Capricho POS v${MK_VERSION}</p>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
                         ${changes.map(c => `

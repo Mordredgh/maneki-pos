@@ -415,7 +415,7 @@ function mostrarListaCompras(esRerender?) {
         if (!faltantes.length) return;
         const fecha = _fechaHoy();
         const totalEst = faltantes.reduce((s, r) => s + r.costoTotal, 0);
-        let msg = `📦 Lista de compras Maneki Store\nFecha: ${fecha}\n\n`;
+        let msg = `📦 Lista de compras Bicho Capricho\nFecha: ${fecha}\n\n`;
         faltantes.forEach(r => {
             const nombre = r.nombre + (r.variante ? ` (${r.variante})` : '');
             if (r.costoUnit > 0) {
@@ -582,7 +582,7 @@ async function _notificarStockTelegram({ agotados, bajos, mpAgotadas, mpBajas })
     }
     if (mpAgotadas.length) lineas.push(`🏭 *MP AGOTADAS — producción bloqueada:* ${mpAgotadas.map(p=>p.name).join(', ')}`);
 
-    const msg = `📦 *Alerta de inventario — Maneki Store*\n\n${lineas.join('\n')}`;
+    const msg = `📦 *Alerta de inventario — Bicho Capricho*\n\n${lineas.join('\n')}`;
     for (const chatId of chatIds) {
         try {
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -602,7 +602,7 @@ function _alertaStockWA(agotadas, bajas) {
     const partes = [];
     if (agotadas.length) partes.push(`🔴 Agotadas: ${agotadas.map(p=>p.name).join(', ')}`);
     if (bajas.length)    partes.push(`⚠️ Stock bajo: ${bajas.map(p=>p.name).join(', ')}`);
-    const msgWA = encodeURIComponent(`🏭 *Maneki — Alerta de Inventario*\n\n${partes.join('\n')}\n\n_Reabastece pronto para no detener producción._`);
+    const msgWA = encodeURIComponent(`🏭 *Bicho Capricho — Alerta de Inventario*\n\n${partes.join('\n')}\n\n_Reabastece pronto para no detener producción._`);
     const div = document.createElement('div');
     div.id = '_mkStockWAAlert';
     div.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;background:#fff;border:2px solid #25D366;border-radius:14px;padding:14px 18px;box-shadow:0 4px 24px rgba(0,0,0,0.15);max-width:300px;font-size:13px;line-height:1.4;';
@@ -1462,7 +1462,7 @@ function imprimirEtiquetasBatch(ids?: string[]) {
     const win = window.open('', '_blank');
     if (!win) { manekiToastExport('Activa ventanas emergentes para imprimir', 'warn'); return; }
     win.document.write(`<!DOCTYPE html><html><head>
-        <title>Etiquetas — Maneki Store</title>
+        <title>Etiquetas — Bicho Capricho</title>
         <style>
             @page { size: A4; margin: 10mm; }
             body { font-family: 'Outfit', Arial, sans-serif; margin: 0; }
@@ -1470,7 +1470,7 @@ function imprimirEtiquetasBatch(ids?: string[]) {
             @media print { .no-print { display:none; } }
         </style>
     </head><body>
-        <div class="header no-print">${prods.length} etiquetas · Maneki Store · <button onclick="window.print()" style="padding:4px 12px;background:#FFD166;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:8pt;">🖨️ Imprimir</button></div>
+        <div class="header no-print">${prods.length} etiquetas · Bicho Capricho · <button onclick="window.print()" style="padding:4px 12px;background:#FFD166;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:8pt;">🖨️ Imprimir</button></div>
         ${etiquetasHTML}
     </body></html>`);
     win.document.close();

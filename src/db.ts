@@ -87,7 +87,7 @@ function mkId(): string {
 
 function mkHandleError(err: any, context: string): void {
     const msg = err?.message || String(err);
-    console.error(`[Maneki ${context}]`, msg, err);
+    console.error(`[Bicho Capricho ${context}]`, msg, err);
     if (typeof manekiToastExport === 'function') {
         manekiToastExport(`Error en ${context}: ${msg}`, 'error');
     }
@@ -708,7 +708,7 @@ async function sbSave(key, data) {
             localStorage.setItem('maneki_' + key, dataSnapshot);
         } catch (e: any) {
             if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22)) {
-                console.warn('[Maneki] localStorage lleno — caché local no guardada:', e.message);
+                console.warn('[Bicho Capricho] localStorage lleno — caché local no guardada:', e.message);
                 if (typeof (window as any).mkToast === 'function') {
                     (window as any).mkToast('⚠️ Caché local llena — datos guardados en la nube', 'warning');
                 }
@@ -967,7 +967,7 @@ let _localFolioCounters = {};
 let _folioLock = false;
 async function getNextFolio(tipo, _retry = 0) {
     if (_folioLock) {
-        if (_retry >= 20) throw new Error('[Maneki] getNextFolio: timeout esperando lock');
+        if (_retry >= 20) throw new Error('[Bicho Capricho] getNextFolio: timeout esperando lock');
         await new Promise(r => setTimeout(r, 100));
         return getNextFolio(tipo, _retry + 1);
     }

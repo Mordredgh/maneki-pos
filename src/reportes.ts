@@ -1240,7 +1240,7 @@ function descargarReporteVentas() {
     const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url; a.download = `Reporte_Ventas_Maneki_${_fechaHoy()}.csv`;
+    a.href = url; a.download = `Reporte_Ventas_BichoCapricho_${_fechaHoy()}.csv`;
     a.click(); URL.revokeObjectURL(url);
 }
 window.descargarReporteVentas = descargarReporteVentas;

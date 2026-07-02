@@ -160,7 +160,7 @@ function renderListaProduccion() {
 
 function imprimirListaProduccion() {
     const content = document.getElementById('listaProduccionContent')?.innerHTML || '';
-    const storeName = document.querySelector('.sidebar-store-name')?.textContent || 'Maneki Store';
+    const storeName = document.querySelector('.sidebar-store-name')?.textContent || 'Bicho Capricho';
     const win = window.open('', '_blank');
     win.document.write(`<!DOCTYPE html><html><head>
         <meta charset="UTF-8"><title>Lista de Producción</title>
@@ -667,7 +667,7 @@ async function exportarCotizacionPNG(quoteId: string) {
     ctx.fillRect(0, 0, 600, 80);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 24px Arial';
-    ctx.fillText((window as any).storeConfig?.name || 'Maneki Store', 30, 40);
+    ctx.fillText((window as any).storeConfig?.name || 'Bicho Capricho', 30, 40);
     ctx.font = '14px Arial';
     ctx.fillText('COTIZACIÓN', 30, 62);
 
@@ -839,7 +839,7 @@ function abrirWAMasivoRetirar() {
     }
 
     const storeNameEl = document.querySelector('.sidebar-store-name') as HTMLElement | null;
-    const storeName = storeNameEl ? storeNameEl.textContent || 'Maneki Store' : 'Maneki Store';
+    const storeName = storeNameEl ? storeNameEl.textContent || 'Bicho Capricho' : 'Bicho Capricho';
 
     const filas = pendientes.length === 0
         ? '<p style="text-align:center;color:#9ca3af;padding:24px;font-size:.85rem;">No hay pedidos con más de 3 días esperando retiro 🎉</p>'

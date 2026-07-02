@@ -58,8 +58,8 @@
         : `<tr><td colspan="4" style="padding:16px 12px;text-align:center;color:#9ca3af;font-style:italic;font-size:13px;">${p.concepto || 'Pedido personalizado'}</td></tr>`;
 
     const logoHtml = logoBase64
-        ? `<img src="${logoBase64}" style="height:72px;object-fit:contain;margin-bottom:8px;" alt="Maneki Store">`
-        : `<div style="font-size:2rem;">🐱</div>`;
+        ? `<img src="${logoBase64}" style="height:72px;object-fit:contain;margin-bottom:8px;" alt="Bicho Capricho">`
+        : `<div style="font-size:2rem;">🐛</div>`;
 
     const notasHtml = p.notas ? `
         <div style="margin:20px 0;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
@@ -79,7 +79,7 @@
 <html lang="es"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Comprobante ${p.folio} — Maneki Store</title>
+<title>Comprobante ${p.folio} — Bicho Capricho</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -339,7 +339,7 @@
 
   <!-- FOOTER -->
   <div class="footer">
-    <div style="font-size:18px;margin-bottom:6px;">🐱</div>
+    <div style="font-size:18px;margin-bottom:6px;">🐛</div>
     <div>¡Gracias por tu pedido!</div>
     <div style="margin-top:4px;"><strong>manekistore.com.mx</strong></div>
   </div>
@@ -435,7 +435,7 @@ async function exportarPedidoPDF(id) {
     const totalPagado = sumPagos>0?sumPagos:Number(p.anticipo||0);
     const resta = Math.max(0,total-totalPagado);
     const items = (p.productosInventario||[]).filter(it=>it.id!=='libre');
-    const storeName = window.storeConfig?.name||'Maneki Store';
+    const storeName = window.storeConfig?.name||'Bicho Capricho';
     const storePhone = window.storeConfig?.phone||'';
     const _e = _esc;
 
@@ -497,7 +497,7 @@ async function exportarPedidoPDF(id) {
             ${p.notas?`<div style="margin-top:16px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:12px;color:#78350f;"><strong>📝 Notas:</strong> ${_e(p.notas)}</div>`:''}
             <div style="text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #f3f4f6;">
                 <p style="font-size:10px;color:#9ca3af;">Documento generado el ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</p>
-                <p style="font-size:10px;color:#FFD166;font-weight:600;margin-top:4px;">¡Gracias por tu preferencia! 🐱</p>
+                <p style="font-size:10px;color:#FFD166;font-weight:600;margin-top:4px;">¡Gracias por tu preferencia! 🐛</p>
             </div>
         </div>`;
 
@@ -975,7 +975,7 @@ function generarTicketPedido(id) {
 
     const logoHtml = cfg.logoMode === 'image' && cfg.logo
         ? '<img src="'+cfg.logo+'" alt="'+_e(cfg.name||'Logo')+'" style="width:60px;height:60px;object-fit:contain;border-radius:10px;">'
-        : _e(cfg.emoji||'🐱');
+        : _e(cfg.emoji||'🐛');
 
     const html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Ticket '+_e(p.folio||'')+'</title><style>'
         + '*{box-sizing:border-box;margin:0;padding:0;}'
@@ -1001,7 +1001,7 @@ function generarTicketPedido(id) {
         + '@media print{body{padding:12px;}.no-print{display:none!important;}}'
         + '</style></head><body>'
         + '<div class="logo">'+logoHtml+'</div>'
-        + '<div class="tienda">'+_e(cfg.name||'Maneki Store')+'</div>'
+        + '<div class="tienda">'+_e(cfg.name||'Bicho Capricho')+'</div>'
         + '<div class="slogan">'+_e(cfg.slogan||'Regalos Personalizados')+'</div>'
         + '<div class="contacto">'+(cfg.phone ? '📱 '+_e(cfg.phone) : '')+(cfg.phone&&cfg.facebook?' · ':'')+(cfg.facebook ? '📘 '+_e(cfg.facebook) : '')+'</div>'
         + '<div class="folio-badge">📋 Pedido '+_e(p.folio||'—')+'</div>'
@@ -1026,7 +1026,7 @@ function generarTicketPedido(id) {
             : '<div class="pagado-row"><span>✅ Liquidado</span><span>$0.00</span></div>')
         + (p.notas ? '<div class="notas"><b>Notas:</b> '+_e(p.notas)+'</div>' : '')
         + '<hr class="divider">'
-        + '<div class="footer">'+_e(cfg.footer||'¡Gracias por tu compra!')+'<br>'+(cfg.facebook ? _e(cfg.facebook)+'<br>' : '')+'<span style="color:#FFD166;font-weight:700;">✨ Maneki Store</span></div>'
+        + '<div class="footer">'+_e(cfg.footer||'¡Gracias por tu compra!')+'<br>'+(cfg.facebook ? _e(cfg.facebook)+'<br>' : '')+'<span style="color:#FFD166;font-weight:700;">✨ Bicho Capricho</span></div>'
         + '<div class="no-print" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 16px;display:flex;gap:8px;">'
         + '<button onclick="window.print()" style="flex:1;padding:10px;background:#FFD166;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">🖨️ Imprimir / Guardar PDF</button>'
         + '<button onclick="window.close()" style="padding:10px 16px;background:#f3f4f6;color:#374151;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.9rem;">✕ Cerrar</button>'
@@ -1270,7 +1270,7 @@ function imprimirEtiquetaPedido(id) {
         + '.badge{display:inline-block;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;font-size:8px;font-weight:700;}'
         + '</style></head><body>'
         + '<div class="hdr">'
-        +   '<div><div class="brand">\uD83D\uDC31 Maneki Store</div>'
+        +   '<div><div class="brand">\uD83D\uDC31 Bicho Capricho</div>'
         +   '<div style="font-size:8px;color:#6b7280;">Regalos personalizados \u00b7 Monterrey</div></div>'
         +   '<div><div class="folio">' + _ee(p.folio||'') + '</div>'
         +   '<div style="font-size:8px;color:#9ca3af;text-align:right;">Imp. ' + fechaImpresion + '</div></div>'
@@ -1300,7 +1300,7 @@ function imprimirEtiquetaPedido(id) {
         + '</div>'
         + '<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">'
         +   '<span class="badge">' + _ee(p.status||'Pendiente') + '</span>'
-        +   '<span style="font-size:7.5px;color:#9ca3af;">Maneki POS</span>'
+        +   '<span style="font-size:7.5px;color:#9ca3af;">Bicho Capricho POS</span>'
         + '</div>'
         + '<div class="footer">\u00a1Gracias por tu pedido! \u00b7 manekistore.com</div>'
         + '</body></html>';
@@ -1374,7 +1374,7 @@ async function verificarEntregasProximas({ silencioso = false } = {}) {
         });
     }
 
-    const msg = `📦 *Recordatorio de entregas — Maneki Store*\n\n${lineas.join('\n')}`;
+    const msg = `📦 *Recordatorio de entregas — Bicho Capricho*\n\n${lineas.join('\n')}`;
     for (const chatId of chatIds) {
         try {
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -1430,7 +1430,7 @@ function imprimirOrdenProduccion() {
 <h1>🔧 Orden de Producción</h1>
 <p style="color:#6b7280;margin-bottom:20px;">Fecha: <b>${hoy}</b> · ${pedidos.length} pedido${pedidos.length!==1?'s':''} en producción</p>
 ${filas}
-<p style="margin-top:24px;font-size:.75rem;color:#d1d5db;text-align:center;">Maneki Store · generado ${new Date().toLocaleString('es-MX')}</p>
+<p style="margin-top:24px;font-size:.75rem;color:#d1d5db;text-align:center;">Bicho Capricho · generado ${new Date().toLocaleString('es-MX')}</p>
 </body></html>`;
     const w = window.open('', '_blank');
     if (!w) { if (typeof manekiToastExport === 'function') manekiToastExport('Permite ventanas emergentes para imprimir', 'warn'); return; }

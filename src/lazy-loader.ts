@@ -104,7 +104,7 @@
             el.src = src;
             el.onload  = resolve;
             el.onerror = function () {
-                console.warn('[Maneki Lazy] No se pudo cargar:', src);
+                console.warn('[Bicho Capricho Lazy] No se pudo cargar:', src);
                 resolve();
             };
             document.body.appendChild(el);
@@ -124,7 +124,7 @@
             el.href = href;
             el.onload  = resolve;
             el.onerror = function () {
-                console.warn('[Maneki Lazy] No se pudo cargar CSS:', href);
+                console.warn('[Bicho Capricho Lazy] No se pudo cargar CSS:', href);
                 resolve();
             };
             document.head.appendChild(el);

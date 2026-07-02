@@ -194,7 +194,7 @@ function _updateDashboardImpl() {
     const sn = document.getElementById('dashStoreName');
     if (el) el.textContent = greeting;
     if (ee) ee.textContent = greetingEmoji;
-    if (sn) sn.textContent = storeConfig ? storeConfig.name : 'Maneki Store';
+    if (sn) sn.textContent = storeConfig ? storeConfig.name : 'Bicho Capricho';
 
     // ── Fecha y hora ──
     const dateEl = document.getElementById('dashDate');
@@ -566,7 +566,7 @@ function _updateDashboardImpl() {
             const _rowTextColor = _isDark ? '#e5e7eb' : '#374151';
             const _rowBorderColor = _isDark ? '#334155' : '#f3f4f6';
             const filas = entradas.map(([nombre, info]) => {
-                const _waTxt = encodeURIComponent(`Hola ${nombre}, te recordamos tu saldo pendiente de ${fmtMoney(info.monto)} con Maneki Store 😊 ¿Cómo te gustaría liquidarlo?`);
+                const _waTxt = encodeURIComponent(`Hola ${nombre}, te recordamos tu saldo pendiente de ${fmtMoney(info.monto)} con Bicho Capricho 😊 ¿Cómo te gustaría liquidarlo?`);
                 const _waLink = info.tel
                     ? `<a href="https://wa.me/52${info.tel}?text=${_waTxt}" target="_blank" onclick="event.stopPropagation()" title="Recordar por WhatsApp" style="color:#25D366;text-decoration:none;font-size:1rem;margin-left:10px;flex-shrink:0;"><i class="fab fa-whatsapp"></i></a>`
                     : '';
@@ -1063,13 +1063,13 @@ function renderResumenDia() {
 
     const sinFecha = pedidosActivos.filter(p => !p.entrega && !p.fechaEntrega).length;
 
-    const nombreTienda = window.storeConfig?.name || window.storeConfig?.storeName || window.storeName || 'Maneki';
+    const nombreTienda = window.storeConfig?.name || window.storeConfig?.storeName || window.storeName || 'Bicho Capricho';
 
     const html = `
         <div id="resumenDia" style="background:linear-gradient(135deg,#fff9f0 0%,#fffbf5 100%);border:1.5px solid #f5e6cc;border-radius:18px;padding:20px 22px;margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
                 <div>
-                    <h2 style="font-size:1.15rem;font-weight:800;color:#1f2937;margin:0;">${saludo}, ${nombreTienda} 🐱</h2>
+                    <h2 style="font-size:1.15rem;font-weight:800;color:#1f2937;margin:0;">${saludo}, ${nombreTienda} 🐛</h2>
                     <p style="font-size:.8rem;color:#9ca3af;margin:2px 0 0;">${fechaCap}</p>
                 </div>
             </div>
@@ -1327,14 +1327,14 @@ function generarResumenSemanalWA() {
     const neto = ventasTotal - gastosTotal;
     const ticket = ventasCount > 0 ? (ventasTotal / ventasCount) : 0;
 
-    const texto = `📊 *Resumen Semanal — Maneki Store*\n` +
+    const texto = `📊 *Resumen Semanal — Bicho Capricho*\n` +
         `📅 ${ini} al ${fin}\n\n` +
         `💰 Ventas: $${ventasTotal.toLocaleString('es-MX',{minimumFractionDigits:2})} (${ventasCount} ventas)\n` +
         `💸 Gastos: $${gastosTotal.toLocaleString('es-MX',{minimumFractionDigits:2})}\n` +
         `📈 Neto: $${neto.toLocaleString('es-MX',{minimumFractionDigits:2})} ${neto >= 0 ? '✅' : '⚠️'}\n` +
         `🎫 Ticket promedio: $${ticket.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}\n` +
         `📋 Pedidos nuevos: ${pedidosNuevos}\n\n` +
-        `_Generado desde Maneki POS_`;
+        `_Generado desde Bicho Capricho POS_`;
 
     if (navigator.clipboard) {
         navigator.clipboard.writeText(texto).then(() => {

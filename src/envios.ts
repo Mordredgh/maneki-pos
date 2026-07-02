@@ -200,7 +200,7 @@ function copiarCotizacionEnvio() {
     const anillo    = document.getElementById('envioAnilloLabel').textContent.trim();
     const distancia = document.getElementById('envioDistanciaLabel').textContent.trim();
     const precio    = document.getElementById('envioPrecioLabel').textContent.trim();
-    const texto = `🛵 *Cotización de Envío - Maneki Store*\n\n📍 *Destino:* ${direccion}\n🗺️ *Zona:* ${anillo}\n📏 *Distancia aprox.:* ${distancia}\n💰 *Tarifa estimada:* ${precio}\n\n⚠️ _La tarifa puede variar según condiciones del envío_`;
+    const texto = `🛵 *Cotización de Envío - Bicho Capricho*\n\n📍 *Destino:* ${direccion}\n🗺️ *Zona:* ${anillo}\n📏 *Distancia aprox.:* ${distancia}\n💰 *Tarifa estimada:* ${precio}\n\n⚠️ _La tarifa puede variar según condiciones del envío_`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(texto)
             .then(() => manekiToastExport('✅ Copiado al portapapeles', 'ok'))

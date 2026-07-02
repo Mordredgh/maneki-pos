@@ -28,7 +28,7 @@ function _buildBackupObject() {
     return {
         version: '2.1',
         fecha: new Date().toISOString(),
-        tienda: (window.storeConfig && window.storeConfig.name) || 'Maneki Store',
+        tienda: (window.storeConfig && window.storeConfig.name) || 'Bicho Capricho',
         datos: {
             products: window.products || [],
             salesHistory: window.salesHistory || [],
@@ -62,7 +62,7 @@ function exportarBackupJSON() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Maneki_Backup_${_fechaHoy()}.json`;
+    a.download = `BichoCapricho_Backup_${_fechaHoy()}.json`;
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -91,7 +91,7 @@ async function exportarBackupComprimido() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Maneki_Backup_${_fechaHoy()}.json.gz`;
+        a.download = `BichoCapricho_Backup_${_fechaHoy()}.json.gz`;
         a.click();
         URL.revokeObjectURL(url);
         manekiToastExport(`📦 Backup comprimido: ${originalMB}MB → ${sizeMB}MB (${Math.round((1 - blob.size / jsonFinal.length) * 100)}% menos)`, 'ok');
@@ -168,7 +168,7 @@ function procesarArchivoBackup(file) {
             const data = JSON.parse(e.target.result);
             _activarBackupPendiente(data, file.name);
         } catch(err) {
-            manekiToastExport('El archivo no es un backup válido de Maneki Store.', 'err');
+            manekiToastExport('El archivo no es un backup válido de Bicho Capricho.', 'err');
             backupDataPendiente = null;
         }
     };
@@ -249,7 +249,7 @@ document.getElementById('backupModal').addEventListener('click', function(e) {
             const backup = {
                 version: '2.1',
                 fecha: new Date().toISOString(),
-                tienda: (window.storeConfig && window.storeConfig.name) || 'Maneki Store',
+                tienda: (window.storeConfig && window.storeConfig.name) || 'Bicho Capricho',
                 datos: {
                     products: window.products || [],
                     salesHistory: window.salesHistory || [],
