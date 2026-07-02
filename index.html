@@ -1595,7 +1595,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <!-- Fila 1: título + badge de count -->
         <div class="flex items-center gap-3 mb-3">
             <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-shopping-bag"></i></div><div class="mk-sh-text"><h2>Pedidos por Encargo</h2><p>Gestiona cada encargo de tus clientes</p></div></div>
-            <span id="pedidosCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(255,209,102,0.15);color:#FFD166;">0</span>
+            <span id="pedidosCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(255,209,102,0.15);color:#8a6510;">0</span>
         </div>
         <!-- Fila 2: acciones / vista -->
         <div class="flex flex-wrap items-center gap-2 mb-6">
@@ -1614,56 +1614,45 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <i class="fas fa-calendar-alt mr-1"></i> Calendario
                 </button>
             </div>
-            <button type="button" data-action="toggleListaProduccion" id="btnListaProduccion"
-                    class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                    style="background: linear-gradient(135deg,#9B7BC4,#C4A8E0)">
-                <i class="fas fa-hammer"></i> Lista de Producción
+            <button type="button" data-action="toggleListaProduccion" id="btnListaProduccion" class="mk-toolbar-btn">
+                <i class="fas fa-hammer mk-tb-ico"></i> Lista de Producción
             </button>
             <button type="button" onclick="typeof imprimirOrdenProduccion==='function'?imprimirOrdenProduccion():manekiToastExport('Cargando...','warn')"
-                    class="px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
-                    style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;"
-                    title="Imprimir orden de producción del día">
-                <i class="fas fa-print"></i> <span class="hidden sm:inline">Orden</span>
+                    class="mk-toolbar-btn" title="Imprimir orden de producción del día">
+                <i class="fas fa-print mk-tb-ico"></i> <span class="hidden sm:inline">Orden</span>
             </button>
-            <button type="button" data-action="manekiExportar" data-arg="pedidos"
-                    class="px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                    style="background: linear-gradient(135deg,#10B981,#059669)">
-                <i class="fas fa-file-excel"></i> Exportar Excel
+            <button type="button" data-action="manekiExportar" data-arg="pedidos" class="mk-toolbar-btn">
+                <i class="fas fa-file-excel mk-tb-ico"></i> Exportar Excel
             </button>
             <button type="button" onclick="typeof abrirParserWA==='function'?abrirParserWA():manekiToastExport('Cargando...','warn')"
-                    class="px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
-                    style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;"
-                    title="Parsear mensaje de WhatsApp para pre-llenar pedido">
-                <i class="fab fa-whatsapp"></i> <span class="hidden sm:inline">Desde WA</span>
+                    class="mk-toolbar-btn" title="Parsear mensaje de WhatsApp para pre-llenar pedido">
+                <i class="fab fa-whatsapp mk-tb-ico" style="color:#25D366;"></i> <span class="hidden sm:inline">Desde WA</span>
             </button>
             <button type="button" onclick="typeof abrirHojaRuta==='function'?abrirHojaRuta():manekiToastExport('Cargando...','warn')"
-                    class="px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
-                    style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;"
-                    title="Hoja de ruta del día — entregas de hoy">
-                <i class="fas fa-route"></i> <span class="hidden sm:inline">Ruta del día</span>
+                    class="mk-toolbar-btn" title="Hoja de ruta del día — entregas de hoy">
+                <i class="fas fa-route mk-tb-ico"></i> <span class="hidden sm:inline">Ruta del día</span>
             </button>
-            <button type="button" data-action="openPedidoModal" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2">
+            <button type="button" data-action="openPedidoModal" class="mk-btn-primary">
                 <i class="fas fa-plus"></i> Nuevo Pedido
             </button>
             <button type="button" id="btnKanbanFocus" data-action="toggleKanbanFocus"
-                    class="px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-sm text-gray-500 flex items-center gap-1"
-                    title="Modo focus (ocultar sidebar)">
-                <i class="fas fa-expand-alt"></i>
+                    class="mk-toolbar-btn" title="Modo focus (ocultar sidebar)">
+                <i class="fas fa-expand-alt mk-tb-ico"></i>
             </button>
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Activos</p><h3 class="text-2xl font-bold" id="pedidosActivos">0</h3></div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Por Cobrar</p><h3 class="text-2xl font-bold text-red-600" id="pedidosPorCobrar">$0</h3></div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Anticipo Cobrado</p><h3 class="text-2xl font-bold text-green-600" id="pedidosAnticipos">$0</h3></div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Este Mes</p><h3 class="text-2xl font-bold" style="color:#FFD166" id="pedidosMes">0</h3></div>
+            <div class="mk-card" style="padding:18px 20px;"><p class="mk-kpi-label">Activos</p><h3 class="mk-kpi-value" style="font-size:1.5rem;color:#1c4f32;margin-top:4px;" id="pedidosActivos">0</h3></div>
+            <div class="mk-card" style="padding:18px 20px;"><p class="mk-kpi-label">Por Cobrar</p><h3 class="mk-kpi-value" style="font-size:1.5rem;color:#b8305a;margin-top:4px;" id="pedidosPorCobrar">$0</h3></div>
+            <div class="mk-card" style="padding:18px 20px;"><p class="mk-kpi-label">Anticipo Cobrado</p><h3 class="mk-kpi-value" style="font-size:1.5rem;color:#10B981;margin-top:4px;" id="pedidosAnticipos">$0</h3></div>
+            <div class="mk-card" style="padding:18px 20px;"><p class="mk-kpi-label">Este Mes</p><h3 class="mk-kpi-value" style="font-size:1.5rem;color:#8a6510;margin-top:4px;" id="pedidosMes">0</h3></div>
         </div>
 
         <!-- Banner recordatorio de cobro -->
         <div id="alertaCobro" class="hidden mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-4">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl">💰</span>
+                    <i class="fas fa-hand-holding-usd" style="color:#dc2626;font-size:1.1rem;"></i>
                     <div>
                         <p class="font-bold text-red-700 text-sm">Recordatorio de Cobro</p>
                         <p id="alertaCobroSubtitulo" class="text-xs text-red-500"></p>
@@ -1680,10 +1669,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <input type="text" id="kanbanBuscar" placeholder="Buscar por folio, cliente o teléfono..."
                     data-oninput="_mkDebouncePed"
                     class="w-full sm:w-80 px-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2">
-                <button type="button" data-action="verificarEntregasProximas" title="Ver entregas próximas y vencidas"
-                    class="px-4 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                    style="background:linear-gradient(135deg,#f59e0b,#d97706)">
-                    🔔 Entregas
+                <button type="button" data-action="verificarEntregasProximas" title="Ver entregas próximas y vencidas" class="mk-toolbar-btn">
+                    <i class="fas fa-calendar-alt mk-tb-ico" style="color:#8a6510;"></i> Entregas
                 </button>
             </div>
             <div id="kanbanNoResults" style="display:none;" class="text-center text-gray-400 text-sm py-8 bg-gray-50 rounded-2xl mb-4"></div>
@@ -1733,12 +1720,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <!-- ── Col: Envío ── -->
                     <div class="mk-kanban-wrapper flex-1 min-w-[200px] max-w-[280px] flex flex-col" data-col="envio" style="max-height: calc(100vh - 280px);">
                         <div class="mk-kanban-header flex items-center gap-2 mb-3 px-2 py-1.5 flex-shrink-0 rounded-xl">
-                            <span class="mk-kanban-dot" style="background:#9B7BC4;"></span>
-                            <span class="font-bold text-sm" style="color:#4E3470;">Envío</span>
-                            <span id="kBadge-envio" class="ml-auto mk-kanban-badge text-xs font-bold px-2 py-0.5 rounded-full" style="background:#EDE5F8;color:#6B4A8E;">0</span>
+                            <span class="mk-kanban-dot" style="background:#9669c4;"></span>
+                            <span class="font-bold text-sm" style="color:#5c3a80;">Envío</span>
+                            <span id="kBadge-envio" class="ml-auto mk-kanban-badge text-xs font-bold px-2 py-0.5 rounded-full" style="background:#ecd9ff;color:#7d4fa3;">0</span>
                         </div>
                         <div id="kCol-envio" class="mk-kanban-col space-y-3 min-h-[200px] rounded-2xl p-2 transition-all overflow-y-auto flex-1"
-                            style="background:#FAF5FF; border: 2px dashed #E9D5FF; max-height: calc(100vh - 380px);"
+                            style="background:#f6ecff; border: 2px dashed #dfbfff; max-height: calc(100vh - 380px);"
                             ondragover="kanbanDragOver(event,'envio')" ondragleave="kanbanDragLeave(event)" ondrop="kanbanDrop(event,'envio')">
                         </div>
                     </div>
@@ -1821,9 +1808,9 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div id="listaProduccionPanel" style="display:none;position:fixed;inset:0;z-index:800;" data-backdrop="toggleListaProduccion">
             <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);" aria-hidden="true"></div>
             <div style="position:absolute;right:0;top:0;bottom:0;width:min(540px,100vw);background:#fff;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.18);">
-                <div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;background:#faf5ff;">
+                <div style="padding:20px 24px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;background:#f6ecff;">
                     <div>
-                        <h3 style="font-weight:800;font-size:1rem;color:#3B2659;display:flex;align-items:center;gap:8px;">🔨 Lista de Producción</h3>
+                        <h3 style="font-weight:800;font-size:1rem;color:#5c3a80;display:flex;align-items:center;gap:8px;"><i class="fas fa-hammer"></i> Lista de Producción</h3>
                         <p style="font-size:.72rem;color:#9ca3af;margin-top:2px;" id="produccionFechaLabel">Pedidos activos ordenados por fecha de entrega</p>
                     </div>
                     <div style="display:flex;gap:8px;">
@@ -1832,7 +1819,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                 </div>
                 <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;display:flex;gap:6px;flex-wrap:wrap;">
-                    <button type="button" data-action="filtrarProduccion" data-arg="todos" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #9B7BC4;background:#EDE5F8;color:#6B4A8E;cursor:pointer;">Todos</button>
+                    <button type="button" data-action="filtrarProduccion" data-arg="todos" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #9669c4;background:#ecd9ff;color:#7d4fa3;cursor:pointer;">Todos</button>
                     <button type="button" data-action="filtrarProduccion" data-arg="hoy" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🔴 Hoy</button>
                     <button type="button" data-action="filtrarProduccion" data-arg="manana" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">🟠 Mañana</button>
                     <button type="button" data-action="filtrarProduccion" data-arg="semana" data-pass-el="after" class="prod-filter-btn" style="padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:2px solid #e5e7eb;background:#fff;color:#4B5563;cursor:pointer;">📅 Semana</button>
@@ -1844,7 +1831,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div class="mt-10 border-t border-gray-100 pt-6">
             <div id="historialHeader" class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">📋 Historial de Pedidos Finalizados</h3>
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider"><i class="fas fa-clipboard-list" style="margin-right:6px;"></i>Historial de Pedidos Finalizados</h3>
                 <div id="historialControls" class="flex gap-2 items-center">
                     <input type="text" id="histPedidoBuscar" placeholder="Buscar..." data-oninput="_mkDebounceHp"
                         class="px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none w-40">
