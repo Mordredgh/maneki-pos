@@ -45,15 +45,15 @@ function switchQuoteTab(tab) {
     if (tab === 'productos') {
         tabProductos.classList.remove('hidden');
         tabEnvios.classList.add('hidden');
-        btnP.style.cssText = 'background:#C5973B;color:white;padding:10px 24px;border-radius:12px;font-size:0.875rem;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;';
+        btnP.style.cssText = 'background:#FFD166;color:white;padding:10px 24px;border-radius:12px;font-size:0.875rem;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;';
         btnE.style.cssText = 'background:transparent;color:#6B7280;padding:10px 24px;border-radius:12px;font-size:0.875rem;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;';
         headerBtns.innerHTML = `<button onclick="openQuoteModal()" class="btn-primary px-6 py-3 rounded-xl text-white font-semibold"><i class="fas fa-plus mr-2"></i>Nueva Cotización</button>`;
     } else {
         tabProductos.classList.add('hidden');
         tabEnvios.classList.remove('hidden');
-        btnE.style.cssText = 'background:#C5973B;color:white;padding:10px 24px;border-radius:12px;font-size:0.875rem;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;';
+        btnE.style.cssText = 'background:#FFD166;color:white;padding:10px 24px;border-radius:12px;font-size:0.875rem;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;';
         btnP.style.cssText = 'background:transparent;color:#6B7280;padding:10px 24px;border-radius:12px;font-size:0.875rem;font-weight:600;transition:all 0.2s;border:none;cursor:pointer;';
-        headerBtns.innerHTML = `<button onclick="abrirConfigAnillos()" class="px-5 py-3 rounded-xl text-white font-semibold flex items-center gap-2" style="background:linear-gradient(135deg,#7C3AED,#6D28D9)"><i class="fas fa-sliders-h"></i> Configurar Anillos</button>`;
+        headerBtns.innerHTML = `<button onclick="abrirConfigAnillos()" class="px-5 py-3 rounded-xl text-white font-semibold flex items-center gap-2" style="background:linear-gradient(135deg,#9669c4,#6D28D9)"><i class="fas fa-sliders-h"></i> Configurar Anillos</button>`;
         setTimeout(() => { initMapaCoberturaView(); renderTablaAnillos(); initAutocompleteEnvio(); }, 200);
     }
 }
@@ -79,7 +79,7 @@ async function initMapaCoberturaView() {
         maxZoom: 18,
     }).addTo(_mapaCobView);
     // Marcador base
-    const baseIcon = L.divIcon({ html: '<div style="width:14px;height:14px;border-radius:50%;background:#C5973B;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>', iconSize:[14,14], iconAnchor:[7,7], className:'' });
+    const baseIcon = L.divIcon({ html: '<div style="width:14px;height:14px;border-radius:50%;background:#FFD166;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>', iconSize:[14,14], iconAnchor:[7,7], className:'' });
     L.marker([ENVIO_BASE.lat, ENVIO_BASE.lng], { icon: baseIcon, title:'Tu base' }).addTo(_mapaCobView).bindPopup(`<b>📍 Tu base</b><br>${storeConfig.address || 'Base configurada'}`).openPopup();
     // Anillos
     _mapaAnillosLayerGroup = L.layerGroup().addTo(_mapaCobView);
@@ -88,7 +88,7 @@ async function initMapaCoberturaView() {
     _mapaCobView.on('click', function(e) {
         const km = haversineKm(ENVIO_BASE.lat, ENVIO_BASE.lng, e.latlng.lat, e.latlng.lng);
         if (_mapaCobMarker) _mapaCobMarker.remove();
-        const destIcon = L.divIcon({ html: '<div style="width:12px;height:12px;border-radius:50%;background:#7C3AED;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>', iconSize:[12,12], iconAnchor:[6,6], className:'' });
+        const destIcon = L.divIcon({ html: '<div style="width:12px;height:12px;border-radius:50%;background:#9669c4;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>', iconSize:[12,12], iconAnchor:[6,6], className:'' });
         _mapaCobMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon: destIcon }).addTo(_mapaCobView);
         procesarDestino(e.latlng.lat, e.latlng.lng, 'Punto seleccionado en mapa');
     });
@@ -179,7 +179,7 @@ function buscarNominatim(q) {
             return `<div data-nominatim-lat="${_esc(String(r.lat))}" data-nominatim-lon="${_esc(String(r.lon))}" data-nominatim-addr="${_esc(label)}"
                 style="padding:10px 14px;cursor:pointer;font-size:0.82rem;color:#374151;border-bottom:1px solid #F3F4F6;transition:background 0.15s;"
                 onmouseover="this.style.background='#FFF9F0'" onmouseout="this.style.background='white'">
-                <i class="fas fa-map-marker-alt" style="color:#C5973B;margin-right:6px;"></i>${_esc(shortLabel)}
+                <i class="fas fa-map-marker-alt" style="color:#FFD166;margin-right:6px;"></i>${_esc(shortLabel)}
             </div>`;
         }).join('');
         _nominatimDropdown.style.display = 'block';
@@ -229,7 +229,7 @@ function procesarDestino(lat, lng, label) {
     // Marcar destino en mapa
     if (_mapaCobView) {
         if (_mapaCobMarker) _mapaCobMarker.remove();
-        const destIcon = L.divIcon({ html: '<div style="width:12px;height:12px;border-radius:50%;background:#7C3AED;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>', iconSize:[12,12], iconAnchor:[6,6], className:'' });
+        const destIcon = L.divIcon({ html: '<div style="width:12px;height:12px;border-radius:50%;background:#9669c4;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>', iconSize:[12,12], iconAnchor:[6,6], className:'' });
         _mapaCobMarker = L.marker([lat, lng], { icon: destIcon }).addTo(_mapaCobView);
         _mapaCobView.panTo([lat, lng]);
     }
@@ -304,7 +304,7 @@ function renderTablaAnillos() {
                 <p style="font-size:0.8rem;font-weight:700;color:#1F2937;margin:0">${_esc(a.label)}</p>
                 <p style="font-size:0.72rem;color:#9CA3AF;margin:0">hasta ${a.km} km</p>
             </div>
-            <span style="font-size:0.95rem;font-weight:800;color:#C5973B">$${a.precio}</span>
+            <span style="font-size:0.95rem;font-weight:800;color:#FFD166">$${a.precio}</span>
         </div>`).join('');
 }
 
@@ -346,7 +346,7 @@ function renderAnillosLista() {
                         <span style="font-size:0.7rem;color:#9CA3AF;">$</span>
                         <input type="number" value="${a.precio}" min="0"
                             oninput="updateAnilloByIndex(${i},'precio',+this.value)"
-                            style="width:60px;border:1px solid #E5E7EB;border-radius:8px;padding:4px 6px;font-size:0.8rem;font-weight:700;color:#C5973B;outline:none;text-align:center;">
+                            style="width:60px;border:1px solid #E5E7EB;border-radius:8px;padding:4px 6px;font-size:0.8rem;font-weight:700;color:#FFD166;outline:none;text-align:center;">
                     </div>
                     <button onclick="eliminarAnilloByIndex(${i})" 
                         style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:0.9rem;padding:2px 4px;flex-shrink:0;" title="Eliminar">✕</button>
@@ -409,7 +409,7 @@ async function initMapaConfigLeaflet() {
     _mapaConfig = L.map(el, { zoomControl: true, attributionControl: false }).setView([ENVIO_BASE.lat, ENVIO_BASE.lng], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(_mapaConfig);
     // Marcador base
-    const baseIcon = L.divIcon({ html: '<div style="width:16px;height:16px;border-radius:50%;background:#C5973B;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.35)"></div>', iconSize:[16,16], iconAnchor:[8,8], className:'' });
+    const baseIcon = L.divIcon({ html: '<div style="width:16px;height:16px;border-radius:50%;background:#FFD166;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.35)"></div>', iconSize:[16,16], iconAnchor:[8,8], className:'' });
     L.marker([ENVIO_BASE.lat, ENVIO_BASE.lng], { icon: baseIcon }).addTo(_mapaConfig)
         .bindPopup(`<b>📍 Tu base</b><br>${storeConfig.address || 'Base configurada'}`).openPopup();
     // Layer group para anillos
@@ -419,7 +419,7 @@ async function initMapaConfigLeaflet() {
     _mapaConfig.on('click', function(e) {
         const km = haversineKm(ENVIO_BASE.lat, ENVIO_BASE.lng, e.latlng.lat, e.latlng.lng);
         if (_mapaClickMarker) _mapaClickMarker.remove();
-        const icon = L.divIcon({ html: '<div style="width:12px;height:12px;border-radius:50%;background:#7C3AED;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>', iconSize:[12,12], iconAnchor:[6,6], className:'' });
+        const icon = L.divIcon({ html: '<div style="width:12px;height:12px;border-radius:50%;background:#9669c4;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>', iconSize:[12,12], iconAnchor:[6,6], className:'' });
         _mapaClickMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon }).addTo(_mapaConfig);
         const t = getTarifaParaKm(km);
         const msg = t ? `📍 ${km.toFixed(1)} km → ${t.anillo.label} — $${t.anillo.precio}` : `📍 ${km.toFixed(1)} km → ⛔ Fuera de cobertura`;

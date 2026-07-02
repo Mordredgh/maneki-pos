@@ -467,7 +467,7 @@ function _updateDashboardImpl() {
             #dailySales, #netProfit, #accountsReceivable, #dashActivePedidos {
                 transition: transform .15s ease, box-shadow .15s ease;
             }
-            #dailySales:hover, #netProfit:hover, #accountsReceivable:hover { color: var(--mk-gold-500, #C9933A) !important; }
+            #dailySales:hover, #netProfit:hover, #accountsReceivable:hover { color: var(--mk-gold-500, #FFD166) !important; }
             [id="dailySales"], [id="netProfit"], [id="accountsReceivable"], [id="dashActivePedidos"] {
                 transition: color .15s ease;
             }
@@ -1075,7 +1075,7 @@ function renderResumenDia() {
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;">
                 <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;cursor:pointer;transition:box-shadow .15s;" class="hover:shadow-md" onclick="showSection('pedidos')" title="Ver pedidos">
-                    <p style="font-size:1.4rem;font-weight:900;color:#C5973B;margin:0;">${nActivos}</p>
+                    <p style="font-size:1.4rem;font-weight:900;color:#FFD166;margin:0;">${nActivos}</p>
                     <p style="font-size:.7rem;color:#6b7280;margin:2px 0 0;">pedidos activos</p>
                 </div>
                 <div style="background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #f3e8d0;cursor:pointer;transition:box-shadow .15s;" class="hover:shadow-md" onclick="showSection('pedidos');typeof setPedidoFiltro==='function'&&setPedidoFiltro('entregado')" title="Ver entregas de hoy">
@@ -1136,7 +1136,7 @@ function renderAccesosRapidos() {
         btn.innerHTML = `<span style="font-size:1.5rem;line-height:1;">${a.emoji}</span><span style="font-size:.68rem;font-weight:700;color:#374151;text-align:center;line-height:1.2;">${a.label}</span>`;
         btn.title = a.label;
         btn.addEventListener('click', a.fn);
-        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#C5973B'; btn.style.boxShadow = '0 2px 8px rgba(197,165,114,.18)'; });
+        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#FFD166'; btn.style.boxShadow = '0 2px 8px rgba(197,165,114,.18)'; });
         btn.addEventListener('mouseleave', () => { btn.style.borderColor = '#f3f4f6'; btn.style.boxShadow = ''; });
         container.appendChild(btn);
     });
@@ -1262,7 +1262,7 @@ function renderCashFlowChart() {
                     label: 'Tendencia',
                     data: _calcTrend(ingresos),
                     type: 'line' as any,
-                    borderColor: 'rgba(197,151,59,0.7)',
+                    borderColor: 'rgba(255,209,102,0.7)',
                     backgroundColor: 'transparent',
                     borderWidth: 2,
                     borderDash: [6, 4],
@@ -1505,7 +1505,7 @@ function _renderClimaHTML(card: HTMLElement, data: any) {
                     <span style="font-size:2rem;line-height:1;">${icon}</span>
                     <div>
                         <p style="font-size:1.4rem;font-weight:800;color:#92622A;margin:0;line-height:1;">${temp}°C</p>
-                        <p style="font-size:.7rem;color:#C5973B;margin:1px 0 0;">${desc} · Monterrey</p>
+                        <p style="font-size:.7rem;color:#FFD166;margin:1px 0 0;">${desc} · Monterrey</p>
                     </div>
                 </div>
                 <div style="text-align:right;">
@@ -1663,10 +1663,10 @@ function renderHeatmapPedidos(): void {
     const bg = (v: number) => {
         const t = v / maxVal;
         if (t === 0) return '#f9fafb';
-        if (t < 0.25) return 'rgba(197,151,59,0.12)';
-        if (t < 0.5)  return 'rgba(197,151,59,0.32)';
-        if (t < 0.75) return 'rgba(197,151,59,0.58)';
-        return 'rgba(197,151,59,0.85)';
+        if (t < 0.25) return 'rgba(255,209,102,0.12)';
+        if (t < 0.5)  return 'rgba(255,209,102,0.32)';
+        if (t < 0.75) return 'rgba(255,209,102,0.58)';
+        return 'rgba(255,209,102,0.85)';
     };
     const fg = (v: number) => v / maxVal > 0.5 ? '#5c3a00' : '#6b7280';
     const fmt = (v: number) => _heatmapModo === 'amount'
@@ -1678,8 +1678,8 @@ function renderHeatmapPedidos(): void {
     el.innerHTML = `
         <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
             <div style="display:inline-flex;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;font-size:.65rem;">
-                <button onclick="_heatmapModo='count';renderHeatmapPedidos()" style="padding:3px 10px;cursor:pointer;background:${_heatmapModo==='count'?'#C5973B':'#fff'};color:${_heatmapModo==='count'?'#fff':'#6b7280'};border:none;font-weight:600;font-size:.65rem;">Pedidos</button>
-                <button onclick="_heatmapModo='amount';renderHeatmapPedidos()" style="padding:3px 10px;cursor:pointer;background:${_heatmapModo==='amount'?'#C5973B':'#fff'};color:${_heatmapModo==='amount'?'#fff':'#6b7280'};border:none;font-weight:600;font-size:.65rem;">Montos</button>
+                <button onclick="_heatmapModo='count';renderHeatmapPedidos()" style="padding:3px 10px;cursor:pointer;background:${_heatmapModo==='count'?'#FFD166':'#fff'};color:${_heatmapModo==='count'?'#fff':'#6b7280'};border:none;font-weight:600;font-size:.65rem;">Pedidos</button>
+                <button onclick="_heatmapModo='amount';renderHeatmapPedidos()" style="padding:3px 10px;cursor:pointer;background:${_heatmapModo==='amount'?'#FFD166':'#fff'};color:${_heatmapModo==='amount'?'#fff':'#6b7280'};border:none;font-weight:600;font-size:.65rem;">Montos</button>
             </div>
         </div>
         <div style="display:grid;grid-template-columns:36px repeat(6,minmax(0,1fr));gap:2px;font-size:.62rem;max-width:520px;">

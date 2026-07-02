@@ -38,7 +38,7 @@ function renderMpTags() {
         return `<button type="button" onclick="toggleMpTag('${tag}')"
             id="mptag-${tag.replace(/[^a-zA-Z0-9]/g,'')}"
             style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
-                border:1.5px solid ${active ? '#C5973B' : '#e5e7eb'};
+                border:1.5px solid ${active ? '#FFD166' : '#e5e7eb'};
                 background:${active ? '#FFF9F0' : '#fff'};
                 color:${active ? '#92400e' : '#6b7280'};">
             ${tag}
@@ -143,7 +143,7 @@ function injectMpModal() {
                         onkeydown="if(event.key==='Enter'){event.preventDefault();agregarMpTagCustom();}"
                         class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
                     <button type="button" onclick="agregarMpTagCustom()"
-                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5973B">+ Agregar</button>
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#FFD166">+ Agregar</button>
                 </div>
                 <div id="mpTagsCustomSelected" class="flex flex-wrap gap-2 mt-2"></div>
             </div>
@@ -151,7 +151,7 @@ function injectMpModal() {
             <!-- Compra por paquete o unidad -->
             <div style="background:linear-gradient(135deg,#faf5ff,#f5f3ff);border:1.5px solid #e9d5ff;border-radius:14px;padding:16px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                    <label class="block text-sm font-semibold" style="color:#7c3aed;">💰 Costo</label>
+                    <label class="block text-sm font-semibold" style="color:#9669c4;">💰 Costo</label>
                     <div style="display:flex;align-items:center;gap:8px;">
                         <span style="font-size:.78rem;color:#9ca3af;">¿Compras por paquete?</span>
                         <label style="position:relative;display:inline-block;width:38px;height:21px;cursor:pointer;">
@@ -173,7 +173,7 @@ function injectMpModal() {
                         <input type="number" id="mpCosto" required step="0.01" min="0"
                                style="width:100%;padding:10px 14px 10px 28px;border:1.5px solid #e9d5ff;border-radius:10px;font-size:.9rem;outline:none;background:#fff;box-sizing:border-box;font-weight:600;"
                                placeholder="0.00"
-                               onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e9d5ff'">
+                               onfocus="this.style.borderColor='#9669c4'" onblur="this.style.borderColor='#e9d5ff'">
                     </div>
                 </div>
 
@@ -185,7 +185,7 @@ function injectMpModal() {
                             <input type="number" id="mpPaqueteCantidad" step="1" min="1" placeholder="Ej: 100"
                                 oninput="mpCalcCostoUnidad()"
                                 style="width:100%;padding:10px 12px;border:1.5px solid #e9d5ff;border-radius:10px;font-size:.9rem;outline:none;background:#fff;box-sizing:border-box;"
-                                onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e9d5ff'">
+                                onfocus="this.style.borderColor='#9669c4'" onblur="this.style.borderColor='#e9d5ff'">
                         </div>
                         <div>
                             <label style="font-size:.78rem;color:#6b7280;margin-bottom:4px;display:block;">Precio del paquete</label>
@@ -194,14 +194,14 @@ function injectMpModal() {
                                 <input type="number" id="mpPaquetePrecio" step="0.01" min="0" placeholder="0.00"
                                     oninput="mpCalcCostoUnidad()"
                                     style="width:100%;padding:10px 12px 10px 24px;border:1.5px solid #e9d5ff;border-radius:10px;font-size:.9rem;outline:none;background:#fff;box-sizing:border-box;"
-                                    onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e9d5ff'">
+                                    onfocus="this.style.borderColor='#9669c4'" onblur="this.style.borderColor='#e9d5ff'">
                             </div>
                         </div>
                     </div>
                     <!-- Resultado: costo por unidad calculado -->
                     <div id="mpCostoUnidadBox" style="background:#ede9fe;border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
                         <div>
-                            <div style="font-size:.72rem;color:#7c3aed;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Costo por unidad</div>
+                            <div style="font-size:.72rem;color:#9669c4;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Costo por unidad</div>
                             <div style="font-size:1.4rem;font-weight:800;color:#5b21b6;" id="mpCostoUnidadResult">$0.00</div>
                         </div>
                         <div style="text-align:right;">
@@ -319,7 +319,7 @@ function injectMpModal() {
 
             <button type="submit" id="mpSubmitBtn"
                     class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg mt-4"
-                    style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+                    style="background:linear-gradient(135deg,#9669c4,#ab84d1);">
                 ✅ Guardar Materia Prima
             </button>
         </form>
@@ -506,7 +506,7 @@ function mpTogglePaquete() {
     if (chk.checked) {
         simple.style.display = 'none';
         paq.style.display = 'block';
-        if (slider) slider.style.background = '#7c3aed';
+        if (slider) slider.style.background = '#9669c4';
         if (thumb)  thumb.style.left = '20px';
         // mpCosto ya no es requerido directamente — lo llena mpCalcCostoUnidad
         if (costoInput) costoInput.removeAttribute('required');

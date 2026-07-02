@@ -19,7 +19,7 @@
                 if (!banner) {
                     banner = document.createElement('div');
                     banner.id = 'swUpdateBanner';
-                    banner.style.cssText = 'display:none;position:fixed;bottom:0;left:0;right:0;background:#7c3aed;color:#fff;padding:12px 16px;text-align:center;z-index:9999;font-size:14px;';
+                    banner.style.cssText = 'display:none;position:fixed;bottom:0;left:0;right:0;background:#9669c4;color:#fff;padding:12px 16px;text-align:center;z-index:9999;font-size:14px;';
                     banner.innerHTML = '🚀 Nueva versión disponible — <button onclick="window.location.reload()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:4px 12px;border-radius:4px;cursor:pointer;margin-left:8px;">Actualizar ahora</button>';
                     document.body.appendChild(banner);
                 }
@@ -88,12 +88,12 @@
     // ── Supabase status bar styling ──
     const supaEl = document.getElementById('supabaseStatus');
     if (supaEl && !supaEl.style.background) {
-        supaEl.style.background = 'rgba(197,151,59,0.08)';
-        supaEl.style.border = '1px solid rgba(197,151,59,0.12)';
+        supaEl.style.background = 'rgba(255,209,102,0.08)';
+        supaEl.style.border = '1px solid rgba(255,209,102,0.12)';
     }
 
-    console.log('%c🐱 Maneki Store Premium v4.1', 'color:#E8B84B;font-size:14px;font-weight:800;');
-    console.log('%cDesign System cargado correctamente.', 'color:#A855F7;font-size:11px;');
+    console.log('%c🐱 Maneki Store Premium v4.1', 'color:#FFDD85;font-size:14px;font-weight:800;');
+    console.log('%cDesign System cargado correctamente.', 'color:#ab84d1;font-size:11px;');
 
     // ══════════════════════════════════════════════════════════════
     // #1 CONFETTI — explosión al finalizar pedido
@@ -103,7 +103,7 @@
         if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'mk-confetti-canvas'; canvas.style.cssText='position:fixed;inset:0;z-index:99999;pointer-events:none;'; document.body.appendChild(canvas); }
         canvas.width = innerWidth; canvas.height = innerHeight; canvas.style.display = 'block';
         const ctx = canvas.getContext('2d');
-        const colors = ['#C5973B','#E8B84B','#F5D080','#9B7BC4','#C4A8E0','#F2A97E','#10b981','#ef4444','#3b82f6'];
+        const colors = ['#FFD166','#FFDD85','#FFE8B0','#9669c4','#dfbfff','#F2A97E','#10b981','#ef4444','#3b82f6'];
         const pieces = Array.from({length:80}, ()=>({
             x: Math.random()*innerWidth, y: -10-Math.random()*40,
             w: 4+Math.random()*5, h: 4+Math.random()*5,
@@ -431,7 +431,7 @@
         // Color determinístico basado en el nombre
         let hash = 0;
         for (let i=0; i<n.length; i++) hash = n.charCodeAt(i) + ((hash<<5)-hash);
-        const colors = ['#C5973B','#9B7BC4','#F2A97E','#10b981','#3b82f6','#ef4444','#f59e0b','#06b6d4','#8b5cf6','#ec4899'];
+        const colors = ['#FFD166','#9669c4','#F2A97E','#10b981','#3b82f6','#ef4444','#f59e0b','#06b6d4','#8b5cf6','#ec4899'];
         const bg = colors[Math.abs(hash) % colors.length];
         return `<span class="mk-avatar" style="background:${bg}">${initials}</span>`;
     };
@@ -556,7 +556,7 @@
                 if (idx >= steps.length) { finish(); return; }
                 const s = steps[idx], el = document.querySelector(s.target);
                 document.querySelectorAll('._mk-hl').forEach(e => { e.style.zIndex=''; e.style.boxShadow=''; e.classList.remove('_mk-hl'); });
-                if (el) { el.style.zIndex='99998'; el.style.boxShadow='0 0 0 4px rgba(197,151,59,0.5),0 0 20px rgba(197,151,59,0.3)'; el.classList.add('_mk-hl'); }
+                if (el) { el.style.zIndex='99998'; el.style.boxShadow='0 0 0 4px rgba(255,209,102,0.5),0 0 20px rgba(255,209,102,0.3)'; el.classList.add('_mk-hl'); }
                 const r = el ? el.getBoundingClientRect() : { top:innerHeight/2-80, left:innerWidth/2-160, bottom:innerHeight/2 };
                 tip.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h4 style="font-size:1rem;font-weight:800;color:#1a0533;margin:0;">'+s.title+'</h4><span style="font-size:.7rem;color:#9ca3af;">'+(idx+1)+'/'+steps.length+'</span></div><p style="font-size:.82rem;color:#6b7280;margin:0 0 14px;line-height:1.5;">'+s.text+'</p><div style="display:flex;justify-content:space-between;"><button id="_ts" style="background:none;border:none;color:#9ca3af;font-size:.78rem;cursor:pointer;">Saltar</button><button id="_tn" style="background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:white;border:none;border-radius:10px;padding:8px 20px;font-weight:700;font-size:.82rem;cursor:pointer;">'+(idx===steps.length-1?'¡Empezar! 🚀':'Siguiente →')+'</button></div>';
                 tip.style.top = (r.bottom+12+200>innerHeight ? r.top-180 : r.bottom+12)+'px';

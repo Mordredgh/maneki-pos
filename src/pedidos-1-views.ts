@@ -7,7 +7,7 @@ function setVistaPedidos(vista) {
     const btnK    = document.getElementById('btnVistaKanban');
     const btnT    = document.getElementById('btnVistaTabla');
     const btnC    = document.getElementById('btnVistaCalendario');
-    const activo  = '#C5973B';
+    const activo  = '#FFD166';
     const inactivo = '';
     // ocultar todo
     [kanban, tabla, cal].forEach(el => el && el.classList.add('hidden'));
@@ -34,7 +34,7 @@ function filterPedidos(status, btn) {
     document.querySelectorAll('.pedido-filter').forEach(b => {
         b.style.borderColor = '#E5E7EB'; b.style.background = 'white'; b.style.color = '#4B5563';
     });
-    if (btn) { btn.style.borderColor = '#C5973B'; btn.style.background = '#FFF9F0'; btn.style.color = '#C5973B'; }
+    if (btn) { btn.style.borderColor = '#FFD166'; btn.style.background = '#FFF9F0'; btn.style.color = '#FFD166'; }
     renderTablaPedidos();
 }
 
@@ -127,14 +127,14 @@ function _updatePedidoStep(step: number): void {
     if (!steps.length) return;
     steps.forEach((el: any, i: number) => {
         const n = i + 1;
-        el.style.background = n < step ? '#10b981' : n === step ? 'var(--mk-g500, #C5973B)' : '#e5e7eb';
+        el.style.background = n < step ? '#10b981' : n === step ? 'var(--mk-g500, #FFD166)' : '#e5e7eb';
         el.style.color = n <= step ? 'white' : '#6b7280';
     });
     // También colorear las labels
     const labels = document.querySelectorAll('#pedido-steps span.text-xs');
     labels.forEach((el: any, i: number) => {
         const n = i + 1;
-        el.style.color = n === step ? '#C5973B' : n < step ? '#10b981' : '#9ca3af';
+        el.style.color = n === step ? '#FFD166' : n < step ? '#10b981' : '#9ca3af';
         el.style.fontWeight = n === step ? '700' : '400';
     });
 }
@@ -213,7 +213,7 @@ function setKanbanUrgencia(filtro, btn) {
     document.querySelectorAll('.btn-kanban-urgencia').forEach(b => {
         b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
     });
-    if (btn) { btn.style.background = '#C5973B'; btn.style.color = 'white'; btn.style.borderColor = '#C5973B'; }
+    if (btn) { btn.style.background = '#FFD166'; btn.style.color = 'white'; btn.style.borderColor = '#FFD166'; }
     renderKanbanBoard();
 }
 window.setKanbanUrgencia = setKanbanUrgencia;
@@ -226,7 +226,7 @@ function setKanbanOcasion(ocasion: string, btn?: HTMLElement) {
     document.querySelectorAll('.btn-kanban-ocasion').forEach((b: any) => {
         b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
     });
-    if (btn) { btn.style.background = '#7c3aed'; btn.style.color = 'white'; btn.style.borderColor = '#7c3aed'; }
+    if (btn) { btn.style.background = '#9669c4'; btn.style.color = 'white'; btn.style.borderColor = '#9669c4'; }
     renderKanbanBoard();
 }
 (window as any).setKanbanOcasion = setKanbanOcasion;
@@ -243,7 +243,7 @@ function toggleKanbanFocus() {
     if (searchBar) { searchBar.style.marginLeft = _kanbanFocusMode ? '0' : ''; }
     if (btn) {
         btn.title = _kanbanFocusMode ? 'Salir del modo focus' : 'Modo focus (ocultar sidebar)';
-        btn.style.background = _kanbanFocusMode ? '#C5973B' : '';
+        btn.style.background = _kanbanFocusMode ? '#FFD166' : '';
         btn.style.color      = _kanbanFocusMode ? 'white'   : '';
     }
 }
@@ -406,7 +406,7 @@ window._kanbanVerMas = function(col: string) {
     const input = document.createElement('input');
     input.type = 'date';
     input.value = fechaActual;
-    input.style.cssText = 'font-size:.72rem;border:1.5px solid #C5973B;border-radius:6px;padding:2px 6px;background:#fffbf5;outline:none;';
+    input.style.cssText = 'font-size:.72rem;border:1.5px solid #FFD166;border-radius:6px;padding:2px 6px;background:#fffbf5;outline:none;';
 
     span.textContent = '';
     span.appendChild(input);
@@ -466,7 +466,7 @@ function kanbanCardHTML(p) {
     const _checkboxHtml = `<input type="checkbox" ${_isSelected ? 'checked' : ''}
         onchange="_toggleKanbanSelect('${p.id}', this.checked)"
         onclick="event.stopPropagation()"
-        style="position:absolute;top:6px;right:6px;width:16px;height:16px;cursor:pointer;accent-color:#C5973B;opacity:${_isSelected ? '1' : '0'};transition:opacity .15s;"
+        style="position:absolute;top:6px;right:6px;width:16px;height:16px;cursor:pointer;accent-color:#FFD166;opacity:${_isSelected ? '1' : '0'};transition:opacity .15s;"
         class="_kanban-check"
         title="Seleccionar para acción en lote">`;
 
@@ -494,7 +494,7 @@ function kanbanCardHTML(p) {
             draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
             ${_checkboxHtml}
             <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px;">
-                <span style="font-size:.72rem;font-weight:800;color:#C5973B;">${_e(p.folio)}</span>
+                <span style="font-size:.72rem;font-weight:800;color:#FFD166;">${_e(p.folio)}</span>
                 <span style="font-size:.7rem;font-weight:700;color:${_saldo>0?'#dc2626':'#16a34a'};">${_saldo>0?'$'+_saldo.toFixed(0):'✓'}</span>
             </div>
             <p style="font-size:.76rem;font-weight:600;color:#1f2937;margin:0 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_e(p.cliente)}</p>
@@ -528,7 +528,7 @@ function kanbanCardHTML(p) {
         : '';
     // Badge de ocasión (XV, boda, graduación, etc.)
     const _ocasionLabels: Record<string,string> = {xv:'👑 XV',boda:'💍 Boda',graduacion:'🎓 Grad.',baby_shower:'🍼 Baby',aniversario:'❤️ Aniv.',navidad:'🎄 Nav.',otro:'✨'};
-    const _ocasionBadge = (p.ocasion && _ocasionLabels[p.ocasion]) ? `<span style="font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;background:#f5f3ff;color:#7c3aed;">${_ocasionLabels[p.ocasion]}</span>` : '';
+    const _ocasionBadge = (p.ocasion && _ocasionLabels[p.ocasion]) ? `<span style="font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;background:#f5f3ff;color:#9669c4;">${_ocasionLabels[p.ocasion]}</span>` : '';
     // Recordatorio: pedido en "Retirar" más de 3 días sin ser recogido
     const _retirarAlerta = (function(){
         if ((p.status||'') !== 'retirar') return '';
@@ -602,7 +602,7 @@ function _inyectarBuscadorTabla() {
         <div style="flex:1;min-width:200px;position:relative;">
             <input id="tablaPedidosBuscar" type="text" placeholder="🔍 Buscar por cliente, folio, concepto..."
                 style="width:100%;padding:10px 14px 10px 36px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;background:#fff;"
-                onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'"
+                onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#e5e7eb'"
                 oninput="_pedidosTablePage=1;renderTablaPedidos()">
             <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.4;">🔎</span>
         </div>
@@ -635,7 +635,7 @@ function _mkTblMenu(btn: HTMLElement, id: string) {
     menu.innerHTML = `
         <button onclick="openPedidoModal('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#374151;text-align:left;" onmouseover="this.style.background='#fef9f0'" onmouseout="this.style.background='none'">✏️ Editar pedido</button>
         <button onclick="exportarPedidoPDF('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#1d4ed8;text-align:left;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='none'">📄 Descargar PDF</button>
-        <button onclick="duplicarPedido('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#7c3aed;text-align:left;" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='none'">⧉ Duplicar</button>
+        <button onclick="duplicarPedido('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#9669c4;text-align:left;" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='none'">⧉ Duplicar</button>
         <hr style="margin:4px 0;border:none;border-top:1px solid #f3f4f6;">
         <button onclick="eliminarPedido('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#dc2626;text-align:left;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">🗑 Eliminar</button>
     `;
@@ -770,7 +770,7 @@ function renderTablaPedidos() {
             </td>
             <td class="px-4 py-3 text-xs text-gray-500 max-w-[160px]">
                 <p class="truncate">${_et(p.concepto)||'—'}</p>
-                ${_dir ? `<p class="truncate mt-1" style="color:#7c3aed;">📍 ${_et(_dir)}</p>` : ''}
+                ${_dir ? `<p class="truncate mt-1" style="color:#9669c4;">📍 ${_et(_dir)}</p>` : ''}
             </td>
             <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.fechaPedido)||''}">${_fmtFechaCorta((p.fechaPedido||'').split('T')[0].split(' ')[0])||'—'}</span></td>
             <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.entrega)||''}">${_fmtFechaCorta((p.entrega||'').split('T')[0].split(' ')[0])||'—'}</span></td>

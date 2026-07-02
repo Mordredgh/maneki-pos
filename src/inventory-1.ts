@@ -24,7 +24,7 @@ if (typeof window.showSection === 'undefined') {
         negro:'#1f2937', negra:'#1f2937', black:'#1f2937',
         blanco:'#f9fafb', blanca:'#f9fafb', white:'#f9fafb',
         rosa:'#ec4899', pink:'#ec4899', 'rosa mexicano':'#e91e8c',
-        morado:'#a855f7', morada:'#a855f7', violeta:'#8b5cf6', lila:'#c084fc', lavanda:'#c4b5fd', purple:'#a855f7',
+        morado:'#ab84d1', morada:'#ab84d1', violeta:'#8b5cf6', lila:'#c084fc', lavanda:'#c4b5fd', purple:'#ab84d1',
         naranja:'#f97316', orange:'#f97316',
         gris:'#9ca3af', grise:'#9ca3af', gray:'#9ca3af', grey:'#9ca3af', plateado:'#94a3b8', silver:'#94a3b8',
         café:'#92400e', cafe:'#92400e', 'marrón':'#92400e', marron:'#92400e', brown:'#78350f', beige:'#e5c9a0', crema:'#fef3c7',
@@ -293,8 +293,8 @@ function mostrarListaCompras(esRerender?) {
     // I8: toggle Ahora / Pipeline en la parte superior
     const _modeToggleHtml = `
         <div style="display:flex;gap:0;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:12px;font-size:.78rem;">
-            <button onclick="_listaComprasModo='ahora';mostrarListaCompras(true)" style="flex:1;padding:7px 0;border:none;cursor:pointer;font-weight:700;background:${_listaComprasModo==='ahora'?'#C5973B':'#fff'};color:${_listaComprasModo==='ahora'?'#fff':'#6b7280'};">🔥 Necesitas ahora</button>
-            <button onclick="_listaComprasModo='pipeline';mostrarListaCompras(true)" style="flex:1;padding:7px 0;border:none;cursor:pointer;font-weight:700;background:${_listaComprasModo==='pipeline'?'#C5973B':'#fff'};color:${_listaComprasModo==='pipeline'?'#fff':'#6b7280'};">📋 Pipeline completo</button>
+            <button onclick="_listaComprasModo='ahora';mostrarListaCompras(true)" style="flex:1;padding:7px 0;border:none;cursor:pointer;font-weight:700;background:${_listaComprasModo==='ahora'?'#FFD166':'#fff'};color:${_listaComprasModo==='ahora'?'#fff':'#6b7280'};">🔥 Necesitas ahora</button>
+            <button onclick="_listaComprasModo='pipeline';mostrarListaCompras(true)" style="flex:1;padding:7px 0;border:none;cursor:pointer;font-weight:700;background:${_listaComprasModo==='pipeline'?'#FFD166':'#fff'};color:${_listaComprasModo==='pipeline'?'#fff':'#6b7280'};">📋 Pipeline completo</button>
         </div>`;
 
     if (resultado.length === 0) {
@@ -711,7 +711,7 @@ function invInlineEditStock(id, td) {
     const input = document.createElement('input');
     input.type = 'number'; input.min = '0'; input.step = '0.01';
     input.value = prev;
-    input.style.cssText = 'width:60px;padding:2px 6px;border:1.5px solid #7c3aed;border-radius:6px;font-size:.85rem;text-align:center;';
+    input.style.cssText = 'width:60px;padding:2px 6px;border:1.5px solid #9669c4;border-radius:6px;font-size:.85rem;text-align:center;';
     const commit = async () => {
         const nv = parseFloat(input.value);
         if (!isNaN(nv) && nv !== prev) {
@@ -744,7 +744,7 @@ function invInlineEditPrice(id, td) {
     const input = document.createElement('input');
     input.type = 'number'; input.min = '0'; input.step = '0.01';
     input.value = prev.toFixed(2);
-    input.style.cssText = 'width:80px;padding:2px 6px;border:1.5px solid #C5973B;border-radius:6px;font-size:.85rem;text-align:center;font-weight:700;';
+    input.style.cssText = 'width:80px;padding:2px 6px;border:1.5px solid #FFD166;border-radius:6px;font-size:.85rem;text-align:center;font-weight:700;';
     const commit = () => {
         const nv = parseFloat(input.value);
         if (!isNaN(nv) && nv >= 0 && nv !== prev) {
@@ -979,7 +979,7 @@ function ptRenderGaleria() {
         div.style = 'position:relative;width:120px;height:120px;';
         div.dataset.fileIdx = i;
         const img = document.createElement('img');
-        img.style = 'width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #C5973B;opacity:.85;';
+        img.style = 'width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #FFD166;opacity:.85;';
         const reader = new FileReader();
         reader.onload = ev => { img.src = ev.target.result; };
         reader.readAsDataURL(file);
@@ -1454,7 +1454,7 @@ function imprimirEtiquetasBatch(ids?: string[]) {
                 ${p.sku ? `<div style="font-size:7pt;color:#9ca3af;margin-top:1mm;">SKU: ${_esc(p.sku)}</div>` : ''}
             </div>
             <div style="display:flex;justify-content:space-between;align-items:flex-end;">
-                <div style="font-size:16pt;font-weight:900;color:#C5973B;">$${Number(p.price).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:2})}</div>
+                <div style="font-size:16pt;font-weight:900;color:#FFD166;">$${Number(p.price).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:2})}</div>
                 <div style="font-size:7pt;color:#9ca3af;text-align:right;">${_esc(p.category || p.categoria || '')}</div>
             </div>
         </div>`).join('');
@@ -1470,7 +1470,7 @@ function imprimirEtiquetasBatch(ids?: string[]) {
             @media print { .no-print { display:none; } }
         </style>
     </head><body>
-        <div class="header no-print">${prods.length} etiquetas · Maneki Store · <button onclick="window.print()" style="padding:4px 12px;background:#C5973B;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:8pt;">🖨️ Imprimir</button></div>
+        <div class="header no-print">${prods.length} etiquetas · Maneki Store · <button onclick="window.print()" style="padding:4px 12px;background:#FFD166;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:8pt;">🖨️ Imprimir</button></div>
         ${etiquetasHTML}
     </body></html>`);
     win.document.close();

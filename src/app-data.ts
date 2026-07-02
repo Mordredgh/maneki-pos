@@ -354,7 +354,7 @@ function selectEmoji(emoji) {
     // Highlight seleccionado
     document.querySelectorAll('.emoji-btn').forEach(btn => {
         btn.style.background = btn.textContent.trim() === emoji ? '#FFF9F0' : '';
-        btn.style.border = btn.textContent.trim() === emoji ? '2px solid #C5973B' : '';
+        btn.style.border = btn.textContent.trim() === emoji ? '2px solid #FFD166' : '';
     });
 }
 
@@ -442,7 +442,7 @@ function selectEquipoEmoji(emoji) {
     document.querySelectorAll('.equipo-emoji-btn').forEach(btn => {
         const isSelected = btn.textContent.trim() === emoji;
         btn.style.background = isSelected ? '#FFF9F0' : '';
-        btn.style.border = isSelected ? '2px solid #C5973B' : '';
+        btn.style.border = isSelected ? '2px solid #FFD166' : '';
     });
 }
 
@@ -458,8 +458,8 @@ function openAddCategoryModal() {
     document.getElementById('categoryEmoji').value = '📦';
     document.getElementById('selectedEmojiDisplay').textContent = '📦';
     document.getElementById('emojiSearch').value = '';
-    document.getElementById('categoryColor').value = '#C5973B';
-    setTimeout(() => selectCategoryColor('#C5973B'), 50);
+    document.getElementById('categoryColor').value = '#FFD166';
+    setTimeout(() => selectCategoryColor('#FFD166'), 50);
     renderEmojiGrid();
 }
         // ============== REFRESCO DE PÁGINA ==============
@@ -534,14 +534,14 @@ function applyDarkMode(enabled) {
 
 const themes = {
     dorado: {
-        primary: '#C5973B',
+        primary: '#FFD166',
         primaryDark: '#B8965F',
         primaryLight: '#FFF9F0',
         secondary: '#D8BFD8',
         secondaryLight: '#E6D5E6',
-        accent: '#C5973B',
+        accent: '#FFD166',
         sidebarBg: 'linear-gradient(180deg, #FFFFFF 0%, #FAF9F7 100%)',
-        borderColor: '#C5973B'
+        borderColor: '#FFD166'
     },
     rosas: {
         primary: '#E91E8C',
@@ -554,14 +554,14 @@ const themes = {
         borderColor: '#E91E8C'
     },
     morado: {
-        primary: '#7C3AED',
+        primary: '#9669c4',
         primaryDark: '#6D28D9',
         primaryLight: '#F5F3FF',
         secondary: '#C4B5FD',
         secondaryLight: '#EDE9FE',
-        accent: '#7C3AED',
+        accent: '#9669c4',
         sidebarBg: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8FF 100%)',
-        borderColor: '#7C3AED'
+        borderColor: '#9669c4'
     },
     verde: {
         primary: '#059669',
@@ -671,7 +671,7 @@ function applyTheme(themeName) {
             border-color: ${t.primary} !important;
             box-shadow: 0 0 0 2px ${t.primary}33 !important;
         }
-        [style*="color: #C5973B"], [style*="color:#C5973B"] {
+        [style*="color: #FFD166"], [style*="color:#FFD166"] {
             color: ${t.primary} !important;
         }
         [style*="background: #E6D5E6"], [style*="background:#E6D5E6"] {
@@ -680,7 +680,7 @@ function applyTheme(themeName) {
         [style*="background: #FFF9F0"], [style*="background:#FFF9F0"] {
             background: ${t.primaryLight} !important;
         }
-        [style*="border-color: #C5973B"], [style*="border-color:#C5973B"] {
+        [style*="border-color: #FFD166"], [style*="border-color:#FFD166"] {
             border-color: ${t.primary} !important;
         }
         .badge-vip {

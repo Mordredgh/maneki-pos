@@ -196,7 +196,7 @@ CREATE INDEX IF NOT EXISTS idx_products_category ON mk_products(category);
     // Mostrar reporte en consola
     async report() {
         const data = await this.estimateDataSize();
-        console.log('%c📊 Maneki Migration Report', 'font-size:14px;font-weight:800;color:#C5973B');
+        console.log('%c📊 Maneki Migration Report', 'font-size:14px;font-weight:800;color:#FFD166');
         console.table(data);
         console.log(data._recommendation);
         // SQL schema omitted from console in production — call this.getTargetSQL() manually if needed

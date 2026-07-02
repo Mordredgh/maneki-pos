@@ -231,7 +231,7 @@ function _getSortedClients() {
 
 function _sortArrow(col) {
     if (_clientesSortCol !== col) return '<span style="opacity:.3;font-size:.65rem">↕</span>';
-    return `<span style="font-size:.65rem;color:#C5973B">${_clientesSortDir === 'asc' ? '↑' : '↓'}</span>`;
+    return `<span style="font-size:.65rem;color:#FFD166">${_clientesSortDir === 'asc' ? '↑' : '↓'}</span>`;
 }
 
 // ── MEJORA 1: Stats del cliente ───────────────────────────────────────────────
@@ -621,10 +621,10 @@ function selectClientType(type) {
     const btnR = document.getElementById('btnClientRegular');
     const btnV = document.getElementById('btnClientVip');
     if (type === 'vip') {
-        btnV.style.borderColor = '#C5973B'; btnV.style.background = '#FFF9F0'; btnV.style.color = '#C5973B';
+        btnV.style.borderColor = '#FFD166'; btnV.style.background = '#FFF9F0'; btnV.style.color = '#FFD166';
         btnR.style.borderColor = '#E5E7EB'; btnR.style.background = 'white'; btnR.style.color = '#6B7280';
     } else {
-        btnR.style.borderColor = '#C5973B'; btnR.style.background = '#FFF9F0'; btnR.style.color = '#C5973B';
+        btnR.style.borderColor = '#FFD166'; btnR.style.background = '#FFF9F0'; btnR.style.color = '#FFD166';
         btnV.style.borderColor = '#E5E7EB'; btnV.style.background = 'white'; btnV.style.color = '#6B7280';
     }
 }
@@ -807,8 +807,8 @@ function closeAddClientModal() {
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(197,151,59,0.18) !important;">
-                                    <i class="fas fa-user" style="color: #C5973B !important;"></i>
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(255,209,102,0.18) !important;">
+                                    <i class="fas fa-user" style="color: #FFD166 !important;"></i>
                                 </div>
                                 <div>
                                     <div style="display:flex;align-items:center;gap:6px">
@@ -1034,7 +1034,7 @@ window._ejecutarFusion = _ejecutarFusion;
         btn.title = 'Fusionar clientes duplicados';
         btn.textContent = '🔀 Fusionar duplicados';
         btn.style.cssText = 'padding:6px 14px;border-radius:10px;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#374151;transition:border-color .15s;margin-left:8px;';
-        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#C5973B'; btn.style.color = '#C5973B'; });
+        btn.addEventListener('mouseenter', () => { btn.style.borderColor = '#FFD166'; btn.style.color = '#FFD166'; });
         btn.addEventListener('mouseleave', () => { btn.style.borderColor = '#d1d5db'; btn.style.color = '#374151'; });
         btn.addEventListener('click', () => abrirFusionarClientes());
         addBtn.insertAdjacentElement('afterend', btn);

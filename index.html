@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; connect-src 'self' https://*.supabase.co https://api.telegram.org wss://*.supabase.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com https://api.open-meteo.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; worker-src 'self' blob:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Sistema de gestión para negocios de regalos personalizados. Dashboard, inventario, pedidos por encargo y reportes.">
-    <meta name="theme-color" content="#C9933A">
+    <meta name="theme-color" content="#FFD166">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -78,15 +78,15 @@ input:focus, select:focus, textarea:focus, button:focus {
     /* ── LIGHT MODE ── */
     #sidebar.sidebar, aside#sidebar {
       background: linear-gradient(175deg,#FBF8F3 0%,#FDF6E3 55%,#FBF8F3 100%) !important;
-      border-right: 1px solid rgba(201,147,58,0.18) !important;
+      border-right: 1px solid rgba(255,209,102,0.18) !important;
       box-shadow: 4px 0 32px rgba(28,79,50,0.08) !important;
     }
     #sidebar .sidebar-item { color: rgba(61,94,74,0.75) !important; }
-    #sidebar .sidebar-item:hover { background: rgba(201,147,58,0.10) !important; color: #1c4f32 !important; transform: translateX(2px); }
-    #sidebar .sidebar-item.active { background: linear-gradient(135deg,rgba(201,147,58,0.20),rgba(232,184,75,0.10)) !important; color: #7A5010 !important; border: 1px solid rgba(201,147,58,0.30) !important; box-shadow: 0 2px 12px rgba(201,147,58,0.12) !important; }
-    #sidebar .sidebar-store-name { color: #1c4f32 !important; -webkit-text-fill-color: transparent !important; background: linear-gradient(135deg,#C9933A,#E8B84B,#C9933A) !important; -webkit-background-clip: text !important; background-clip: text !important; }
-    #sidebar .sidebar-store-slogan { color: rgba(201,147,58,0.7) !important; }
-    #sidebar .border-t, #sidebar [class*="border-"] { border-color: rgba(201,147,58,0.15) !important; }
+    #sidebar .sidebar-item:hover { background: rgba(255,209,102,0.10) !important; color: #1c4f32 !important; transform: translateX(2px); }
+    #sidebar .sidebar-item.active { background: linear-gradient(135deg,rgba(255,209,102,0.20),rgba(255,221,133,0.10)) !important; color: #8a6510 !important; border: 1px solid rgba(255,209,102,0.30) !important; box-shadow: 0 2px 12px rgba(255,209,102,0.12) !important; }
+    #sidebar .sidebar-store-name { color: #1c4f32 !important; -webkit-text-fill-color: transparent !important; background: linear-gradient(135deg,#FFD166,#FFDD85,#FFD166) !important; -webkit-background-clip: text !important; background-clip: text !important; }
+    #sidebar .sidebar-store-slogan { color: rgba(255,209,102,0.7) !important; }
+    #sidebar .border-t, #sidebar [class*="border-"] { border-color: rgba(255,209,102,0.15) !important; }
     #sidebar .text-gray-600, #sidebar .text-gray-500 { color: #7a8f80 !important; }
     #sidebar .text-gray-800, #sidebar .text-gray-700 { color: #1c4f32 !important; }
 
@@ -94,17 +94,17 @@ input:focus, select:focus, textarea:focus, button:focus {
     body.dark #sidebar.sidebar,
     body.dark aside#sidebar {
       background: linear-gradient(175deg,#0f2d1c 0%,#123625 55%,#0f2d1c 100%) !important;
-      border-right: 1px solid rgba(201,147,58,0.22) !important;
-      box-shadow: 4px 0 40px rgba(0,0,0,0.45), 1px 0 0 rgba(201,147,58,0.10) !important;
+      border-right: 1px solid rgba(255,209,102,0.22) !important;
+      box-shadow: 4px 0 40px rgba(0,0,0,0.45), 1px 0 0 rgba(255,209,102,0.10) !important;
     }
     body.dark #sidebar .sidebar-item { color: rgba(180,210,192,0.65) !important; }
-    body.dark #sidebar .sidebar-item:hover { background: rgba(201,147,58,0.13) !important; color: #F5ECD6 !important; transform: translateX(2px); }
-    body.dark #sidebar .sidebar-item.active { background: linear-gradient(135deg,rgba(201,147,58,0.24),rgba(232,184,75,0.13)) !important; color: #E8B84B !important; border: 1px solid rgba(201,147,58,0.32) !important; box-shadow: 0 2px 16px rgba(201,147,58,0.20) !important; }
-    body.dark #sidebar .sidebar-store-name { background: linear-gradient(135deg,#E8B84B,#F5DFA8,#C9933A) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; background-clip: text !important; }
-    body.dark #sidebar .sidebar-store-slogan { color: rgba(201,147,58,0.60) !important; }
-    body.dark #sidebar .border-t, body.dark #sidebar [class*="border-"] { border-color: rgba(201,147,58,0.12) !important; }
+    body.dark #sidebar .sidebar-item:hover { background: rgba(255,209,102,0.13) !important; color: #FFF6E0 !important; transform: translateX(2px); }
+    body.dark #sidebar .sidebar-item.active { background: linear-gradient(135deg,rgba(255,209,102,0.24),rgba(255,221,133,0.13)) !important; color: #FFDD85 !important; border: 1px solid rgba(255,209,102,0.32) !important; box-shadow: 0 2px 16px rgba(255,209,102,0.20) !important; }
+    body.dark #sidebar .sidebar-store-name { background: linear-gradient(135deg,#FFDD85,#FFE8B0,#FFD166) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; background-clip: text !important; }
+    body.dark #sidebar .sidebar-store-slogan { color: rgba(255,209,102,0.60) !important; }
+    body.dark #sidebar .border-t, body.dark #sidebar [class*="border-"] { border-color: rgba(255,209,102,0.12) !important; }
     body.dark #sidebar .text-gray-600, body.dark #sidebar .text-gray-500 { color: #6a9a80 !important; }
-    body.dark #sidebar .text-gray-800, body.dark #sidebar .text-gray-700 { color: #F5ECD6 !important; }
+    body.dark #sidebar .text-gray-800, body.dark #sidebar .text-gray-700 { color: #FFF6E0 !important; }
   </style>
 </head>
 <body class="bg-gray-50">
@@ -127,7 +127,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   <button type="button" id="hamburgerBtn" data-action="_mkToggleSidebar"
     aria-label="Abrir menú"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:22px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;transition:transform .2s;">☰</button>
-  <img src="logo.png" alt="Bicho Capricho" style="height:32px;object-fit:contain;" data-error-fallback="hide" data-error-html="<span style='font-family:'Fredoka One',serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;'>Bicho Capricho</span>">
+  <img src="logo.png" alt="Bicho Capricho" style="height:32px;object-fit:contain;" data-error-fallback="hide" data-error-html="<span style='font-family:'Fredoka One',serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#FFD166,#FFDD85);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;'>Bicho Capricho</span>">
   <button type="button" data-action="_abrirBusquedaOverlay"
     aria-label="Buscar"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:18px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">🔍</button>
@@ -147,9 +147,9 @@ input:focus, select:focus, textarea:focus, button:focus {
 </div>
 
 <div>
-    <h1 class="sidebar-store-name" style="font-family:'Fredoka One',serif;font-size:1.35rem;font-weight:600;letter-spacing:-0.01em;background:linear-gradient(135deg,#F5D080,#E8B84B,#fff,#C5973B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer;line-height:1.1;"
+    <h1 class="sidebar-store-name" style="font-family:'Fredoka One',serif;font-size:1.35rem;font-weight:600;letter-spacing:-0.01em;background:linear-gradient(135deg,#FFE8B0,#FFDD85,#fff,#FFD166);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer;line-height:1.1;"
         data-action="showSection" data-arg="bienvenida">Bicho Capricho</h1>
-    <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(197,151,59,.5);margin-top:3px;">Regalos Personalizados</p>
+    <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,209,102,.5);margin-top:3px;">Regalos Personalizados</p>
 </div>
 
                 <button type="button" id="closeSidebar" data-action="closeSidebar" class="md:hidden text-gray-600" aria-label="Cerrar menú">
@@ -208,14 +208,14 @@ input:focus, select:focus, textarea:focus, button:focus {
 </button>
         </nav>
 
-        <div class="border-t flex-shrink-0" style="padding:10px 12px;border-color:rgba(197,151,59,0.12);">
+        <div class="border-t flex-shrink-0" style="padding:10px 12px;border-color:rgba(255,209,102,0.12);">
             <div class="flex gap-2 mb-1">
               <button type="button" data-action="abrirModalBackup" class="flex-1 px-2 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-200 transition-all flex items-center justify-center gap-1">
                   <i class="fas fa-database"></i><span>Backup</span>
               </button>
             </div>
             <div class="mb-1">
-              <div id="supabaseStatus" class="flex items-center gap-2 text-xs px-2 py-1 rounded-lg cursor-default" style="background:rgba(197,151,59,0.08);border:1px solid rgba(197,151,59,0.12);" title="Estado de sincronización con la nube">
+              <div id="supabaseStatus" class="flex items-center gap-2 text-xs px-2 py-1 rounded-lg cursor-default" style="background:rgba(255,209,102,0.08);border:1px solid rgba(255,209,102,0.12);" title="Estado de sincronización con la nube">
                 <span id="supabaseStatusDot" class="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0 inline-block"></span>
                 <span id="supabaseStatusText" class="text-gray-500 truncate">Verificando...</span>
                 <span id="supabaseOfflineBadge" class="hidden ml-auto text-orange-600 font-bold text-xs" title="Modo offline — datos en cola">✦ Offline</span>
@@ -223,12 +223,12 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2 cursor-pointer" data-action="showSection" data-arg="configuracion" title="Ir a Configuración" aria-label="Abrir configuración">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(197,151,59,0.18) !important;">
-                        <i class="fas fa-user text-sm" style="color: #C5973B !important;"></i>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(255,209,102,0.18) !important;">
+                        <i class="fas fa-user text-sm" style="color: #FFD166 !important;"></i>
                     </div>
                     <div class="min-w-0">
                         <p class="text-sm font-semibold text-gray-800 dark-text truncate" id="sidebarUserName">Bicho Capricho</p>
-                        <p class="text-xs truncate" style="color: #C5973B !important;">⚙️ Configuración</p>
+                        <p class="text-xs truncate" style="color: #FFD166 !important;">⚙️ Configuración</p>
                     </div>
                 </div>
                 <!-- UX6: botón de atajos de teclado visible -->
@@ -254,7 +254,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div id="global-search-bar" class="md:ml-64 sticky top-0 z-40 flex items-center gap-3" style="
         padding: 10px 20px;
         background: rgba(250,248,255,0.98);
-        border-bottom: 1px solid rgba(197,151,59,0.1);
+        border-bottom: 1px solid rgba(255,209,102,0.1);
         box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 4px 16px rgba(21,4,40,0.05);
         position:relative;
     ">
@@ -269,7 +269,7 @@ input:focus, select:focus, textarea:focus, button:focus {
           autocomplete="off"
           style="
             width:100%;padding:8px 14px 8px 36px;
-            border:1.5px solid rgba(197,151,59,0.15);
+            border:1.5px solid rgba(255,209,102,0.15);
             border-radius:12px;font-size:0.85rem;
             background:rgba(255,255,255,0.8);
             font-family:'Outfit',sans-serif;
@@ -284,13 +284,13 @@ input:focus, select:focus, textarea:focus, button:focus {
         <span class="mk-kbd-hint" data-tip="Paleta de comandos"
           data-action="mkOpenCommandPalette"
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">⌘K</span>
-        <div id="globalSearchResults" class="hidden absolute top-11 left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto" style="box-shadow:0 24px 64px rgba(21,4,40,0.15),0 8px 24px rgba(124,58,237,0.08);border-radius:20px;border:1px solid rgba(197,151,59,0.12);"></div>
+        <div id="globalSearchResults" class="hidden absolute top-11 left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto" style="box-shadow:0 24px 64px rgba(21,4,40,0.15),0 8px 24px rgba(124,58,237,0.08);border-radius:20px;border:1px solid rgba(255,209,102,0.12);"></div>
       </div>
       <button type="button" data-action="refrescarPagina" id="btnRefrescar"
         title="Refrescar datos"
         style="
           flex-shrink:0;width:36px;height:36px;border-radius:11px;
-          border:1.5px solid rgba(197,151,59,0.15);
+          border:1.5px solid rgba(255,209,102,0.15);
           background:rgba(255,255,255,0.7);
           color:rgba(124,58,237,0.6);
           display:flex;align-items:center;justify-content:center;
@@ -380,7 +380,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       <!-- Meta mensual (card amplia) -->
       <div class="mk-card mk-kpi-v2 mk-dash-meta-card" style="padding:20px 22px;">
         <div class="flex items-center justify-between mb-3">
-          <p class="mk-kpi-label" style="color:#C5973B;font-size:.62rem;">🎯 META MENSUAL</p>
+          <p class="mk-kpi-label" style="color:#FFD166;font-size:.62rem;">🎯 META MENSUAL</p>
           <div class="flex items-center gap-1">
             <span style="font-size:.72rem;color:#9ca3af;">$</span>
             <input type="number" id="dashMonthGoal" value="5000" min="1" step="500"
@@ -398,8 +398,8 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div class="mk-card mk-kpi mk-kpi-v2 kpi-amber" style="padding:18px 20px;">
         <div class="flex items-center justify-between mb-3">
           <p class="mk-kpi-label">Ventas hoy</p>
-          <div class="mk-kpi-icon-sm" style="background:rgba(197,151,59,0.12);">
-            <i class="fas fa-store" style="color:#C5973B;font-size:.88rem;"></i>
+          <div class="mk-kpi-icon-sm" style="background:rgba(255,209,102,0.12);">
+            <i class="fas fa-store" style="color:#FFD166;font-size:.88rem;"></i>
           </div>
         </div>
         <h3 class="mk-kpi-value privacy-target" id="dailySales" style="color:#92400e;"></h3>
@@ -589,8 +589,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;" id="morningKpiGrid">
 
             <div class="mk-card mk-kpi" style="background:linear-gradient(135deg,#fffbf5,#fff8ed);animation:fadeUp 0.4s 0.1s ease both;opacity:0;">
-                <div class="mk-kpi-blob" style="background:#C5973B;"></div>
-                <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#C5973B,#e8a844);box-shadow:0 4px 14px rgba(197,165,114,.4);">
+                <div class="mk-kpi-blob" style="background:#FFD166;"></div>
+                <div class="mk-kpi-icon" style="background:linear-gradient(135deg,#FFD166,#FFDD85);box-shadow:0 4px 14px rgba(255,209,102,.4);">
                     <i class="fas fa-store" style="color:white;"></i>
                 </div>
                 <p class="mk-kpi-label">Ventas hoy</p>
@@ -655,7 +655,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
 
-        <button type="button" data-action="showSection" data-arg="dashboard" class="mk-dash-go-btn" style="width:100%;background:linear-gradient(135deg,#C9933A 0%,#E8B84B 100%);color:#3A2000;font-weight:700;font-size:.9rem;padding:.85rem;border-radius:18px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(201,147,58,.3);transition:all .2s ease;font-family:inherit;animation:fadeUp 0.4s 0.58s ease both;opacity:0;">
+        <button type="button" data-action="showSection" data-arg="dashboard" class="mk-dash-go-btn" style="width:100%;background:linear-gradient(135deg,#FFD166 0%,#FFDD85 100%);color:#3A2000;font-weight:700;font-size:.9rem;padding:.85rem;border-radius:18px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(255,209,102,.3);transition:all .2s ease;font-family:inherit;animation:fadeUp 0.4s 0.58s ease both;opacity:0;">
             <i class="fas fa-chart-line mr-2"></i>Ver Dashboard completo
         </button>
 
@@ -680,7 +680,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="flex gap-1 bg-gray-100 rounded-2xl p-1 mb-6 w-fit">
                     <button type="button" id="tabQuoteProductos" data-action="switchQuoteTab" data-arg="productos"
                         class="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                        style="background:#C5973B;color:white;">
+                        style="background:#FFD166;color:white;">
                         <i class="fas fa-tag mr-1"></i> Cotización de Productos
                     </button>
                     <button type="button" id="tabQuoteEnvios" data-action="switchQuoteTab" data-arg="envios"
@@ -724,7 +724,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                         <div class="flex gap-2">
                                             <input type="text" id="envioDestinoDireccion" placeholder="Escribe colonia, calle o dirección..."
                                                 class="flex-1 px-4 py-3 border border-gray-200 rounded-xl outline-none text-sm focus:ring-2 focus:ring-amber-300">
-                                            <button type="button" data-action="buscarDestinoCotizador" class="px-4 py-3 rounded-xl text-white text-sm font-semibold flex-shrink-0" style="background:#C5973B">
+                                            <button type="button" data-action="buscarDestinoCotizador" class="px-4 py-3 rounded-xl text-white text-sm font-semibold flex-shrink-0" style="background:#FFD166">
                                                 <i class="fas fa-search"></i>
                                             </button>
                                         </div>
@@ -743,7 +743,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                         </div>
                                         <div class="text-center py-2 border-t border-amber-200">
                                             <p class="text-sm text-gray-500 mb-1">Tarifa estimada</p>
-                                            <p class="text-4xl font-black" style="color:#C5973B" id="envioPrecioLabel">$0</p>
+                                            <p class="text-4xl font-black" style="color:#FFD166" id="envioPrecioLabel">$0</p>
                                         </div>
                                         <button type="button" data-action="copiarCotizacionEnvio" class="mt-3 w-full py-2 rounded-xl border border-amber-300 text-amber-700 text-sm font-semibold hover:bg-amber-100 transition-all">
                                             <i class="fas fa-copy mr-1"></i> Copiar para WhatsApp
@@ -772,7 +772,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" style="min-height:80px;">
                             <div class="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="font-bold text-gray-700 text-sm">🗺️ Mapa de cobertura</h3>
-                                <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#C5973B">
+                                <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#FFD166">
                                     <i class="fas fa-edit mr-1"></i> Editar anillos
                                 </button>
                             </div>
@@ -1084,8 +1084,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <!-- Stat-bar compacta — horizontal -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-wrap items-center gap-0 mb-6 overflow-hidden">
                     <div class="flex items-center gap-3 px-5 py-3 flex-1 min-w-[160px]">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(197,151,59,0.18);">
-                            <i class="fas fa-users text-sm" style="color:#C5973B;"></i>
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,209,102,0.18);">
+                            <i class="fas fa-users text-sm" style="color:#FFD166;"></i>
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 leading-tight">Total Clientes</p>
@@ -1095,7 +1095,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="w-px self-stretch bg-gray-100 hidden sm:block"></div>
                     <div class="flex items-center gap-3 px-5 py-3 flex-1 min-w-[160px]">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:#FFF9F0;">
-                            <i class="fas fa-star text-sm" style="color:#C5973B;"></i>
+                            <i class="fas fa-star text-sm" style="color:#FFD166;"></i>
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 leading-tight">Clientes VIP</p>
@@ -1104,8 +1104,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                     <div class="w-px self-stretch bg-gray-100 hidden sm:block"></div>
                     <div class="flex items-center gap-3 px-5 py-3 flex-1 min-w-[160px]">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(197,151,59,0.18);">
-                            <i class="fas fa-shopping-bag text-sm" style="color:#C5973B;"></i>
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,209,102,0.18);">
+                            <i class="fas fa-shopping-bag text-sm" style="color:#FFD166;"></i>
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 leading-tight">Compras Totales</p>
@@ -1509,7 +1509,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
             <button type="button" id="equipoTab-equipos" data-action="switchEquipoTab" data-arg="equipos"
                 class="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
-                style="background:#C5973B;color:white;">
+                style="background:#FFD166;color:white;">
                 <i class="fas fa-tools mr-1"></i> Equipos
             </button>
             <button type="button" id="equipoTab-roi" data-action="switchEquipoTab" data-arg="roi"
@@ -1535,7 +1535,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="flex items-center gap-2 ml-auto">
                     <input type="number" id="roiPorcentajeGlobal" min="1" max="100" value="10" class="w-20 border-2 border-gray-200 rounded-xl px-3 py-2 text-center font-bold text-lg focus:border-amber-400 focus:outline-none" data-change="saveRoiConfig">
                     <span class="font-bold text-gray-600 text-lg">%</span>
-                    <button type="button" data-action="saveRoiConfig" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#C5973B;">Guardar</button>
+                    <button type="button" data-action="saveRoiConfig" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#FFD166;">Guardar</button>
                 </div>
             </div>
 
@@ -1544,7 +1544,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
                     <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
                     <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
-                    <button type="button" data-action="openEquipoModal" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#C5973B;">+ Agregar equipo</button>
+                    <button type="button" data-action="openEquipoModal" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#FFD166;">+ Agregar equipo</button>
                 </div>
             </div>
         </div>
@@ -1595,14 +1595,14 @@ input:focus, select:focus, textarea:focus, button:focus {
         <!-- Fila 1: título + badge de count -->
         <div class="flex items-center gap-3 mb-3">
             <div class="mk-section-header" style="margin-bottom:0;"><div class="mk-sh-icon"><i class="fas fa-shopping-bag"></i></div><div class="mk-sh-text"><h2>Pedidos por Encargo</h2><p>Gestiona cada encargo de tus clientes</p></div></div>
-            <span id="pedidosCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(197,151,59,0.15);color:#C5973B;">0</span>
+            <span id="pedidosCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(255,209,102,0.15);color:#FFD166;">0</span>
         </div>
         <!-- Fila 2: acciones / vista -->
         <div class="flex flex-wrap items-center gap-2 mb-6">
             <div class="flex bg-gray-100 rounded-xl p-1 gap-1">
                 <button type="button" id="btnVistaKanban" data-action="setVistaPedidos" data-arg="kanban"
                     class="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-                    style="background:#C5973B; color:white;">
+                    style="background:#FFD166; color:white;">
                     <i class="fas fa-columns mr-1"></i> Kanban
                 </button>
                 <button type="button" id="btnVistaTabla" data-action="setVistaPedidos" data-arg="tabla"
@@ -1656,7 +1656,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Activos</p><h3 class="text-2xl font-bold" id="pedidosActivos">0</h3></div>
             <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Por Cobrar</p><h3 class="text-2xl font-bold text-red-600" id="pedidosPorCobrar">$0</h3></div>
             <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Anticipo Cobrado</p><h3 class="text-2xl font-bold text-green-600" id="pedidosAnticipos">$0</h3></div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Este Mes</p><h3 class="text-2xl font-bold" style="color:#C5973B" id="pedidosMes">0</h3></div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border"><p class="text-xs text-gray-500 mb-1">Este Mes</p><h3 class="text-2xl font-bold" style="color:#FFD166" id="pedidosMes">0</h3></div>
         </div>
 
         <!-- Banner recordatorio de cobro -->
@@ -1777,7 +1777,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div id="vistaTabla" class="hidden">
             <div class="flex flex-wrap gap-2 mb-4">
-                <button type="button" data-action="filterPedidos" data-arg="todos" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 cursor-pointer" style="border-color:#C5973B;background:#FFF9F0;color:#C5973B;">Todos</button>
+                <button type="button" data-action="filterPedidos" data-arg="todos" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 cursor-pointer" style="border-color:#FFD166;background:#FFF9F0;color:#FFD166;">Todos</button>
                 <button type="button" data-action="filterPedidos" data-arg="confirmado" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">✅ Confirmado</button>
                 <button type="button" data-action="filterPedidos" data-arg="pago" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">💰 Pago</button>
                 <button type="button" data-action="filterPedidos" data-arg="produccion" data-pass-el="after" class="pedido-filter px-4 py-2 rounded-full text-sm font-semibold border-2 border-gray-200 text-gray-600 bg-white cursor-pointer">🔧 Producción</button>
@@ -1881,7 +1881,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <button type="button" data-action="selectTheme" data-arg="dorado" data-theme="dorado"
              class="theme-option text-left rounded-xl p-4 border-2 border-yellow-400 bg-yellow-50 transition-all">
             <div class="flex gap-2 mb-2">
-                <div class="w-6 h-6 rounded-full" style="background:#C5973B;"></div>
+                <div class="w-6 h-6 rounded-full" style="background:#FFD166;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#D8BFD8;"></div>
                 <div class="w-6 h-6 rounded-full" style="background:#FFF9F0;"></div>
             </div>
@@ -1987,7 +1987,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                             <span id="previewEmoji" class="text-2xl leading-none">🐛</span>
                             <div class="overflow-hidden">
                                 <p id="previewName" class="text-sm font-bold text-gray-800 truncate">Bicho Capricho</p>
-                                <p id="previewSlogan" class="text-xs truncate" style="color:#C5973B;">Regalos Personalizados</p>
+                                <p id="previewSlogan" class="text-xs truncate" style="color:#FFD166;">Regalos Personalizados</p>
                             </div>
                         </div>
                     </div>
@@ -2024,7 +2024,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-map-marker-alt mr-1" style="color:#C5973B;"></i>Dirección base
+                        <i class="fas fa-map-marker-alt mr-1" style="color:#FFD166;"></i>Dirección base
                         <span class="text-xs font-normal text-gray-400 ml-1">(aparece en el mapa de envíos)</span>
                     </label>
                     <input type="text" id="configAddress" placeholder="Ej: Calle 5 de Mayo 123, Col. Centro, MTY"
@@ -2190,7 +2190,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="px-6 pb-5">
           <button type="button" data-action="closeModal" data-arg="resumenMensualModal"
                   class="w-full py-3 rounded-xl text-white font-bold"
-                  style="background:linear-gradient(135deg,#C5973B,#B8965F)">
+                  style="background:linear-gradient(135deg,#FFD166,#c9a84d)">
             Cerrar
           </button>
         </div>
@@ -2245,7 +2245,7 @@ input:focus, select:focus, textarea:focus, button:focus {
           </div>
           <div class="flex gap-2">
             <input type="text" id="tagCustomInput" placeholder="Agregar tag personalizado..." class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
-            <button type="button" data-action="agregarTagCustom" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5973B">+ Agregar</button>
+            <button type="button" data-action="agregarTagCustom" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#FFD166">+ Agregar</button>
           </div>
           <div class="flex flex-wrap gap-1 mt-2" id="tagsSeleccionados"></div>
           <input type="hidden" id="productTags">
@@ -2273,7 +2273,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none">
                     </div>
                     <button type="button" data-action="addVariant"
-                            class="text-sm font-semibold" style="color: #E8B84B !important;">
+                            class="text-sm font-semibold" style="color: #FFDD85 !important;">
                         <i class="fas fa-plus mr-1"></i> Agregar Variante
                     </button>
                     <div id="variantsList" class="mt-3"></div>
@@ -2342,7 +2342,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <option value="">-- Seleccionar componente --</option>
               </select>
               <input type="number" id="kitComponentCantidad" value="1" min="1" class="w-16 px-2 py-2 border border-gray-200 rounded-xl text-sm">
-              <button type="button" data-action="agregarComponenteKit" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5973B">+ Agregar</button>
+              <button type="button" data-action="agregarComponenteKit" class="px-3 py-2 rounded-xl text-sm font-semibold text-white" style="background:#FFD166">+ Agregar</button>
             </div>
             <div id="kitComponentesList" class="space-y-1"></div>
             <input type="hidden" id="productKitComponentes">
@@ -2410,7 +2410,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="grid grid-cols-2 gap-3">
                     <button type="button" data-action="selectClientType" data-arg="regular" id="btnClientRegular"
                             class="client-type-btn py-3 rounded-xl border-2 text-sm font-semibold transition-all"
-                            style="border-color: #C5973B; background: #FFF9F0; color: #C5973B;">
+                            style="border-color: #FFD166; background: #FFF9F0; color: #FFD166;">
                         👤 Regular
                     </button>
                     <button type="button" data-action="selectClientType" data-arg="vip" id="btnClientVip"
@@ -2454,7 +2454,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Emoji/Icono</label>
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-16 h-16 border-2 rounded-xl flex items-center justify-center text-4xl"
-                         style="border-color: #C5973B; background: #FFF9F0;" id="editSelectedEmojiDisplay">📦</div>
+                         style="border-color: #FFD166; background: #FFF9F0;" id="editSelectedEmojiDisplay">📦</div>
                     <div>
                         <p class="text-sm font-semibold text-gray-700">Emoji seleccionado</p>
                         <p class="text-xs text-gray-400">Haz clic en cualquier emoji de abajo</p>
@@ -2469,7 +2469,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">🎨 Color</label>
                 <div class="flex gap-2 flex-wrap" id="editColorPicker">
-                    <button type="button" data-action="selectEditColor" data-arg="#C5973B" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#C5973B" data-color="#C5973B"></button>
+                    <button type="button" data-action="selectEditColor" data-arg="#FFD166" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#FFD166" data-color="#FFD166"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#10B981" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#3B82F6" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#8B5CF6" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></button>
@@ -2478,12 +2478,12 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <button type="button" data-action="selectEditColor" data-arg="#EC4899" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></button>
                     <button type="button" data-action="selectEditColor" data-arg="#06B6D4" class="edit-color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#06B6D4" data-color="#06B6D4"></button>
                 </div>
-                <input type="hidden" id="editCategoryColor" value="#C5973B">
+                <input type="hidden" id="editCategoryColor" value="#FFD166">
             </div>
         </div>
         <div class="flex gap-3 mt-6">
             <button type="button" data-action="closeEditCategoryModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" data-action="saveEditCategory" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5973B;">Guardar cambios</button>
+            <button type="button" data-action="saveEditCategory" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Guardar cambios</button>
         </div>
     </div>
 </div>
@@ -2509,7 +2509,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
     <div class="flex items-center gap-3 mb-3">
         <div class="w-16 h-16 border-2 rounded-xl flex items-center justify-center text-4xl"
-             style="border-color: #C5973B; background: #FFF9F0;" id="selectedEmojiDisplay">📦</div>
+             style="border-color: #FFD166; background: #FFF9F0;" id="selectedEmojiDisplay">📦</div>
         <div>
             <p class="text-sm font-semibold text-gray-700">Emoji seleccionado</p>
             <p class="text-xs text-gray-400">Haz clic en cualquier emoji de abajo</p>
@@ -2529,7 +2529,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">🎨 Color de la categoría</label>
                     <div class="flex gap-2 flex-wrap" id="colorPicker">
-                        <button type="button" data-action="selectCategoryColor" data-arg="#C5973B" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#C5973B" data-color="#C5973B"></button>
+                        <button type="button" data-action="selectCategoryColor" data-arg="#FFD166" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#FFD166" data-color="#FFD166"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#10B981" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#10B981" data-color="#10B981"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#3B82F6" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#3B82F6" data-color="#3B82F6"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#8B5CF6" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#8B5CF6" data-color="#8B5CF6"></button>
@@ -2538,7 +2538,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <button type="button" data-action="selectCategoryColor" data-arg="#EC4899" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#EC4899" data-color="#EC4899"></button>
                         <button type="button" data-action="selectCategoryColor" data-arg="#06B6D4" class="color-btn w-8 h-8 rounded-full border-2 border-transparent hover:scale-110 transition-transform" style="background:#06B6D4" data-color="#06B6D4"></button>
                     </div>
-                    <input type="hidden" id="categoryColor" value="#C5973B">
+                    <input type="hidden" id="categoryColor" value="#FFD166">
                 </div>
                 <button type="submit"
                         class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg mt-6">
@@ -2554,7 +2554,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div class="p-6 border-b border-gray-100 flex justify-between items-start" style="background: linear-gradient(135deg, #FFF9F0 0%, #F5EFE6 100%);">
             <div class="flex items-center gap-4">
-                <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl" style="background: rgba(197,151,59,0.18) !important;">
+                <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl" style="background: rgba(255,209,102,0.18) !important;">
                     <span id="historyClientEmoji">👤</span>
                 </div>
                 <div>
@@ -2571,7 +2571,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 border-b border-gray-100">
             <div class="bg-gray-50 rounded-xl p-4 text-center">
                 <p class="text-xs text-gray-500 mb-1">Total gastado</p>
-                <p class="text-xl font-bold" style="color: #C5973B;" id="historyTotalSpent">$0</p>
+                <p class="text-xl font-bold" style="color: #FFD166;" id="historyTotalSpent">$0</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-4 text-center">
                 <p class="text-xs text-gray-500 mb-1">Compras POS</p>
@@ -2607,7 +2607,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="flex border-b border-gray-100 px-6">
             <button type="button" data-action="switchHistoryTab" data-arg="ventas" id="tabVentas"
                 class="history-tab px-4 py-3 text-sm font-semibold border-b-2 mr-4 transition-all"
-                style="border-color: #C5973B; color: #C5973B;">
+                style="border-color: #FFD166; color: #FFD166;">
                 <i class="fas fa-receipt mr-1"></i> Ventas POS
             </button>
             <button type="button" data-action="switchHistoryTab" data-arg="pedidos" id="tabPedidos"
@@ -2732,7 +2732,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </button>
                     <button type="submit" id="transactionSubmitBtn"
                         class="flex-1 px-4 py-3 rounded-xl text-white font-semibold text-sm"
-                        style="background: linear-gradient(135deg, #C5973B 0%, #B8965F 100%);">
+                        style="background: linear-gradient(135deg, #FFD166 0%, #c9a84d 100%);">
                         💾 Guardar
                     </button>
                 </div>
@@ -2756,7 +2756,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Método de Pago</label>
                 <div class="grid grid-cols-3 gap-2">
-                    <button type="button" data-action="selectAbonoPedidoMethod" data-arg="cash" data-pass-el="before" class="abono-ped-btn border-2 rounded-xl py-3 flex flex-col items-center" style="border-color:#C5973B;background:#FFF9F0;"><i class="fas fa-money-bill-wave text-green-600 text-xl mb-1"></i><p class="text-xs font-semibold">Efectivo</p></button>
+                    <button type="button" data-action="selectAbonoPedidoMethod" data-arg="cash" data-pass-el="before" class="abono-ped-btn border-2 rounded-xl py-3 flex flex-col items-center" style="border-color:#FFD166;background:#FFF9F0;"><i class="fas fa-money-bill-wave text-green-600 text-xl mb-1"></i><p class="text-xs font-semibold">Efectivo</p></button>
                     <button type="button" data-action="selectAbonoPedidoMethod" data-arg="card" data-pass-el="before" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-credit-card text-blue-600 text-xl mb-1"></i><p class="text-xs font-semibold">Tarjeta</p></button>
                     <button type="button" data-action="selectAbonoPedidoMethod" data-arg="transfer" data-pass-el="before" class="abono-ped-btn border-2 border-gray-200 rounded-xl py-3 flex flex-col items-center"><i class="fas fa-exchange-alt  text-xl mb-1" style="color:#C4A8E0;"></i><p class="text-xs font-semibold">Transfer.</p></button>
                 </div>
@@ -2844,7 +2844,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       <input type="number" id="pedidoProductoPrecio" placeholder="Precio $" step="0.01" min="0"
         class="w-28 px-3 py-2 border border-amber-300 rounded-xl outline-none text-sm font-semibold text-amber-800" style="background:#fffbeb">
       <button type="button" data-action="agregarProductoPedido"
-        class="flex-1 py-2 text-white rounded-xl font-semibold text-sm" style="background:#C5973B">
+        class="flex-1 py-2 text-white rounded-xl font-semibold text-sm" style="background:#FFD166">
         + Agregar al pedido
       </button>
     </div>
@@ -2930,7 +2930,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="px-8 py-4 border-t border-gray-100 flex-shrink-0">
-            <button type="button" data-action="_mkSubmitPedidoForm" class="w-full py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2" style="background:#C5973B;">
+            <button type="button" data-action="_mkSubmitPedidoForm" class="w-full py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2" style="background:#FFD166;">
                 <i class="fas fa-save"></i> <span id="pedidoSubmitBtn">Guardar Pedido</span>
             </button>
         </div>
@@ -2944,7 +2944,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <h3 class="text-lg font-bold text-gray-800">&#128247; Fotos de referencia</h3>
             <button type="button" data-action="closeModal" data-arg="fotoReferenciaModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-lg"></i></button>
         </div>
-        <p id="fotoRefFolio" class="text-xs font-bold mb-4" style="color:#C5973B;">—</p>
+        <p id="fotoRefFolio" class="text-xs font-bold mb-4" style="color:#FFD166;">—</p>
         <div id="fotoRefContent"></div>
         <input type="file" id="fotoRefInput" accept="image/*" multiple class="hidden" data-change="subirFotoReferencia">
     </div>
@@ -2969,7 +2969,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <button type="button" data-action="closePedidoStatusModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <input type="hidden" id="pedidoStatusId">
-        <p class="text-sm text-gray-500 mb-4">Pedido: <span id="pedidoStatusFolio" class="font-bold" style="color:#C5973B;"></span></p>
+        <p class="text-sm text-gray-500 mb-4">Pedido: <span id="pedidoStatusFolio" class="font-bold" style="color:#FFD166;"></span></p>
         <div class="space-y-2">
             <button type="button" data-action="setPedidoStatus" data-arg="confirmado" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-yellow-300 cursor-pointer text-left bg-white"><span class="text-2xl">✅</span><p class="font-semibold">Confirmado</p></button>
             <button type="button" data-action="setPedidoStatus" data-arg="pago" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-green-300 cursor-pointer text-left bg-white"><span class="text-2xl">💰</span><p class="font-semibold">Pago</p></button>
@@ -2989,7 +2989,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:#F5EDD8;">
-                    <i class="fas fa-receipt" style="color:#C5973B;"></i>
+                    <i class="fas fa-receipt" style="color:#FFD166;"></i>
                 </div>
                 <div>
                     <h3 class="text-xl font-bold text-gray-800" id="detalleSaleFolio">Detalle de Venta</h3>
@@ -3067,7 +3067,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
                 <div class="flex justify-between font-bold text-gray-800 text-lg pt-2 border-t border-gray-200">
                     <span>Total</span>
-                    <span id="detalleSaleTotal" style="color:#C5973B;">$0.00</span>
+                    <span id="detalleSaleTotal" style="color:#FFD166;">$0.00</span>
                 </div>
             </div>
         </div>
@@ -3172,7 +3172,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between" style="background:linear-gradient(135deg,#FFF9F0,#FFF);">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:#E6D5E6;">
-                    <i class="fas fa-database" style="color:#C5973B;"></i>
+                    <i class="fas fa-database" style="color:#FFD166;"></i>
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-800">Backup & Restauración</h3>
@@ -3231,7 +3231,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
                 <div id="dropZone"
                     data-action="_mkClickInput" data-arg="backupFileInput"
-                    ondragover="event.preventDefault(); this.style.borderColor='#C5973B';"
+                    ondragover="event.preventDefault(); this.style.borderColor='#FFD166';"
                     ondragleave="this.style.borderColor='#BFDBFE';"
                     ondrop="handleBackupDrop(event)"
                     class="border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all mb-3"
@@ -3315,7 +3315,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <label class="block text-sm font-semibold text-gray-600 mb-1">Emoji / Ícono</label>
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-14 h-14 border-2 rounded-xl flex items-center justify-center text-3xl"
-                         style="border-color:#C5973B;background:#FFF9F0;" id="equipoEmojiDisplay">🔧</div>
+                         style="border-color:#FFD166;background:#FFF9F0;" id="equipoEmojiDisplay">🔧</div>
                     <div class="text-xs text-gray-400">Haz clic en cualquier emoji</div>
                 </div>
                 <input type="hidden" id="equipoEmoji" value="🔧">
@@ -3340,7 +3340,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <div class="flex gap-3 mt-6">
             <button type="button" data-action="closeEquipoModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" data-action="saveEquipo" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5973B;">Guardar</button>
+            <button type="button" data-action="saveEquipo" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Guardar</button>
         </div>
     </div>
 </div>
@@ -3376,7 +3376,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div class="flex gap-3">
             <button type="button" data-action="cerrarRoiEquiposModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Omitir</button>
-            <button type="button" data-action="confirmarRoiEquipos" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#C5973B;">Registrar ROI</button>
+            <button type="button" data-action="confirmarRoiEquipos" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Registrar ROI</button>
         </div>
     </div>
 </div>
@@ -3408,7 +3408,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <div class="flex gap-3 mt-6">
             <button type="button" data-action="cerrarRoiManualModal" class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" data-action="confirmarRoiManual" class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold" style="background:#C5973B;">Registrar</button>
+            <button type="button" data-action="confirmarRoiManual" class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold" style="background:#FFD166;">Registrar</button>
         </div>
     </div>
 </div>
@@ -3429,7 +3429,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <input type="text" id="qrManualInput" placeholder="SKU, código o nombre..."
                         class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2"
                         data-onkeydown="_qrManualBuscar">
-                    <button type="button" data-action="_qrManualBuscar" class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#C5973B">Buscar</button>
+                    <button type="button" data-action="_qrManualBuscar" class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#FFD166">Buscar</button>
                 </div>
             </div>
         </div>
@@ -3483,7 +3483,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div style="padding:20px;border-left:1px solid #F3F4F6;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:480px;">
                 <div style="font-size:0.8rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.05em;">Anillos de cobertura</div>
                 <div id="anillosLista" style="display:flex;flex-direction:column;gap:8px;"></div>
-                <button type="button" data-action="agregarAnillo" class="mk-anillo-add" style="margin-top:4px;padding:10px;border:2px dashed #C5973B;border-radius:12px;background:#FFF9F0;color:#C5973B;font-weight:700;font-size:0.8rem;cursor:pointer;transition:all 0.2s;">
+                <button type="button" data-action="agregarAnillo" class="mk-anillo-add" style="margin-top:4px;padding:10px;border:2px dashed #FFD166;border-radius:12px;background:#FFF9F0;color:#FFD166;font-weight:700;font-size:0.8rem;cursor:pointer;transition:all 0.2s;">
                     + Agregar anillo
                 </button>
                 <div style="background:#F9FAFB;border-radius:12px;padding:12px;font-size:0.75rem;color:#6B7280;">
@@ -3495,7 +3495,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div style="padding:16px 28px;border-top:1px solid #F3F4F6;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;">
             <button type="button" data-action="cerrarConfigAnillos" style="padding:10px 20px;border:2px solid #E5E7EB;border-radius:12px;background:white;color:#6B7280;font-weight:600;cursor:pointer;font-size:0.9rem;">Cancelar</button>
-            <button type="button" data-action="guardarAnillos" style="padding:10px 24px;border-radius:12px;background:linear-gradient(135deg,#C5973B,#B8965F);color:white;font-weight:700;cursor:pointer;font-size:0.9rem;border:none;">
+            <button type="button" data-action="guardarAnillos" style="padding:10px 24px;border-radius:12px;background:linear-gradient(135deg,#FFD166,#c9a84d);color:white;font-weight:700;cursor:pointer;font-size:0.9rem;border:none;">
                 <i class="fas fa-save" style="margin-right:6px;"></i>Guardar configuración
             </button>
         </div>
@@ -3515,7 +3515,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   <button type="button" id="fabNuevoPedido"
       data-action="_mkNewPedido"
       title="Nuevo Pedido (acceso rápido)"
-      style="position:fixed;bottom:80px;right:24px;z-index:9000;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#C5973B,#a8864f);color:white;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(197,165,114,0.4);font-size:24px;display:flex;align-items:center;justify-content:center;transition:transform 0.2s,box-shadow 0.2s;"
+      style="position:fixed;bottom:80px;right:24px;z-index:9000;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#FFD166,#c9a84d);color:white;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(255,209,102,0.4);font-size:24px;display:flex;align-items:center;justify-content:center;transition:transform 0.2s,box-shadow 0.2s;"
 
 
       aria-label="Crear nuevo pedido">

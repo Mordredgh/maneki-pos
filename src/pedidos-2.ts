@@ -825,7 +825,7 @@ function openAbonoPedido(id) {
     document.getElementById('abonoPedidoNota').value = '';
     _abonoPedidoMetodo = 'cash';
     document.querySelectorAll('.abono-ped-btn').forEach((b, i) => {
-        b.style.borderColor = i === 0 ? '#C5973B' : '';
+        b.style.borderColor = i === 0 ? '#FFD166' : '';
         b.style.background  = i === 0 ? '#FFF9F0' : '';
     });
     openModal('abonoPedidoModal');
@@ -838,7 +838,7 @@ function cerrarAbonoPedido() {
 function selectAbonoPedidoMethod(btn, method) {
     _abonoPedidoMetodo = method;
     document.querySelectorAll('.abono-ped-btn').forEach(b => { b.style.borderColor = ''; b.style.background = ''; });
-    btn.style.borderColor = '#C5973B'; btn.style.background = '#FFF9F0';
+    btn.style.borderColor = '#FFD166'; btn.style.background = '#FFF9F0';
 }
 
 let _abonoEnProceso = false;
@@ -1106,7 +1106,7 @@ function _actualizarBarraLote() {
             <option value="retirar">🏪 Retirar</option>
         </select>
         <button onclick="_aplicarCambioLote()"
-            style="padding:7px 18px;border-radius:8px;background:#C5973B;color:white;border:none;cursor:pointer;font-weight:700;font-size:.85rem;">
+            style="padding:7px 18px;border-radius:8px;background:#FFD166;color:white;border:none;cursor:pointer;font-weight:700;font-size:.85rem;">
             Aplicar
         </button>
         <button onclick="_cancelarSeleccionLote()"
@@ -1234,7 +1234,7 @@ function toggleKanbanCompacto() {
     if (btn) {
         const _labels = { full: '☰ Vista', medium: '≡ Media', compact: '▪ Compacto' };
         btn.textContent = _labels[_kanbanCompacto];
-        btn.style.background = _kanbanCompacto !== 'full' ? '#C5973B' : '';
+        btn.style.background = _kanbanCompacto !== 'full' ? '#FFD166' : '';
         btn.style.color = _kanbanCompacto !== 'full' ? 'white' : '';
     }
     renderKanbanBoard();
@@ -1562,7 +1562,7 @@ function renderHistorialPedidos() {
             _histLoadMoreBtn = document.createElement('div');
             _histLoadMoreBtn.id = 'histLoadMoreBtn';
             _histLoadMoreBtn.style.cssText = 'text-align:center;margin-top:12px;';
-            _histLoadMoreBtn.innerHTML = `<button onclick="cargarMasPedidosFinalizados()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #C5973B;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más pedidos ↓</button>`;
+            _histLoadMoreBtn.innerHTML = `<button onclick="cargarMasPedidosFinalizados()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #FFD166;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más pedidos ↓</button>`;
             lista.insertAdjacentElement('afterend', _histLoadMoreBtn);
         } else {
             _histLoadMoreBtn.style.display = '';
@@ -1647,7 +1647,7 @@ function renderGraficaROI() {
     const canvas = document.getElementById('roiBarChart');
     if (!canvas) return;
     const equiposList = typeof equipos !== 'undefined' ? equipos : (window.equipos||[]);
-    if (!equiposList.length) { canvas.parentElement.innerHTML = '<div class="flex flex-col items-center justify-center py-8 gap-3"><p class="text-center text-gray-400 text-sm">Sin equipos registrados aún</p><button onclick="showSection(\'equipos\')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:#C5973B;color:#fff;">+ Agregar primer equipo</button></div>'; return; }
+    if (!equiposList.length) { canvas.parentElement.innerHTML = '<div class="flex flex-col items-center justify-center py-8 gap-3"><p class="text-center text-gray-400 text-sm">Sin equipos registrados aún</p><button onclick="showSection(\'equipos\')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:#FFD166;color:#fff;">+ Agregar primer equipo</button></div>'; return; }
     const ctx = canvas.getContext('2d');
     if (window._roiChart) window._roiChart.destroy();
     window._roiChart = new Chart(ctx, {
@@ -1708,7 +1708,7 @@ function renderTopClientes() {
     el.innerHTML = top.length===0
         ? '<p class="text-xs text-gray-400 text-center py-2">Sin datos aún</p>'
         : top.map((c,i) => `<div class="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-            <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0" style="background:#C5973B">${i+1}</span>
+            <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center flex-shrink-0" style="background:#FFD166">${i+1}</span>
             <div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">${_esc(c.nombre || '')}</p><p class="text-xs text-gray-400">${c.pedidos} pedidos</p></div>
             <span class="text-sm font-bold text-gray-700">$${c.total.toFixed(0)}</span>
         </div>`).join('');
@@ -1738,7 +1738,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 wrap.className = 'flex gap-1 ml-2';
                 wrap.style.cssText = 'align-items:center;';
                 const btns = [
-                    { id:'btnKanbanUrgTodos',   filtro:'todos',   label:'Todos',     color:'#C5973B' },
+                    { id:'btnKanbanUrgTodos',   filtro:'todos',   label:'Todos',     color:'#FFD166' },
                     { id:'btnKanbanUrgVencido', filtro:'vencido', label:'⛔ Vencidos', color:'#dc2626' },
                     { id:'btnKanbanUrgHoy',     filtro:'hoy',     label:'🔴 Hoy',     color:'#ea580c' },
                     { id:'btnKanbanUrgProximos',filtro:'pronto',  label:'🟡 2 días',  color:'#ca8a04' },
@@ -1776,7 +1776,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const btnCarga = document.createElement('button');
                 btnCarga.id = 'btnCargaSemanal';
                 btnCarga.title = 'Ver carga de producción de los próximos 14 días';
-                btnCarga.style.cssText = 'padding:5px 10px;border-radius:8px;border:1.5px solid #7c3aed;background:#f5f3ff;color:#4c1d95;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;';
+                btnCarga.style.cssText = 'padding:5px 10px;border-radius:8px;border:1.5px solid #9669c4;background:#f5f3ff;color:#4c1d95;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;';
                 btnCarga.innerHTML = '📅 Carga';
                 btnCarga.onclick = function() { if (typeof (window as any).abrirCargaSemanal === 'function') (window as any).abrirCargaSemanal(); };
                 actionsWrap.appendChild(btnCarga);
@@ -1807,8 +1807,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 ocasionSel.onchange = function() {
                     const v = ocasionSel.value;
-                    ocasionSel.style.borderColor = v ? '#7c3aed' : '#e5e7eb';
-                    ocasionSel.style.color = v ? '#7c3aed' : '#6b7280';
+                    ocasionSel.style.borderColor = v ? '#9669c4' : '#e5e7eb';
+                    ocasionSel.style.color = v ? '#9669c4' : '#6b7280';
                     if (typeof (window as any).setKanbanOcasion === 'function') {
                         (window as any).setKanbanOcasion(v);
                     }
@@ -2083,7 +2083,7 @@ function _sugerirResenaGoogle(pedido: any) {
     const waUrl = tel ? `https://wa.me/${tel}?text=${msg}` : `https://wa.me/?text=${msg}`;
     setTimeout(() => {
         manekiToastExport(
-            `✨ <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="color:#C5973B;font-weight:700;text-decoration:underline;">¡Pide tu reseña a ${_esc(nombre)}! →</a>`,
+            `✨ <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="color:#FFD166;font-weight:700;text-decoration:underline;">¡Pide tu reseña a ${_esc(nombre)}! →</a>`,
             'ok'
         );
     }, 1200);
@@ -2328,13 +2328,13 @@ function renderHojaRuta() {
         totalCobrar += saldo;
         const dir = p.direccionEntrega || p.lugarEntrega || p.direccion || '';
         const mapsLink = dir
-            ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(dir)}" target="_blank" rel="noopener noreferrer" style="color:#C5973B;font-size:.75rem;font-weight:600;">📍 Ver en Maps</a>`
+            ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(dir)}" target="_blank" rel="noopener noreferrer" style="color:#FFD166;font-size:.75rem;font-weight:600;">📍 Ver en Maps</a>`
             : '';
         return `
         <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:10px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
                 <div>
-                    <span style="font-size:.8rem;font-weight:700;color:#C5973B;">${_e(p.folio||'—')}</span>
+                    <span style="font-size:.8rem;font-weight:700;color:#FFD166;">${_e(p.folio||'—')}</span>
                     <span style="font-size:.82rem;font-weight:700;color:#1f2937;margin-left:6px;">${_e(p.cliente||'—')}</span>
                     ${p.telefono ? `<a href="https://wa.me/${(_e(p.telefono)).replace(/\D/g,'')}" target="_blank" rel="noopener noreferrer" style="font-size:.75rem;color:#25D366;margin-left:6px;">📱 ${_e(p.telefono)}</a>` : ''}
                 </div>

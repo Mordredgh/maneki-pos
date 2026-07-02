@@ -118,13 +118,13 @@
   .brand-name {
     font-size: 22px;
     font-weight: 800;
-    color: #E8B84B;
+    color: #FFDD85;
     letter-spacing: .04em;
     margin-top: 6px;
   }
   .brand-sub {
     font-size: 11px;
-    color: rgba(232,184,75,.65);
+    color: rgba(255,221,133,.65);
     letter-spacing: .08em;
     text-transform: uppercase;
     margin-top: 3px;
@@ -137,7 +137,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: linear-gradient(135deg,#C5973B,#E8B84B);
+    background: linear-gradient(135deg,#FFD166,#FFDD85);
     color: #fff;
     font-size: 12px;
     font-weight: 800;
@@ -217,7 +217,7 @@
   .total-row:last-child { border-bottom: none; }
   .total-row.grand {
     background: linear-gradient(135deg,#1a0533,#2d0a4e);
-    color: #E8B84B;
+    color: #FFDD85;
     font-weight: 800;
     font-size: 15px;
     padding: 14px 16px;
@@ -232,7 +232,7 @@
     font-size: 11px;
     line-height: 1.6;
   }
-  .footer strong { color: #C5973B; }
+  .footer strong { color: #FFD166; }
   /* Acciones */
   .actions {
     display: flex;
@@ -251,7 +251,7 @@
   }
   .btn:hover { opacity: .88; }
   .btn-print {
-    background: linear-gradient(135deg,#C5973B,#E8B84B);
+    background: linear-gradient(135deg,#FFD166,#FFDD85);
     color: #fff;
   }
   .btn-close {
@@ -461,12 +461,12 @@ async function exportarPedidoPDF(id) {
     div.innerHTML = `
         <div style="background:linear-gradient(135deg,#1a0533,#2d0a4e);padding:28px 24px;text-align:center;color:white;border-radius:12px 12px 0 0;">
             ${logoBase64?`<img src="${logoBase64}" alt="${_e(storeName)}" style="height:52px;margin-bottom:8px;">`:''}
-            <div style="font-size:20px;font-weight:800;color:#E8B84B;">${_e(storeName)}</div>
+            <div style="font-size:20px;font-weight:800;color:#FFDD85;">${_e(storeName)}</div>
             ${storePhone?`<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;">${_e(storePhone)}</div>`:''}
         </div>
         <div style="padding:24px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <div><span style="font-size:18px;font-weight:800;color:#C5973B;">${_e(p.folio||'')}</span></div>
+                <div><span style="font-size:18px;font-weight:800;color:#FFD166;">${_e(p.folio||'')}</span></div>
                 <div style="text-align:right;">
                     <div style="font-size:11px;color:#9ca3af;">Fecha: ${_e(p.fechaPedido||'—')}</div>
                     <div style="font-size:11px;color:#9ca3af;">Entrega: ${_e(p.entrega||'—')}</div>
@@ -475,7 +475,7 @@ async function exportarPedidoPDF(id) {
             <div style="background:#faf9f7;border-radius:10px;padding:14px;margin-bottom:20px;">
                 <div style="font-size:14px;font-weight:700;color:#1f2937;">${_e(p.cliente||'—')}</div>
                 ${p.telefono?`<div style="font-size:12px;color:#6b7280;margin-top:2px;">📱 ${_e(p.telefono)}</div>`:''}
-                ${p.lugarEntrega?`<div style="font-size:12px;color:#7c3aed;margin-top:2px;">📍 ${_e(p.lugarEntrega)}</div>`:''}
+                ${p.lugarEntrega?`<div style="font-size:12px;color:#9669c4;margin-top:2px;">📍 ${_e(p.lugarEntrega)}</div>`:''}
             </div>
             ${p.concepto?`<div style="font-size:12px;color:#6b7280;margin-bottom:12px;"><strong>Concepto:</strong> ${_e(p.concepto)}</div>`:''}
             <table style="width:100%;border-collapse:collapse;">
@@ -497,7 +497,7 @@ async function exportarPedidoPDF(id) {
             ${p.notas?`<div style="margin-top:16px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:12px;color:#78350f;"><strong>📝 Notas:</strong> ${_e(p.notas)}</div>`:''}
             <div style="text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #f3f4f6;">
                 <p style="font-size:10px;color:#9ca3af;">Documento generado el ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</p>
-                <p style="font-size:10px;color:#C5973B;font-weight:600;margin-top:4px;">¡Gracias por tu preferencia! 🐱</p>
+                <p style="font-size:10px;color:#FFD166;font-weight:600;margin-top:4px;">¡Gracias por tu preferencia! 🐱</p>
             </div>
         </div>`;
 
@@ -576,7 +576,7 @@ function filtrarProductosPedido() {
         const tipoLabel = esSvc
             ? `<span style="font-size:.65rem;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:99px;font-weight:700;">⚙️ Serv</span>`
             : esMp
-            ? `<span style="font-size:.65rem;background:#ede9fe;color:#7c3aed;padding:1px 6px;border-radius:99px;font-weight:700;">MP</span>`
+            ? `<span style="font-size:.65rem;background:#ede9fe;color:#9669c4;padding:1px 6px;border-radius:99px;font-weight:700;">MP</span>`
             : esPV
             ? `<span style="font-size:.65rem;background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:99px;font-weight:700;">🎯 Var</span>`
             : `<span style="font-size:.65rem;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;font-weight:700;">PT</span>`;
@@ -984,7 +984,7 @@ function generarTicketPedido(id) {
         + '.tienda{text-align:center;font-size:1.3rem;font-weight:800;color:#1a0533;}'
         + '.slogan{text-align:center;font-size:.8rem;color:#6b7280;margin-bottom:4px;}'
         + '.contacto{text-align:center;font-size:.75rem;color:#9ca3af;margin-bottom:12px;}'
-        + '.folio-badge{background:#f5ede0;border:1.5px solid #C5973B;border-radius:8px;padding:6px 16px;text-align:center;font-weight:800;color:#92400e;font-size:.9rem;margin-bottom:16px;}'
+        + '.folio-badge{background:#f5ede0;border:1.5px solid #FFD166;border-radius:8px;padding:6px 16px;text-align:center;font-weight:800;color:#92400e;font-size:.9rem;margin-bottom:16px;}'
         + '.divider{border:none;border-top:1.5px dashed #e5e7eb;margin:12px 0;}'
         + '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}'
         + '.info-item label{display:block;font-size:.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;}'
@@ -993,7 +993,7 @@ function generarTicketPedido(id) {
         + 'th{background:#f9f5ef;padding:7px 10px;text-align:left;font-weight:700;font-size:.72rem;text-transform:uppercase;color:#92400e;}'
         + 'td{padding:6px 10px;border-bottom:1px solid #f3f4f6;}'
         + '.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:.85rem;color:#374151;}'
-        + '.total-final{display:flex;justify-content:space-between;padding:10px 0;font-size:1.1rem;font-weight:800;border-top:2px solid #C5973B;color:#1a0533;margin-top:4px;}'
+        + '.total-final{display:flex;justify-content:space-between;padding:10px 0;font-size:1.1rem;font-weight:800;border-top:2px solid #FFD166;color:#1a0533;margin-top:4px;}'
         + '.saldo-row{display:flex;justify-content:space-between;padding:4px 0;font-size:.9rem;font-weight:700;color:#dc2626;}'
         + '.pagado-row{display:flex;justify-content:space-between;padding:4px 0;font-size:.9rem;font-weight:700;color:#16a34a;}'
         + '.notas{background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:.8rem;color:#374151;}'
@@ -1026,9 +1026,9 @@ function generarTicketPedido(id) {
             : '<div class="pagado-row"><span>✅ Liquidado</span><span>$0.00</span></div>')
         + (p.notas ? '<div class="notas"><b>Notas:</b> '+_e(p.notas)+'</div>' : '')
         + '<hr class="divider">'
-        + '<div class="footer">'+_e(cfg.footer||'¡Gracias por tu compra!')+'<br>'+(cfg.facebook ? _e(cfg.facebook)+'<br>' : '')+'<span style="color:#C5973B;font-weight:700;">✨ Maneki Store</span></div>'
+        + '<div class="footer">'+_e(cfg.footer||'¡Gracias por tu compra!')+'<br>'+(cfg.facebook ? _e(cfg.facebook)+'<br>' : '')+'<span style="color:#FFD166;font-weight:700;">✨ Maneki Store</span></div>'
         + '<div class="no-print" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 16px;display:flex;gap:8px;">'
-        + '<button onclick="window.print()" style="flex:1;padding:10px;background:#C5973B;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">🖨️ Imprimir / Guardar PDF</button>'
+        + '<button onclick="window.print()" style="flex:1;padding:10px;background:#FFD166;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">🖨️ Imprimir / Guardar PDF</button>'
         + '<button onclick="window.close()" style="padding:10px 16px;background:#f3f4f6;color:#374151;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:.9rem;">✕ Cerrar</button>'
         + '</div>'
         + '<div style="height:64px;"></div>'
@@ -1109,7 +1109,7 @@ function renderCalendarioPedidos() {
         const fecha  = _calAnio+'-'+String(_calMes+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
         const esHoy  = new Date(_calAnio, _calMes, d).getTime() === hoy.getTime();
         const items  = porFecha[fecha] || [];
-        celdas += '<div style="min-height:80px;border:1px solid #f3f4f6;border-radius:10px;padding:6px;background:'+(esHoy?'#fef9f0':'#fff')+';'+(esHoy?'border-color:#C5973B;border-width:2px;':'')+';">'
+        celdas += '<div style="min-height:80px;border:1px solid #f3f4f6;border-radius:10px;padding:6px;background:'+(esHoy?'#fef9f0':'#fff')+';'+(esHoy?'border-color:#FFD166;border-width:2px;':'')+';">'
             + '<div style="font-size:.75rem;font-weight:'+(esHoy?'800':'600')+';color:'+(esHoy?'#92400e':'#374151')+';margin-bottom:3px;">'+d+(esHoy?' 📍':'')+'</div>'
             + items.slice(0,3).map(p => {const _e=_esc;return '<div onclick="openPedidoModal(\''+p.id+'\')" style="font-size:.65rem;background:'+(calcSaldoPendiente(p)>0?'#fef2f2':'#f0fdf4')+';color:'+(calcSaldoPendiente(p)>0?'#991b1b':'#166534')+';border-radius:4px;padding:2px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+_e(p.cliente)+' — '+_e(p.concepto)+'">'+_e(p.folio)+' '+_e(p.cliente)+'</div>';}).join('')
             + (items.length > 3 ? '<div style="font-size:.6rem;color:#9ca3af;text-align:center;">+'+(items.length-3)+' más</div>' : '')
@@ -1253,9 +1253,9 @@ function imprimirEtiquetaPedido(id) {
         + '@page{size:10cm 15cm;margin:0;}'
         + '*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}'
         + 'body{width:10cm;min-height:15cm;padding:10px;background:#fff;}'
-        + '.hdr{border-bottom:2px solid #C5973B;padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;}'
+        + '.hdr{border-bottom:2px solid #FFD166;padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;}'
         + '.brand{font-size:13px;font-weight:900;color:#1a0533;}'
-        + '.folio{font-size:11px;font-weight:800;color:#C5973B;text-align:right;}'
+        + '.folio{font-size:11px;font-weight:800;color:#FFD166;text-align:right;}'
         + '.row{margin-bottom:6px;}'
         + '.lbl{font-size:7.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;font-weight:700;}'
         + '.val{font-size:10px;color:#1a0533;font-weight:600;}'
@@ -1281,7 +1281,7 @@ function imprimirEtiquetaPedido(id) {
         + '</div>'
         + (p.entrega
             ? '<div class="row"><div class="lbl">Fecha de entrega</div>'
-            + '<div class="val big" style="color:#C5973B;">\uD83D\uDCC5 ' + _ee(p.entrega) + '</div></div>'
+            + '<div class="val big" style="color:#FFD166;">\uD83D\uDCC5 ' + _ee(p.entrega) + '</div></div>'
             : '')
         + (p.lugarEntrega
             ? '<div class="row"><div class="lbl">Lugar de entrega</div>'
@@ -1400,15 +1400,15 @@ function imprimirOrdenProduccion() {
     const statusLabel = (s: string) => ({pago:'💰 Pagado',produccion:'🔧 Producción',salida:'🚚 Salió'})[s] || s;
     const filas = pedidos.map(p => {
         const items = (p.productosInventario || []).map((it: any) =>
-            `<li>${_e(it.name || it.concepto || '—')} × ${it.quantity || 1}${it.variante ? ` <span style="color:#7c3aed;">[${_e(it.variante)}]</span>` : ''}</li>`
+            `<li>${_e(it.name || it.concepto || '—')} × ${it.quantity || 1}${it.variante ? ` <span style="color:#9669c4;">[${_e(it.variante)}]</span>` : ''}</li>`
         ).join('');
         return `
         <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                 <div>
-                    <span style="font-weight:800;color:#C5973B;font-size:1.1rem;">${_e(p.folio)}</span>
+                    <span style="font-weight:800;color:#FFD166;font-size:1.1rem;">${_e(p.folio)}</span>
                     <span style="margin-left:10px;font-size:.8rem;background:#f3f4f6;padding:2px 8px;border-radius:99px;">${statusLabel(p.status)}</span>
-                    ${p.ocasion ? `<span style="margin-left:6px;font-size:.78rem;background:#f5f3ff;color:#7c3aed;padding:2px 8px;border-radius:99px;">${_e(p.ocasion)}</span>` : ''}
+                    ${p.ocasion ? `<span style="margin-left:6px;font-size:.78rem;background:#f5f3ff;color:#9669c4;padding:2px 8px;border-radius:99px;">${_e(p.ocasion)}</span>` : ''}
                 </div>
                 <span style="font-size:.82rem;color:#6b7280;">Entrega: <b>${p.entrega || '—'}</b></span>
             </div>
@@ -1423,7 +1423,7 @@ function imprimirOrdenProduccion() {
 <title>Orden de Producción — ${hoy}</title>
 <style>
   body{font-family:system-ui,sans-serif;color:#1f2937;padding:24px;max-width:860px;margin:0 auto;}
-  h1{color:#C5973B;margin-bottom:4px;}
+  h1{color:#FFD166;margin-bottom:4px;}
   @media print{body{padding:0;}}
 </style>
 </head><body>

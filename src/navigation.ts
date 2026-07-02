@@ -35,7 +35,7 @@ function showSection(sectionName) {
         // Defer Web Animations API (lee layout en el starting state → forced reflow)
         requestAnimationFrame(() => {
             (sidebarBtn as HTMLElement).animate(
-                [{background:'rgba(197,151,59,0.35)'},{background:'rgba(197,151,59,0.20)'}],
+                [{background:'rgba(255,209,102,0.35)'},{background:'rgba(255,209,102,0.20)'}],
                 {duration:400, easing:'ease-out'}
             );
         });

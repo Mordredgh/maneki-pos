@@ -170,7 +170,7 @@ function switchHistoryTab(tab) {
     const activeContent = document.getElementById('tabContent' + tab.charAt(0).toUpperCase() + tab.slice(1));
     const activeBtn     = document.getElementById('tab'        + tab.charAt(0).toUpperCase() + tab.slice(1));
     if (activeContent) activeContent.classList.remove('hidden');
-    if (activeBtn)     { activeBtn.style.borderColor = '#C5973B'; activeBtn.style.color = '#C5973B'; }
+    if (activeBtn)     { activeBtn.style.borderColor = '#FFD166'; activeBtn.style.color = '#FFD166'; }
 }
 
 // ============== STORE CONFIG ==============

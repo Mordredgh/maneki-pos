@@ -237,7 +237,7 @@ function initComparativaMeses(ventasCache?: any[]) {
             data: {
                 labels: meses,
                 datasets: [
-                    { label: 'Ventas', data: ventas, backgroundColor: '#C5973B', borderRadius: 6 },
+                    { label: 'Ventas', data: ventas, backgroundColor: '#FFD166', borderRadius: 6 },
                     { label: 'Gastos', data: gastos, backgroundColor: '#FCA5A5', borderRadius: 6 },
                     { label: 'Ventas año anterior', data: ventasAnioAnterior, backgroundColor: 'rgba(197,165,114,0.45)', borderRadius: 6, hidden: true }
                 ]
@@ -257,7 +257,7 @@ function initComparativaMeses(ventasCache?: any[]) {
                 '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#6B7280;">' +
                 '<input type="checkbox" id="toggleAnioAnterior" ' +
                 'onchange="(function(cb){if(comparativaMesesChart){comparativaMesesChart.data.datasets[2].hidden=!cb.checked;comparativaMesesChart.update();}})(this)" ' +
-                'style="cursor:pointer;accent-color:#C5973B;"> 📅 vs. año anterior</label></div>'
+                'style="cursor:pointer;accent-color:#FFD166;"> 📅 vs. año anterior</label></div>'
             );
         }
         var comparativaContainer = canvas.closest('div.bg-white') || canvas.parentElement;
@@ -615,7 +615,7 @@ function initComparativaAnio(ventasCache?: any[]) {
             data: {
                 labels: meses,
                 datasets: [
-                    { label: String(anioActual), data: ventasActual, borderColor: '#C5973B', backgroundColor: 'rgba(197,165,114,0.12)', fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 },
+                    { label: String(anioActual), data: ventasActual, borderColor: '#FFD166', backgroundColor: 'rgba(197,165,114,0.12)', fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 },
                     { label: String(anioAnterior), data: ventasAnterior, borderColor: '#94a3b8', backgroundColor: 'rgba(148,163,184,0.08)', fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, borderDash: [5,4], borderWidth: 2 }
                 ]
             },
@@ -642,7 +642,7 @@ function initComparativaAnio(ventasCache?: any[]) {
             const isActual = i === mesActual;
             return `<tr style="background:${isActual ? '#fffbf5' : ''};${isActual ? 'font-weight:600' : ''}">
                 <td style="padding:5px 8px;font-size:.78rem;color:#374151">${mesNombres[i]}</td>
-                <td style="padding:5px 8px;font-size:.78rem;text-align:right;color:#C5973B;font-weight:600">$${va.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+                <td style="padding:5px 8px;font-size:.78rem;text-align:right;color:#FFD166;font-weight:600">$${va.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
                 <td style="padding:5px 8px;font-size:.78rem;text-align:right;color:#94a3b8">$${vb.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
                 <td style="padding:5px 8px;text-align:right">${diffHtml}</td>
             </tr>`;
@@ -651,14 +651,14 @@ function initComparativaAnio(ventasCache?: any[]) {
             <table style="width:100%;border-collapse:collapse;font-size:.8rem">
                 <thead><tr style="background:#f9fafb;border-bottom:2px solid #f3f4f6">
                     <th style="padding:5px 8px;text-align:left;color:#6b7280;font-size:.7rem">Mes</th>
-                    <th style="padding:5px 8px;text-align:right;color:#C5973B;font-size:.7rem">${anioActual}</th>
+                    <th style="padding:5px 8px;text-align:right;color:#FFD166;font-size:.7rem">${anioActual}</th>
                     <th style="padding:5px 8px;text-align:right;color:#94a3b8;font-size:.7rem">${anioAnterior}</th>
                     <th style="padding:5px 8px;text-align:right;color:#6b7280;font-size:.7rem">Var.</th>
                 </tr></thead>
                 <tbody>${filas}</tbody>
                 <tfoot><tr style="border-top:2px solid #f3f4f6;background:#f9fafb">
                     <td style="padding:5px 8px;font-size:.78rem;font-weight:700">Total</td>
-                    <td style="padding:5px 8px;text-align:right;font-size:.78rem;font-weight:700;color:#C5973B">$${totalActual.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+                    <td style="padding:5px 8px;text-align:right;font-size:.78rem;font-weight:700;color:#FFD166">$${totalActual.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
                     <td style="padding:5px 8px;text-align:right;font-size:.78rem;font-weight:700;color:#94a3b8">$${totalAnterior.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
                     <td style="padding:5px 8px;text-align:right">${pct !== null ? `<span style="font-weight:700;color:${pct>=0?'#059669':'#dc2626'}">${pct>=0?'▲':'▼'}${Math.abs(pct).toFixed(1)}%</span>` : '—'}</td>
                 </tfoot>
@@ -685,7 +685,7 @@ function _inyectarPresetsFechaReportes() {
         const btn = document.createElement('button');
         btn.textContent = label;
         btn.style.cssText = 'padding:4px 10px;font-size:.72rem;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#6b7280;cursor:pointer;white-space:nowrap;transition:background .15s;';
-        btn.onmouseover = () => { btn.style.background = '#fff7ed'; btn.style.borderColor = '#C5973B'; btn.style.color = '#C5973B'; };
+        btn.onmouseover = () => { btn.style.background = '#fff7ed'; btn.style.borderColor = '#FFD166'; btn.style.color = '#FFD166'; };
         btn.onmouseout  = () => { btn.style.background = '#f9fafb'; btn.style.borderColor = '#e5e7eb'; btn.style.color = '#6b7280'; };
         btn.onclick = () => _setReportDatePreset(key);
         bar.appendChild(btn);
@@ -875,7 +875,7 @@ function renderTopProducts(ventasCache?: any[]) {
     el.innerHTML = top.map((p, i) => `
         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style="background:#C5973B;">${i+1}</div>
+                <div class="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm" style="background:#FFD166;">${i+1}</div>
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(p.name)}</p>
                     <p class="text-xs text-gray-500">${p.sales} vendidos</p>
@@ -938,7 +938,7 @@ function initCategoryChart() {
         ctx.fillText(categoryChartMode==='inventario' ? 'Sin productos en inventario' : 'Sin ventas registradas', canvas.width/2, canvas.height/2);
         return;
     }
-    const defColors = ['#C5973B','#10B981','#3B82F6','#8B5CF6','#EF4444','#F59E0B','#EC4899','#06B6D4'];
+    const defColors = ['#FFD166','#10B981','#3B82F6','#8B5CF6','#EF4444','#F59E0B','#EC4899','#06B6D4'];
     const chartColors = labels.map((lbl, i) => {
         const cat = (window.categories||[]).find(c => c.name === lbl);
         return (cat && cat.color) ? cat.color : defColors[i % defColors.length];
@@ -1097,7 +1097,7 @@ function renderSalesHistory() {
             _loadMoreBtn = document.createElement('div');
             _loadMoreBtn.id = 'salesLoadMoreBtn';
             _loadMoreBtn.style.cssText = 'text-align:center;margin-top:12px;';
-            _loadMoreBtn.innerHTML = `<button onclick="cargarMasVentas()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #C5973B;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más registros ↓</button>`;
+            _loadMoreBtn.innerHTML = `<button onclick="cargarMasVentas()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #FFD166;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más registros ↓</button>`;
             const tableContainer = document.getElementById('salesHistoryTable')?.parentElement;
             if (tableContainer) tableContainer.appendChild(_loadMoreBtn);
         } else {
@@ -1430,7 +1430,7 @@ function renderAnalisis() {
     if (lista.length === 0) { tbody.innerHTML=''; if(vacio) vacio.classList.remove('hidden'); return; }
     if (vacio) vacio.classList.add('hidden');
 
-    const colores = ['#C5973B','#E9B84A','#7CB9A8','#A78BFA','#F87171','#60A5FA','#34D399'];
+    const colores = ['#FFD166','#E9B84A','#7CB9A8','#A78BFA','#F87171','#60A5FA','#34D399'];
     tbody.innerHTML = lista.map((p,i) => {
         const pct = totalIngresos>0 ? (p.ingresos/totalIngresos*100).toFixed(1) : 0;
         const barPct = maxIngresos>0 ? (p.ingresos/maxIngresos*100).toFixed(1) : 0;

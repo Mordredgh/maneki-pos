@@ -52,7 +52,7 @@ function injectVariableProductModal() {
                     <label class="text-sm font-semibold text-gray-700">🏭 Materias Primas y Servicios</label>
                     <button type="button" onclick="pvAgregarComponente()"
                         class="px-3 py-1.5 rounded-lg text-xs font-bold text-white"
-                        style="background:linear-gradient(135deg,#7c3aed,#a855f7);">+ Agregar componente</button>
+                        style="background:linear-gradient(135deg,#9669c4,#ab84d1);">+ Agregar componente</button>
                 </div>
                 <div style="margin-bottom:8px;">
                     <input type="text" id="pvBuscarMP" placeholder="Buscar materia prima..."
@@ -106,7 +106,7 @@ function injectVariableProductModal() {
 
             <button type="submit" id="pvSubmitBtn"
                 class="w-full py-3 rounded-xl text-white font-bold text-base mt-2"
-                style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+                style="background:linear-gradient(135deg,#9669c4,#ab84d1);">
                 ✅ Guardar Producto Variable
             </button>
         </form>
@@ -165,10 +165,10 @@ function pvRenderMpList() {
             <input type="number" min="0.01" step="0.01" value="${c.qty}"
                 onchange="pvEditarQtyComp(${i}, this.value)"
                 style="width:50px;padding:3px 6px;border:1px solid #ddd6fe;border-radius:6px;text-align:center;font-size:.8rem;">
-            <span style="color:#7c3aed;font-weight:600;min-width:55px;text-align:right;">$${((parseFloat(c.costUnit)||0)*(parseFloat(c.qty)||1)).toFixed(2)}</span>
+            <span style="color:#9669c4;font-weight:600;min-width:55px;text-align:right;">$${((parseFloat(c.costUnit)||0)*(parseFloat(c.qty)||1)).toFixed(2)}</span>
             <button onclick="pvQuitarComp(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;">✕</button>
         </div>`).join('') +
-        `<div style="text-align:right;font-size:.78rem;color:#7c3aed;font-weight:700;padding:4px 10px 0;">Costo por hoja: $${costoTotal.toFixed(2)}</div>`;
+        `<div style="text-align:right;font-size:.78rem;color:#9669c4;font-weight:700;padding:4px 10px 0;">Costo por hoja: $${costoTotal.toFixed(2)}</div>`;
 }
 window.pvRenderMpList = pvRenderMpList;
 

@@ -12,11 +12,11 @@ const _css = `
     box-shadow:
         0 2px 0 rgba(255,255,255,0.75) inset,
         0 32px 80px rgba(21,4,50,0.20),
-        0 12px 28px rgba(124,58,237,0.13) !important;
+        0 12px 28px rgba(150,105,196,0.13) !important;
 }
 body.dark .modal > div {
     background: rgba(14,4,32,0.96) !important;
-    border-color: rgba(197,151,59,0.22) !important;
+    border-color: rgba(255,209,102,0.22) !important;
 }
 
 /* == TIPOGRAFÍA EXPRESIVA — Cormorant en KPIs grandes == */
@@ -44,9 +44,9 @@ body.dark .modal > div {
     content: '';
     position: absolute;
     left: 0; top: 15%; height: 70%; width: 3.5px;
-    background: linear-gradient(180deg,transparent,#E8B84B 35%,#E8B84B 65%,transparent);
+    background: linear-gradient(180deg,transparent,#FFDD85 35%,#FFDD85 65%,transparent);
     border-radius: 0 4px 4px 0;
-    box-shadow: 0 0 18px rgba(232,184,75,0.85), 0 0 6px rgba(232,184,75,0.5);
+    box-shadow: 0 0 18px rgba(255,221,133,0.85), 0 0 6px rgba(255,221,133,0.5);
     animation: mkSidebarPulse 2.4s ease-in-out infinite;
     pointer-events: none; z-index: 10;
 }
@@ -54,12 +54,12 @@ body.dark .modal > div {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(232,184,75,0.12) 0%, transparent 70%);
+    background: linear-gradient(90deg, rgba(255,221,133,0.12) 0%, transparent 70%);
     pointer-events: none;
 }
 @keyframes mkSidebarPulse {
-    0%,100% { opacity: 0.65; box-shadow: 0 0 14px rgba(232,184,75,0.6); }
-    50%      { opacity: 1;   box-shadow: 0 0 26px rgba(232,184,75,1), 0 0 10px rgba(232,184,75,0.4); }
+    0%,100% { opacity: 0.65; box-shadow: 0 0 14px rgba(255,221,133,0.6); }
+    50%      { opacity: 1;   box-shadow: 0 0 26px rgba(255,221,133,1), 0 0 10px rgba(255,221,133,0.4); }
 }
 
 /* == SECTION MORPH TRANSITION == */
@@ -87,7 +87,7 @@ section:not(.hidden).active-section {
 /* == POS PRODUCT CARDS PREMIUM == */
 .product-card {
     background: #fff !important;
-    border: 1.5px solid rgba(197,151,59,0.12) !important;
+    border: 1.5px solid rgba(255,209,102,0.12) !important;
     border-radius: 18px !important;
     box-shadow: 0 2px 8px rgba(21,4,50,0.05), inset 0 1px 0 rgba(255,255,255,0.95) !important;
     transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1) !important;
@@ -98,8 +98,8 @@ section:not(.hidden).active-section {
 }
 .product-card:hover:not(.mk-out-of-stock) {
     transform: translateY(-5px) scale(1.015) !important;
-    border-color: rgba(197,151,59,0.35) !important;
-    box-shadow: 0 14px 36px rgba(124,58,237,0.14), 0 5px 14px rgba(197,151,59,0.14) !important;
+    border-color: rgba(255,209,102,0.35) !important;
+    box-shadow: 0 14px 36px rgba(150,105,196,0.14), 0 5px 14px rgba(255,209,102,0.14) !important;
 }
 .product-card:active:not(.mk-out-of-stock) {
     transform: scale(0.96) !important; transition-duration:0.08s !important;
@@ -108,18 +108,18 @@ section:not(.hidden).active-section {
 .mk-pc-img img { width:100%;height:100%;object-fit:cover;transition:transform 0.35s ease; }
 .product-card:hover .mk-pc-img img { transform:scale(1.07); }
 .mk-pc-emoji { width:100%;height:96px;display:flex;align-items:center;justify-content:center;
-    font-size:2.6rem;background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(197,151,59,0.04)); }
+    font-size:2.6rem;background:linear-gradient(135deg,rgba(150,105,196,0.05),rgba(255,209,102,0.04)); }
 .mk-pc-body { padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;gap:4px; }
 .mk-pc-name { font-size:0.79rem;font-weight:700;color:#1A0533;line-height:1.3;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
 .mk-pc-price { font-family:'Space Grotesk',sans-serif;font-size:1.2rem;
-    font-weight:600;font-style:italic;color:#C5973B;margin-top:auto; }
+    font-weight:600;font-style:italic;color:#FFD166;margin-top:auto; }
 .mk-pc-stock-ok  { font-size:0.65rem;font-weight:700;color:#10B981; }
 .mk-pc-stock-low { font-size:0.65rem;font-weight:700;color:#F59E0B; }
 .mk-pc-stock-out { font-size:0.65rem;font-weight:700;color:#EF4444; }
 .mk-out-of-stock { opacity:0.52;filter:grayscale(25%);cursor:not-allowed !important; }
 .mk-pc-tags { display:flex;flex-wrap:wrap;gap:3px;margin-top:2px; }
-.mk-pc-tag { background:rgba(232,184,75,0.1);color:#92400e;border:1px solid rgba(197,151,59,0.2);
+.mk-pc-tag { background:rgba(255,221,133,0.1);color:#92400e;border:1px solid rgba(255,209,102,0.2);
     font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:99px; }
 
 /* == PARTICLES CANVAS == */
@@ -137,7 +137,7 @@ section:not(.hidden).active-section {
     position:fixed;bottom:20px;right:20px;z-index:600;
     width:38px;height:38px;border-radius:50%;
     background:rgba(255,255,255,0.88);
-    border:1px solid rgba(197,151,59,0.25);
+    border:1px solid rgba(255,209,102,0.25);
     box-shadow:0 4px 14px rgba(21,4,50,0.1),inset 0 1px 0 rgba(255,255,255,0.85);
     cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;
     transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
@@ -148,14 +148,14 @@ section:not(.hidden).active-section {
 /* == META EDITABLE == */
 .mk-goal-edit-btn {
     cursor:pointer;font-size:0.65rem;padding:1px 5px;border-radius:6px;
-    background:rgba(197,151,59,0.1);color:#92400e;border:1px dashed rgba(197,151,59,0.4);
+    background:rgba(255,209,102,0.1);color:#92400e;border:1px dashed rgba(255,209,102,0.4);
     transition:background 0.15s;margin-left:6px;font-weight:700;letter-spacing:0.04em;
 }
-.mk-goal-edit-btn:hover { background:rgba(197,151,59,0.22); }
+.mk-goal-edit-btn:hover { background:rgba(255,209,102,0.22); }
 
 /* == SKELETON LOADING == */
 .mk-skeleton {
-    background:linear-gradient(90deg,rgba(197,151,59,0.06) 25%,rgba(197,151,59,0.13) 50%,rgba(197,151,59,0.06) 75%);
+    background:linear-gradient(90deg,rgba(255,209,102,0.06) 25%,rgba(255,209,102,0.13) 50%,rgba(255,209,102,0.06) 75%);
     background-size:200% 100%;
     animation:mkSkeletonShimmer 1.6s ease-in-out infinite;
     border-radius:8px;
@@ -184,7 +184,7 @@ function initParticles() {
     resize();
     addEventListener('resize', resize);
 
-    const COLS = ['rgba(197,151,59,OP)','rgba(232,184,75,OP)','rgba(124,58,237,OP)','rgba(168,85,247,OP)'];
+    const COLS = ['rgba(255,209,102,OP)','rgba(255,221,133,OP)','rgba(150,105,196,OP)','rgba(171,132,209,OP)'];
     const pts = Array.from({length:26}, (_, i) => ({
         x: Math.random(), y: Math.random(),
         r: Math.random()*2+0.7,
@@ -230,7 +230,7 @@ function initConfetti() {
     resize();
     addEventListener('resize', resize);
 
-    const PCOLS = ['#E8B84B','#F5D080','#7C3AED','#A855F7','#10B981','#FF6B9D','#fff'];
+    const PCOLS = ['#FFDD85','#FFE8B0','#9669c4','#ab84d1','#10B981','#FF6B9D','#fff'];
     let parts = [], rafC;
 
     window.mkConfetti = function() {
@@ -335,19 +335,19 @@ if (!_overlay) {
 }
 
 const SECTION_PALETTE = {
-    dashboard:'rgba(124,58,237,0.10)', bienvenida:'rgba(124,58,237,0.10)',
+    dashboard:'rgba(150,105,196,0.10)', bienvenida:'rgba(150,105,196,0.10)',
     pedidos:'rgba(139,92,246,0.09)',
     inventory:'rgba(16,185,129,0.09)', balance:'rgba(245,158,11,0.09)',
-    clientes:'rgba(255,107,157,0.09)', analisis:'rgba(197,151,59,0.09)',
+    clientes:'rgba(255,107,157,0.09)', analisis:'rgba(255,209,102,0.09)',
     reportes:'rgba(99,102,241,0.09)', configuracion:'rgba(139,92,246,0.09)',
     categorias:'rgba(249,115,22,0.09)', equipos:'rgba(100,116,139,0.09)',
-    quotes: 'rgba(197,151,59,0.09)',
+    quotes: 'rgba(255,209,102,0.09)',
 };
 
 let _prevSection = 'bienvenida';
 function _morphTo(name) {
-    const from = SECTION_PALETTE[_prevSection] || 'rgba(124,58,237,0.08)';
-    const to   = SECTION_PALETTE[name]         || 'rgba(124,58,237,0.08)';
+    const from = SECTION_PALETTE[_prevSection] || 'rgba(150,105,196,0.08)';
+    const to   = SECTION_PALETTE[name]         || 'rgba(150,105,196,0.08)';
     _overlay.style.background = `linear-gradient(135deg,${from},${to})`;
     _overlay.classList.remove('active');
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -421,7 +421,7 @@ function _initEditableGoal() {
             inlineInput.type = 'number';
             inlineInput.value = currentVal;
             inlineInput.min = '1';
-            inlineInput.style.cssText = 'width:110px;padding:2px 6px;border:1.5px solid #E8B84B;border-radius:8px;font-size:0.85rem;outline:none;font-family:inherit;';
+            inlineInput.style.cssText = 'width:110px;padding:2px 6px;border:1.5px solid #FFDD85;border-radius:8px;font-size:0.85rem;outline:none;font-family:inherit;';
             btn.style.display = 'none';
             btn.parentNode.insertBefore(inlineInput, btn.nextSibling);
             inlineInput.focus();
@@ -565,7 +565,7 @@ function _sectionSpinner(name, show) {
         const s = document.createElement('div');
         s.id = spinnerId;
         s.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);z-index:99;border-radius:12px;';
-        s.innerHTML = '<div style="width:36px;height:36px;border:3px solid #f3f3f3;border-top:3px solid #C9933A;border-radius:50%;animation:mkSpin .7s linear infinite;"></div>';
+        s.innerHTML = '<div style="width:36px;height:36px;border:3px solid #f3f3f3;border-top:3px solid #FFD166;border-radius:50%;animation:mkSpin .7s linear infinite;"></div>';
         if (!document.getElementById('mk-spin-style')) {
             const st = document.createElement('style');
             st.id = 'mk-spin-style';
@@ -685,7 +685,7 @@ function _patchRenderAnalisis() {
                         <td class="px-6 py-3">
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <div style="flex:1;height:5px;background:#f3f4f6;border-radius:99px;overflow:hidden;">
-                                    <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#C5973B,#E8B84B);border-radius:99px;"></div>
+                                    <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#FFD166,#FFDD85);border-radius:99px;"></div>
                                 </div>
                                 <span style="font-size:0.7rem;color:#6b7280;width:38px;text-align:right;">${pct}%</span>
                             </div>
@@ -783,7 +783,7 @@ function _onReady() {
 if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', _onReady);
 else _onReady();
 
-console.log('%c🐱 Maneki Premium v4.1 ·', 'color:#E8B84B;font-weight:800;font-size:12px;',
+console.log('%c🐱 Maneki Premium v4.1 ·', 'color:#FFDD85;font-weight:800;font-size:12px;',
             'Glassmorphism · Sound · Particles · Workers · Morph · InvPatch ✓');
 
 })();

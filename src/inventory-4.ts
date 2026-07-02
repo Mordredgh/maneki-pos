@@ -310,7 +310,7 @@ function editProduct(id) {
                 if (chkOc) {
                     chkOc.checked = Array.isArray(p.ocasiones) && p.ocasiones.includes(id);
                     if (lblOc) {
-                        lblOc.style.borderColor = chkOc.checked ? '#C5973B' : '#e5e7eb';
+                        lblOc.style.borderColor = chkOc.checked ? '#FFD166' : '#e5e7eb';
                         lblOc.style.background  = chkOc.checked ? '#fdf8f0' : '';
                     }
                 }
@@ -445,7 +445,7 @@ function patchInventoryButtons() {
         mpBtn.setAttribute('data-mp-btn', '1');
         mpBtn.onclick = () => { injectMpModal(); openAddMateriaPrimaModal(); };
         mpBtn.className = 'px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2';
-        mpBtn.style.cssText = 'background:linear-gradient(135deg,#7c3aed,#a855f7);';
+        mpBtn.style.cssText = 'background:linear-gradient(135deg,#9669c4,#ab84d1);';
         mpBtn.innerHTML = '🧪 Materia Prima';
         mpBtn.title = 'Agregar materia prima';
         parent.insertBefore(mpBtn, btn);

@@ -58,7 +58,7 @@ function injectPackModal() {
                 <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Nombre del Pack *</label>
                 <input type="text" id="packNombre" placeholder="Ej: Pack Boxer + Calcetas"
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;box-sizing:border-box;"
-                    onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
+                    onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#e5e7eb'">
             </div>
 
             <!-- PRODUCTOS DEL PACK -->
@@ -88,7 +88,7 @@ function injectPackModal() {
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                     <label style="font-size:.85rem;font-weight:700;color:#374151;">🏭 Materias Primas Adicionales</label>
                     <button type="button" onclick="packAbrirSelectorMP()"
-                        style="padding:6px 14px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
+                        style="padding:6px 14px;background:linear-gradient(135deg,#9669c4,#ab84d1);color:#fff;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         + Agregar MP
                     </button>
                 </div>
@@ -120,7 +120,7 @@ function injectPackModal() {
                     <input type="number" id="packPrecio" step="0.01" min="0" placeholder="0.00"
                         oninput="packMostrarMargen()"
                         style="width:100%;padding:12px 16px 12px 28px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;box-sizing:border-box;"
-                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
                 <div id="packMargenInfo" style="font-size:.8rem;margin-top:6px;min-height:18px;"></div>
                 <!-- Sugerir por margen -->
@@ -136,7 +136,7 @@ function injectPackModal() {
                     <label style="display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:6px;">SKU (opcional)</label>
                     <input type="text" id="packSku" placeholder="Auto-generado"
                         style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;box-sizing:border-box;"
-                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
                 <div>
                     <label style="display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:6px;">Categoría (opcional)</label>
@@ -364,7 +364,7 @@ function packRenderComponentes() {
                     <input type="number" min="1" value="${c.qty}"
                         onchange="packActualizarQty('${c.productoId}', this.value)"
                         style="width:46px;padding:4px 6px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.82rem;text-align:center;outline:none;"
-                        onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
                 <div style="text-align:center;">
                     <div style="font-size:.68rem;color:#9ca3af;margin-bottom:2px;">Costo pack</div>
@@ -373,7 +373,7 @@ function packRenderComponentes() {
                         <input type="number" min="0" step="0.01" value="${Number(c.costoCustom).toFixed(2)}"
                             onchange="packActualizarCosto('${c.productoId}', this.value)"
                             style="width:72px;padding:4px 6px 4px 16px;border:1.5px solid #fde68a;border-radius:8px;font-size:.82rem;outline:none;"
-                            onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#fde68a'">
+                            onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#fde68a'">
                     </div>
                 </div>
                 <button type="button" onclick="packQuitarComponente('${c.productoId}')"
@@ -502,7 +502,7 @@ function packRenderMpDirectos() {
                     <input type="number" min="0.001" step="0.001" value="${m.qty}"
                         onchange="packActualizarQtyMP('${m.id}', this.value)"
                         style="width:54px;padding:4px 6px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.82rem;text-align:center;outline:none;"
-                        onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e5e7eb'">
+                        onfocus="this.style.borderColor='#9669c4'" onblur="this.style.borderColor='#e5e7eb'">
                 </div>
                 <div style="text-align:center;">
                     <div style="font-size:.68rem;color:#9ca3af;margin-bottom:2px;">Costo pack</div>
@@ -511,7 +511,7 @@ function packRenderMpDirectos() {
                         <input type="number" min="0" step="0.01" value="${Number(m.costoCustom).toFixed(2)}"
                             onchange="packActualizarCostoMP('${m.id}', this.value)"
                             style="width:72px;padding:4px 6px 4px 16px;border:1.5px solid #ddd6fe;border-radius:8px;font-size:.82rem;outline:none;"
-                            onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#ddd6fe'">
+                            onfocus="this.style.borderColor='#9669c4'" onblur="this.style.borderColor='#ddd6fe'">
                     </div>
                 </div>
                 <button type="button" onclick="packQuitarMP('${m.id}')"

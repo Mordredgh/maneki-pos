@@ -1483,7 +1483,7 @@ function confirmarResetTotal() {
 function _actualizarBottomNavActivo(seccion) {
     const mapSection = { dashboard: 0, pedidos: 1, inventory: 2, balance: 3 };
     document.querySelectorAll('#mobileBottomNav button').forEach((btn, i) => {
-        btn.style.color = i === mapSection[seccion] ? '#C9933A' : '#6b7280';
+        btn.style.color = i === mapSection[seccion] ? '#FFD166' : '#6b7280';
     });
 }
 window._actualizarBottomNavActivo = _actualizarBottomNavActivo;
@@ -1618,7 +1618,7 @@ function initResponsive() {
         document.querySelectorAll('#mobileBottomNav button').forEach(b => {
             b.style.color = '#6b7280';
         });
-        btn.style.color = '#C9933A';
+        btn.style.color = '#FFD166';
     });
 }
 
@@ -1645,7 +1645,7 @@ function manekiUndoToast(msg, undoFn, duracion) {
         <div class="mk-toast-body" style="flex:1">
             <div class="mk-toast-msg">${msg}</div>
         </div>
-        <button id="${_id}" style="background:#C5973B;color:white;border:none;border-radius:8px;padding:6px 16px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;">Deshacer</button>
+        <button id="${_id}" style="background:#FFD166;color:white;border:none;border-radius:8px;padding:6px 16px;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;">Deshacer</button>
         <div class="mk-toast-progress" style="animation-duration:${duracion}ms"></div>`;
     container.appendChild(toast);
     let _undone = false;
@@ -1672,7 +1672,7 @@ window.manekiUndoToast = manekiUndoToast;
 .mk-skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:800px 100%;animation:mkShimmer 1.5s infinite;border-radius:8px;min-height:20px}
 #mk-loading-overlay{position:fixed;inset:0;background:rgba(250,248,245,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s}
 #mk-loading-overlay.fade-out{opacity:0;pointer-events:none}
-.mk-loading-spinner{width:44px;height:44px;border:3.5px solid #e5e7eb;border-top-color:#C5973B;border-radius:50%;animation:spin 0.8s linear infinite}
+.mk-loading-spinner{width:44px;height:44px;border:3.5px solid #e5e7eb;border-top-color:#FFD166;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}`;
     document.head.appendChild(style);
 

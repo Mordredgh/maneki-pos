@@ -83,11 +83,11 @@ function abrirBulkPrecioModal() {
             </div>
             <div style="display:flex;gap:20px;flex-wrap:wrap;">
                 <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;">
-                    <input type="checkbox" id="bulkPrecioSoloPT" onchange="bulkPrecioPreview()" style="accent-color:#C5973B;">
+                    <input type="checkbox" id="bulkPrecioSoloPT" onchange="bulkPrecioPreview()" style="accent-color:#FFD166;">
                     Solo Productos Terminados
                 </label>
                 <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;color:#374151;cursor:pointer;">
-                    <input type="checkbox" id="bulkPrecioSoloMP" onchange="bulkPrecioPreview()" style="accent-color:#7c3aed;">
+                    <input type="checkbox" id="bulkPrecioSoloMP" onchange="bulkPrecioPreview()" style="accent-color:#9669c4;">
                     Solo Materias Primas (costo)
                 </label>
             </div>
@@ -484,22 +484,22 @@ function renderInventoryTable() {
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-purple-50">
             <td class="px-2 py-3" style="width:32px;">
               <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
-                style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;"
+                style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;"
                 onchange="invBulkToggle(this)">
             </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
                 <div>
                     <span class="font-semibold text-gray-800" style="font-size:.9rem;">${_esc(product.name)}</span>
-                    ${product.historialCostos && product.historialCostos.length ? `<span title="Este producto ha tenido ${product.historialCostos.length} modificaciones de precio o stock" style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialCostos.length} cambio${product.historialCostos.length>1?'s':''}</span>` : ''}
-                    ${product.compraPaquete ? `<div style="font-size:10px;color:#7c3aed;margin-top:2px;">📦 Paquete: ${product.compraPaquete.cantidad} uds · $${Number(product.compraPaquete.precio).toFixed(2)}</div>` : ''}
+                    ${product.historialCostos && product.historialCostos.length ? `<span title="Este producto ha tenido ${product.historialCostos.length} modificaciones de precio o stock" style="font-size:10px;background:#f3e8ff;color:#9669c4;padding:1px 6px;border-radius:99px;margin-left:4px;cursor:help;">📈 ${product.historialCostos.length} cambio${product.historialCostos.length>1?'s':''}</span>` : ''}
+                    ${product.compraPaquete ? `<div style="font-size:10px;color:#9669c4;margin-top:2px;">📦 Paquete: ${product.compraPaquete.cantidad} uds · $${Number(product.compraPaquete.precio).toFixed(2)}</div>` : ''}
                     ${product.notas ? `<div class="text-xs text-gray-400 truncate" style="max-width:160px;" title="${_esc(product.notas)}">${_esc(product.notas)}</div>` : ''}
-                    ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#f3e8ff;color:#7c3aed;border:1px solid #e9d5ff;">${_esc(t)}</span>`).join('')}</div>` : ''}
+                    ${product.tags && product.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;">${product.tags.map(t=>`<span style="padding:1px 6px;border-radius:99px;font-size:10px;background:#f3e8ff;color:#9669c4;border:1px solid #e9d5ff;">${_esc(t)}</span>`).join('')}</div>` : ''}
                 </div>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
-            <td class="px-4 py-3 text-right" style="font-size:.85rem;color:#7c3aed;font-weight:600;">$${Number(product.cost||0).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right" style="font-size:.85rem;color:#9669c4;font-weight:600;">$${Number(product.cost||0).toFixed(2)}</td>
             <td class="px-4 py-3 text-gray-500 text-sm inv-col-hidden-prov">${_esc(product.proveedor||'—')}</td>
             <td class="px-4 py-3 font-semibold" id="stock-cell-${pid}">
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
@@ -530,7 +530,7 @@ function renderInventoryTable() {
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-indigo-50">
             <td class="px-2 py-3" style="width:32px;">
               <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
-                style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;"
+                style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;"
                 onchange="invBulkToggle(this)">
             </td>
             <td class="px-4 py-3">${imgHTML}</td>
@@ -638,7 +638,7 @@ function renderInventoryTable() {
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-amber-50">
             <td class="px-2 py-3" style="width:32px;">
               <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
-                style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;"
+                style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;"
                 onchange="invBulkToggle(this)">
             </td>
             <td class="px-4 py-3">${imgHTML}</td>
@@ -671,9 +671,9 @@ function renderInventoryTable() {
                             style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>`
                     }
                     <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
                     ${product.tipo !== 'pack' ? `<button type="button" onclick="cambiarTipoProducto('${pid}')" title="Convertir a Materia Prima" aria-label="Convertir tipo de producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ''}
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ''}
                     ${product.movimientos && product.movimientos.length ? `<button type="button" onclick="verMovimientosProducto('${pid}')" title="Ver movimientos de stock (${product.movimientos.length})" aria-label="Ver movimientos de stock"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>` : ''}
                     <button type="button" onclick="abrirMovimientoProducto('${pid}')" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
@@ -751,7 +751,7 @@ function renderInventoryTable() {
         <tr style="animation:mkSectionIn 0.3s ease both;animation-delay:${ri*0.03}s" class="hover:bg-sky-50">
             <td class="px-2 py-3" style="width:32px;">
               <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
-                style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;"
+                style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;"
                 onchange="invBulkToggle(this)">
             </td>
             <td class="px-4 py-3">${imgHTML}</td>
@@ -776,7 +776,7 @@ function renderInventoryTable() {
                     <button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar servicio"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">✏️</button>
                     <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar servicio"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(124,58,237,0.2);background:rgba(124,58,237,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
+                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">📋</button>
                     <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar servicio"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">🗑️</button>
                 </div>
@@ -833,7 +833,7 @@ function renderInventoryTable() {
                         let p2 = page <= 3 ? i+1 : page + i - 2;
                         if (p2 < 1) p2 = null; if (p2 > totalPgs) p2 = null;
                         if (p2 === null) return '';
-                        return `<button onclick="invSectionPage('${id}',${p2})" style="min-width:30px;padding:4px 8px;border:1px solid ${p2===page?'#C5973B':'#e5e7eb'};border-radius:7px;background:${p2===page?'#C5973B':'#fff'};color:${p2===page?'#fff':'#374151'};font-weight:${p2===page?700:400};font-size:13px;cursor:${p2===page?'default':'pointer'};" ${p2===page?'disabled':''}>${p2}</button>`;
+                        return `<button onclick="invSectionPage('${id}',${p2})" style="min-width:30px;padding:4px 8px;border:1px solid ${p2===page?'#FFD166':'#e5e7eb'};border-radius:7px;background:${p2===page?'#FFD166':'#fff'};color:${p2===page?'#fff':'#374151'};font-weight:${p2===page?700:400};font-size:13px;cursor:${p2===page?'default':'pointer'};" ${p2===page?'disabled':''}>${p2}</button>`;
                     }).join('')}
                     <button onclick="invSectionPage('${id}',${page+1})" ${page>=totalPgs?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page>=totalPgs?'default':'pointer'};opacity:${page>=totalPgs?0.4:1};font-size:13px;">›</button>
                 </div>
@@ -906,7 +906,7 @@ function renderInventoryTable() {
             <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">Total productos</div>
         </div>
         <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 18px;box-shadow:0 1px 6px #0000000a;">
-            <div style="font-size:1.4rem;font-weight:800;color:#7c3aed;">$${valorInventario.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#9669c4;">$${valorInventario.toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
             <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;text-transform:uppercase;letter-spacing:.06em;">Valor inventario</div>
         </div>
         <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 18px;box-shadow:0 1px 6px #0000000a;">
@@ -924,7 +924,7 @@ function renderInventoryTable() {
         {
             id: 'pt',
             title: '📦 Productos Terminados',
-            titleColor: '#C5973B',
+            titleColor: '#FFD166',
             titleBg: 'linear-gradient(135deg,#fffbeb,#fef9f0)',
             btnLabel: '+ Producto',
             btnOnclick: 'openAddProductModal()',
@@ -932,7 +932,7 @@ function renderInventoryTable() {
             products: pts,
             renderFila: renderFilaPT,
             headers: [
-                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
+                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
                 {label:''},
                 {label:'Producto', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
@@ -956,7 +956,7 @@ function renderInventoryTable() {
             products: pvs,
             renderFila: renderFilaVariable,
             headers: [
-                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
+                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
@@ -973,7 +973,7 @@ function renderInventoryTable() {
         {
             id: 'mp',
             title: '🏭 Materias Primas',
-            titleColor: '#7c3aed',
+            titleColor: '#9669c4',
             titleBg: 'linear-gradient(135deg,#faf5ff,#f5f3ff)',
             btnLabel: '+ Materia Prima',
             btnOnclick: 'injectMpModal();openAddMateriaPrimaModal()',
@@ -981,7 +981,7 @@ function renderInventoryTable() {
             products: mps,
             renderFila: renderFilaMP,
             headers: [
-                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
+                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
@@ -1004,7 +1004,7 @@ function renderInventoryTable() {
             products: svcs,
             renderFila: renderFilaServicio,
             headers: [
-                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed;">', sortKey: null},
+                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
@@ -1131,8 +1131,8 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
             if (p === '...') return `<span style="padding:0 4px;color:#9ca3af;">…</span>`;
             const active = p === page;
             return `<button onclick="invGoToPage(${p})"
-                style="min-width:34px;height:34px;border-radius:8px;border:1px solid ${active ? '#C5973B' : '#e5e7eb'};
-                       background:${active ? '#C5973B' : 'white'};color:${active ? 'white' : '#374151'};
+                style="min-width:34px;height:34px;border-radius:8px;border:1px solid ${active ? '#FFD166' : '#e5e7eb'};
+                       background:${active ? '#FFD166' : 'white'};color:${active ? 'white' : '#374151'};
                        font-weight:${active ? '700' : '500'};font-size:13px;cursor:${active ? 'default' : 'pointer'};
                        transition:all 0.15s;"
                 ${active ? 'disabled' : ''}>${p}</button>`;
@@ -1213,7 +1213,7 @@ function _invMpMenu(btn: HTMLElement, pid: string, hasProvUrl: boolean, archivar
     const _btnStyle = (color: string, bg: string) => `style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:${color};text-align:left;" onmouseover="this.style.background='${bg}'" onmouseout="this.style.background='none'"`;
     menu.innerHTML = `
         <button onclick="registrarMerma('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#d97706','#fffbeb')}>📉 Registrar merma</button>
-        <button onclick="duplicarProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#7c3aed','#f5f3ff')}>📋 Duplicar</button>
+        <button onclick="duplicarProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#9669c4','#f5f3ff')}>📋 Duplicar</button>
         <button onclick="cambiarTipoProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#b45309','#fef9c3')}>→📦 Convertir a PT</button>
         <button onclick="abrirMovimientoProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#4338ca','#eef2ff')}>📈 Ver gráfica</button>
         ${hasProvUrl ? `<button onclick="(()=>{const p=(window.products||[]).find(x=>String(x.id)==='${pid}');if(p?.proveedorUrl)window.open(p.proveedorUrl,'_blank');document.getElementById('_invMpMenuDrop')?.remove()})()" ${_btnStyle('#16a34a','#f0fdf4')}>🔗 Abrir proveedor</button>` : ''}
@@ -1517,7 +1517,7 @@ function invUpdateBulkBar() {
   bar.style.display = 'flex';
   bar.innerHTML = `
     <span style="font-weight:700;font-size:.9rem;">${ids.length} seleccionado${ids.length>1?'s':''}</span>
-    <button onclick="invBulkExportar()" style="padding:6px 14px;border-radius:10px;border:none;background:#7c3aed;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">📥 Exportar</button>
+    <button onclick="invBulkExportar()" style="padding:6px 14px;border-radius:10px;border:none;background:#9669c4;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">📥 Exportar</button>
     <button onclick="invBulkCambiarCategoria()" style="padding:6px 14px;border-radius:10px;border:none;background:#0369a1;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">📁 Categoría</button>
     <button onclick="invBulkEliminar()" style="padding:6px 14px;border-radius:10px;border:none;background:#dc2626;color:white;font-size:.8rem;font-weight:700;cursor:pointer;">🗑 Eliminar</button>
     <button onclick="invBulkDesseleccionar()" style="padding:6px 14px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:white;font-size:.8rem;cursor:pointer;">✕ Cancelar</button>
@@ -1820,7 +1820,7 @@ function abrirConteoFisico() {
       <td style="padding:7px 10px;text-align:center;">
         <input type="number" min="0" value="${st}" data-pid="${_e(p.id)}" data-sistema="${st}"
           style="width:70px;border:1.5px solid #e5e7eb;border-radius:8px;padding:4px 8px;font-size:.85rem;text-align:center;outline:none;"
-          onfocus="this.style.borderColor='#C5973B'" onblur="this.style.borderColor='#e5e7eb'" class="conteo-input">
+          onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#e5e7eb'" class="conteo-input">
       </td>
     </tr>`;
   }).join('');
@@ -1892,7 +1892,7 @@ function abrirReabastecimiento() {
       return `<tr><td style="padding:6px 10px;font-size:.83rem;font-weight:600;">${_e(p.name)}</td>
         <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${st}</td>
         <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${min}</td>
-        <td style="padding:6px 10px;text-align:center;font-size:.82rem;font-weight:700;color:#C5973B;">${sugerido}</td>
+        <td style="padding:6px 10px;text-align:center;font-size:.82rem;font-weight:700;color:#FFD166;">${sugerido}</td>
         <td style="padding:6px 10px;font-size:.78rem;color:#6b7280;">${_e(p.unidad||'pza')}</td></tr>`;
     }).join('');
     const waTxt = encodeURIComponent(`Hola, necesito reabastecer:\n${items.map((p:any)=>{const st=Number(p.stock)||0;const min=Number(p.stockMin)||5;return `• ${p.name}: ${Math.max(1,min*2-st)} ${p.unidad||'pza'}`}).join('\n')}`);
@@ -1957,7 +1957,7 @@ function mostrarDonutCategoria() {
   });
   const entries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
   const total = entries.reduce((s,[,v])=>s+v, 0);
-  const colors = ['#C5973B','#7c3aed','#10b981','#3b82f6','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#f97316','#14b8a6'];
+  const colors = ['#FFD166','#9669c4','#10b981','#3b82f6','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#f97316','#14b8a6'];
   const filas = entries.map(([cat, val], i) => {
     const pct = total > 0 ? (val/total*100).toFixed(1) : '0';
     return `<tr>
@@ -2040,7 +2040,7 @@ function sugerirStockMinimo() {
       <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${actual}</td>
       <td style="padding:6px 10px;text-align:center;font-size:.82rem;">${cambio}</td>
       <td style="padding:6px 10px;text-align:center;">
-        <input type="checkbox" checked data-pid="${_e(p.id)}" data-nuevo="${sugerido}" class="mkStockMinCb" style="accent-color:#C5973B;width:16px;height:16px;">
+        <input type="checkbox" checked data-pid="${_e(p.id)}" data-nuevo="${sugerido}" class="mkStockMinCb" style="accent-color:#FFD166;width:16px;height:16px;">
       </td>
     </tr>`;
   }).join('');

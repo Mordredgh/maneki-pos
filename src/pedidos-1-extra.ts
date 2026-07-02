@@ -18,9 +18,9 @@ function filtrarProduccion(filtro, btn) {
         b.style.color = '#4B5563';
     });
     if (btn) {
-        btn.style.borderColor = '#7c3aed';
+        btn.style.borderColor = '#9669c4';
         btn.style.background = '#f3e8ff';
-        btn.style.color = '#7c3aed';
+        btn.style.color = '#9669c4';
     }
     renderListaProduccion();
 }
@@ -80,7 +80,7 @@ function renderListaProduccion() {
         const prods = p.productosInventario && p.productosInventario.length > 0
             ? p.productosInventario.map(i => {
                 const _escProd = _esc;
-                const varLabel = i.variante ? ` <span style="font-size:.7rem;color:#7c3aed;">(${_escProd((()=>{const p=i.variante.indexOf(':');if(p===-1)return i.variante;const t=i.variante.slice(0,p).trim(),val=i.variante.slice(p+1).trim();return t+': '+(typeof _mkColorDot==='function'?_mkColorDot(t,val):val);})())})</span>` : '';
+                const varLabel = i.variante ? ` <span style="font-size:.7rem;color:#9669c4;">(${_escProd((()=>{const p=i.variante.indexOf(':');if(p===-1)return i.variante;const t=i.variante.slice(0,p).trim(),val=i.variante.slice(p+1).trim();return t+': '+(typeof _mkColorDot==='function'?_mkColorDot(t,val):val);})())})</span>` : '';
                 return `<span class="inline-block px-2 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-xs mr-1 mb-1">${_escProd(i.name || i.nombre || '')}${varLabel} ×${i.quantity||1}</span>`;
               }).join('')
             : '';
@@ -104,7 +104,7 @@ function renderListaProduccion() {
                     ${calcSaldoPendiente(p) > 0 ? `<span class="text-red-500 font-bold">⚠️ Resta: $${calcSaldoPendiente(p).toFixed(2)}</span>` : '<span class="text-green-600 font-bold">✅ Pagado</span>'}
                     ${ganancia}
                 </div>
-                ${p.lugarEntrega ? `<p class="text-xs mt-1" style="color:#7c3aed;">📍 ${_escP(p.lugarEntrega)}</p>` : ''}
+                ${p.lugarEntrega ? `<p class="text-xs mt-1" style="color:#9669c4;">📍 ${_escP(p.lugarEntrega)}</p>` : ''}
                 ${p.notas ? `<p class="text-xs text-gray-400 mt-1 italic">📝 ${_escP(p.notas)}</p>` : ''}
             </div>
             <div class="flex flex-col gap-1 flex-shrink-0">
@@ -140,13 +140,13 @@ function renderListaProduccion() {
             const _escM = _esc;
             _matSummaryEl.innerHTML = `
                 <div style="margin-top:14px;background:#f5f3ff;border:1px solid #ede9fe;border-radius:12px;padding:12px 14px;">
-                    <div style="font-size:.72rem;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">📦 Materiales necesarios (total agrupado)</div>
+                    <div style="font-size:.72rem;font-weight:800;color:#9669c4;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">📦 Materiales necesarios (total agrupado)</div>
                     <div style="display:flex;flex-wrap:wrap;gap:6px;">
                         ${_matEntries.map(([key, {total, pedidos}]) => {
                             const [nombre, variante] = key.split('|');
                             return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#ede9fe;border-radius:99px;font-size:.72rem;color:#5b21b6;font-weight:600;" title="Pedidos: ${[...new Set(pedidos)].join(', ')}">
-                                ${_escM(nombre)}${variante?` <span style="font-weight:400;color:#7c3aed;">(${_escM(variante)})</span>`:''}
-                                <span style="background:#7c3aed;color:#fff;border-radius:99px;padding:0 6px;font-size:.68rem;font-weight:800;">×${total}</span>
+                                ${_escM(nombre)}${variante?` <span style="font-weight:400;color:#9669c4;">(${_escM(variante)})</span>`:''}
+                                <span style="background:#9669c4;color:#fff;border-radius:99px;padding:0 6px;font-size:.68rem;font-weight:800;">×${total}</span>
                             </span>`;
                         }).join('')}
                     </div>
@@ -164,7 +164,7 @@ function imprimirListaProduccion() {
     const win = window.open('', '_blank');
     win.document.write(`<!DOCTYPE html><html><head>
         <meta charset="UTF-8"><title>Lista de Producción</title>
-        <style>body{font-family:sans-serif;padding:2rem;} h1{color:#7c3aed;} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#C5973B;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#4B5563;} .meta{font-size:12px;color:#6B7280;margin-top:4px;} @media print{body{padding:0.5rem;}}</style>
+        <style>body{font-family:sans-serif;padding:2rem;} h1{color:#9669c4;} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#FFD166;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#4B5563;} .meta{font-size:12px;color:#6B7280;margin-top:4px;} @media print{body{padding:0.5rem;}}</style>
     </head><body>
         <h1>🔨 Lista de Producción</h1>
         <p style="color:#6B7280;font-size:13px;">${storeName} · ${new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
@@ -275,7 +275,7 @@ function abrirFotoReferencia(id) {
     if (!content) return;
 
     if (!urls.length) {
-        content.innerHTML = `<div onclick="document.getElementById('fotoRefInput').click()" style="border:2px dashed #d1d5db;border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='#C5973B'" onmouseout="this.style.borderColor='#d1d5db'">
+        content.innerHTML = `<div onclick="document.getElementById('fotoRefInput').click()" style="border:2px dashed #d1d5db;border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='#FFD166'" onmouseout="this.style.borderColor='#d1d5db'">
             <p style="font-size:2.2rem;">📷</p>
             <p style="font-size:.85rem;color:#6b7280;margin-top:8px;font-weight:600;">Toca para subir fotos de referencia</p>
             <p style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Hasta ${_FOTO_MAX} fotos · JPG, PNG, WEBP · máx 5 MB c/u</p>
@@ -290,7 +290,7 @@ function abrirFotoReferencia(id) {
             </div>`;
         });
         if (urls.length < _FOTO_MAX) {
-            grid += `<div onclick="document.getElementById('fotoRefInput').click()" style="aspect-ratio:1;border:2px dashed #d1d5db;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#fafafa;" onmouseover="this.style.borderColor='#C5973B'" onmouseout="this.style.borderColor='#d1d5db'">
+            grid += `<div onclick="document.getElementById('fotoRefInput').click()" style="aspect-ratio:1;border:2px dashed #d1d5db;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#fafafa;" onmouseover="this.style.borderColor='#FFD166'" onmouseout="this.style.borderColor='#d1d5db'">
                 <span style="font-size:1.4rem;color:#9ca3af;">+</span>
                 <span style="font-size:.6rem;color:#9ca3af;margin-top:2px;">Agregar</span>
             </div>`;
@@ -487,7 +487,7 @@ function _inyectarQuoteModal() {
       <div>
         <div class="flex items-center justify-between mb-2">
           <label class="text-xs font-semibold text-gray-600">Productos / Servicios</label>
-          <button type="button" id="quoteAddProdBtn" onclick="addQuoteProduct()" class="text-xs px-3 py-1 rounded-lg font-semibold" style="background:#7c3aed;color:white;">+ Agregar</button>
+          <button type="button" id="quoteAddProdBtn" onclick="addQuoteProduct()" class="text-xs px-3 py-1 rounded-lg font-semibold" style="background:#9669c4;color:white;">+ Agregar</button>
         </div>
         <table class="w-full text-xs" style="border-collapse:collapse;">
           <thead>
@@ -508,8 +508,8 @@ function _inyectarQuoteModal() {
     </div>
     <div class="flex gap-2 mt-5 flex-wrap">
       <button type="button" onclick="closeQuoteModal()" class="flex-1 py-2 rounded-xl text-sm" style="background:#f3f4f6;color:#374151;">Cancelar</button>
-      <button type="button" id="quoteSaveBtn" onclick="_guardarCotizacion()" class="flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#7c3aed;color:white;">Guardar cotización</button>
-      <button type="button" id="quoteExportBtn" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#C5973B;color:white;" onclick="exportarCotizacionPNG(_quoteViewId)">Guardar PNG</button>
+      <button type="button" id="quoteSaveBtn" onclick="_guardarCotizacion()" class="flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#9669c4;color:white;">Guardar cotización</button>
+      <button type="button" id="quoteExportBtn" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#FFD166;color:white;" onclick="exportarCotizacionPNG(_quoteViewId)">Guardar PNG</button>
     </div>
   </div>
 </div>`;
@@ -663,7 +663,7 @@ async function exportarCotizacionPNG(quoteId: string) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 600, 700);
 
-    ctx.fillStyle = '#C5973B';
+    ctx.fillStyle = '#FFD166';
     ctx.fillRect(0, 0, 600, 80);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 24px Arial';
@@ -705,7 +705,7 @@ async function exportarCotizacionPNG(quoteId: string) {
     });
 
     y += 40;
-    ctx.fillStyle = '#C5973B';
+    ctx.fillStyle = '#FFD166';
     ctx.fillRect(20, y, 560, 40);
     ctx.fillStyle = 'white';
     ctx.font = 'bold 18px Arial';
@@ -775,8 +775,8 @@ function abrirCargaSemanal() {
             <div style="width:100%;height:120px;display:flex;align-items:flex-end;justify-content:center;padding:0 1px;">
                 <div style="width:85%;border-radius:4px 4px 0 0;background:${color};height:${hPct}%;min-height:${n>0?8:4}px;transition:height 0.3s;"></div>
             </div>
-            <div style="font-size:.65rem;font-weight:${esHoy?'800':'600'};color:${esHoy?'#7c3aed':'#374151'};margin-top:2px;text-align:center;">${d.dow}</div>
-            <div style="font-size:.6rem;color:${esHoy?'#7c3aed':'#9ca3af'};text-align:center;">${d.label}</div>
+            <div style="font-size:.65rem;font-weight:${esHoy?'800':'600'};color:${esHoy?'#9669c4':'#374151'};margin-top:2px;text-align:center;">${d.dow}</div>
+            <div style="font-size:.6rem;color:${esHoy?'#9669c4':'#9ca3af'};text-align:center;">${d.label}</div>
             <div style="font-size:.7rem;font-weight:700;color:${n===0?'#d1d5db':color};margin-top:2px;">${n || ''}</div>
         </div>`;
     }).join('');
@@ -802,7 +802,7 @@ function abrirCargaSemanal() {
         <div style="padding:18px 22px;border-bottom:1px solid #f3f4f6;background:linear-gradient(135deg,#f5f3ff,#ede9fe);display:flex;justify-content:space-between;align-items:center;">
             <div>
                 <h2 style="font-size:1.05rem;font-weight:800;color:#4c1d95;margin:0;">📅 Carga de Producción — Próximos 14 Días</h2>
-                <p style="font-size:.75rem;color:#7c3aed;margin:3px 0 0;">Pedidos programados por fecha de entrega · Semáforo de saturación</p>
+                <p style="font-size:.75rem;color:#9669c4;margin:3px 0 0;">Pedidos programados por fecha de entrega · Semáforo de saturación</p>
             </div>
             <button onclick="document.getElementById('cargaSemanalModal').style.display='none'"
                 style="width:30px;height:30px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:15px;line-height:1;">✕</button>

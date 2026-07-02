@@ -113,7 +113,7 @@ function openPedidoModal(id) {
             </label>
             <textarea id="pedidoNotasInternas" rows="2" placeholder="Notas internas (solo equipo — no va al cliente)"
                 style="width:100%;border:2px dashed #d1d5db;border-radius:8px;padding:8px 10px;font-size:.83rem;resize:vertical;outline:none;background:#fafafa;color:#374151;"
-                onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#d1d5db'"></textarea>`;
+                onfocus="this.style.borderColor='#9669c4'" onblur="this.style.borderColor='#d1d5db'"></textarea>`;
         taNotas.parentElement.insertAdjacentElement('afterend', wrapper);
     })();
     // Campo de Ocasión (XV, boda, graduación…)
@@ -254,7 +254,7 @@ function openPedidoModal(id) {
                             _precioEl.insertAdjacentElement('afterend', _hint);
                         }
                         _hint.style.cssText = 'font-size:.7rem;color:#9ca3af;margin-top:3px;display:flex;align-items:center;gap:4px;';
-                        _hint.innerHTML = `💡 Promedio histórico de este cliente: <strong style="color:#C5973B;">$${_promedio.toFixed(2)}</strong>`;
+                        _hint.innerHTML = `💡 Promedio histórico de este cliente: <strong style="color:#FFD166;">$${_promedio.toFixed(2)}</strong>`;
                     }
                 } else if (_hint) {
                     _hint.remove();
@@ -444,7 +444,7 @@ function calcPedidoTotal() {
             if (!_calcHint) {
                 _calcHint = document.createElement('span');
                 _calcHint.id = '_pedidoCalcHint';
-                _calcHint.style.cssText = 'display:block;font-size:.68rem;color:#7c3aed;margin-top:2px;';
+                _calcHint.style.cssText = 'display:block;font-size:.68rem;color:#9669c4;margin-top:2px;';
                 dispTotal.parentElement && dispTotal.parentElement.appendChild(_calcHint);
             }
             _calcHint.textContent = '💡 Precio calculado desde los productos agregados';
@@ -743,7 +743,7 @@ function abrirParserWA() {
     <div id="waParserPreview" class="hidden mt-3 bg-gray-50 rounded-xl p-3 text-sm"></div>
     <div class="flex gap-2 mt-4">
       <button type="button" onclick="closeModal('waParserModal')" class="flex-1 py-2 rounded-xl text-sm" style="background:#f3f4f6;color:#374151;">Cancelar</button>
-      <button type="button" onclick="_analizarWAMsg()" class="flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#7c3aed;color:white;">Analizar</button>
+      <button type="button" onclick="_analizarWAMsg()" class="flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#9669c4;color:white;">Analizar</button>
       <button type="button" id="waParserApplyBtn" onclick="_aplicarDatosWA()" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#059669;color:white;">Usar datos</button>
     </div>
   </div>

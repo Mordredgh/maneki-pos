@@ -23,7 +23,7 @@ const _escBal = window._esc;
 
 // MEJORA-3: Etiquetas de movimientos — definidas temprano para uso en renders
 const _ETIQUETAS = [
-    { valor: 'produccion',  label: 'Producción',  color: '#7c3aed', bg: '#ede9fe' },
+    { valor: 'produccion',  label: 'Producción',  color: '#9669c4', bg: '#ede9fe' },
     { valor: 'marketing',   label: 'Marketing',   color: '#db2777', bg: '#fce7f3' },
     { valor: 'envios',      label: 'Envíos',      color: '#0284c7', bg: '#e0f2fe' },
     { valor: 'servicios',   label: 'Servicios',   color: '#0f766e', bg: '#ccfbf1' },
@@ -193,7 +193,7 @@ function _renderGraficaCategorias(gastosMes, mesStr) {
     const total = Object.values(mapa).reduce((s, v) => s + v, 0);
     const sorted = Object.entries(mapa).sort((a, b) => b[1] - a[1]);
 
-    const colores = ['#C5973B','#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#14b8a6'];
+    const colores = ['#FFD166','#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#14b8a6'];
     const barras = sorted.map(([cat, monto], i) => {
         const pct = total > 0 ? (monto / total * 100).toFixed(1) : 0;
         const color = colores[i % colores.length];
@@ -256,7 +256,7 @@ function renderBalancePieChart(): void {
         container.className = 'mk-card';
         container.style.cssText = 'padding:20px 22px;margin-top:16px;';
         container.innerHTML = `
-            <div class="mk-chart-title" style="color:#7C3AED;">
+            <div class="mk-chart-title" style="color:#9669c4;">
               <span>🍩 Gastos por categoría — mes actual</span>
             </div>
             <div style="height:220px;position:relative;margin-top:12px;">
@@ -272,7 +272,7 @@ function renderBalancePieChart(): void {
     const canvas = document.getElementById('balancePieChart') as HTMLCanvasElement;
     if (!canvas) return;
 
-    const colors = ['#8B5CF6','#F59E0B','#10B981','#EF4444','#3B82F6','#F97316','#EC4899','#6366F1','#14B8A6','#A855F7'];
+    const colors = ['#8B5CF6','#F59E0B','#10B981','#EF4444','#3B82F6','#F97316','#EC4899','#6366F1','#14B8A6','#ab84d1'];
 
     const existingChart = (window as any)._balancePieChart;
     if (existingChart) {
@@ -653,7 +653,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             <div class="mk-tx-expense flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
                 <div>
                     <p class="font-semibold text-gray-800">${_esc(expense.concept)}</p>
-                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#C5973B;font-weight:600">${_esc(expense.categoria)}</span>` : ''}${expense.etiqueta ? ' ' + _etiquetaBadge(expense.etiqueta) : ''}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">↺</span>' : ''}</p>
+                    <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#FFD166;font-weight:600">${_esc(expense.categoria)}</span>` : ''}${expense.etiqueta ? ' ' + _etiquetaBadge(expense.etiqueta) : ''}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">↺</span>' : ''}</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="font-bold text-red-600">-$${Number(expense.amount||0).toFixed(2)}</span>
