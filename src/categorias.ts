@@ -8,6 +8,7 @@
             'ropaytextiles': 'ropa-y-textiles', 'cajasregalo': 'cajas-de-regalo',
             'vasosytumblers': 'vasos-y-tumblers', 'velas': 'velas', 'setsypacks': 'sets-y-packs',
             'cuadrosyarte': 'cuadros-y-arte', 'stickers': 'stickers', 'papeleria': 'papeleria',
+            'globosydecoracion': 'globos-y-decoracion',
         };
         function _catIconSlug(name) {
             const norm = String(name || '').toLowerCase()
