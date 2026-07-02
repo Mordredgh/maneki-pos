@@ -19,10 +19,10 @@ body.dark .modal > div {
     border-color: rgba(255,209,102,0.22) !important;
 }
 
-/* == TIPOGRAFÍA EXPRESIVA — Cormorant en KPIs grandes == */
+/* == TIPOGRAFÍA EXPRESIVA — Nunito en KPIs grandes == */
 .mk-kpi-value,
 #dailySales, #netProfit, #accountsReceivable {
-    font-family: 'Space Grotesk', sans-serif !important;
+    font-family: 'Nunito', sans-serif !important;
     font-size: clamp(1.6rem, 2.5vw, 2.4rem) !important;
     font-weight: 700 !important;
     font-style: normal !important;
@@ -30,7 +30,7 @@ body.dark .modal > div {
     line-height: 1.05 !important;
 }
 .mk-kpi-label {
-    font-family: 'Outfit', sans-serif !important;
+    font-family: 'Nunito', sans-serif !important;
     font-style: normal !important;
     font-size: 0.7rem !important;
     text-transform: uppercase !important;
@@ -38,28 +38,20 @@ body.dark .modal > div {
     opacity: 0.65 !important;
 }
 
-/* == SIDEBAR ACTIVE GLOW == */
-.sidebar-item { position: relative !important; overflow: hidden; }
-.sidebar-item.active::before {
-    content: '';
+/* == SIDEBAR ACTIVE INDICATOR ==
+   Reemplaza el acento de borde lateral (banned pattern) por un indicador
+   tipo pill que GSAP desliza detrás del item activo — ver _mkMoveSidebarIndicator. */
+.sidebar-item { position: relative !important; overflow: hidden; z-index: 1; }
+#sidebarIndicator {
     position: absolute;
-    left: 0; top: 15%; height: 70%; width: 3.5px;
-    background: linear-gradient(180deg,transparent,#FFDD85 35%,#FFDD85 65%,transparent);
-    border-radius: 0 4px 4px 0;
-    box-shadow: 0 0 18px rgba(255,221,133,0.85), 0 0 6px rgba(255,221,133,0.5);
-    animation: mkSidebarPulse 2.4s ease-in-out infinite;
-    pointer-events: none; z-index: 10;
-}
-.sidebar-item.active::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, rgba(255,221,133,0.12) 0%, transparent 70%);
+    left: 16px; right: 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(255,209,102,0.22) 0%, rgba(255,221,133,0.12) 100%);
+    border: 1px solid rgba(255,209,102,0.30);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 4px 16px rgba(255,209,102,0.14);
     pointer-events: none;
-}
-@keyframes mkSidebarPulse {
-    0%,100% { opacity: 0.65; box-shadow: 0 0 14px rgba(255,221,133,0.6); }
-    50%      { opacity: 1;   box-shadow: 0 0 26px rgba(255,221,133,1), 0 0 10px rgba(255,221,133,0.4); }
+    z-index: 0;
+    opacity: 0;
 }
 
 /* == SECTION MORPH TRANSITION == */
@@ -110,9 +102,9 @@ section:not(.hidden).active-section {
 .mk-pc-emoji { width:100%;height:96px;display:flex;align-items:center;justify-content:center;
     font-size:2.6rem;background:linear-gradient(135deg,rgba(150,105,196,0.05),rgba(255,209,102,0.04)); }
 .mk-pc-body { padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;gap:4px; }
-.mk-pc-name { font-size:0.79rem;font-weight:700;color:#1A0533;line-height:1.3;
+.mk-pc-name { font-size:0.79rem;font-weight:700;color:#1c4f32;line-height:1.3;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
-.mk-pc-price { font-family:'Space Grotesk',sans-serif;font-size:1.2rem;
+.mk-pc-price { font-family:'Nunito',sans-serif;font-size:1.2rem;
     font-weight:600;font-style:italic;color:#FFD166;margin-top:auto; }
 .mk-pc-stock-ok  { font-size:0.65rem;font-weight:700;color:#10B981; }
 .mk-pc-stock-low { font-size:0.65rem;font-weight:700;color:#F59E0B; }
@@ -336,10 +328,10 @@ if (!_overlay) {
 
 const SECTION_PALETTE = {
     dashboard:'rgba(150,105,196,0.10)', bienvenida:'rgba(150,105,196,0.10)',
-    pedidos:'rgba(139,92,246,0.09)',
+    pedidos:'rgba(150,105,196,0.09)',
     inventory:'rgba(16,185,129,0.09)', balance:'rgba(245,158,11,0.09)',
     clientes:'rgba(255,107,157,0.09)', analisis:'rgba(255,209,102,0.09)',
-    reportes:'rgba(99,102,241,0.09)', configuracion:'rgba(139,92,246,0.09)',
+    reportes:'rgba(99,102,241,0.09)', configuracion:'rgba(150,105,196,0.09)',
     categorias:'rgba(249,115,22,0.09)', equipos:'rgba(100,116,139,0.09)',
     quotes: 'rgba(255,209,102,0.09)',
 };
@@ -358,6 +350,74 @@ function _morphTo(name) {
 }
 // #23 — Exponer para uso directo desde showSection consolidado en reportes.js
 window._mkMorphTo = _morphTo;
+
+// ─────────────────────────────────────────────────────────────────
+// 4.5 SIDEBAR INDICATOR — pill que se desliza detrás del item activo (GSAP)
+// ─────────────────────────────────────────────────────────────────
+function _mkMoveSidebarIndicator(btn) {
+    const nav = btn && btn.closest ? btn.closest('nav') : null;
+    const indicator = document.getElementById('sidebarIndicator');
+    if (!nav || !indicator) return;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const top = btnRect.top - navRect.top + nav.scrollTop;
+    const height = btnRect.height;
+    const hasGsap = typeof (window as any).gsap !== 'undefined';
+    const wasVisible = indicator.style.opacity !== '' && indicator.style.opacity !== '0';
+    if (hasGsap) {
+        (window as any).gsap.to(indicator, {
+            top, height, opacity: 1,
+            duration: wasVisible ? 0.32 : 0.01,
+            ease: wasVisible ? 'expo.out' : 'none',
+            overwrite: true,
+        });
+    } else {
+        indicator.style.top = top + 'px';
+        indicator.style.height = height + 'px';
+        indicator.style.opacity = '1';
+    }
+}
+window._mkMoveSidebarIndicator = _mkMoveSidebarIndicator;
+
+// ─────────────────────────────────────────────────────────────────
+// 4.6 DASHBOARD HERO — único "hero moment" GSAP de la fase (entrada
+// escalonada saludo → pill/fecha → KPIs), solo al ENTRAR a la sección.
+// ─────────────────────────────────────────────────────────────────
+function _mkAnimateDashboardHero() {
+    if (typeof (window as any).gsap === 'undefined') return;
+    const gsap = (window as any).gsap;
+    const hero = document.getElementById('mkDashHero');
+    if (!hero) return;
+    const steps = [
+        hero.querySelector('[data-hero-stagger="1"]'),
+        hero.querySelector('[data-hero-stagger="2"]'),
+        document.querySelector('#dashboard-section [data-hero-stagger="3"]'),
+    ].filter(Boolean);
+    if (!steps.length) return;
+    gsap.matchMedia().add(
+        { reduced: '(prefers-reduced-motion: reduce)', full: '(prefers-reduced-motion: no-preference)' },
+        (ctx) => {
+            if (ctx.conditions.reduced) {
+                gsap.set(steps, { opacity: 1, y: 0 });
+                return;
+            }
+            gsap.fromTo(steps,
+                { opacity: 0, y: 14 },
+                { opacity: 1, y: 0, duration: 0.5, ease: 'expo.out', stagger: 0.09, overwrite: true }
+            );
+        }
+    );
+}
+window._mkAnimateDashboardHero = _mkAnimateDashboardHero;
+// Posición inicial detrás del item .active ya presente en el HTML estático
+document.addEventListener('DOMContentLoaded', () => {
+    const initial = document.querySelector('.sidebar-item.active');
+    if (initial) requestAnimationFrame(() => _mkMoveSidebarIndicator(initial));
+});
+window.addEventListener('resize', () => {
+    const current = document.querySelector('.sidebar-item.active');
+    if (current) _mkMoveSidebarIndicator(current);
+});
 
 // ─────────────────────────────────────────────────────────────────
 // 5. COUNT-UP — KPIs dashboard animan desde 0

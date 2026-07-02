@@ -39,6 +39,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js" async crossorigin="anonymous"></script>
   <!-- Supabase: necesario al arranque para autenticación y datos -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+  <!-- GSAP: motion layer del sistema de diseño (sidebar, hero dashboard, transiciones) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer crossorigin="anonymous"></script>
 
   <!-- Estilos -->
   <link rel="stylesheet" href="css/styles.css?v=2.0.0">
@@ -136,20 +138,20 @@ input:focus, select:focus, textarea:focus, button:focus {
 <div id="sidebarOverlay" data-action="closeSidebar"></div>
 
     <aside id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 shadow-xl z-50 flex flex-col">
-        <div class="p-3 border-b border-gray-200">
+        <div class="p-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div id="sidebarLogoContainer"
-     class="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
+     class="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden flex-shrink-0"
      style="background:transparent;"
      data-action="showSection" data-arg="bienvenida" title="Inicio">
     <img src="logo.png" alt="Bicho Capricho" style="width:44px;height:44px;object-fit:contain;border-radius:10px;" data-error-fallback="sibling"><span style="font-size:30px;display:none">🐛</span>
 </div>
 
 <div>
-    <h1 class="sidebar-store-name" style="font-family:'Fredoka One',serif;font-size:1.35rem;font-weight:600;letter-spacing:-0.01em;background:linear-gradient(135deg,#FFE8B0,#FFDD85,#fff,#FFD166);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer;line-height:1.1;"
+    <h1 class="sidebar-store-name" style="font-family:'Fredoka One',serif;font-size:1.3rem;font-weight:400;letter-spacing:-0.01em;color:var(--mk-p950,#1c4f32);cursor:pointer;line-height:1.1;"
         data-action="showSection" data-arg="bienvenida">Bicho Capricho</h1>
-    <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,209,102,.5);margin-top:3px;">Regalos Personalizados</p>
+    <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mk-g700,#8a6510);margin-top:3px;">Regalos Personalizados</p>
 </div>
 
                 <button type="button" id="closeSidebar" data-action="closeSidebar" class="md:hidden text-gray-600" aria-label="Cerrar menú">
@@ -158,7 +160,8 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </div>
 
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto" style="position:relative;">
+            <div id="sidebarIndicator" aria-hidden="true"></div>
             <button type="button" data-action="showSection" data-arg="dashboard" data-section="dashboard" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium">
                 <i class="fas fa-home w-5"></i>
                 <span>Dashboard</span>
@@ -251,15 +254,16 @@ input:focus, select:focus, textarea:focus, button:focus {
         <i class="fas fa-bars text-gray-700"></i>
     </button>
 
-    <div id="global-search-bar" class="md:ml-64 sticky top-0 z-40 flex items-center gap-3" style="
-        padding: 10px 20px;
-        background: rgba(250,248,255,0.98);
-        border-bottom: 1px solid rgba(255,209,102,0.1);
-        box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 4px 16px rgba(21,4,40,0.05);
+    <div id="global-search-bar" class="md:ml-64 sticky top-0 flex items-center gap-3" style="
+        padding: 12px 20px;
+        background: rgba(248,244,236,0.92);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--bd-soft, rgba(255,209,102,0.18));
+        z-index: var(--z-sticky, 40);
         position:relative;
     ">
       <div class="relative flex-1 max-w-xl">
-        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" style="color:rgba(124,58,237,.4)"></i>
+        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" style="color:var(--tx-muted,#7a8f80)"></i>
         <input
           type="text"
           id="globalSearchInput"
@@ -268,37 +272,33 @@ input:focus, select:focus, textarea:focus, button:focus {
           data-onblur="_mkBlurBusquedaGlobal"
           autocomplete="off"
           style="
-            width:100%;padding:8px 14px 8px 36px;
-            border:1.5px solid rgba(255,209,102,0.15);
-            border-radius:12px;font-size:0.85rem;
-            background:rgba(255,255,255,0.8);
-            font-family:'Outfit',sans-serif;
-            color:#1A0533;
-            transition:all .18s cubic-bezier(0.16,1,0.3,1);
-            box-shadow:inset 0 1.5px 4px rgba(21,4,40,0.04);
+            width:100%;padding:9px 14px 9px 36px;
+            border:1.5px solid var(--bd-soft, rgba(255,209,102,0.18));
+            border-radius:var(--r-sm,10px);font-size:0.85rem;
+            background:#fff;
+            font-family:var(--font-body,'Nunito',sans-serif);
+            color:var(--tx-primary,#1c4f32);
+            transition:border-color .18s var(--ease-out-quart,ease), box-shadow .18s var(--ease-out-quart,ease);
+            box-shadow:none;
             outline:none;
           "
-
-
         />
         <span class="mk-kbd-hint" data-tip="Paleta de comandos"
           data-action="mkOpenCommandPalette"
           style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;">⌘K</span>
-        <div id="globalSearchResults" class="hidden absolute top-11 left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto" style="box-shadow:0 24px 64px rgba(21,4,40,0.15),0 8px 24px rgba(124,58,237,0.08);border-radius:20px;border:1px solid rgba(255,209,102,0.12);"></div>
+        <div id="globalSearchResults" class="hidden absolute top-11 left-0 w-full bg-white border border-gray-100 max-h-96 overflow-y-auto" style="box-shadow:var(--sh-xl);border-radius:var(--r-lg,18px);border:1px solid var(--bd-soft, rgba(255,209,102,0.18));z-index:var(--z-dropdown,20);"></div>
       </div>
       <button type="button" data-action="refrescarPagina" id="btnRefrescar"
         title="Refrescar datos"
         style="
-          flex-shrink:0;width:36px;height:36px;border-radius:11px;
-          border:1.5px solid rgba(255,209,102,0.15);
-          background:rgba(255,255,255,0.7);
-          color:rgba(124,58,237,0.6);
+          flex-shrink:0;width:38px;height:38px;border-radius:var(--r-sm,10px);
+          border:1.5px solid var(--bd-soft, rgba(255,209,102,0.18));
+          background:#fff;
+          color:var(--tx-muted,#7a8f80);
           display:flex;align-items:center;justify-content:center;
-          transition:all .18s cubic-bezier(0.22,1,0.36,1);
+          transition:transform .22s var(--ease-out-quart,ease), color .18s ease, border-color .18s ease;
           font-size:0.82rem;
         "
-
-
         >
         <i class="fas fa-sync-alt" id="iconRefrescar"></i>
       </button>
@@ -310,14 +310,14 @@ input:focus, select:focus, textarea:focus, button:focus {
 <section id="dashboard-section" class="animate-fade-in" style="padding:0;overflow-x:hidden;">
 
   <!-- ── HERO HEADER ─────────────────────────────────────── -->
-  <div class="mk-dash-hero">
+  <div class="mk-dash-hero" id="mkDashHero">
     <div class="mk-dash-hero-glow"></div>
-    <div style="position:relative;z-index:1;">
+    <div style="position:relative;z-index:1;" data-hero-stagger="1">
       <div class="flex items-center gap-3 mb-2">
         <span id="dashGreetingEmoji" class="leading-none" style="font-size:2.2rem;filter:drop-shadow(0 2px 10px rgba(255,210,80,.4))">☀️</span>
         <h1 id="dashGreeting" class="mk-dash-greeting-text">¡Buenos días!</h1>
       </div>
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap" data-hero-stagger="2">
         <span class="mk-dash-store-pill">🐛 <span id="dashStoreName">Bicho Capricho</span></span>
         <span class="mk-dash-sep hidden sm:inline">·</span>
         <span class="mk-dash-date-text" id="dashDate">—</span>
@@ -325,7 +325,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <span class="mk-dash-time-text" id="dashTime">—</span>
       </div>
     </div>
-    <div class="flex items-center gap-2 flex-wrap justify-end" style="position:relative;z-index:1;">
+    <div class="flex items-center gap-2 flex-wrap justify-end" style="position:relative;z-index:1;" data-hero-stagger="2">
       <button type="button" data-action="togglePrivacidad" id="privacyToggleBtn" class="mk-dash-hero-btn" title="Ocultar montos">
         <i class="fas fa-eye" id="privacyIcon"></i>
         <span id="privacyLabel" class="hidden sm:inline">Privacidad</span>
@@ -375,7 +375,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 
     <!-- ── KPIs — Meta + 4 métricas ──────────────────────── -->
-    <div class="mk-dash-kpi-row">
+    <div class="mk-dash-kpi-row" data-hero-stagger="3">
 
       <!-- Meta mensual (card amplia) -->
       <div class="mk-card mk-kpi-v2 mk-dash-meta-card" style="padding:20px 22px;">
@@ -422,24 +422,24 @@ input:focus, select:focus, textarea:focus, button:focus {
       <div class="mk-card mk-kpi mk-kpi-v2 kpi-purple clickable" style="padding:18px 20px;" data-action="showSection" data-arg="pedidos">
         <div class="flex items-center justify-between mb-3">
           <p class="mk-kpi-label">Pedidos activos</p>
-          <div class="mk-kpi-icon-sm" style="background:rgba(139,92,246,0.11);">
-            <i class="fas fa-clipboard-list" style="color:#8B5CF6;font-size:.88rem;"></i>
+          <div class="mk-kpi-icon-sm" style="background:rgba(150,105,196,0.12);">
+            <i class="fas fa-clipboard-list" style="color:#9669c4;font-size:.88rem;"></i>
           </div>
         </div>
-        <h3 class="mk-kpi-value" id="dashActivePedidos" style="color:#3B2659;"></h3>
-        <p class="mk-kpi-sub mt-2"><span class="mk-kpi-badge" style="background:#EDE5F8;color:#6B4A8E;">ver todos →</span></p>
+        <h3 class="mk-kpi-value" id="dashActivePedidos" style="color:#6b3f92;"></h3>
+        <p class="mk-kpi-sub mt-2"><span class="mk-kpi-badge" style="background:#ecd9ff;color:#7d4fa3;">ver todos →</span></p>
       </div>
 
       <!-- Me deben -->
       <div class="mk-card mk-kpi mk-kpi-v2 kpi-rose clickable" style="padding:18px 20px;" data-action="showSection" data-arg="balance">
         <div class="flex items-center justify-between mb-3">
           <p class="mk-kpi-label">Me deben</p>
-          <div class="mk-kpi-icon-sm" style="background:rgba(244,63,94,0.11);">
-            <i class="fas fa-hand-holding-usd" style="color:#F43F5E;font-size:.88rem;"></i>
+          <div class="mk-kpi-icon-sm" style="background:rgba(255,180,200,0.20);">
+            <i class="fas fa-hand-holding-usd" style="color:#e0567e;font-size:.88rem;"></i>
           </div>
         </div>
-        <h3 class="mk-kpi-value privacy-target" id="accountsReceivable" style="color:#9d174d;"></h3>
-        <p class="mk-kpi-sub mt-2"><span class="mk-kpi-badge" style="background:#fce7f3;color:#9d174d;">cobrar →</span></p>
+        <h3 class="mk-kpi-value privacy-target" id="accountsReceivable" style="color:#b8305a;"></h3>
+        <p class="mk-kpi-sub mt-2"><span class="mk-kpi-badge" style="background:#ffe4ec;color:#b8305a;">cobrar →</span></p>
       </div>
 
     </div>
@@ -463,22 +463,22 @@ input:focus, select:focus, textarea:focus, button:focus {
 
       <!-- Derecha: información operativa -->
       <div style="display:flex;flex-direction:column;gap:14px;">
-        <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);">
+        <div class="mk-card" style="padding:18px 20px;">
           <div class="mk-chart-title">
             <span><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Entregas próximas</span>
-            <button type="button" data-action="showSection" data-arg="pedidos" style="font-size:.7rem;font-weight:700;color:#9B7BC4;background:none;border:none;cursor:pointer;">Ver →</button>
+            <button type="button" data-action="showSection" data-arg="pedidos" style="font-size:.7rem;font-weight:700;color:#9669c4;background:none;border:none;cursor:pointer;">Ver →</button>
           </div>
           <div id="dashUpcomingDeliveries"><p class="text-gray-400 text-xs text-center py-4">Sin entregas próximas 🎉</p></div>
         </div>
-        <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#fffbf5,#fff7ed);">
+        <div class="mk-card" style="padding:18px 20px;">
           <div class="mk-chart-title">
             <span><i class="fas fa-box-open" style="margin-right:6px;"></i>Stock bajo</span>
-            <span style="font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:99px;background:#ffedd5;color:#c2410c;" id="lowStockBadge">0 items</span>
+            <span style="font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:99px;background:#FFF1D2;color:#8a6510;" id="lowStockBadge">0 items</span>
           </div>
           <div id="dashLowStockList" class="space-y-1" style="max-height:155px;overflow-y:auto;"></div>
         </div>
-        <div class="mk-card" style="padding:18px 20px;background:linear-gradient(135deg,#fff7ed,#ffedd5);">
-          <div class="mk-chart-title" style="color:#c2410c;"><span><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>Atención hoy</span></div>
+        <div class="mk-card" style="padding:18px 20px;border:1.5px solid rgba(255,209,102,0.35);">
+          <div class="mk-chart-title" style="color:#8a6510;"><span><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>Atención hoy</span></div>
           <div id="atencionHoyList" style="margin-top:8px;"></div>
         </div>
       </div>
@@ -499,13 +499,13 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div id="semanalWidget"></div>
       </div>
 
-      <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);">
-        <div class="mk-chart-title" style="color:#166534;"><span><i class="fas fa-clipboard-list" style="margin-right:6px;"></i>Pedidos por estado</span></div>
+      <div class="mk-card" style="padding:20px 22px;">
+        <div class="mk-chart-title" style="color:#10B981;"><span><i class="fas fa-clipboard-list" style="margin-right:6px;"></i>Pedidos por estado</span></div>
         <div id="dashPedidosEstado" style="margin-top:4px;"></div>
       </div>
 
-      <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#eff6ff,#dbeafe);">
-        <div class="mk-chart-title" style="color:#1e40af;"><span>📅 Este mes vs anterior</span></div>
+      <div class="mk-card" style="padding:20px 22px;">
+        <div class="mk-chart-title" style="color:#3B82F6;"><span>📅 Este mes vs anterior</span></div>
         <div id="dashMesVsAnterior" style="margin-top:4px;"></div>
       </div>
 
@@ -514,13 +514,13 @@ input:focus, select:focus, textarea:focus, button:focus {
     <!-- ── FILA SECUNDARIA — 2 columnas ──────────────────── -->
     <div class="mk-dash-stats-row-2">
 
-      <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#fdf4ff,#fae8ff);">
-        <div class="mk-chart-title" style="color:#7e22ce;"><span>💎 Material más usado</span></div>
+      <div class="mk-card" style="padding:20px 22px;">
+        <div class="mk-chart-title" style="color:#9669c4;"><span>💎 Material más usado</span></div>
         <div id="dashMaterialTop" style="margin-top:4px;"></div>
       </div>
 
-      <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);">
-        <div class="mk-chart-title" style="color:#065f46;">
+      <div class="mk-card" style="padding:20px 22px;">
+        <div class="mk-chart-title" style="color:#10B981;">
           <span>🏆 Día más rentable</span>
           <span style="font-size:.65rem;color:#6ee7b7;font-weight:600;text-transform:none;letter-spacing:0;">promedio</span>
         </div>
@@ -531,24 +531,24 @@ input:focus, select:focus, textarea:focus, button:focus {
 
     <!-- ── HEATMAP — pedidos por día y hora ── -->
     <div class="mk-card" style="padding:20px 22px;">
-      <div class="mk-chart-title" style="color:#7C3AED;">
+      <div class="mk-chart-title" style="color:#9669c4;">
         <span>🗓️ Actividad por día y hora</span>
-        <span style="font-size:.65rem;color:#A78BFA;font-weight:600;text-transform:none;letter-spacing:0;">últimos registros</span>
+        <span style="font-size:.65rem;color:#ab84d1;font-weight:600;text-transform:none;letter-spacing:0;">últimos registros</span>
       </div>
       <div id="dashHeatmapWidget" style="margin-top:12px;overflow-x:auto;"></div>
     </div>
 
     <!-- ── CUENTA REGRESIVA A TEMPORADAS ─────────────────── -->
     <div class="mk-card" style="padding:16px 20px;">
-      <div class="mk-chart-title" style="color:#d97706;margin-bottom:10px;"><span>🗓️ Próxima temporada</span></div>
+      <div class="mk-chart-title" style="color:#8a6510;margin-bottom:10px;"><span>🗓️ Próxima temporada</span></div>
       <div id="widgetTemporadas"></div>
     </div>
 
     <!-- ── NOTAS RÁPIDAS ──────────────────────────────────── -->
-    <div class="mk-card" style="padding:20px 22px;background:linear-gradient(135deg,#fff8f9,#fdf2f8);">
-      <div class="mk-chart-title" style="color:#9d174d;">
+    <div class="mk-card" style="padding:20px 22px;">
+      <div class="mk-chart-title" style="color:#b8305a;">
         <span>📝 Notas rápidas</span>
-        <span id="notasCount" style="font-size:.68rem;color:#f9a8d4;font-weight:600;text-transform:none;letter-spacing:0;">0 notas</span>
+        <span id="notasCount" style="font-size:.68rem;color:#e0567e;font-weight:600;text-transform:none;letter-spacing:0;">0 notas</span>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <input type="text" id="notaInput" placeholder="Escribe una nota... (Enter)"

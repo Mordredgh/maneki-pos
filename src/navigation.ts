@@ -28,17 +28,18 @@ function showSection(sectionName) {
         });
     }
 
+    // Hero moment del dashboard: solo al entrar a la sección, no en cada refresh de datos
+    if (sectionName === 'dashboard' && typeof (window as any)._mkAnimateDashboardHero === 'function') {
+        (window as any)._mkAnimateDashboardHero();
+    }
+
     document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
     const sidebarBtn = document.querySelector(`[data-section="${sectionName}"]`);
     if (sidebarBtn) {
         sidebarBtn.classList.add('active');
-        // Defer Web Animations API (lee layout en el starting state → forced reflow)
-        requestAnimationFrame(() => {
-            (sidebarBtn as HTMLElement).animate(
-                [{background:'rgba(255,209,102,0.35)'},{background:'rgba(255,209,102,0.20)'}],
-                {duration:400, easing:'ease-out'}
-            );
-        });
+        if (typeof (window as any)._mkMoveSidebarIndicator === 'function') {
+            (window as any)._mkMoveSidebarIndicator(sidebarBtn);
+        }
     }
 
     if (window.innerWidth < 768) document.getElementById('sidebar')?.classList.add('collapsed');
