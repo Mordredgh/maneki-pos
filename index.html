@@ -9,12 +9,12 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Maneki POS">
-    <meta property="og:title" content="Maneki Store — Sistema de Gestión">
+    <meta name="apple-mobile-web-app-title" content="Bicho Capricho POS">
+    <meta property="og:title" content="Bicho Capricho — Sistema de Gestión">
     <meta property="og:description" content="Dashboard, inventario, pedidos por encargo y reportes para tu negocio">
     <meta property="og:image" content="/logo.png">
     <meta property="og:type" content="website">
-    <title>Maneki Store - Sistema de Gestión</title>
+    <title>Bicho Capricho - Sistema de Gestión</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/logo.png" type="image/png">
     <link rel="apple-touch-icon" sizes="180x180" href="/logo.png">
@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <!-- Leaflet CSS — cargado por lazy-loader al entrar a Envíos -->
     <!-- html2pdf (500KB) — cargado por lazy-loader al exportar PDF -->
@@ -51,7 +51,7 @@
 
   <!-- showSection stub now in config-init.js -->
 
-  <!-- ── Focus ring con color de marca Maneki ── -->
+  <!-- ── Focus ring con color de marca Bicho Capricho ── -->
   <style>
 input:focus, select:focus, textarea:focus, button:focus {
     outline: 2px solid rgba(197, 165, 114, 0.6);
@@ -73,37 +73,37 @@ input:focus, select:focus, textarea:focus, button:focus {
 }
   </style>
 
-  <!-- ── Override sidebar: crema cálido Maneki Premium ── -->
+  <!-- ── Override sidebar: crema cálido Bicho Capricho Premium ── -->
   <style id="maneki-sidebar-override">
     /* ── LIGHT MODE ── */
     #sidebar.sidebar, aside#sidebar {
       background: linear-gradient(175deg,#FBF8F3 0%,#FDF6E3 55%,#FBF8F3 100%) !important;
       border-right: 1px solid rgba(201,147,58,0.18) !important;
-      box-shadow: 4px 0 32px rgba(42,26,14,0.08) !important;
+      box-shadow: 4px 0 32px rgba(28,79,50,0.08) !important;
     }
-    #sidebar .sidebar-item { color: rgba(92,61,30,0.65) !important; }
-    #sidebar .sidebar-item:hover { background: rgba(201,147,58,0.10) !important; color: #2A1A0E !important; transform: translateX(2px); }
-    #sidebar .sidebar-item.active { background: linear-gradient(135deg,rgba(201,147,58,0.20),rgba(232,184,75,0.10)) !important; color: #5C3D1E !important; border: 1px solid rgba(201,147,58,0.30) !important; box-shadow: 0 2px 12px rgba(201,147,58,0.12) !important; }
-    #sidebar .sidebar-store-name { color: #2A1A0E !important; -webkit-text-fill-color: transparent !important; background: linear-gradient(135deg,#C9933A,#E8B84B,#C9933A) !important; -webkit-background-clip: text !important; background-clip: text !important; }
+    #sidebar .sidebar-item { color: rgba(61,94,74,0.75) !important; }
+    #sidebar .sidebar-item:hover { background: rgba(201,147,58,0.10) !important; color: #1c4f32 !important; transform: translateX(2px); }
+    #sidebar .sidebar-item.active { background: linear-gradient(135deg,rgba(201,147,58,0.20),rgba(232,184,75,0.10)) !important; color: #7A5010 !important; border: 1px solid rgba(201,147,58,0.30) !important; box-shadow: 0 2px 12px rgba(201,147,58,0.12) !important; }
+    #sidebar .sidebar-store-name { color: #1c4f32 !important; -webkit-text-fill-color: transparent !important; background: linear-gradient(135deg,#C9933A,#E8B84B,#C9933A) !important; -webkit-background-clip: text !important; background-clip: text !important; }
     #sidebar .sidebar-store-slogan { color: rgba(201,147,58,0.7) !important; }
     #sidebar .border-t, #sidebar [class*="border-"] { border-color: rgba(201,147,58,0.15) !important; }
-    #sidebar .text-gray-600, #sidebar .text-gray-500 { color: #9B7B5A !important; }
-    #sidebar .text-gray-800, #sidebar .text-gray-700 { color: #2A1A0E !important; }
+    #sidebar .text-gray-600, #sidebar .text-gray-500 { color: #7a8f80 !important; }
+    #sidebar .text-gray-800, #sidebar .text-gray-700 { color: #1c4f32 !important; }
 
-    /* ── DARK MODE — warm ink palette ── */
+    /* ── DARK MODE — tinte bosque ── */
     body.dark #sidebar.sidebar,
     body.dark aside#sidebar {
-      background: linear-gradient(175deg,#1E1208 0%,#261508 55%,#1E1208 100%) !important;
+      background: linear-gradient(175deg,#0f2d1c 0%,#123625 55%,#0f2d1c 100%) !important;
       border-right: 1px solid rgba(201,147,58,0.22) !important;
       box-shadow: 4px 0 40px rgba(0,0,0,0.45), 1px 0 0 rgba(201,147,58,0.10) !important;
     }
-    body.dark #sidebar .sidebar-item { color: rgba(201,168,123,0.65) !important; }
+    body.dark #sidebar .sidebar-item { color: rgba(180,210,192,0.65) !important; }
     body.dark #sidebar .sidebar-item:hover { background: rgba(201,147,58,0.13) !important; color: #F5ECD6 !important; transform: translateX(2px); }
     body.dark #sidebar .sidebar-item.active { background: linear-gradient(135deg,rgba(201,147,58,0.24),rgba(232,184,75,0.13)) !important; color: #E8B84B !important; border: 1px solid rgba(201,147,58,0.32) !important; box-shadow: 0 2px 16px rgba(201,147,58,0.20) !important; }
     body.dark #sidebar .sidebar-store-name { background: linear-gradient(135deg,#E8B84B,#F5DFA8,#C9933A) !important; -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; background-clip: text !important; }
     body.dark #sidebar .sidebar-store-slogan { color: rgba(201,147,58,0.60) !important; }
     body.dark #sidebar .border-t, body.dark #sidebar [class*="border-"] { border-color: rgba(201,147,58,0.12) !important; }
-    body.dark #sidebar .text-gray-600, body.dark #sidebar .text-gray-500 { color: #7B5A3A !important; }
+    body.dark #sidebar .text-gray-600, body.dark #sidebar .text-gray-500 { color: #6a9a80 !important; }
     body.dark #sidebar .text-gray-800, body.dark #sidebar .text-gray-700 { color: #F5ECD6 !important; }
   </style>
 </head>
@@ -114,7 +114,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 <noscript>
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;display:flex;align-items:center;justify-content:center;font-family:sans-serif;z-index:99999;">
     <div style="text-align:center;padding:32px;">
-      <h1 style="font-size:24px;color:#7c3aed;margin-bottom:12px;">Maneki POS</h1>
+      <h1 style="font-size:24px;color:#7d4fa3;margin-bottom:12px;">Bicho Capricho POS</h1>
       <p style="color:#666;">Esta aplicación requiere JavaScript para funcionar.</p>
       <p style="color:#666;">Por favor activa JavaScript en tu navegador.</p>
     </div>
@@ -127,7 +127,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   <button type="button" id="hamburgerBtn" data-action="_mkToggleSidebar"
     aria-label="Abrir menú"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:22px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;transition:transform .2s;">☰</button>
-  <img src="logo.png" alt="Maneki Store" style="height:32px;object-fit:contain;" data-error-fallback="hide" data-error-html="<span style='font-family:Cormorant Garamond,serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;'>Maneki Store</span>">
+  <img src="logo.png" alt="Bicho Capricho" style="height:32px;object-fit:contain;" data-error-fallback="hide" data-error-html="<span style='font-family:'Fredoka One',serif;font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,#C9933A,#E8B84B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;'>Bicho Capricho</span>">
   <button type="button" data-action="_abrirBusquedaOverlay"
     aria-label="Buscar"
     style="background:none;border:none;cursor:pointer;padding:10px;font-size:18px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">🔍</button>
@@ -143,12 +143,12 @@ input:focus, select:focus, textarea:focus, button:focus {
      class="w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
      style="background:transparent;"
      data-action="showSection" data-arg="bienvenida" title="Inicio">
-    <img src="logo.png" alt="Maneki Store" style="width:44px;height:44px;object-fit:contain;border-radius:10px;" data-error-fallback="sibling"><span style="font-size:30px;display:none">🐱</span>
+    <img src="logo.png" alt="Bicho Capricho" style="width:44px;height:44px;object-fit:contain;border-radius:10px;" data-error-fallback="sibling"><span style="font-size:30px;display:none">🐛</span>
 </div>
 
 <div>
-    <h1 class="sidebar-store-name" style="font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:600;letter-spacing:-0.01em;background:linear-gradient(135deg,#F5D080,#E8B84B,#fff,#C5973B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer;line-height:1.1;"
-        data-action="showSection" data-arg="bienvenida">Maneki Store</h1>
+    <h1 class="sidebar-store-name" style="font-family:'Fredoka One',serif;font-size:1.35rem;font-weight:600;letter-spacing:-0.01em;background:linear-gradient(135deg,#F5D080,#E8B84B,#fff,#C5973B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:pointer;line-height:1.1;"
+        data-action="showSection" data-arg="bienvenida">Bicho Capricho</h1>
     <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(197,151,59,.5);margin-top:3px;">Regalos Personalizados</p>
 </div>
 
@@ -227,7 +227,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <i class="fas fa-user text-sm" style="color: #C5973B !important;"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-gray-800 dark-text truncate" id="sidebarUserName">Maneki Store</p>
+                        <p class="text-sm font-semibold text-gray-800 dark-text truncate" id="sidebarUserName">Bicho Capricho</p>
                         <p class="text-xs truncate" style="color: #C5973B !important;">⚙️ Configuración</p>
                     </div>
                 </div>
@@ -318,7 +318,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <h1 id="dashGreeting" class="mk-dash-greeting-text">¡Buenos días!</h1>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <span class="mk-dash-store-pill">🐱 <span id="dashStoreName">Maneki</span></span>
+        <span class="mk-dash-store-pill">🐛 <span id="dashStoreName">Bicho Capricho</span></span>
         <span class="mk-dash-sep hidden sm:inline">·</span>
         <span class="mk-dash-date-text" id="dashDate">—</span>
         <span class="mk-dash-sep hidden sm:inline">·</span>
@@ -571,11 +571,11 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.1) 0%,transparent 70%);pointer-events:none;"></div>
         <div style="position:absolute;bottom:-30px;left:20%;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.07) 0%,transparent 70%);pointer-events:none;"></div>
         <div style="display:flex;align-items:center;gap:16px;position:relative;z-index:1;">
-            <div id="welcomeLogoContainer" style="width:56px;height:56px;border-radius:16px;background:white;box-shadow:0 8px 24px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;"><span style="font-size:28px">🐱</span></div>
+            <div id="welcomeLogoContainer" style="width:56px;height:56px;border-radius:16px;background:white;box-shadow:0 8px 24px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;"><span style="font-size:28px">🐛</span></div>
             <div style="flex:1;">
                 <p style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.14em;margin-bottom:2px;" id="welcomeDate"></p>
                 <h1 style="font-size:1.6rem;font-weight:900;color:white;margin:0;letter-spacing:-0.02em;" id="welcomeGreeting">¡Buenos días!</h1>
-                <p style="font-size:0.82rem;color:rgba(255,255,255,0.7);margin:2px 0 0;" id="welcomeStoreName">Maneki Store</p>
+                <p style="font-size:0.82rem;color:rgba(255,255,255,0.7);margin:2px 0 0;" id="welcomeStoreName">Bicho Capricho</p>
             </div>
             <div style="text-align:right;">
                 <p style="font-size:1.6rem;font-weight:800;color:white;line-height:1;" id="welcomeTime">--:--</p>
@@ -794,11 +794,11 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div style="position:relative;">
                             <button type="button" data-action="_mkToggleDropdown" data-pass-el="before"
                                 class="px-4 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
-                                style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
+                                style="background:linear-gradient(135deg,#7d4fa3,#ab84d1);">
                                 <i class="fas fa-plus"></i> Agregar <span style="font-size:.7rem;opacity:.8;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
-                                <button type="button" data-action="openPtModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-box w-4 text-center" style="color:#7c3aed;"></i> Producto Terminado</button>
+                                <button type="button" data-action="openPtModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-box w-4 text-center" style="color:#7d4fa3;"></i> Producto Terminado</button>
                                 <button type="button" data-action="openVariableProductModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-sky-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-palette w-4 text-center" style="color:#0284c7;"></i> Producto Variable</button>
                                 <button type="button" data-action="openMpModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-industry w-4 text-center" style="color:#6d28d9;"></i> Materia Prima</button>
                                 <button type="button" data-action="openSvcModal" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2 font-semibold"><i class="fas fa-cog w-4 text-center" style="color:#6b7280;"></i> Servicio</button>
@@ -840,7 +840,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                 <i class="fas fa-cog"></i> Herramientas <span style="font-size:.7rem;opacity:.7;">▾</span>
                             </button>
                             <div class="inv-hdr-dd" style="display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.13);min-width:190px;padding:6px;">
-                                <button type="button" data-action="toggleMovimientosInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history w-4 text-center" style="color:#7c3aed;"></i> Movimientos de stock</button>
+                                <button type="button" data-action="toggleMovimientosInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-history w-4 text-center" style="color:#7d4fa3;"></i> Movimientos de stock</button>
                                 <div style="border-top:1px solid #f3f4f6;margin:4px 0;"></div>
                                 <button type="button" data-action="guardarSnapshotInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-camera w-4 text-center" style="color:#4f46e5;"></i> Guardar snapshot</button>
                                 <button type="button" data-action="verSnapshotsInventario" data-close-dd="1" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 rounded-lg text-gray-700 flex items-center gap-2"><i class="fas fa-calendar-alt w-4 text-center" style="color:#6b7280;"></i> Ver snapshots</button>
@@ -1865,7 +1865,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <template id="configuracion-section-tpl">
     <div class="max-w-3xl mx-auto">
         <div class="mb-8">
-            <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-cog"></i></div><div class="mk-sh-text"><h2>Configuraci&#243;n</h2><p>Personaliza tu experiencia Maneki Store</p></div></div>
+            <div class="mk-section-header"><div class="mk-sh-icon"><i class="fas fa-cog"></i></div><div class="mk-sh-text"><h2>Configuraci&#243;n</h2><p>Personaliza tu experiencia Bicho Capricho</p></div></div>
             <p class="text-gray-600">Personaliza los datos que aparecen en tickets y cotizaciones</p>
         </div>
 
@@ -1943,7 +1943,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <hr class="border-gray-100">
 
-<input type="hidden" id="configEmoji" value="🐱">
+<input type="hidden" id="configEmoji" value="🐛">
 <div>
     <label class="block text-sm font-semibold text-gray-700 mb-3">Logo de la tienda</label>
 
@@ -1980,13 +1980,13 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la tienda *</label>
                     <div class="flex gap-3 items-center">
-                        <input type="text" id="configName" value="Maneki Store" required
+                        <input type="text" id="configName" value="Bicho Capricho" required
                                class="flex-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
                                data-oninput="updateStorePreview">
                         <div id="storePreview" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 shrink-0" style="min-width:160px;max-width:220px;">
-                            <span id="previewEmoji" class="text-2xl leading-none">🐱</span>
+                            <span id="previewEmoji" class="text-2xl leading-none">🐛</span>
                             <div class="overflow-hidden">
-                                <p id="previewName" class="text-sm font-bold text-gray-800 truncate">Maneki Store</p>
+                                <p id="previewName" class="text-sm font-bold text-gray-800 truncate">Bicho Capricho</p>
                                 <p id="previewSlogan" class="text-xs truncate" style="color:#C5973B;">Regalos Personalizados</p>
                             </div>
                         </div>
@@ -2010,7 +2010,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Facebook / Messenger</label>
-                    <input type="text" id="configFacebook" placeholder="Ej: facebook.com/ManekiStore"
+                    <input type="text" id="configFacebook" placeholder="Ej: facebook.com/BichoCapricho"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
                            data-oninput="updateStorePreview">
                 </div>
@@ -2139,7 +2139,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
             <div>
               <h3 class="text-lg font-bold text-gray-800">Atajos de teclado</h3>
-              <p class="text-xs text-gray-500">Navega rápido por Maneki Store</p>
+              <p class="text-xs text-gray-500">Navega rápido por Bicho Capricho</p>
             </div>
           </div>
           <button type="button" data-action="closeModal" data-arg="atajosModal" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar"><i class="fas fa-times"></i></button>

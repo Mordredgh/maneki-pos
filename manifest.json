@@ -1,6 +1,6 @@
 {
-  "name": "Maneki Store — Sistema de Gestión",
-  "short_name": "Maneki POS",
+  "name": "Bicho Capricho — Sistema de Gestión",
+  "short_name": "Bicho Capricho",
   "description": "Dashboard, inventario, pedidos por encargo y reportes para tu negocio",
   "start_url": "/",
   "scope": "/",
