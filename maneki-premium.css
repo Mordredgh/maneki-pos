@@ -1821,7 +1821,7 @@ body.dark [style*="border-bottom:1px solid #f3f4f6"] { border-color: rgba(255,25
 
 /* ── R3-S32: KPI sólida — la métrica principal de la vista lleva color de marca
    solido en vez de fondo blanco+texto de color, para anclar la jerarquía visual ── */
-.mk-kpi-solid {
+.mk-card.mk-kpi-solid {
   background: linear-gradient(135deg, #1c4f32 0%, #2c6a45 100%) !important;
   color: #fff !important;
   box-shadow: 0 8px 22px rgba(28,79,50,0.22) !important;
