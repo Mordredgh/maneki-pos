@@ -558,7 +558,7 @@
                 document.querySelectorAll('._mk-hl').forEach(e => { e.style.zIndex=''; e.style.boxShadow=''; e.classList.remove('_mk-hl'); });
                 if (el) { el.style.zIndex='99998'; el.style.boxShadow='0 0 0 4px rgba(255,209,102,0.5),0 0 20px rgba(255,209,102,0.3)'; el.classList.add('_mk-hl'); }
                 const r = el ? el.getBoundingClientRect() : { top:innerHeight/2-80, left:innerWidth/2-160, bottom:innerHeight/2 };
-                tip.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h4 style="font-size:1rem;font-weight:800;color:#1a0533;margin:0;">'+s.title+'</h4><span style="font-size:.7rem;color:#9ca3af;">'+(idx+1)+'/'+steps.length+'</span></div><p style="font-size:.82rem;color:#6b7280;margin:0 0 14px;line-height:1.5;">'+s.text+'</p><div style="display:flex;justify-content:space-between;"><button id="_ts" style="background:none;border:none;color:#9ca3af;font-size:.78rem;cursor:pointer;">Saltar</button><button id="_tn" style="background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:white;border:none;border-radius:10px;padding:8px 20px;font-weight:700;font-size:.82rem;cursor:pointer;">'+(idx===steps.length-1?'¡Empezar! 🚀':'Siguiente →')+'</button></div>';
+                tip.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h4 style="font-size:1rem;font-weight:800;color:#1a0533;margin:0;">'+s.title+'</h4><span style="font-size:.7rem;color:#9ca3af;">'+(idx+1)+'/'+steps.length+'</span></div><p style="font-size:.82rem;color:#6b7280;margin:0 0 14px;line-height:1.5;">'+s.text+'</p><div style="display:flex;justify-content:space-between;"><button id="_ts" style="background:none;border:none;color:#9ca3af;font-size:.78rem;cursor:pointer;">Saltar</button><button id="_tn" class="mk-btn-primary" style="padding:8px 20px;font-size:.82rem;">'+(idx===steps.length-1?'¡Empezar! 🚀':'Siguiente →')+'</button></div>';
                 tip.style.top = (r.bottom+12+200>innerHeight ? r.top-180 : r.bottom+12)+'px';
                 tip.style.left = Math.max(16,Math.min(r.left||100,innerWidth-340))+'px';
                 document.getElementById('_tn').onclick = () => { current++; show(current); };
@@ -608,8 +608,7 @@
                             </div>
                         `).join('')}
                     </div>
-                    <button onclick="localStorage.setItem('${KEY}','${MK_VERSION}');this.closest('#mk-changelog-modal').remove();"
-                        style="width:100%;padding:12px;background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:white;border:none;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer;">
+                    <button onclick="localStorage.setItem('${KEY}','${MK_VERSION}');this.closest('#mk-changelog-modal').remove();" class="mk-btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:.9rem;">
                         ¡Entendido! 🚀
                     </button>
                 </div>`;

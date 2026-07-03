@@ -206,9 +206,8 @@
                 </label>
             </div>
 
-            <button type="button" id="ptSubmitBtn" onclick="guardarProductoTerminado()"
-                style="width:100%;padding:16px;background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-top:8px;letter-spacing:.02em;">
-                \u2705 Agregar Producto
+            <button type="button" id="ptSubmitBtn" onclick="guardarProductoTerminado()" class="mk-btn-primary" style="width:100%;justify-content:center;padding:16px;font-size:1rem;margin-top:8px;letter-spacing:.02em;">
+                <i class="fas fa-check"></i> Agregar Producto
             </button>
         </form>
     </div>`,document.body.appendChild(t),setTimeout(()=>{const o=document.getElementById("ptProductImage");o&&!o._mkBound&&(o._mkBound=!0,o.addEventListener("change",function(d){const l=d.target.files[0];if(!l)return;window.currentProductImageFile=l;const m=new FileReader;m.onload=b=>{const h=document.getElementById("ptPreviewImg"),g=document.getElementById("ptImagePreview");h&&(h.src=b.target.result),g&&g.classList.remove("hidden"),window.currentProductImage=b.target.result},m.readAsDataURL(l)}));const i=document.getElementById("ptPublicarTienda"),n=document.getElementById("ptToggleTrack"),a=document.getElementById("ptToggleThumb");if(i&&n&&a){const d=()=>{n.style.background=i.checked?"#10b981":"#d1d5db",a.style.transform=i.checked?"translateX(22px)":"translateX(0)"};i.addEventListener("change",d),d()}poblarCategoriasPt(),renderTagsPt();const s=document.getElementById("ptPrecio");if(s&&s.addEventListener("input",()=>ptMostrarMargenInfo()),!document.getElementById("ptProveedorNombre")){const d=document.getElementById("ptSubmitBtn");d&&d.insertAdjacentHTML("beforebegin",`

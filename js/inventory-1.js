@@ -162,9 +162,8 @@ _Reabastece pronto para no detener producci\xF3n._`),a=document.createElement("d
             <div style="display:flex;gap:8px;">
                 <button onclick="document.getElementById('_bulkEditModal').style.display='none'"
                     style="flex:1;padding:10px;border:1.5px solid #E5E7EB;border-radius:12px;background:#fff;font-size:.85rem;cursor:pointer;">Cancelar</button>
-                <button id="_bulkApplyBtn" onclick="_aplicarBulkPrecios()"
-                    style="flex:2;padding:10px;background:linear-gradient(135deg,var(--mk-gold-500),var(--mk-gold-400));color:#fff;border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;">
-                    \u2705 Aplicar cambios
+                <button id="_bulkApplyBtn" onclick="_aplicarBulkPrecios()" class="mk-btn-primary" style="flex:2;justify-content:center;padding:10px;font-size:.85rem;">
+                    <i class="fas fa-check"></i> Aplicar cambios
                 </button>
             </div>
         </div>`,e.style.display="flex";const o=()=>_renderBulkPreview();e.querySelector("#_bulkCatFilter")?.addEventListener("change",o),e.querySelector("#_bulkTipo")?.addEventListener("change",o),e.querySelector("#_bulkValor")?.addEventListener("input",o)}window.abrirBulkEditPrecios=abrirBulkEditPrecios;function _calcBulkPrecio(t,e,i){return e==="pct_up"?t*(1+i/100):e==="pct_dn"?t*(1-i/100):e==="fixed"?i:t}function _getBulkProductos(){const t=document.getElementById("_bulkCatFilter")?.value||"";return(window.products||[]).filter(e=>!(e.tipo==="materia_prima"||e.tipo==="servicio"||Number(e.price||0)<=0||t&&(e.category||e.categoria||"Sin categor\xEDa")!==t))}function _renderBulkPreview(){const t=document.getElementById("_bulkPreview");if(!t)return;const e=document.getElementById("_bulkTipo")?.value||"pct_up",i=parseFloat(document.getElementById("_bulkValor")?.value||"0"),o=_getBulkProductos();if(!i||i<=0){t.innerHTML='<div style="padding:12px;text-align:center;color:#9CA3AF;font-size:.8rem;">Ingresa un valor para ver la vista previa</div>';return}t.innerHTML=`
