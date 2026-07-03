@@ -472,7 +472,7 @@ function renderInventoryTable() {
         const pid     = String(product.id);
         const stockEf = _stockCache.get(pid) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : parseInt(product.stock) || 0);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
+            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'🏭'}</span>`;
         let badge;
         if      (stockEf === 0)                    badge = '<span class="badge-danger"><i class="fas fa-circle-xmark"></i> Agotado</span>';
@@ -559,7 +559,7 @@ function renderInventoryTable() {
     function renderFilaPT(product, ri) {
         const pid     = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
+            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'📦'}</span>`;
         const cat = (window.categories||[]).find(c => c.id === product.category);
         const catName = cat ? cat.name : (product.category||'');
@@ -691,7 +691,7 @@ function renderInventoryTable() {
     function renderFilaVariable(product, ri) {
         const pid = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" loading="lazy">`
+            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy">`
             : `<span style="font-size:1.6rem;">${product.image||'🎯'}</span>`;
 
         // Tabla de precios como pills
