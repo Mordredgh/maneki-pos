@@ -419,7 +419,6 @@
 
         /* ── SCROLLBAR PREMIUM ── */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, var(--lila), var(--gold));
             border-radius: 99px;
@@ -646,10 +645,6 @@
             margin-left: auto;
             margin-right: auto;
         }
-        .modal.active > div:first-child {
-            transform: translateY(0) scale(1);
-            opacity: 1;
-        }
         /* Contenido del modal — salida */
         .modal.closing > div:first-child {
             animation: modalContentOut 0.18s ease forwards;
@@ -751,7 +746,6 @@
             pointer-events: none;
             opacity: 0.85;
         }
-        .btn-loading .btn-label { visibility: hidden; }
         .btn-loading::after {
             content: '';
             position: absolute;
@@ -977,7 +971,6 @@ body.dark .border-gray-200 { border-color: rgba(255,209,102,0.16) !important; }
 
 /* ── SOMBRAS ── */
 body.dark .shadow-sm  { box-shadow: 0 1px 3px rgba(0,0,0,0.5) !important; }
-body.dark .shadow-xl  { box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important; }
 
 /* ── INPUTS ── */
 body.dark input, body.dark textarea, body.dark select {
@@ -1235,7 +1228,6 @@ body, .sidebar, .bg-white, input, textarea, select, table {
         .sortable-th .sort-icon { margin-left: 4px; opacity: 0.4; font-size: 10px; }
         .sortable-th.asc .sort-icon::after  { content: ' ▲'; opacity: 1; }
         .sortable-th.desc .sort-icon::after { content: ' ▼'; opacity: 1; }
-        .sortable-th:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
 
 
 
@@ -3214,7 +3206,6 @@ body.dark .mk-kpi-delta.down { background: rgba(239,68,68,.12); color: #F87171; 
   margin-top: 1px;
 }
 
-.mk-toast-body { flex: 1; }
 
 .mk-toast-title {
   font-weight: 700;
