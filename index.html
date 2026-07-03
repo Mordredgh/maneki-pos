@@ -147,12 +147,12 @@ input:focus, select:focus, textarea:focus, button:focus {
 </div>
 
 <div>
-    <h1 class="sidebar-store-name" style="font-family:'Fredoka One',serif;font-size:1.3rem;font-weight:400;letter-spacing:-0.01em;color:var(--mk-p950,#1c4f32);cursor:pointer;line-height:1.1;"
+    <h1 class="sidebar-store-name" style="font-family:'Fredoka One',serif;font-size:1.3rem;font-weight:400;letter-spacing:-0.01em;color:#FBF8F3;cursor:pointer;line-height:1.1;"
         data-action="showSection" data-arg="bienvenida">Bicho Capricho</h1>
-    <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mk-g700,#8a6510);margin-top:3px;">Regalos Personalizados</p>
+    <p class="sidebar-store-slogan" style="font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#FFD166;margin-top:3px;">Regalos Personalizados</p>
 </div>
 
-                <button type="button" id="closeSidebar" data-action="closeSidebar" class="md:hidden text-gray-600" aria-label="Cerrar menú">
+                <button type="button" id="closeSidebar" data-action="closeSidebar" class="md:hidden" style="color:#FBF8F3;" aria-label="Cerrar menú">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -218,7 +218,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="mb-1">
               <div id="supabaseStatus" class="flex items-center gap-2 text-xs px-2 py-1 rounded-lg cursor-default" style="background:rgba(255,209,102,0.08);border:1px solid rgba(255,209,102,0.12);" title="Estado de sincronización con la nube">
                 <span id="supabaseStatusDot" class="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0 inline-block"></span>
-                <span id="supabaseStatusText" class="text-gray-500 truncate">Verificando...</span>
+                <span id="supabaseStatusText" class="truncate" style="color:rgba(251,248,243,0.65);">Verificando...</span>
                 <span id="supabaseOfflineBadge" class="hidden ml-auto text-orange-600 font-bold text-xs" title="Modo offline — datos en cola">✦ Offline</span>
               </div>
             </div>
@@ -228,7 +228,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <i class="fas fa-user text-sm" style="color: #FFD166 !important;"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-gray-800 dark-text truncate" id="sidebarUserName">Bicho Capricho</p>
+                        <p class="text-sm font-semibold truncate" style="color:#FBF8F3;" id="sidebarUserName">Bicho Capricho</p>
                         <p class="text-xs truncate" style="color: #FFD166 !important;">⚙️ Configuración</p>
                     </div>
                 </div>
@@ -236,8 +236,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <button type="button" data-action="_mkShowShortcuts"
                     title="Atajos de teclado (también presiona ?)"
                     aria-label="Ver atajos de teclado"
-                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors text-xs font-bold border border-gray-200"
-                    style="flex-shrink:0;">?</button>
+                    class="w-7 h-7 rounded-lg flex items-center justify-center hover:text-amber-600 hover:bg-amber-50 transition-colors text-xs font-bold"
+                    style="flex-shrink:0;color:rgba(251,248,243,0.55);border:1px solid rgba(255,255,255,0.15);">?</button>
                 <button type="button" data-action="toggleDarkMode" id="darkModeBtn"
                         title="Modo oscuro"
                         class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all hover:scale-110"
