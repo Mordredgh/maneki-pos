@@ -11,7 +11,6 @@ const ASSETS_TO_HASH = [
   'manifest.json',
   'logo.png',
   'css/tailwind.css',
-  'css/app.css',
 ];
 
 const jsDir = path.join(ROOT, 'js');
