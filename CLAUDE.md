@@ -970,6 +970,39 @@ mano — se había quedado desactualizada durante toda la sesión. Se actualizó
 para el futuro:** actualizar esta lista + bump de versión en cada sesión con cambios visibles
 para el usuario, no solo al final de rediseños grandes.
 
+### Auditoría de los 23 modales de la app
+Los modales quedaron fuera del rediseño de Sesión 31 (evaluado el reflow a 2 columnas del modal
+de Pedido y descartado por riesgo). Se hizo un inventario completo de los 23 modales
+(`index.html`) para decidir con el usuario qué valía la pena arreglar sin ese riesgo:
+
+- **`backupModal` y `configAnillosModal` usaban `style="display:none;position:fixed..."` a mano**
+  en vez de `class="modal"` — la diferencia NO era solo de código: `.modal.active` en
+  `maneki-premium.css` da el fondo verde bosque de marca + animación de entrada
+  (`mkModalBgIn`/spring en el contenido); estos dos con estilo inline tenían fondo negro genérico
+  SIN animación. Fix: `class="modal"` en el HTML + las funciones de abrir/cerrar
+  (`abrirModalBackup`/`cerrarBackupModal` en `backup.ts`, `abrirConfigAnillos`/`cerrarConfigAnillos`
+  en `envios.ts`) cambiaron de `.style.display` a `.classList.add/remove('active')`.
+- **Emoji decorativos → íconos SVG** en labels de modales (🏷️→`fa-tag`, ⚠️→`fa-triangle-exclamation`,
+  📦→`fa-box`, 📝→`fa-edit`, 🔔→`fa-bell` [nuevo en el diccionario `D` de `icons.ts`],
+  💡→`fa-percentage`, 🔧→`fa-wrench`, 🗺️→`fa-route`). **NO se tocaron** los emoji que son parte del
+  *contenido* de un mensaje (los botones de plantilla de WhatsApp en el modal de Pedido, ej.
+  `data-arg="🎁 Como regalo"` — esos emoji se insertan literalmente en el texto que lee el
+  cliente) ni el selector de estado del pedido (✅💰🔧📦🚚🏪🎉❌ — grande, colorido, funciona bien
+  como está, cambiarlo a íconos monocromáticos hubiera sido un downgrade visual).
+- **Accesibilidad:** `role="dialog" aria-modal="true"` agregado a los 25 `class="modal"`, y
+  `aria-label="Cerrar"` a los botones de cerrar que solo tenían un símbolo (×/✕/&times;) sin
+  texto — antes no tenían forma de que un lector de pantalla anunciara su propósito.
+- **NO se tocó:** el selector de emoji+color duplicado 3 veces (Categoría nueva/editar, Equipos)
+  — cada copia tiene su propio set de IDs y funciones JS (`filterEditEmojis` vs `filterEmojis`,
+  etc.); fusionarlas en un componente real tocaría 3 flujos de CRUD distintos por una ganancia
+  puramente de DRY — evaluado y pospuesto por relación riesgo/beneficio, igual que el reflow del
+  modal de Pedido en Sesión 31.
+- **Modal de Pedido — agrupado en 3 secciones plegables** (`<details open class="mk-pedido-section">`,
+  nativo HTML, sin JS nuevo): Cliente / Productos / Detalles y pago. Todas quedan `open` por
+  defecto — el comportamiento visual es idéntico a antes salvo el separador visual y la
+  posibilidad de colapsar; cero riesgo de romper validación de campos requeridos o lógica JS
+  existente porque ningún `id` ni estructura interna se tocó, solo se envolvió en `<details>`.
+
 ## ✅ Sesión 26 (13 junio 2026) — Auditoría profunda + mejoras UI/UX (v2.6.2)
 
 > Veredicto: la capa de datos/lógica/Supabase quedó SÓLIDA tras S24–S25 (fechas guardadas,
