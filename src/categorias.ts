@@ -59,12 +59,8 @@
         });
         
         function selectCategoryColor(color) {
-    document.getElementById('categoryColor').value = color;
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.style.borderColor = btn.dataset.color === color ? '#374151' : 'transparent';
-        btn.style.transform = btn.dataset.color === color ? 'scale(1.2)' : 'scale(1)';
-    });
-}
+            _selectColorGeneric(color, 'categoryColor', 'color-btn');
+        }
 
         // openAddCategoryModal definida globalmente arriba (con reset completo de emoji + color)
 
@@ -146,43 +142,15 @@
         }
 
         function selectEditColor(color) {
-            document.getElementById('editCategoryColor').value = color;
-            document.querySelectorAll('.edit-color-btn').forEach(btn => {
-                btn.style.borderColor = btn.dataset.color === color ? '#374151' : 'transparent';
-                btn.style.transform = btn.dataset.color === color ? 'scale(1.2)' : 'scale(1)';
-            });
+            _selectColorGeneric(color, 'editCategoryColor', 'edit-color-btn');
         }
 
         function renderEditEmojiGrid(filter = '') {
-            const grid = document.getElementById('editEmojiGrid');
-            if (!grid) return;
-            const q = filter.toLowerCase().trim();
-            const allE = emojiCategories.flatMap(cat => cat.emojis);
-            if (q) {
-                const found = allE.filter((_, i) => true); // show all on search
-                const keywords = { 'regalo':['🎁','🎀','🎊'], 'ropa':['👗','👕','👔'], 'taza':['☕','🍵'], 'llave':['🔑','🗝️'], 'peluche':['🧸','🐻'], 'joya':['💍','💎'] };
-                let res = [];
-                Object.entries(keywords).forEach(([k,v]) => { if(k.includes(q)||q.includes(k)) res.push(...v); });
-                if (res.length === 0) res = allE;
-                grid.innerHTML = `<div class="flex flex-wrap gap-1">${[...new Set(res)].map(e => `<button type="button" onclick="selectEditEmoji('${e}')" class="edit-emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">${e}</button>`).join('')}</div>`;
-                return;
-            }
-            grid.innerHTML = emojiCategories.map(cat => `
-                <div class="mb-2">
-                    <p class="text-xs font-semibold text-gray-400 mb-1">${cat.label}</p>
-                    <div class="flex flex-wrap gap-1">
-                        ${cat.emojis.map(e => `<button type="button" onclick="selectEditEmoji('${e}')" class="edit-emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">${e}</button>`).join('')}
-                    </div>
-                </div>`).join('');
+            _renderEmojiPickerGrid('editEmojiGrid', emojiCategories, CATEGORY_EMOJI_KEYWORDS, filter, 'edit-emoji-btn', 'selectEditEmoji');
         }
 
         function selectEditEmoji(emoji) {
-            document.getElementById('editCategoryEmoji').value = emoji;
-            document.getElementById('editSelectedEmojiDisplay').textContent = emoji;
-            document.querySelectorAll('.edit-emoji-btn').forEach(btn => {
-                btn.style.background = btn.textContent.trim() === emoji ? '#FFF9F0' : '';
-                btn.style.border = btn.textContent.trim() === emoji ? '2px solid #FFD166' : '';
-            });
+            _selectEmojiGeneric(emoji, 'editCategoryEmoji', 'editSelectedEmojiDisplay', 'edit-emoji-btn');
         }
 
         function filterEditEmojis(value) { renderEditEmojiGrid(value); }

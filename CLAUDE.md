@@ -992,16 +992,44 @@ de Pedido y descartado por riesgo). Se hizo un inventario completo de los 23 mod
 - **Accesibilidad:** `role="dialog" aria-modal="true"` agregado a los 25 `class="modal"`, y
   `aria-label="Cerrar"` a los botones de cerrar que solo tenían un símbolo (×/✕/&times;) sin
   texto — antes no tenían forma de que un lector de pantalla anunciara su propósito.
-- **NO se tocó:** el selector de emoji+color duplicado 3 veces (Categoría nueva/editar, Equipos)
-  — cada copia tiene su propio set de IDs y funciones JS (`filterEditEmojis` vs `filterEmojis`,
-  etc.); fusionarlas en un componente real tocaría 3 flujos de CRUD distintos por una ganancia
-  puramente de DRY — evaluado y pospuesto por relación riesgo/beneficio, igual que el reflow del
-  modal de Pedido en Sesión 31.
+- **Selector de emoji+color duplicado 3 veces (Categoría nueva/editar, Equipos) — arreglado**
+  (ver detalle abajo, "Dedup del selector de emoji/color").
 - **Modal de Pedido — agrupado en 3 secciones plegables** (`<details open class="mk-pedido-section">`,
   nativo HTML, sin JS nuevo): Cliente / Productos / Detalles y pago. Todas quedan `open` por
   defecto — el comportamiento visual es idéntico a antes salvo el separador visual y la
   posibilidad de colapsar; cero riesgo de romper validación de campos requeridos o lógica JS
   existente porque ningún `id` ni estructura interna se tocó, solo se envolvió en `<details>`.
+
+### Dedup del selector de emoji/color (lo que se había pospuesto — arreglado después)
+El usuario pidió explícitamente arreglar esto tras verlo pospuesto en el punto anterior. Había
+3 copias del selector de emoji (categoría nueva, categoría editar, equipos) y 2 copias del
+selector de color (categoría nueva, categoría editar) — mismo patrón visual, misma lógica de
+resaltado, cada una con su propia función global casi idéntica.
+
+**Cómo se dedupeó sin tocar el HTML ni los nombres de función que usan `onclick`/`data-oninput`
+en `index.html`:** se extrajeron 3 funciones genéricas y parametrizadas en `app-data.ts`
+(`_renderEmojiPickerGrid(gridId, cats, keywordMap, filter, btnClass, onSelectFnName)`,
+`_selectEmojiGeneric(emoji, hiddenId, displayId, btnClass)`,
+`_selectColorGeneric(color, hiddenId, btnClass)`). Las 8 funciones globales originales
+(`renderEmojiGrid`/`selectEmoji`/`filterEmojis`, `renderEditEmojiGrid`/`selectEditEmoji`/
+`filterEditEmojis`, `renderEquipoEmojiGrid`/`selectEquipoEmoji`/`filterEquipoEmojis`,
+`selectCategoryColor`, `selectEditColor`) siguen existiendo con el mismo nombre, pero ahora son
+wrappers de una línea que llaman al motor genérico con su propia configuración (grid, IDs,
+diccionario de búsqueda, clase de botón). El HTML en `index.html` no cambió ni una letra —
+cero riesgo ahí. `app-data.ts` carga antes que `categorias.ts` en `core.bundle.js` (orden de
+`scripts/build.js`), así que las funciones genéricas están disponibles quando `categorias.ts`
+las usa — mismo patrón cross-file que ya existía (`categorias.ts` ya leía `emojiCategories`,
+definido en `app-data.ts`, antes de este cambio).
+
+**Efecto colateral bueno, no buscado:** el diccionario de búsqueda por palabra clave del picker
+de "editar categoría" tenía solo 6 entradas (copy-paste incompleto de hace tiempo) contra las 15
+entradas del de "nueva categoría" — al unificar ambos bajo `CATEGORY_EMOJI_KEYWORDS` (la lista
+completa de 15), buscar emoji al editar una categoría ahora encuentra tantos resultados como al
+crear una nueva. No se buscaba este fix, salió gratis de la unificación.
+
+Verificado: build completo en verde (65 tests + lint + 34/34 TS), y los bundles se hicieron más
+chicos (`core.bundle.js` -1.3 KB, `inventario.bundle.js` -1.7 KB) — confirma que sí se eliminó
+código real, no solo se movió.
 
 ## ✅ Sesión 26 (13 junio 2026) — Auditoría profunda + mejoras UI/UX (v2.6.2)
 

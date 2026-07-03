@@ -241,6 +241,46 @@ function loadLogoUI() {
     updateStorePreview();
 }
 // ============== SELECTOR DE EMOJIS ==============
+// Motor genérico compartido por los 3 pickers de emoji de la app (categoría nueva,
+// categoría editar, equipos) — cada uno sigue exponiendo sus mismas funciones globales
+// (renderXGrid/filterX/selectX) como wrappers delgados, así el HTML no cambia.
+function _renderEmojiPickerGrid(gridId, cats, keywordMap, filter, btnClass, onSelectFnName) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    const q = (filter || '').toLowerCase().trim();
+    const btnHtml = e => `<button type="button" onclick="${onSelectFnName}('${e}')" class="${btnClass} w-9 h-9 text-xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">${e}</button>`;
+    if (q) {
+        let found = [];
+        Object.entries(keywordMap).forEach(([key, emojis]) => {
+            if (key.includes(q) || q.includes(key)) found.push(...emojis);
+        });
+        if (found.length === 0) found = cats.flatMap(cat => cat.emojis);
+        grid.innerHTML = `<div class="flex flex-wrap gap-1">${[...new Set(found)].map(btnHtml).join('')}</div>`;
+        return;
+    }
+    grid.innerHTML = cats.map(cat => `
+        <div class="mb-2">
+            <p class="text-xs font-semibold text-gray-400 mb-1">${cat.label}</p>
+            <div class="flex flex-wrap gap-1">${cat.emojis.map(btnHtml).join('')}</div>
+        </div>`).join('');
+}
+function _selectEmojiGeneric(emoji, hiddenId, displayId, btnClass) {
+    document.getElementById(hiddenId).value = emoji;
+    const disp = document.getElementById(displayId);
+    if (disp) disp.textContent = emoji;
+    document.querySelectorAll('.' + btnClass).forEach(btn => {
+        const sel = btn.textContent.trim() === emoji;
+        btn.style.background = sel ? '#FFF9F0' : '';
+        btn.style.border = sel ? '2px solid #FFD166' : '';
+    });
+}
+function _selectColorGeneric(color, hiddenId, btnClass) {
+    document.getElementById(hiddenId).value = color;
+    document.querySelectorAll('.' + btnClass).forEach(btn => {
+        btn.style.borderColor = btn.dataset.color === color ? '#374151' : 'transparent';
+        btn.style.transform = btn.dataset.color === color ? 'scale(1.2)' : 'scale(1)';
+    });
+}
 
 const emojiCategories = [
     {
@@ -287,75 +327,30 @@ const emojiCategories = [
 
 let allEmojis = emojiCategories.flatMap(cat => cat.emojis.map(e => ({ emoji: e, label: cat.label })));
 
+// Búsqueda plana por palabra clave (categoría nueva/editar comparten esta lista)
+const CATEGORY_EMOJI_KEYWORDS = {
+    'regalo': ['🎁','🎀','🎊','🎉','💝','🛍️'],
+    'caja': ['📦','🗃️'],
+    'gato': ['🐛'], 'perro': ['🐶'], 'conejo': ['🐰'],
+    'ropa': ['👗','👘','👕','👔','🧥'],
+    'taza': ['☕','🍵','🫖'],
+    'libro': ['📚','📓','📒','📔'],
+    'bebe': ['👶','🍼','🧸','🧷'], 'bebé': ['👶','🍼','🧸','🧷'],
+    'flor': ['🌸','🌺','🌻','🌹','💐','🌼'],
+    'estrella': ['⭐','🌟','✨','💫'],
+    'corazon': ['💝','💖','💗','💓','💞','💕'], 'corazón': ['💝','💖','💗','💓','💞','💕'],
+    'joya': ['💍','💎','📿'], 'joyeria': ['💍','💎','📿'], 'joyería': ['💍','💎','📿'],
+    'spa': ['💆','🧘','🛁','🪷','🌿'],
+    'juguete': ['🧸','🪆','🎮','🎯','🎲'],
+    'arte': ['🎨','🖌️','✏️','🖍️'],
+};
+
 function renderEmojiGrid(filter = '') {
-    const grid = document.getElementById('emojiGrid');
-    if (!grid) return;
-
-    const q = filter.toLowerCase().trim();
-
-    if (q) {
-        // Búsqueda plana
-        const keywords = {
-            'regalo': ['🎁','🎀','🎊','🎉','💝','🛍️'],
-            'caja': ['📦','🗃️'],
-            'gato': ['🐛'], 'perro': ['🐶'], 'conejo': ['🐰'],
-            'ropa': ['👗','👘','👕','👔','🧥'],
-            'taza': ['☕','🍵','🫖'],
-            'libro': ['📚','📓','📒','📔'],
-            'bebe': ['👶','🍼','🧸','🧷'], 'bebé': ['👶','🍼','🧸','🧷'],
-            'flor': ['🌸','🌺','🌻','🌹','💐','🌼'],
-            'estrella': ['⭐','🌟','✨','💫'],
-            'corazon': ['💝','💖','💗','💓','💞','💕'], 'corazón': ['💝','💖','💗','💓','💞','💕'],
-            'joya': ['💍','💎','📿'], 'joyeria': ['💍','💎','📿'], 'joyería': ['💍','💎','📿'],
-            'spa': ['💆','🧘','🛁','🪷','🌿'],
-            'juguete': ['🧸','🪆','🎮','🎯','🎲'],
-            'arte': ['🎨','🖌️','✏️','🖍️'],
-        };
-
-        let found = [];
-        Object.entries(keywords).forEach(([key, emojis]) => {
-            if (key.includes(q) || q.includes(key)) found.push(...emojis);
-        });
-        // También buscar en todos si no hubo coincidencia exacta
-        if (found.length === 0) found = allEmojis.map(e => e.emoji);
-
-        grid.innerHTML = `
-            <div class="flex flex-wrap gap-2">
-                ${[...new Set(found)].map(e => `
-                    <button type="button" onclick="selectEmoji('${e}')"
-                            class="emoji-btn w-10 h-10 text-2xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">
-                        ${e}
-                    </button>
-                `).join('')}
-            </div>
-        `;
-        return;
-    }
-
-    // Sin filtro: mostrar por categorías
-    grid.innerHTML = emojiCategories.map(cat => `
-        <div class="mb-3">
-            <p class="text-xs font-semibold text-gray-400 mb-2">${cat.label}</p>
-            <div class="flex flex-wrap gap-1">
-                ${cat.emojis.map(e => `
-                    <button type="button" onclick="selectEmoji('${e}')"
-                            class="emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-yellow-50 hover:scale-125 transition-all flex items-center justify-center">
-                        ${e}
-                    </button>
-                `).join('')}
-            </div>
-        </div>
-    `).join('');
+    _renderEmojiPickerGrid('emojiGrid', emojiCategories, CATEGORY_EMOJI_KEYWORDS, filter, 'emoji-btn', 'selectEmoji');
 }
 
 function selectEmoji(emoji) {
-    document.getElementById('categoryEmoji').value = emoji;
-    document.getElementById('selectedEmojiDisplay').textContent = emoji;
-    // Highlight seleccionado
-    document.querySelectorAll('.emoji-btn').forEach(btn => {
-        btn.style.background = btn.textContent.trim() === emoji ? '#FFF9F0' : '';
-        btn.style.border = btn.textContent.trim() === emoji ? '2px solid #FFD166' : '';
-    });
+    _selectEmojiGeneric(emoji, 'categoryEmoji', 'selectedEmojiDisplay', 'emoji-btn');
 }
 
 function filterEmojis(value) {
@@ -392,58 +387,22 @@ const equipoEmojiCats = [
 
 const allEquipoEmojis = equipoEmojiCats.flatMap(cat => cat.emojis);
 
+const EQUIPO_EMOJI_KEYWORDS = {
+    'impresora': ['🖨️','📠'], 'laser': ['🔬','⚡','💡','🔥'], 'cricut': ['✂️','🪡','🖊️'],
+    'plancha': ['🔥','♨️','🌡️'], 'prensa': ['🔧','⚙️','🛠️'], 'dtf': ['🖨️','🔥','♨️'],
+    'sublimacion': ['🖨️','♨️','🔥'], 'sublimación': ['🖨️','♨️','🔥'],
+    'laminadora': ['📋','🗃️','⚙️'], '3d': ['🤖','⚙️','🔧'], 'rotador': ['🔄','⚙️'],
+    'atomstack': ['🔬','⚡','💡'], 'mini': ['⚙️','🔧'], 'cpu': ['💻','🖥️','🖱️'],
+    'computadora': ['💻','🖥️'], 'herramienta': ['🔧','🪛','🛠️','🧰'],
+    'corte': ['✂️','🪚'], 'calor': ['🔥','♨️'], 'maquina': ['⚙️','🏭','🤖'], 'máquina': ['⚙️','🏭','🤖'],
+};
+
 function renderEquipoEmojiGrid(filter = '') {
-    const grid = document.getElementById('equipoEmojiGrid');
-    if (!grid) return;
-    const q = filter.toLowerCase().trim();
-
-    const equipoKeywords = {
-        'impresora': ['🖨️','📠'], 'laser': ['🔬','⚡','💡','🔥'], 'cricut': ['✂️','🪡','🖊️'],
-        'plancha': ['🔥','♨️','🌡️'], 'prensa': ['🔧','⚙️','🛠️'], 'dtf': ['🖨️','🔥','♨️'],
-        'sublimacion': ['🖨️','♨️','🔥'], 'sublimación': ['🖨️','♨️','🔥'],
-        'laminadora': ['📋','🗃️','⚙️'], '3d': ['🤖','⚙️','🔧'], 'rotador': ['🔄','⚙️'],
-        'atomstack': ['🔬','⚡','💡'], 'mini': ['⚙️','🔧'], 'cpu': ['💻','🖥️','🖱️'],
-        'computadora': ['💻','🖥️'], 'herramienta': ['🔧','🪛','🛠️','🧰'],
-        'corte': ['✂️','🪚'], 'calor': ['🔥','♨️'], 'maquina': ['⚙️','🏭','🤖'], 'máquina': ['⚙️','🏭','🤖'],
-    };
-
-    if (q) {
-        let found = [];
-        Object.entries(equipoKeywords).forEach(([key, emojis]) => {
-            if (key.includes(q) || q.includes(key)) found.push(...emojis);
-        });
-        if (found.length === 0) found = allEquipoEmojis;
-        const unique = [...new Set(found)];
-        grid.innerHTML = `<div class="flex flex-wrap gap-1">${unique.map(e => `
-            <button type="button" onclick="selectEquipoEmoji('${e}')"
-                    class="equipo-emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-amber-50 hover:scale-125 transition-all flex items-center justify-center">
-                ${e}
-            </button>`).join('')}</div>`;
-        return;
-    }
-
-    grid.innerHTML = equipoEmojiCats.map(cat => `
-        <div class="mb-2">
-            <p class="text-xs font-semibold text-gray-400 mb-1">${cat.label}</p>
-            <div class="flex flex-wrap gap-1">
-                ${cat.emojis.map(e => `
-                    <button type="button" onclick="selectEquipoEmoji('${e}')"
-                            class="equipo-emoji-btn w-9 h-9 text-xl rounded-lg hover:bg-amber-50 hover:scale-125 transition-all flex items-center justify-center">
-                        ${e}
-                    </button>`).join('')}
-            </div>
-        </div>`).join('');
+    _renderEmojiPickerGrid('equipoEmojiGrid', equipoEmojiCats, EQUIPO_EMOJI_KEYWORDS, filter, 'equipo-emoji-btn', 'selectEquipoEmoji');
 }
 
 function selectEquipoEmoji(emoji) {
-    document.getElementById('equipoEmoji').value = emoji;
-    const display = document.getElementById('equipoEmojiDisplay');
-    if (display) display.textContent = emoji;
-    document.querySelectorAll('.equipo-emoji-btn').forEach(btn => {
-        const isSelected = btn.textContent.trim() === emoji;
-        btn.style.background = isSelected ? '#FFF9F0' : '';
-        btn.style.border = isSelected ? '2px solid #FFD166' : '';
-    });
+    _selectEmojiGeneric(emoji, 'equipoEmoji', 'equipoEmojiDisplay', 'equipo-emoji-btn');
 }
 
 function filterEquipoEmojis(value) {
