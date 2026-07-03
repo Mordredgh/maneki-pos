@@ -16,7 +16,7 @@
 
 | Nombre | Hex | Uso |
 |---|---|---|
-| Bosque | `#1c4f32` | texto primario, hero oscuro (sidebar dark mode, dashboard hero, bienvenida hero) |
+| Bosque | `#1c4f32` | texto primario; fondo sólido de sidebar y topbar (`#global-search-bar`) — Sesión 31; hero del dashboard/bienvenida |
 | Lavanda | `#dfbfff` | acento claro, superficies lila |
 | Uva | `#9669c4` | acento morado principal (reemplaza CUALQUIER morado/violeta viejo) |
 | Lima | `#c3ec9f` | (uso puntual, poco usado en UI actual) |
@@ -63,11 +63,25 @@ No se usó GSAP para el drag-and-drop del kanban ni para modales — el CSS exis
 <button class="mk-toolbar-btn"><i class="fas fa-icon mk-tb-ico"></i> Acción secundaria</button>
 ```
 
-### Qué NO tocar (decisiones deliberadas de la Sesión 28)
+### Patrón de página (Sesión 31 — aplicar a cualquier sección nueva)
 
-- **Selector de "Tema de colores" en Configuración** (Dorado/Rosa/Violeta/Esmeralda/Azul/Coral): es una feature real donde el usuario elige un tema alterno para su tienda — el swatch violeta ahí es una opción legítima, no un residuo de marca. No "corregir" sus colores.
+```html
+<div class="mk-page-header">
+  <div>
+    <p class="mk-page-kicker">Categoría breve</p>
+    <h1 class="mk-page-title">Nombre de la sección</h1>
+    <p class="mk-page-sub">Descripción corta</p>
+  </div>
+</div>
+```
+- `.mk-kpi-solid` (combinar con `.mk-card`) para la métrica principal de una vista, cuando haya una candidata obvia — no forzarlo si todas las métricas pesan igual.
+- `.mk-view-tabs`/`.mk-view-tab` para selectores de vista, `.mk-filter-pill` para filtros por estado (color vía `--pill-c`/`--pill-bg`), `.mk-status-pill` para badges de estado, `.mk-mini-btn` (+`.success`/`.danger`) para botones de acción densos en filas de tabla/tarjetas.
+
+### Qué NO tocar (decisiones deliberadas)
+
 - **Diccionario de nombres de color en `inventory-1.ts`** (línea ~27: `morado`/`violeta`/`lila`/`lavanda` → hex): el propósito es que el nombre coincida con el color real, no representar la marca. No remapear a la paleta oficial.
-- **Template denso de la tarjeta kanban individual** (`kanbanCardHTML` en `pedidos-1-views.ts`): usa emojis como indicadores de estado compactos (🔴 hoy, 🟡 mañana, ⛔ vencido) — es información funcional glanceable, no decoración. El drag-and-drop es un área con múltiples bugs históricos (ver changelog Sesión 20/18) — no se tocó por relación riesgo/beneficio.
+- **Badges de urgencia dentro de `kanbanCardHTML`** (`pedidos-1-views.ts`): 🔴 hoy / 🟡 mañana / ⛔ vencido siguen siendo emoji — es información funcional glanceable, no decoración, y son distintos de los *botones* de acción de la tarjeta (esos sí se migraron a íconos FA en la Sesión 31). El drag-and-drop es un área con múltiples bugs históricos (ver changelog Sesión 20/18) — no se tocó la estructura por relación riesgo/beneficio.
+- **Selector de "Tema de colores" en Configuración — ELIMINADO en Sesión 29.** Si en algún commit viejo o rama vieja aparece, no restaurarlo: el usuario confirmó explícitamente que nunca se usaba.
 
 ---
 
@@ -780,6 +794,84 @@ Rebrand nombre/paleta inicial (2 sesiones previas a esta) → esta sesión: fix 
 limpieza texto "Maneki" en `src/*.ts` → Fase 1 (sistema+Sidebar+Topbar+Dashboard) → fix
 contraste `.mk-kpi-label` → fix cascada `css/styles.css` + cache-busting → Fase 2 (Pedidos) →
 fix 2 bugs (envioAnillos + resumenDia) → Fases 3-11 + barrido final de morado.
+
+## ✅ Sesión 29 (2 julio 2026) — Limpieza de infra + bienvenida-section + íconos de categorías
+
+> Continuación directa de la Sesión 28 en la misma fecha. Empieza con housekeeping (worktrees
+> huérfanos, consolidación CSS) y termina arreglando varios bugs visuales puntuales en
+> `bienvenida-section` (la pantalla default al abrir la app) y agregando íconos 3D propios a
+> Categorías. Commits `87b90fb`…`2889330`.
+
+| Cambio | Detalle |
+|---|---|
+| 5 worktrees huérfanos de subagentes | `.claude/worktrees/agent-*` estaban además commiteados por error como gitlinks (modo `160000`) — se destrackearon y se agregó `.claude/worktrees/` a `.gitignore` |
+| 4 hojas CSS → 1 | `css/styles.css` + `css/ui-redesign.css` + `css/responsive.css` → `css/app.css`, concatenación literal preservando el orden de cascada exacto (cero cambio visual). `maneki-premium.css` (tokens) y `tailwind.css` (generado) se dejaron aparte. Referencias actualizadas en `index.html`, `sw.js`, `scripts/hash-sw.js` |
+| Tarjetas KPI de `bienvenida-section` transparentes, mostrando el verde del hero por debajo | Regla vieja `.mk-card, .kpi-card, [class*="rounded-xl"][class*="shadow"] { background: rgba(255,255,255,0.72); backdrop-filter: blur(12px); }` en `maneki-premium.css` (comentario "glassmorphism", pre-rebrand) aplicaba sin scope a TODA tarjeta `.mk-card` de la app — eliminada por completo, `.mk-card` vuelve a ser opaca (ya estaba bien definida en otra regla) |
+| Grid de KPIs de `bienvenida-section` invadido por el hero verde | `margin-top:-32px` (pensado como overlap "premium") ponía la fila de ícono+label dentro de la zona verde — cambiado a `margin-top:16px`, las cards empiezan limpiamente debajo del hero |
+| Selector "Tema de colores" en Configuración (6 paletas: Dorado/Rosa/Violeta/Esmeralda/Azul/Coral) | Eliminado por completo a pedido del usuario — nunca se usaba. Quitado el markup, el objeto `themes`, `selectTheme`/`applyTheme`/`loadThemeUI` (inyectaban un `<style>` dinámico que pisaba colores de sidebar/botones/KPIs con `!important`), y las 3 referencias sueltas (`config.ts`, `envios.ts`) |
+| Categorías con emoji de sistema en vez de íconos 3D de marca | 12 íconos 3D generados por el usuario (`F:/PROYECTOS/BICHO CAPRICHO/ICONOS/CATEGORIAS`) convertidos a WebP (8MB→460KB, `sharp`) y copiados a `img/categorias/`. `renderCategoriesGrid()` (`categorias.ts`) mapea nombre de categoría normalizado → ícono; si no hay match cae al emoji de siempre. Alcance deliberadamente acotado a la tarjeta visual — `cat.emoji` se sigue usando igual en dropdowns/tickets/WhatsApp (20+ usos de solo texto donde una imagen no puede renderizar) |
+
+## ✅ Sesión 30 (2 julio 2026) — Bug: categoría nueva desaparece al recargar
+
+> Ver nota permanente en la sección "Base de Datos Supabase" arriba (clase de bug recurrente
+> store-vs-tabla-relacional). Resumen aquí para el historial. Commits `c33a41a`…`42ebf9d`.
+
+| Causa | Fix |
+|---|---|
+| Diálogo falso "¿Cerrar sin guardar?" al crear/editar categoría, siempre, aunque el guardado funcionara | El guard `closeModal()` (H52) marca el modal `_mkDirty` al escribir en un input y no se limpiaba antes de cerrar tras un guardado exitoso. Ahora se llama `_mkModalSaved()` antes de cerrar |
+| La categoría se guardaba pero desaparecía al recargar | `saveCategories()` escribía solo en `store.categories` (blob JSON) vía `sbSave()` genérico, pero `sbLoad()` prioriza la tabla relacional `categories` (ya tenía 12 filas) — el blob nunca se leía. Fix: `saveCategories()` reescrito para hacer `upsert` directo en `public.categories`; nueva `deleteCategoryFromDB()` para el patrón `upsert-sin-delete` |
+| Segunda vuelta: seguía sin guardar tras el fix anterior | El upsert no revisaba `{error}` de la respuesta — un fallo del servidor se tragaba en silencio y el caller creía que había guardado bien. Se agregó el chequeo y se relanza el error para mostrar un toast real |
+
+## ✅ Sesión 31 (2 julio 2026) — "Solo cambiaron los colores": rediseño estructural real + limpieza de deuda CSS
+
+> El usuario señaló que el rediseño de la Sesión 28 se sentía como un reskin superficial, no
+> una restructura real. Auditoría de código confirmó el diagnóstico: el sistema de tokens
+> premium solo se aplicaba de verdad en el 30-40% del HTML (el chrome pasivo: sidebar, topbar,
+> dashboard); las superficies de trabajo diario (tablas, kanban, botones de acción, headers de
+> sección) seguían con Tailwind genérico o emoji-como-ícono. Se validó una dirección visual
+> nueva con una **maqueta** (herramienta `visualize`, sin tocar código real) antes de aplicarla,
+> para no repetir el error de adivinar sin feedback intermedio. Commits `445e5fa`…`b073d3f`.
+
+### Componentes nuevos en `maneki-premium.css`
+| Clase | Para qué |
+|---|---|
+| `.mk-page-header` / `.mk-page-kicker` / `.mk-page-title` / `.mk-page-sub` | Header editorial (etiqueta pequeña + título grande Fredoka) — reemplaza el banner de gradiente `.mk-section-header` en las 11 secciones |
+| `.mk-kpi-solid` | Tarjeta KPI con color de marca sólido (verde bosque) para la métrica principal de una vista, en vez de blanco+texto de color — ancla la jerarquía visual |
+| `.mk-view-tabs` / `.mk-view-tab` | Grupo de pestañas de vista (ej. Kanban/Tabla/Calendario en Pedidos) |
+| `.mk-filter-pill` | Pills de filtro por estado, color vía variables CSS `--pill-c`/`--pill-bg` |
+| `.mk-status-pill` | Badge de estado con ícono — reemplaza emoji+texto en tablas/kanban |
+| `.mk-mini-btn` (+ `.success`/`.danger`) | Botón de acción denso para filas de tabla / tarjetas kanban |
+
+### Aplicado a toda la app
+- Las 11 secciones migradas de `.mk-section-header` (banner de gradiente) a `.mk-page-header`
+- ~30 tarjetas `bg-white rounded-2xl/xl border border-gray-100 (shadow-sm)` → `.mk-card` (Balance, Clientes, Análisis, Categorías, Reportes, Equipos, Pedidos, Inventario)
+- Pedidos: selector de vista y pills de filtro → `.mk-view-tab`/`.mk-filter-pill`; `statusLabel` de la tabla y botones de acción (tabla + kanban) → `.mk-status-pill`/`.mk-mini-btn` con íconos FA en vez de emoji (⚡✏️🗑⋯📷⧉🖨️📄🏷️)
+- Inventario: botones sueltos → `.mk-toolbar-btn`; emoji en botones de acción y badges de stock (🔴⚠️✅) de los 4 templates de fila → íconos FA
+- Balance: hero "Neto del mes" pasó de fondo pastel+texto de color a **sólido** (verde bosque si es positivo, rojo sólido si es negativo)
+- Emoji-como-ícono limpiado en Balance/Clientes/Reportes/Equipos (9 casos: exportar/eliminar/cerrar filtro/fusionar/ver-detalle/ver-pagos)
+- Modales de crear pedido/producto: botones ad-hoc → `.mk-btn-primary`/`.mk-toolbar-btn` + íconos. **No** se hizo reflow a 2 columnas (evaluado y descartado): el modal de pedido ya tiene agrupación visual real por color y toca decenas de IDs con lógica JS interdependiente — restructurar el DOM completo era mucho riesgo por ganancia marginal
+- Sidebar y topbar (`#global-search-bar`) de crema a **verde bosque sólido**, texto de la sidebar al crema que antes era el fondo (`#FBF8F3`), activo/hover en dorado de marca
+
+### 3 bugs de especificidad CSS encontrados en el camino (mismo patrón, 3 veces)
+`css/app.css` (consolidado en Sesión 29 desde 3 hojas viejas) tiene reglas residuales de al
+menos 3 limpiezas previas nunca depuradas del todo, que cargan después de `maneki-premium.css`
+y con igual especificidad ganan por orden de carga:
+1. `.mk-kpi-solid` (Pedidos) no se veía → `.mk-card { background: var(--surface-primary) !important; }` en `app.css` ganaba. Fix: subir especificidad a `.mk-card.mk-kpi-solid`.
+2. Sidebar/topbar seguían crema tras cambiarlos a verde → **dos causas**: (a) duplicados de `.sidebar`/`.sidebar-item` en `app.css` con igual especificidad — fix con prefijo `html` en los selectores de `maneki-premium.css`; (b) causa real: un `<style id="maneki-sidebar-override">` completo pegado en el `<head>` de `index.html`, sobrante de una sesión vieja, con selector `#sidebar.sidebar` (ID+clase) que le gana a CUALQUIER regla basada en clases sin importar cuántos prefijos se usen — eliminado por completo (se confirmó que `app.css` ya tenía el equivalente de modo oscuro antes de borrar).
+3. **Auditoría completa de `css/app.css`**: script que detecta selectores duplicados fuera de `@media` encontró 40 grupos. Para cada uno se calculó — propiedad por propiedad, no bloque por bloque — cuál valor gana hoy según cascada real (importancia > especificidad > orden), y se consolidó en una sola regla con ese resultado (cero cambio visual, solo se borró código ya muerto). 897→861 bloques de selector, 4299→4194 líneas. Quedan ~19 "duplicados" marcados por la auditoría que en realidad son variantes legítimas de `@media` (responsive) — no se tocan.
+
+### Bug adicional: botones casi invisibles por variable CSS sin fallback
+6 botones en modales JS-renderizados (`init.ts`, `inventory-1.ts`, `inventory-2-pt.ts`,
+`inventory-2-pack.ts`) usaban `background: linear-gradient(135deg, var(--mk-gold-500), var(--mk-gold-400))`
+sin valor de respaldo. CSS no hace fallback parcial: si la variable no resuelve, TODA la
+declaración de `background` se invalida y el botón queda sin fondo visible. Todos migrados a
+`.mk-btn-primary` (ya no dependen de reconstruir el gradiente a mano). Confirmado con grep que
+no queda ningún otro botón con ese patrón en la app.
+
+### Pendiente / no hecho esta sesión
+- Reflow a 2 columnas de los modales de pedido/producto (evaluado y descartado, ver arriba)
+- Los ~19 duplicados restantes en `app.css` marcados como variantes de `@media` — no requieren acción
+- KPI sólida y header editorial NO se profundizaron más allá de Pedidos/Balance — Análisis/Reportes/Equipos quedaron solo con el header nuevo, sin una métrica "ancla" sólida (no había un candidato obvio de una sola métrica dominante en esas vistas)
 
 ## ✅ Sesión 26 (13 junio 2026) — Auditoría profunda + mejoras UI/UX (v2.6.2)
 
