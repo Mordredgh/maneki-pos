@@ -477,6 +477,8 @@ table thead th {
   padding: 14px 18px !important;
   white-space: nowrap;
   border-bottom: 1.5px solid rgba(255,209,102,0.12) !important;
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6) !important;
+  position: sticky; top: 0; z-index: 2;
 }
 table tbody tr {
   transition: background 0.12s ease, transform 0.1s ease !important;
@@ -764,14 +766,14 @@ span.badge-vip {
   gap: 16px;
 }
 .mk-empty-icon {
-  width: 80px; height: 80px;
-  border-radius: 24px;
+  width: 80px !important; height: 80px !important;
+  font-size: 2.2rem !important;
+  background: linear-gradient(135deg, rgba(255,209,102,0.08), rgba(150,105,196,0.06)) !important;
+  border: 2px dashed rgba(255,209,102,0.15) !important;
+  border-radius: 24px !important;
   display: flex; align-items: center; justify-content: center;
-  font-size: 2.2rem;
-  background: linear-gradient(135deg, var(--mk-g50), var(--mk-g100));
-  border: 1.5px solid var(--bd-soft);
+  margin: 0 auto 16px !important;
   box-shadow: var(--sh-sm);
-  margin-bottom: 4px;
   animation: mkEmptyFloat 3s ease-in-out infinite;
 }
 @keyframes mkEmptyFloat {
@@ -779,17 +781,16 @@ span.badge-vip {
   50%       { transform: translateY(-6px); }
 }
 .mk-empty-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--tx-primary);
+  font-size: 1rem !important; font-weight: 700 !important;
+  color: var(--tx-primary) !important;
   margin: 0;
+  margin-bottom: 4px !important;
 }
 .mk-empty-sub {
-  font-size: 0.8rem;
-  color: var(--tx-muted);
-  max-width: 260px;
+  font-size: 0.82rem !important; color: var(--tx-muted) !important;
+  max-width: 320px;
   line-height: 1.5;
-  margin: 0;
+  margin: 0 auto;
 }
 .mk-empty-action {
   margin-top: 8px;
@@ -915,10 +916,6 @@ main > section:not(.hidden) {
 table { border-collapse: separate !important; border-spacing: 0 !important; }
 table thead tr th:first-child { border-radius: 12px 0 0 0; }
 table thead tr th:last-child  { border-radius: 0 12px 0 0; }
-table thead th {
-  background: linear-gradient(135deg, #f9fafb, #f3f4f6) !important;
-  position: sticky; top: 0; z-index: 2;
-}
 tbody tr:nth-child(even) { background: rgba(255,209,102,0.025) !important; }
 tbody tr { transition: background 0.12s ease, transform 0.12s ease !important; }
 tbody tr:hover {
@@ -990,30 +987,6 @@ td button:active, td a[onclick]:active {
   text-align: center;
   padding: 48px 24px !important;
 }
-.mk-empty-icon {
-  width: 80px !important; height: 80px !important;
-  font-size: 2.2rem !important;
-  background: linear-gradient(135deg, rgba(255,209,102,0.08), rgba(150,105,196,0.06)) !important;
-  border: 2px dashed rgba(255,209,102,0.15) !important;
-  border-radius: 24px !important;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 16px !important;
-  animation: mkEmptyFloat 3s ease-in-out infinite;
-}
-@keyframes mkEmptyFloat {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-.mk-empty-title {
-  font-size: 1rem !important; font-weight: 700 !important;
-  color: var(--tx-primary) !important;
-  margin-bottom: 4px !important;
-}
-.mk-empty-sub {
-  font-size: 0.82rem !important; color: var(--tx-muted) !important;
-  max-width: 320px; margin: 0 auto;
-}
-
 /* ── #10 PROGRESS BAR — brillo animado ── */
 [id="dashGoalBar"], .progress-bar-fill {
   position: relative;
@@ -1131,7 +1104,8 @@ body.dark #dashboard-section .rounded-2xl, body.dark #dashboard-section .rounded
 }
 body.dark table thead th {
   background: linear-gradient(135deg, #1e1e2e, #252540) !important;
-  color: #d1d5db !important;
+  color: #64748B !important;
+  border-color: rgba(255,255,255,0.06) !important;
 }
 body.dark .mk-empty-icon {
   background: linear-gradient(135deg, rgba(255,209,102,0.12), rgba(150,105,196,0.10)) !important;
@@ -1177,14 +1151,10 @@ body.dark .bg-white,
 body.dark .bg-gray-50 {
   background: #1C1E2E !important;
 }
-body.dark .bg-gray-100 {
-  background: #252838 !important;
-}
 body.dark .text-gray-800, body.dark .text-gray-900 { color: #F1F5F9 !important; }
 body.dark .text-gray-700 { color: #CBD5E1 !important; }
 body.dark .text-gray-600 { color: #94A3B8 !important; }
 body.dark .text-gray-500 { color: #64748B !important; }
-body.dark .text-gray-400 { color: #475569 !important; }
 body.dark .border-gray-100 { border-color: #252838 !important; }
 body.dark .border-gray-200 { border-color: #303450 !important; }
 body.dark .divide-gray-200 > * { border-color: #303450 !important; }
@@ -1241,7 +1211,6 @@ body.dark .modal > div:first-child .bg-white {
 body.dark table thead {
   background: linear-gradient(135deg, #1C1E2E, #252838) !important;
 }
-body.dark table thead th { color: #64748B !important; border-color: rgba(255,255,255,0.06) !important; }
 body.dark table tbody tr:hover {
   background: rgba(150,105,196,0.08) !important;
 }
