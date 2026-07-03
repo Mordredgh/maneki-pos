@@ -31,12 +31,18 @@ try {
 Write-Host "Esperando 60s para que termine el build..."
 Start-Sleep -Seconds 60
 
-# 4. Verificar que el sitio responde
+# 4. Verificar que el sitio responde (PowerShell 5.1 no tiene -SkipHttpErrorCheck,
+#    por eso el try/catch: un 401 de Basic Auth cuenta como "responde bien")
 try {
-    $r = Invoke-WebRequest -Uri "https://pos.manekistore.com.mx/" -Method Head -SkipHttpErrorCheck -TimeoutSec 15
-    Write-Host "pos.manekistore.com.mx respondio HTTP $($r.StatusCode) (401 es normal, esta detras de Basic Auth)"
+    $r = Invoke-WebRequest -Uri "https://pos.manekistore.com.mx/" -Method Head -TimeoutSec 15
+    Write-Host "pos.manekistore.com.mx respondio HTTP $($r.StatusCode)"
 } catch {
-    Write-Warning "No se pudo verificar el sitio: $_"
+    if ($_.Exception.Response) {
+        $code = [int]$_.Exception.Response.StatusCode
+        Write-Host "pos.manekistore.com.mx respondio HTTP $code (401 es normal, esta detras de Basic Auth)"
+    } else {
+        Write-Warning "No se pudo verificar el sitio: $_"
+    }
 }
 
 Write-Host "Deploy completo."
