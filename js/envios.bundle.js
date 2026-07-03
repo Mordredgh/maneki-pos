@@ -17,7 +17,7 @@
                 <p style="font-size:0.72rem;color:#9CA3AF;margin:0">hasta ${o.km} km</p>
             </div>
             <span style="font-size:0.95rem;font-weight:800;color:#FFD166">$${o.precio}</span>
-        </div>`).join("")}var _mapaConfig=null,_mapaConfigLayerGroup=null,_mapaClickMarker=null;function abrirConfigAnillos(){document.getElementById("configAnillosModal").style.display="flex",renderAnillosLista(),setTimeout(initMapaConfigLeaflet,250)}function cerrarConfigAnillos(){document.getElementById("configAnillosModal").style.display="none"}function renderAnillosLista(){const t=document.getElementById("anillosLista");if(!t)return;const e=[...envioAnillos].sort((o,n)=>o.km-n.km);t.innerHTML=e.map((o,n)=>`
+        </div>`).join("")}var _mapaConfig=null,_mapaConfigLayerGroup=null,_mapaClickMarker=null;function abrirConfigAnillos(){document.getElementById("configAnillosModal").classList.add("active"),renderAnillosLista(),setTimeout(initMapaConfigLeaflet,250)}function cerrarConfigAnillos(){document.getElementById("configAnillosModal").classList.remove("active")}function renderAnillosLista(){const t=document.getElementById("anillosLista");if(!t)return;const e=[...envioAnillos].sort((o,n)=>o.km-n.km);t.innerHTML=e.map((o,n)=>`
         <div style="display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:#F9FAFB;border:1px solid #F3F4F6;">
             <div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:6px;background:${ANILLOS_COLORS[n%ANILLOS_COLORS.length]};"></div>
             <div style="display:flex;flex-direction:column;gap:5px;flex:1;">

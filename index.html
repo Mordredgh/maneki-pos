@@ -1282,11 +1282,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
         </section>
 
-<div id="resumenDiaModal" class="modal">
+<div id="resumenDiaModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 animate-fade-in">
         <div class="flex justify-between items-center mb-5">
             <h2 class="text-xl font-bold text-gray-800">📊 Resumen del Día</h2>
-            <button type="button" data-action="closeModal" data-arg="resumenDiaModal" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            <button type="button" data-action="closeModal" data-arg="resumenDiaModal" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Cerrar">✕</button>
         </div>
         <div id="resumenDiaContent"></div>
     </div>
@@ -1979,7 +1979,7 @@ input:focus, select:focus, textarea:focus, button:focus {
          transition: all 0.3s ease;">
     </div>
 
-    <div id="atajosModal" class="modal">
+    <div id="atajosModal" class="modal" role="dialog" aria-modal="true">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-fade-in overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between" style="background:linear-gradient(135deg,#f3e8ff,#fff)">
           <div class="flex items-center gap-3">
@@ -2029,7 +2029,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
     </div>
 
-    <div id="resumenMensualModal" class="modal">
+    <div id="resumenMensualModal" class="modal" role="dialog" aria-modal="true">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-fade-in overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
           <h3 class="text-lg font-bold text-gray-800">📅 Resumen Mensual</h3>
@@ -2047,7 +2047,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 
 
-    <div id="addProductModal" class="modal">
+    <div id="addProductModal" class="modal" role="dialog" aria-modal="true">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 animate-fade-in" style="margin-left:auto;margin-right:auto;">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Nuevo Producto</h3>
@@ -2084,7 +2084,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">🏷️ Tags / Etiquetas</label>
+          <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-tag"></i> Tags / Etiquetas</label>
           <div class="flex flex-wrap gap-2 mb-2" id="tagsPredefinidos">
             <button type="button" data-action="toggleTagPredefinido" data-arg="Oferta" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-yellow-100">Oferta</button>
             <button type="button" data-action="toggleTagPredefinido" data-arg="Nuevo" class="tag-btn px-2 py-1 rounded-full text-xs border border-gray-300 text-gray-600 hover:bg-blue-100">Nuevo</button>
@@ -2135,7 +2135,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
                     </div>
                     <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">💡 Margen de ganancia sugerido</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-percentage"></i> Margen de ganancia sugerido</label>
                     <div class="flex gap-2 flex-wrap">
                         <button type="button" data-action="aplicarMargen" data-arg="30" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">30%</button>
                         <button type="button" data-action="aplicarMargen" data-arg="50" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-100">50%</button>
@@ -2163,7 +2163,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">⚠️ Stock Mínimo</label>
+          <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-triangle-exclamation"></i> Stock Mínimo</label>
           <input type="number" id="productStockMin" min="0" value="5"
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
           <p class="text-xs text-gray-400 mt-1">Te avisaremos cuando el stock baje de este número</p>
@@ -2175,14 +2175,14 @@ input:focus, select:focus, textarea:focus, button:focus {
           <p class="text-xs text-gray-400 mt-1">Opcional — de dónde obtienes este producto</p>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2" title="Solo visible para el equipo — no aparece en recibos ni mensajes al cliente">📝 Notas internas</label>
+          <label class="block text-sm font-semibold text-gray-700 mb-2" title="Solo visible para el equipo — no aparece en recibos ni mensajes al cliente"><i class="fas fa-edit"></i> Notas internas</label>
           <textarea id="productNotas" rows="2" placeholder="Ej: proveedor, instrucciones especiales, recordatorios..."
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none text-sm resize-none"></textarea>
         </div>
         <div>
           <div class="flex items-center gap-2 mb-2">
             <input type="checkbox" id="productIsKit" data-change="toggleKitSection">
-            <label for="productIsKit" class="text-sm font-semibold text-gray-700">📦 Este producto es un Kit</label>
+            <label for="productIsKit" class="text-sm font-semibold text-gray-700"><i class="fas fa-box"></i> Este producto es un Kit</label>
           </div>
           <div id="kitSection" class="hidden space-y-2 bg-gray-50 rounded-xl p-3">
             <p class="text-xs text-gray-500">Agrega los productos que componen este kit:</p>
@@ -2206,7 +2206,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
     </div>
 
-   <div id="addClientModal" class="modal">
+   <div id="addClientModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800" id="clientModalTitle">Nuevo Cliente</h3>
@@ -2271,7 +2271,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
 
              <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2" title="Solo visible para el equipo — no aparece en recibos ni mensajes al cliente">📝 Notas internas</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2" title="Solo visible para el equipo — no aparece en recibos ni mensajes al cliente"><i class="fas fa-edit"></i> Notas internas</label>
                     <textarea id="clientNotas" rows="2" placeholder="Ej: cliente frecuente, preferencias, alergias..."
                         class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none text-sm resize-none"></textarea>
                 </div>
@@ -2284,7 +2284,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="editCategoryModal" class="modal">
+<div id="editCategoryModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800">✏️ Editar Categoría</h3>
@@ -2337,7 +2337,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-    <div id="addCategoryModal" class="modal">
+    <div id="addCategoryModal" class="modal" role="dialog" aria-modal="true">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Nueva Categoría</h3>
@@ -2398,7 +2398,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
     </div>
 
-<div id="clientHistoryModal" class="modal">
+<div id="clientHistoryModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 animate-fade-in">
 
         <div class="p-6 border-b border-gray-100 flex justify-between items-start" style="background: linear-gradient(135deg, #FFF9F0 0%, #F5EFE6 100%);">
@@ -2443,7 +2443,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <p class="text-xs text-red-400" id="historySaldoDetalle"></p>
             </div>
             <div class="flex-1 bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-500 font-semibold mb-1">📝 Notas del cliente</p>
+                <p class="text-xs text-gray-500 font-semibold mb-1"><i class="fas fa-edit"></i> Notas del cliente</p>
                 <p class="text-sm text-gray-700" id="historyClientNotas">Sin notas</p>
             </div>
         </div>
@@ -2483,7 +2483,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="cancelPedidoModal" class="modal">
+<div id="cancelPedidoModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -2528,7 +2528,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-    <div id="transactionModal" class="modal">
+    <div id="transactionModal" class="modal" role="dialog" aria-modal="true">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800" id="transactionModalTitle">Nueva Transacción</h3>
@@ -2589,7 +2589,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
     </div>
 
-<div id="abonoPedidoModal" class="modal">
+<div id="abonoPedidoModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-gray-800">💰 Registrar Pago</h3>
@@ -2619,7 +2619,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="pedidoModal" class="modal">
+<div id="pedidoModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 animate-fade-in flex flex-col" style="margin:auto;">
         <div class="flex justify-between items-center px-8 pt-8 pb-4 flex-shrink-0">
             <h3 class="text-2xl font-bold text-gray-800" id="pedidoModalTitle">Nuevo Pedido</h3>
@@ -2650,6 +2650,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <form id="pedidoForm" class="space-y-4 pb-2">
             <input type="hidden" id="editPedidoId">
+            <details open class="mk-pedido-section">
+            <summary><i class="fas fa-user"></i> Cliente</summary>
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="block text-sm font-semibold text-gray-700 mb-2">Cliente *</label><input type="text" id="pedidoCliente" autofocus required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
                 <div><label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono / WhatsApp</label><input type="text" id="pedidoTelefono" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
@@ -2659,7 +2661,10 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div><label class="block text-sm font-semibold text-gray-700 mb-2">Fecha del Pedido *</label><input type="date" id="pedidoFecha" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
                 <div><label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Entrega *</label><input type="date" id="pedidoEntrega" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
             </div>
+            </details>
 
+            <details open class="mk-pedido-section">
+            <summary><i class="fas fa-gift"></i> Productos</summary>
 <div>
   <label class="block text-sm font-semibold text-gray-700 mb-2">Producto del Inventario *</label>
 
@@ -2729,6 +2734,10 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div id="pedidoEmpaquesList" class="space-y-1"></div>
   </div>
 </div>
+            </details>
+
+            <details open class="mk-pedido-section">
+            <summary><i class="fas fa-clipboard-list"></i> Detalles y pago</summary>
             <div><label class="block text-sm font-semibold text-gray-700 mb-2" title="Descripción del producto o servicio personalizado">¿Qué pidieron?</label><input type="text" id="pedidoConcepto" list="conceptoSuggestions" placeholder="Ej: Taza personalizada con logo de empresa" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"><datalist id="conceptoSuggestions"></datalist></div>
             <input type="hidden" id="pedidoCantidad" value="1">
             <input type="hidden" id="pedidoCosto" value="0">
@@ -2772,6 +2781,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
                 <input type="hidden" id="pedidoPrioridad" value="normal">
             </div>
+            </details>
         </form>
         </div>
 
@@ -2784,7 +2794,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 </div>
 
 <!-- Modal: Foto de referencia -->
-<div id="fotoReferenciaModal" class="modal">
+<div id="fotoReferenciaModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 animate-fade-in">
         <div class="flex justify-between items-center mb-1">
             <h3 class="text-lg font-bold text-gray-800">&#128247; Fotos de referencia</h3>
@@ -2797,7 +2807,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 </div>
 
 <!-- Modal: Lista de compras -->
-<div id="listaComprasModal" class="modal">
+<div id="listaComprasModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in" style="max-height:85vh;overflow-y:auto;">
         <div class="flex justify-between items-center mb-2">
             <h3 class="text-xl font-bold text-gray-800">🛒 Lista de compras</h3>
@@ -2808,7 +2818,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="pedidoStatusModal" class="modal">
+<div id="pedidoStatusModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800">Cambiar Estado del Pedido</h3>
@@ -2829,7 +2839,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="detalleSaleModal" class="modal">
+<div id="detalleSaleModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 animate-fade-in">
 
         <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
@@ -2842,7 +2852,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <p class="text-sm text-gray-400" id="detalleSaleTipo"></p>
                 </div>
             </div>
-            <button type="button" data-action="cerrarDetalleSale" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">×</button>
+            <button type="button" data-action="cerrarDetalleSale" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none" aria-label="Cerrar">×</button>
         </div>
 
         <div class="p-6 space-y-5">
@@ -2920,7 +2930,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="whatsappPedidoModal" class="modal" style="z-index:9999;">
+<div id="whatsappPedidoModal" class="modal" role="dialog" aria-modal="true" style="z-index:9999;">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 animate-fade-in overflow-hidden">
 
         <div class="flex justify-between items-center px-6 py-4" style="background:linear-gradient(135deg,#25D366,#128C7E);">
@@ -3012,8 +3022,8 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="backupModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;" data-backdrop="cerrarBackupModal">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 animate-fade-in overflow-hidden">
+<div id="backupModal" class="modal" role="dialog" aria-modal="true" data-backdrop="cerrarBackupModal">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
 
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between" style="background:linear-gradient(135deg,#FFF9F0,#FFF);">
             <div class="flex items-center gap-3">
@@ -3103,7 +3113,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-    <div id="ajustarStockModal" class="modal">
+    <div id="ajustarStockModal" class="modal" role="dialog" aria-modal="true">
       <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6 animate-fade-in">
         <div class="flex items-start justify-between mb-4">
           <div>
@@ -3111,7 +3121,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <p class="text-sm text-gray-500 mt-1">Producto: <span id="ajustarStockNombre" class="font-semibold text-gray-700"></span></p>
             <p class="text-sm text-gray-500">Stock actual: <span id="ajustarStockActual" class="font-semibold text-gray-700"></span></p>
           </div>
-          <button type="button" data-action="closeAjustarStockModal" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button type="button" data-action="closeAjustarStockModal" class="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Cerrar">&times;</button>
         </div>
         <div class="space-y-3">
           <div>
@@ -3125,7 +3135,7 @@ input:focus, select:focus, textarea:focus, button:focus {
               class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl outline-none focus:border-amber-400 text-sm">
           </div>
           <div style="margin-top:12px;">
-            <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;">🔔 Punto de reorden (alerta cuando baje de este stock)</label>
+            <label style="font-size:.82rem;font-weight:700;color:#374151;display:block;margin-bottom:4px;"><i class="fas fa-bell"></i> Punto de reorden (alerta cuando baje de este stock)</label>
             <input type="number" id="ajusteStockPuntoReorden" min="0" step="1"
               style="width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.85rem;outline:none;"
               placeholder="Ej: 5">
@@ -3145,7 +3155,7 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
     </div>
 
-<div id="equipoModal" class="modal">
+<div id="equipoModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-bold text-gray-800" id="equipoModalTitle">Agregar Equipo</h3>
@@ -3191,10 +3201,10 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="roiEquiposModal" class="modal">
+<div id="roiEquiposModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-2">
-            <h3 class="text-2xl font-bold text-gray-800">🔧 ¿Qué equipos usaste?</h3>
+            <h3 class="text-2xl font-bold text-gray-800"><i class="fas fa-wrench"></i> ¿Qué equipos usaste?</h3>
             <button type="button" data-action="cerrarRoiEquiposModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <p class="text-sm text-gray-500 mb-1">Pedido: <span id="roiPedidoFolio" class="font-bold text-amber-600"></span></p>
@@ -3228,7 +3238,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 </div>
 
 <!-- NTH-17: Modal ROI manual sin pedido -->
-<div id="roiManualModal" class="modal">
+<div id="roiManualModal" class="modal" role="dialog" aria-modal="true">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-fade-in">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold text-gray-800">⚖️ Registrar ROI manual</h3>
@@ -3260,11 +3270,11 @@ input:focus, select:focus, textarea:focus, button:focus {
 </div>
 
 <!-- N3: Modal escáner QR/Barcode -->
-<div id="qrScannerModal" class="modal" data-backdrop="_cerrarQRScanner">
+<div id="qrScannerModal" class="modal" role="dialog" aria-modal="true" data-backdrop="_cerrarQRScanner">
     <div class="bg-white rounded-2xl shadow-2xl w-full mx-4 animate-fade-in" style="max-width:400px">
         <div class="flex justify-between items-center p-5 border-b border-gray-100">
             <h3 class="font-bold text-gray-800 text-base">📷 Escanear código</h3>
-            <button type="button" data-action="_cerrarQRScanner" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+            <button type="button" data-action="_cerrarQRScanner" class="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Cerrar">✕</button>
         </div>
         <div class="p-5">
             <video id="qrVideo" autoplay muted playsinline class="w-full rounded-xl bg-black" style="height:220px;object-fit:cover;display:block"></video>
@@ -3282,7 +3292,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 </div>
 
-<div id="confirmModal" class="modal">
+<div id="confirmModal" class="modal" role="dialog" aria-modal="true">
       <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6 animate-fade-in">
         <div class="flex items-start gap-4 mb-5">
           <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
@@ -3306,15 +3316,15 @@ input:focus, select:focus, textarea:focus, button:focus {
       </div>
     </div>
 
-<div id="configAnillosModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;" data-backdrop="cerrarConfigAnillos">
+<div id="configAnillosModal" class="modal" role="dialog" aria-modal="true" data-backdrop="cerrarConfigAnillos">
     <div style="background:white;border-radius:24px;max-width:960px;width:calc(100vw - 32px);max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.25);display:flex;flex-direction:column;">
 
         <div style="padding:24px 28px 16px;border-bottom:1px solid #F3F4F6;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
             <div>
-                <h3 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin:0">🗺️ Configurar Anillos de Envío</h3>
+                <h3 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin:0"><i class="fas fa-route"></i> Configurar Anillos de Envío</h3>
                 <p style="font-size:0.78rem;color:#9CA3AF;margin:4px 0 0">Arrastra los anillos en el mapa o ajusta los km y tarifas</p>
             </div>
-            <button type="button" data-action="cerrarConfigAnillos" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#9CA3AF;padding:4px">✕</button>
+            <button type="button" data-action="cerrarConfigAnillos" aria-label="Cerrar" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#9CA3AF;padding:4px"><i class="fas fa-times"></i></button>
         </div>
 
         <div id="anillosGridLayout" style="display:grid;grid-template-columns:1fr 320px;flex:1;min-height:0;">

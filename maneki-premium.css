@@ -3050,6 +3050,39 @@ body.dark input, body.dark textarea, body.dark select {
     color: #F5ECD6 !important;
 }
 
+/* ── SECCIONES PLEGABLES DE MODAL (p.ej. modal de Pedido) ── */
+.mk-pedido-section {
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--r-lg, 14px);
+  margin-bottom: 12px;
+  padding: 4px 14px 14px;
+}
+.mk-pedido-section summary {
+  list-style: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #1c4f32;
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.mk-pedido-section summary::-webkit-details-marker { display: none; }
+.mk-pedido-section summary::after {
+  content: '';
+  width: 8px; height: 8px;
+  border-right: 2px solid #9ca3af;
+  border-bottom: 2px solid #9ca3af;
+  transform: rotate(-45deg);
+  margin-left: auto;
+  transition: transform 0.18s ease;
+}
+.mk-pedido-section[open] summary::after { transform: rotate(45deg); }
+body.dark .mk-pedido-section { border-color: rgba(255,209,102,0.12); }
+body.dark .mk-pedido-section summary { color: #FFD166; }
+
 /* ── MODALES ── */
 body.dark .modal > div {
     background: #2A1E0F !important;

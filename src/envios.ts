@@ -318,13 +318,13 @@ var _mapaConfigLayerGroup = null;
 var _mapaClickMarker = null;
 
 function abrirConfigAnillos() {
-    document.getElementById('configAnillosModal').style.display = 'flex';
+    document.getElementById('configAnillosModal').classList.add('active');
     renderAnillosLista();
     setTimeout(initMapaConfigLeaflet, 250);
 }
 
 function cerrarConfigAnillos() {
-    document.getElementById('configAnillosModal').style.display = 'none';
+    document.getElementById('configAnillosModal').classList.remove('active');
 }
 
 function renderAnillosLista() {

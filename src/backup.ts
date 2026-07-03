@@ -17,11 +17,11 @@ function abrirModalBackup() {
     btn.style.cursor = 'not-allowed';
     backupDataPendiente = null;
 
-    document.getElementById('backupModal').style.display = 'flex';
+    document.getElementById('backupModal').classList.add('active');
 }
 
 function cerrarBackupModal() {
-    document.getElementById('backupModal').style.display = 'none';
+    document.getElementById('backupModal').classList.remove('active');
 }
 
 function _buildBackupObject() {
