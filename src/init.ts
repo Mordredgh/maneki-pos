@@ -582,11 +582,10 @@
         if (lastSeen === MK_VERSION) return;
 
         const changes = [
-            { icon: '📲', text: 'Desde "Me deben" en el inicio ahora puedes mandar el recordatorio de saldo por WhatsApp a cada cliente, o copiar todo el desglose de un toque' },
-            { icon: '⛔', text: 'Los pedidos vencidos se marcan con borde rojo en el tablero — ahora también en la vista compacta' },
-            { icon: '💵', text: 'Los montos se muestran con formato consistente en toda la app (clientes, saldos, totales)' },
-            { icon: '🗑️', text: 'Eliminar una venta del historial ahora la borra también de la nube — ya no reaparece al recargar' },
-            { icon: '🛡️', text: 'La sección Clientes es más robusta ante datos locales dañados' }
+            { icon: '🔧', text: 'Se corrigieron íconos que no se veían en varios botones (Editar y Archivar en Inventario, menú "Más acciones" de Pedidos, entre otros)' },
+            { icon: '🖼️', text: 'Las fotos de producto en Inventario ahora tienen un borde sutil para que se vean bien aunque el fondo de la foto sea blanco' },
+            { icon: '🎨', text: 'Rediseño de colores y tarjetas en Pedidos, Inventario y el resto de las secciones con la identidad visual de Bicho Capricho' },
+            { icon: '⚙️', text: 'Se reforzó el proceso de actualización de la app para que los cambios lleguen siempre completos a producción' },
         ];
 
         setTimeout(() => {
