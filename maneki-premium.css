@@ -165,9 +165,9 @@ body:not(.dark) {
 /* ─────────────────────────────────────────────────────────────────────
    SIDEBAR — verde bosque sólido (identidad Bicho Capricho)
    ───────────────────────────────────────────────────────────────────── */
-#sidebar,
-aside.sidebar,
-.sidebar {
+html #sidebar,
+html aside.sidebar,
+html .sidebar {
   background: linear-gradient(180deg, #1c4f32 0%, #163e28 100%) !important;
   border-right: 1px solid rgba(0,0,0,0.15) !important;
   box-shadow: 4px 0 24px rgba(0,0,0,0.15) !important;
@@ -175,9 +175,11 @@ aside.sidebar,
   overflow: hidden;
 }
 
-/* Sidebar nav items — texto crema (antes era el fondo de la barra) sobre el verde sólido */
-.sidebar-item,
-#sidebar button {
+/* Sidebar nav items — texto crema (antes era el fondo de la barra) sobre el verde sólido.
+   Prefijo html# / html. para vencer duplicados viejos de la era Maneki en css/app.css
+   que cargan despues y empatan en especificidad (mismo bug que .mk-card/.mk-kpi-solid). */
+html .sidebar-item,
+html #sidebar button {
   border-radius: 14px !important;
   margin: 2px 0 !important;
   font-weight: 500 !important;
@@ -189,24 +191,28 @@ aside.sidebar,
   z-index: 1;
   overflow: hidden;
 }
-.sidebar-item:hover,
-#sidebar button:hover {
+html .sidebar-item:hover,
+html #sidebar button:hover {
   background: rgba(255,255,255,0.08) !important;
   color: #FFDD85 !important;
   transform: translateX(3px) !important;
 }
-.sidebar-item.active,
-#sidebar button.active {
+html .sidebar-item.active,
+html #sidebar button.active {
   /* Fondo lo aporta #sidebarIndicator (GSAP, ver design-system.ts) — aquí solo color/peso */
   color: #FFD166 !important;
   font-weight: 700 !important;
   transform: translateX(0) !important;
 }
+html .sidebar .sidebar-store-name { color: #FBF8F3 !important; }
+html .sidebar .sidebar-store-slogan { color: #FFD166 !important; }
+html .sidebar #supabaseStatusText { color: rgba(251,248,243,0.65) !important; }
+html .sidebar .text-gray-800 { color: #FBF8F3 !important; }
 
 /* ─────────────────────────────────────────────────────────────────────
    BARRA SUPERIOR (search bar) — verde bosque sólido
    ───────────────────────────────────────────────────────────────────── */
-#global-search-bar {
+html #global-search-bar {
   background: linear-gradient(90deg, #1c4f32 0%, #204f34 100%) !important;
   border-bottom: 1px solid rgba(0,0,0,0.12) !important;
   box-shadow: 0 4px 20px rgba(0,0,0,0.10) !important;
