@@ -89,6 +89,49 @@ const CONFIG_RULES = [
   },
 ];
 
+// ── Chequeo aparte: iconos fas fa-X sin definición SVG ──────────────────────
+// La app NO carga Font Awesome real (ver CLAUDE.md: "Icons: js/icons.js, SVG
+// propio, sin Font Awesome"). Cada <i class="fas fa-X"> se resuelve en runtime
+// buscando "fa-X" en el diccionario D de src/icons.ts; si la clase no está ahí
+// el <i> se queda vacío — un botón sin ícono, invisible hasta que alguien lo
+// reporta a simple vista (bug S31/S32: 19 iconos así en producción).
+function checkIconDictionary() {
+  const iconsSrc = fs.readFileSync(path.join(SRC, 'icons.ts'), 'utf8');
+  const dictMatch = iconsSrc.match(/var D=\{([\s\S]*?)\};/);
+  if (!dictMatch) {
+    console.error('  ✖ Icon lint: no se pudo leer el diccionario D en src/icons.ts (¿cambió el formato?)');
+    return false;
+  }
+  const defined = new Set([...dictMatch[1].matchAll(/"(fa-[a-z0-9-]+)":/g)].map(m => m[1]));
+
+  const scanFiles = [...listTs(SRC), path.join(ROOT, 'index.html')];
+  const used = new Map(); // clase -> [{file, line}]
+  for (const file of scanFiles) {
+    const rel = path.relative(ROOT, file).replace(/\\/g, '/');
+    fs.readFileSync(file, 'utf8').split('\n').forEach((line, i) => {
+      for (const m of line.matchAll(/\bfa-[a-z0-9-]+/g)) {
+        if (!used.has(m[0])) used.set(m[0], []);
+        used.get(m[0]).push({ file: rel, line: i + 1 });
+      }
+    });
+  }
+
+  const missing = [...used.keys()].filter(k => !defined.has(k));
+  if (missing.length === 0) {
+    console.log('  Icon lint: OK (0 iconos sin definir)');
+    return true;
+  }
+
+  console.error(`\n  ✖ Icon lint: ${missing.length} clase(s) fa-X usadas pero sin SVG en src/icons.ts — se renderizan como botón vacío:\n`);
+  for (const k of missing) {
+    const sites = used.get(k);
+    console.error(`  [${k}]  usado en ${sites.length} sitio(s), p.ej. ${sites[0].file}:${sites[0].line}`);
+  }
+  console.error('\n  Agrega la clave faltante al diccionario D en src/icons.ts (ruta SVG 24x24,');
+  console.error('  mismo estilo que las existentes) o usa una clase fa-X ya definida.\n');
+  return false;
+}
+
 // ── Motor ─────────────────────────────────────────────────────────────────
 function scan(files, rules, label) {
   const hits = [];
@@ -139,23 +182,28 @@ function run() {
     ...scan(configFiles, CONFIG_RULES, 'config'),
   ];
 
-  if (hits.length === 0) {
+  const iconsOk = checkIconDictionary();
+
+  if (hits.length === 0 && iconsOk) {
     console.log('  Footgun lint: OK (0 problemas)');
     return true;
   }
 
-  console.error(`\n  ✖ Footgun lint: ${hits.length} problema(s) — el build NO continuará:\n`);
-  // Agrupar por regla para un reporte legible.
-  const byRule = {};
-  for (const h of hits) (byRule[h.rule.id] ||= []).push(h);
-  for (const [id, list] of Object.entries(byRule)) {
-    console.error(`  [${id}] ${list[0].rule.hint}`);
-    for (const h of list) console.error(`     ${h.file}:${h.line}  →  ${h.text}`);
-    console.error('');
+  if (hits.length > 0) {
+    console.error(`\n  ✖ Footgun lint: ${hits.length} problema(s) — el build NO continuará:\n`);
+    // Agrupar por regla para un reporte legible.
+    const byRule = {};
+    for (const h of hits) (byRule[h.rule.id] ||= []).push(h);
+    for (const [id, list] of Object.entries(byRule)) {
+      console.error(`  [${id}] ${list[0].rule.hint}`);
+      for (const h of list) console.error(`     ${h.file}:${h.line}  →  ${h.text}`);
+      console.error('');
+    }
+    console.error('  Corrige los anteriores o, si es un uso legítimo y deliberado,');
+    console.error('  añade  // footgun-ok: <razón>  al final de esa línea.\n');
   }
-  console.error('  Corrige los anteriores o, si es un uso legítimo y deliberado,');
-  console.error('  añade  // footgun-ok: <razón>  al final de esa línea.\n');
-  return false;
+
+  return hits.length === 0 && iconsOk;
 }
 
 // Standalone vs require()
