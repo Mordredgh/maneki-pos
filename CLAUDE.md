@@ -238,10 +238,10 @@ Protected by nginx Basic Auth (usuario: manekimaster).
 | Source | TypeScript en `src/*.ts`, compilado con esbuild a `js/*.js` |
 | DB Remota | Supabase (fuente de verdad, realtime, RLS) |
 | Cache Local | localStorage (fallback básico) |
-| CSS | Tailwind v3 build purgado 32.6KB (`css/tailwind.css`) + `css/app.css` (consolidado) + `maneki-premium.css` (tokens) |
-| Icons | `js/icons.js` (SVG propio, sin Font Awesome) |
-| PWA | `manifest.json` + `sw.js` (Service Worker v2.3.2) — 38 archivos cacheados |
-| Deploy | `git push github fresh-start:master` → Coolify auto-deploy |
+| CSS | Tailwind v3 build purgado 32.6KB (`css/tailwind.css`) + `maneki-premium.css` (único archivo fuente — `css/app.css` se retiró en la Sesión 32, su contenido vive fusionado aquí) |
+| Icons | `js/icons.js` (SVG propio, sin Font Awesome) — diccionario `D` validado en cada build por `scripts/lint-footguns.js` (Sesión 32) |
+| PWA | `manifest.json` + `sw.js` (Service Worker) — archivos cacheados vía hash de contenido |
+| Deploy | `git push github fresh-start:master` (o `.\deploy.ps1 "msg"`) → Coolify. Build Pack = **Dockerfile** (Sesión 32): el build (tests+lint+compile+bundle) corre en el servidor, no depende de comitear `js/*.js` a mano |
 
 ---
 
@@ -274,10 +274,13 @@ js/
   whatsapp.js           — Templates de mensajes WhatsApp
   ui-extras.js          — Modales, toast, undo, exportar Excel, clearAllData
 css/
-  app.css               — Consolidado (Sesión 29): ex styles.css + ui-redesign.css + responsive.css, cascada preservada en ese orden
   tailwind.css          — Build purgado 32.6 KB (NO usar CDN)
+  (app.css ya no existe — retirado en Sesión 32, fusionado a maneki-premium.css)
 src/                    — Fuentes TypeScript (compilar con esbuild --minify)
 types/maneki.d.ts       — Definiciones de tipos globales
+Dockerfile              — Build de 2 etapas (Sesión 32): node:20-alpine corre scripts/build.js, nginx:alpine sirve el resultado
+nginx.conf              — Config de nginx (idéntica a la que ya estaba en Coolify), copiada 1:1 al Dockerfile
+deploy.ps1              — git push + POST a la API de Coolify (Sesión 32) — deploy sin navegador, requiere $env:COOLIFY_BICHOPOS_TOKEN
 ```
 
 ---
@@ -872,6 +875,100 @@ no queda ningún otro botón con ese patrón en la app.
 - Reflow a 2 columnas de los modales de pedido/producto (evaluado y descartado, ver arriba)
 - Los ~19 duplicados restantes en `app.css` marcados como variantes de `@media` — no requieren acción
 - KPI sólida y header editorial NO se profundizaron más allá de Pedidos/Balance — Análisis/Reportes/Equipos quedaron solo con el header nuevo, sin una métrica "ancla" sólida (no había un candidato obvio de una sola métrica dominante en esas vistas)
+
+## ✅ Sesión 32 (3 julio 2026) — Auditoría de duplicados/basura + deploy automatizado
+
+Pedido explícito: "auditoría para eliminar todo lo duplicado, inservible" (continuación de la
+Sesión 31), seguido de varios bugs reales encontrados en el camino y, al final, un cambio de
+infraestructura de deploy.
+
+### Limpieza de duplicados (todo el codebase)
+- **`maneki-premium.css`**: mismo método que Sesión 31 en `app.css` — script detecta selectores
+  duplicados fuera de `@media`, se consolidó cada grupo por propiedad. 10 grupos reales
+  (`table thead th`, `.mk-empty-*`, `body.dark .bg-gray-*`, `body.dark table thead th`, etc.), 3
+  falsos positivos confirmados como variantes `@media` legítimas.
+- **`css/app.css` vs `maneki-premium.css` (entre archivos)**: 81 selectores existían en ambos. 6
+  eran duplicados byte-idénticos (borrados de `app.css`). Los otros **75 tenían valores
+  DISTINTOS** — como `app.css` cargaba después, sus valores viejos (paleta morada "Maneki")
+  le ganaban silenciosamente a los nuevos (paleta Bicho Capricho) en cascada, sin que se notara
+  visualmente como error. Se eliminaron las 69 reglas conflictivas de `app.css` (dejando ganar
+  siempre a `maneki-premium.css`), verificado con `postcss.parse()` antes de escribir.
+- **`css/app.css` retirado por completo**: su contenido restante (ya sin duplicados) se fusionó
+  al final de `maneki-premium.css` — mismo orden de carga, cero cambio de comportamiento, pero
+  ahora hay un solo archivo fuente de verdad. `index.html`/`sw.js`/`scripts/hash-sw.js`
+  actualizados para no referenciarlo.
+- **JS compilado huérfano**: `js/inventory-2.js` y `js/pedidos-1.js` (sobras de antes de la
+  división en archivos más chicos, Sesión previa a D26) sin `.ts` fuente ni referencia en
+  `index.html`/`sw.js` — borrados junto con sus `.map`.
+- Auditado también: `package.json` (4 devDependencies, todas usadas), `img/categorias/*.webp`
+  (13 archivos, los 13 mapeados 1:1 en `CATEGORY_ICON_MAP`), `console.log` en `src/*.ts` (todos
+  detrás de flag `MK_DEBUG` o banners de marca intencionales) — nada más que limpiar.
+
+### Bug real: 19 íconos `fas fa-X` invisibles en toda la app
+La app **no usa Font Awesome real** — nunca se cargó el CSS/font de FA en `index.html` (solo hay
+un `preconnect`). El sistema real es `src/icons.ts`: un `MutationObserver` que busca
+`<i class="fas fa-X">` en el DOM y le inyecta un SVG propio buscando `"fa-X"` en un diccionario
+`D`. Si la clase usada no está en `D`, el `<i>` se queda vacío — un botón sin ícono, sin ningún
+error en consola.
+
+Encontrado por el usuario viendo la columna ACCIONES de Inventario: el botón "Editar" (`fa-pen`)
+y "Archivar" (`fa-box-archive`/`fa-lock-open`) se veían en blanco en TODAS las filas. Auditoría
+completa (`fas fa-` en `src/*.ts` + `index.html` vs. claves de `D`): 19 nombres en uso sin
+definición — mezcla de nombres FontAwesome 6 que no coinciden con los FA5 ya definidos
+(`fa-circle-check` vs `fa-check-circle`, etc.) y iconos nunca agregados (`fa-pen`,
+`fa-box-archive`, `fa-ellipsis`, `fa-gift`, `fa-image`, `fa-envelope`, `fa-wrench`, `fa-route`,
+`fa-layer-group`, `fa-list`, `fa-code-branch`, `fa-bolt`, `fa-file-pdf`, `fa-lock-open`,
+`fa-clone`, `fa-xmark`, `fa-triangle-exclamation`, `fa-circle-check`, `fa-circle-xmark`).
+
+Fix: se agregaron las 19 definiciones al diccionario `D` (rutas SVG 24×24 estilo Feather/Lucide,
+mismo estilo que las 96 existentes; los que tenían equivalente semántico en FA5 reusan el mismo
+path). Corrige TODAS las apariciones en la app de un solo golpe — no se tocó ningún call site.
+
+**Guardrail nuevo:** `scripts/lint-footguns.js` ahora también valida esto en cada build
+(`checkIconDictionary()`) — compara clases `fa-X` usadas contra `D` y truena el build si falta
+alguna. Este bug de clase no puede volver a llegar silenciosamente a producción.
+
+### Bug de proceso: el fix "deployado" no se veía en producción
+Después de arreglar los íconos y hacer commit+push, el usuario seguía viendo el bug en
+producción. Causa: el commit solo incluyó `src/icons.ts` (fuente) — el `.js` compilado real que
+Coolify servía (`js/icons.js`, bundles) se quedó sin comitear en el working tree. `git status`
+completo lo hubiera mostrado; el hábito de solo `git add <archivos que edité>` en vez de revisar
+todo el status fue la causa raíz. Se corrigió subiendo el JS faltante, y se documentó en memoria
+para no repetirlo.
+
+### Cambio de infraestructura: deploy automatizado (Coolify Build Pack Static → Dockerfile)
+Causa raíz del bug anterior, resuelta de fondo: Coolify tenía el Build Pack en **"Static"** —
+copiaba los archivos del repo tal cual a un contenedor `nginx:alpine`, sin ningún paso de build.
+Por eso el compilado en `js/*.js` SIEMPRE tenía que generarse local (`node scripts/build.js`) y
+comitearse a mano; si se olvidaba, producción servía JS viejo sin ningún error visible.
+
+Fix: `Dockerfile` de 2 etapas agregado al repo —
+1. `node:20-alpine`: `npm ci && node scripts/build.js` (tests, footgun lint, icon lint, compila
+   TS→JS, arma bundles, hashea el SW cache) — corre DENTRO del contenedor en el servidor.
+2. `nginx:alpine`: sirve solo lo necesario (`index.html`, `manifest.json`, `sw.js`, `logo.png`,
+   `maneki-premium.css`, `css/`, `js/`, `img/`) con la misma config de nginx que ya estaba en
+   Coolify (`nginx.conf`, copiada 1:1 del panel antes de tocar nada).
+
+Build Pack cambiado de "Static" a "Dockerfile" en Coolify (confirmado con el usuario antes de
+tocar producción). Verificado: log de build en Coolify completo en verde (65 tests + lint +
+34/34 TS), `curl` directo al contenedor devolvió `HTTP 200`, `pos.manekistore.com.mx` devolvió
+`401` (Basic Auth normal, no error). De aquí en adelante, comitear `js/*.js` ya no es necesario
+para que el fix llegue a producción — el servidor siempre reconstruye desde `src/*.ts` fresco.
+
+### Deploy sin navegador: `deploy.ps1` + token dedicado
+El usuario pidió no depender de que Claude se conecte al navegador para cada deploy (mismo
+patrón ya usado en el proyecto Dungeon). Se creó un token de API en Coolify ("BICHO-POS",
+permisos `deploy`+`read`, sin expiración) guardado como variable de entorno de usuario
+`COOLIFY_BICHOPOS_TOKEN` (nunca en el repo), y `deploy.ps1` en la raíz del proyecto: `git push`
++ `POST /api/v1/deploy` a la API de Coolify + verificación con `curl`. Uso:
+`.\deploy.ps1 "mensaje del commit"`.
+
+### Changelog de la app actualizado
+El modal "¿Qué hay de nuevo?" (`src/init.ts`, función `_changelog`) es una lista mantenida a
+mano — se había quedado desactualizada durante toda la sesión. Se actualizó a v2.7.0
+(`window.MK.version` en `config.ts`) con los 4 cambios visibles de esta sesión. **Recordatorio
+para el futuro:** actualizar esta lista + bump de versión en cada sesión con cambios visibles
+para el usuario, no solo al final de rediseños grandes.
 
 ## ✅ Sesión 26 (13 junio 2026) — Auditoría profunda + mejoras UI/UX (v2.6.2)
 
