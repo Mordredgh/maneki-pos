@@ -317,10 +317,15 @@ window.bulkPrecioAplicar = bulkPrecioAplicar;
 function renderInventoryTable() {
     const tbody = document.getElementById('inventoryTable');
     if (!tbody) return;
+
+    document.getElementById('inventoryPaginationBar')?.remove();
     // P1: hash guard — saltar re-render completo si los datos no cambiaron
     const _prods = window.products||[];
     const _tipoQ = (document.getElementById('inventoryTipoFilter') as HTMLSelectElement|null)?.value || '';
-    const _iHash = _prods.length + '_' + _prods.reduce((s: number,p: any)=>s+Number(p.stock||0),0).toFixed(0) + '_' + ((document.getElementById('inventorySearch') as HTMLInputElement|null)?.value||'') + '_' + _tipoQ;
+    const _pageHash = ['pt', 'pv', 'mp', 'svc']
+        .map(id => `${id}:${window[`_invPage_${id}`] || 1}`)
+        .join('|');
+    const _iHash = _prods.length + '_' + _prods.reduce((s: number,p: any)=>s+Number(p.stock||0),0).toFixed(0) + '_' + ((document.getElementById('inventorySearch') as HTMLInputElement|null)?.value||'') + '_' + _tipoQ + '_' + _pageHash + '_' + (window._invPageSize || 10) + '_' + (window._invSortCol || '') + '_' + (window._invSortDir || '');
     const dualEl = document.getElementById('invDualContainer');
     if (dualEl && (dualEl as any)._lastHash === _iHash) return;
     if (dualEl) (dualEl as any)._lastHash = _iHash;
@@ -1178,9 +1183,19 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
 
 function invGoToPage(p) {
     const pageNum = typeof p === 'string' ? parseInt(p) : p;
-    const totalPages = Math.ceil((window.products||[]).length / window._invPageSize);
-    window._invCurrentPage = Math.max(1, Math.min(pageNum || 1, totalPages));
-    renderInventoryTable();
+    const targetPage = pageNum || 1;
+    const visibleSection = Array.from(document.querySelectorAll<HTMLElement>('[id^="invSec_"]'))
+        .find(section => section.offsetParent !== null && section.textContent?.includes('Mostrando'));
+    const sectionId = visibleSection?.id?.replace('invSec_', '');
+
+    if (sectionId && typeof invSectionPage === 'function') {
+        invSectionPage(sectionId, targetPage);
+    } else {
+        const totalPages = Math.max(1, Math.ceil((window.products||[]).length / (window._invPageSize || 10)));
+        window._invCurrentPage = Math.max(1, Math.min(targetPage, totalPages));
+        renderInventoryTable();
+    }
+
     // Scroll suave al inicio de la tabla
     const tabla = document.getElementById('inventoryTable');
     if (tabla) tabla.closest('section, .section, main')?.scrollTo({ top: 0, behavior: 'smooth' });
