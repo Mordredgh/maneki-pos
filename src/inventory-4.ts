@@ -367,8 +367,13 @@ document.addEventListener('DOMContentLoaded', function () {
         function attachFilter() {
             const el = document.getElementById(id);
             if (el && !el._invPagListenerAdded) {
-                el.addEventListener('input',  () => { window._invCurrentPage = 1; renderInventoryTable(); });
-                el.addEventListener('change', () => { window._invCurrentPage = 1; renderInventoryTable(); });
+                const resetAndRender = () => {
+                    window._invCurrentPage = 1;
+                    ['pt', 'pv', 'mp', 'svc'].forEach(sec => { window[`_invPage_${sec}`] = 1; });
+                    renderInventoryTable();
+                };
+                el.addEventListener('input', resetAndRender);
+                el.addEventListener('change', resetAndRender);
                 el._invPagListenerAdded = true;
             }
         }

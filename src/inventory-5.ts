@@ -1701,22 +1701,41 @@ window.invBulkCambiarCategoria = invBulkCambiarCategoria;
 // ══════════════════════════════════════════════════════════════════════════
 const _MK_TIPO_LABELS: Record<string,string> = { '': 'Todos', producto: 'Productos', materia: 'Materia Prima' };
 
+function _mkInvResetPages() {
+  (window as any)._invCurrentPage = 1;
+  ['pt', 'pv', 'mp', 'svc'].forEach(sec => {
+    (window as any)[`_invPage_${sec}`] = 1;
+  });
+}
+
+function _mkInvDispatchFilter(el: HTMLInputElement | HTMLSelectElement, eventName: 'input' | 'change') {
+  const hasFilterListener = (el as any)._invPagListenerAdded;
+  el.dispatchEvent(new Event(eventName, { bubbles: true }));
+  if (!hasFilterListener && typeof renderInventoryTable === 'function') renderInventoryTable();
+}
+
 (window as any)._mkInvSetTipo = function(v: string) {
   const s = document.getElementById('inventoryTipoFilter') as HTMLSelectElement | null;
-  if (s) { s.value = v; s.dispatchEvent(new Event('change')); }
+  if (!s) return;
+  s.value = v;
+  _mkInvResetPages();
+  _mkInvSyncSeg();
+  _mkInvDispatchFilter(s, 'change');
 };
 (window as any)._mkInvClearOne = function(which: string) {
   const el = document.getElementById(which) as HTMLInputElement | HTMLSelectElement | null;
   if (!el) return;
   el.value = '';
-  el.dispatchEvent(new Event(which === 'inventorySearch' ? 'input' : 'change'));
+  _mkInvResetPages();
+  _mkInvDispatchFilter(el, which === 'inventorySearch' ? 'input' : 'change');
 };
 (window as any)._mkInvClearFilters = function() {
   ['inventoryTagFilter','inventoryProveedorFilter','inventoryTipoFilter'].forEach(id => {
     const e = document.getElementById(id) as HTMLSelectElement | null; if (e) e.value = '';
   });
+  _mkInvResetPages();
   const s = document.getElementById('inventorySearch') as HTMLInputElement | null;
-  if (s) { s.value = ''; s.dispatchEvent(new Event('input')); }
+  if (s) { s.value = ''; _mkInvDispatchFilter(s, 'input'); }
   else if (typeof renderInventoryTable === 'function') renderInventoryTable();
 };
 
