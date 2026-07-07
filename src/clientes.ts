@@ -1,4 +1,4 @@
-﻿// ── Validación de email ──────────────────────────────────────────────────────
+// ── Validación de email ──────────────────────────────────────────────────────
 function _validEmail(e) { return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
 const _escAttr = window._esc;
@@ -709,6 +709,7 @@ function closeAddClientModal() {
     }
 
     saveClients();
+    if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('addClientModal');
     closeAddClientModal();
     renderClientsTable();
     updateDashboard();

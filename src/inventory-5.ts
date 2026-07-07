@@ -1,4 +1,4 @@
-﻿// ── N-SEARCH-004: Búsqueda typo-tolerant (Levenshtein distance) ───────────
+// ── N-SEARCH-004: Búsqueda typo-tolerant (Levenshtein distance) ───────────
 function _levenshtein(a: string, b: string): number {
     const m = a.length, n = b.length;
     const dp: number[][] = Array.from({length: m+1}, (_, i) =>
@@ -1130,7 +1130,7 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
         return btns.map(p => {
             if (p === '...') return `<span style="padding:0 4px;color:#9ca3af;">…</span>`;
             const active = p === page;
-            return `<button onclick="invGoToPage(${p})"
+            return `<button data-action="invGoToPage" data-arg="${p}"
                 style="min-width:34px;height:34px;border-radius:8px;border:1px solid ${active ? '#FFD166' : '#e5e7eb'};
                        background:${active ? '#FFD166' : 'white'};color:${active ? 'white' : '#374151'};
                        font-weight:${active ? '700' : '500'};font-size:13px;cursor:${active ? 'default' : 'pointer'};
@@ -1145,7 +1145,7 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
             <!-- Info + selector de tamaño -->
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                 <span style="font-size:13px;color:#6b7280;">${showing}</span>
-                <select onchange="invChangePageSize(this.value)"
+                <select data-change="invChangePageSize" data-pass-el="1"
                     style="font-size:12px;border:1px solid #e5e7eb;border-radius:8px;padding:4px 8px;
                            background:white;color:#374151;cursor:pointer;outline:none;">
                     ${[10,25,50,100].map(s =>
@@ -1155,20 +1155,20 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
             </div>
             <!-- Controles de página -->
             <div style="display:flex;align-items:center;gap:4px;">
-                <button onclick="invGoToPage(1)" ${page === 1 ? 'disabled' : ''}
+                <button data-action="invGoToPage" data-arg="1" ${page === 1 ? 'disabled' : ''}
                     style="height:34px;padding:0 10px;border-radius:8px;border:1px solid #e5e7eb;
                            background:white;cursor:${page===1?'default':'pointer'};opacity:${page===1?0.4:1};font-size:13px;"
                     title="Primera página">⟨⟨</button>
-                <button onclick="invGoToPage(${page - 1})" ${page === 1 ? 'disabled' : ''}
+                <button data-action="invGoToPage" data-arg="${page - 1}" ${page === 1 ? 'disabled' : ''}
                     style="height:34px;padding:0 10px;border-radius:8px;border:1px solid #e5e7eb;
                            background:white;cursor:${page===1?'default':'pointer'};opacity:${page===1?0.4:1};font-size:13px;"
                     title="Página anterior">‹</button>
                 ${pageButtons()}
-                <button onclick="invGoToPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}
+                <button data-action="invGoToPage" data-arg="${page + 1}" ${page === totalPages ? 'disabled' : ''}
                     style="height:34px;padding:0 10px;border-radius:8px;border:1px solid #e5e7eb;
                            background:white;cursor:${page===totalPages?'default':'pointer'};opacity:${page===totalPages?0.4:1};font-size:13px;"
                     title="Página siguiente">›</button>
-                <button onclick="invGoToPage(${totalPages})" ${page === totalPages ? 'disabled' : ''}
+                <button data-action="invGoToPage" data-arg="${totalPages}" ${page === totalPages ? 'disabled' : ''}
                     style="height:34px;padding:0 10px;border-radius:8px;border:1px solid #e5e7eb;
                            background:white;cursor:${page===totalPages?'default':'pointer'};opacity:${page===totalPages?0.4:1};font-size:13px;"
                     title="Última página">⟩⟩</button>
@@ -1177,16 +1177,18 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
 }
 
 function invGoToPage(p) {
+    const pageNum = typeof p === 'string' ? parseInt(p) : p;
     const totalPages = Math.ceil((window.products||[]).length / window._invPageSize);
-    window._invCurrentPage = Math.max(1, Math.min(p, totalPages));
+    window._invCurrentPage = Math.max(1, Math.min(pageNum || 1, totalPages));
     renderInventoryTable();
     // Scroll suave al inicio de la tabla
     const tabla = document.getElementById('inventoryTable');
     if (tabla) tabla.closest('section, .section, main')?.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function invChangePageSize(size) {
-    window._invPageSize    = parseInt(size);
+function invChangePageSize(val: any) {
+    const size = typeof val === 'object' && val ? val.value : val;
+    window._invPageSize    = parseInt(size) || 10;
     window._invCurrentPage = 1;
     renderInventoryTable();
 }

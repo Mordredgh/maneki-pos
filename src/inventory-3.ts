@@ -1,4 +1,4 @@
-﻿function _resetMpVariantesUI() {
+function _resetMpVariantesUI() {
     window._mpVariantes = [];
     const chk = document.getElementById('mpUsaVariantes');
     if (chk) chk.checked = false;
@@ -483,6 +483,7 @@ async function guardarServicio() {
     }
     saveProducts();
     renderInventoryTable();
+    if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('svcModal');
     closeServicioModal();
     if (window.MKS) MKS.notify();
     manekiToastExport(`✅ Servicio "${nombre}" guardado.`, 'ok');

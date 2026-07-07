@@ -1,4 +1,4 @@
-﻿async function _eliminarFotoStorageAlFinalizar(pedido) {
+async function _eliminarFotoStorageAlFinalizar(pedido) {
     const { paths } = _fotosArray(pedido);
     if (!paths.length) return;
     try { await db.storage.from(FOTO_BUCKET).remove(paths); }
@@ -1371,7 +1371,8 @@ let _histPage = 1;
 const _HIST_PER_PAGE = 20;
 
 function cambiarPaginaHistorial(dir) {
-    _histPage = Math.max(1, _histPage + dir);
+    const val = typeof dir === 'string' ? parseInt(dir) : dir;
+    _histPage = Math.max(1, _histPage + (val || 0));
     renderHistorialPedidos();
 }
 window.cambiarPaginaHistorial = cambiarPaginaHistorial;
@@ -1548,9 +1549,9 @@ function renderHistorialPedidos() {
     if (pagEl) {
         pagEl.innerHTML = totalPages <= 1 ? '' : `
             <div class="flex items-center justify-between pt-2 text-xs text-gray-500">
-                <button onclick="cambiarPaginaHistorial(-1)" ${_histPage<=1?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30">← Anterior</button>
+                <button data-action="cambiarPaginaHistorial" data-arg="-1" ${_histPage<=1?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30">← Anterior</button>
                 <span>Página ${_histPage} de ${totalPages} <span class="text-gray-400">(${totalItems} pedidos)</span></span>
-                <button onclick="cambiarPaginaHistorial(1)" ${_histPage>=totalPages?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30">Siguiente →</button>
+                <button data-action="cambiarPaginaHistorial" data-arg="1" ${_histPage>=totalPages?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30">Siguiente →</button>
             </div>`;
     }
 
@@ -1562,7 +1563,7 @@ function renderHistorialPedidos() {
             _histLoadMoreBtn = document.createElement('div');
             _histLoadMoreBtn.id = 'histLoadMoreBtn';
             _histLoadMoreBtn.style.cssText = 'text-align:center;margin-top:12px;';
-            _histLoadMoreBtn.innerHTML = `<button onclick="cargarMasPedidosFinalizados()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #FFD166;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más pedidos ↓</button>`;
+            _histLoadMoreBtn.innerHTML = `<button data-action="cargarMasPedidosFinalizados" style="padding:8px 20px;background:#F5EDD8;border:1px solid #FFD166;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más pedidos ↓</button>`;
             lista.insertAdjacentElement('afterend', _histLoadMoreBtn);
         } else {
             _histLoadMoreBtn.style.display = '';

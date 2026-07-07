@@ -1,4 +1,4 @@
-﻿// ── FIX: clearAllData nunca había sido definida ───────────────
+// ── FIX: clearAllData nunca había sido definida ───────────────
 function clearAllData() {
     showConfirm('Esto eliminará productos, ventas, pedidos, clientes y todo el historial. Esta acción NO se puede deshacer.', '⚠️ ¿Borrar TODOS los datos?').then(ok1 => {
     if (!ok1) return;
@@ -460,10 +460,59 @@ function fuzzyMatch(str, query) {
 
 // ===== DEBOUNCE para buscador global =====
 let _searchDebounceTimer = null;
-function _debouncedSearch(value) {
+function _debouncedSearch(el: any) {
+  const value = (el && typeof el.value === 'string') ? el.value : (typeof el === 'string' ? el : '');
   clearTimeout(_searchDebounceTimer);
   _searchDebounceTimer = setTimeout(() => busquedaGlobal(value), 160);
 }
+(window as any)._debouncedSearch = _debouncedSearch;
+
+function _mkSearchClickProduct(id) {
+  cerrarBusquedaGlobal();
+  showSection('inventory');
+  setTimeout(() => {
+    if (typeof editProduct === 'function') editProduct(id);
+  }, 300);
+}
+(window as any)._mkSearchClickProduct = _mkSearchClickProduct;
+
+function _mkSearchClickClient(name) {
+  cerrarBusquedaGlobal();
+  showSection('clientes');
+  setTimeout(() => {
+    const searchInput = document.getElementById('searchClient') as HTMLInputElement | null;
+    if (searchInput) {
+      searchInput.value = name;
+      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }, 200);
+}
+(window as any)._mkSearchClickClient = _mkSearchClickClient;
+
+function _mkSearchClickPedido(cliente) {
+  cerrarBusquedaGlobal();
+  showSection('pedidos');
+  setTimeout(() => {
+    const el = document.getElementById('kanbanBuscar') as HTMLInputElement | null;
+    if (el) {
+      el.value = cliente;
+      el.dispatchEvent(new Event('input'));
+    }
+  }, 200);
+}
+(window as any)._mkSearchClickPedido = _mkSearchClickPedido;
+
+function _mkSearchClickVenta(folio) {
+  irAReportes();
+  setTimeout(() => {
+    var inp = document.getElementById('salesSearchInput') as HTMLInputElement | null;
+    if (inp) {
+      inp.value = folio;
+      inp.dispatchEvent(new Event('input'));
+    }
+  }, 300);
+}
+(window as any)._mkSearchClickVenta = _mkSearchClickVenta;
 
 // ===== BUSCADOR GLOBAL (CORREGIDO — navegación funcional) =====
 function busquedaGlobal(query) {
@@ -491,8 +540,7 @@ function busquedaGlobal(query) {
         ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`
         : `<span class="text-lg flex-shrink-0">${p.image||'📦'}</span>`;
       html += `<div class="px-4 py-2 hover:bg-amber-50 cursor-pointer flex items-center gap-3"
-          data-id="${p.id.replace(/"/g,'')}"
-          onmousedown="cerrarBusquedaGlobal(); showSection('inventory'); setTimeout(()=>{ if(typeof editProduct==='function') editProduct(this.dataset.id); },300);">
+          data-action="_mkSearchClickProduct" data-arg="${(p.id || '').replace(/"/g,'')}">
         ${img}
         <div class="flex-1 min-w-0">
           <div class="font-medium text-gray-800 truncate">${_esc(p.name)}</div>
@@ -515,7 +563,7 @@ function busquedaGlobal(query) {
       const ventas = (window.salesHistory || []).filter(s => (s.customer||'').toLowerCase() === c.name.toLowerCase()).length;
       const pedidosCli = (window.pedidos || []).filter(p => (p.cliente||'').toLowerCase() === c.name.toLowerCase()).length;
       html += `<div class="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-3"
-          onmousedown="cerrarBusquedaGlobal(); showSection('clientes'); setTimeout(()=>{ const searchInput = document.getElementById('searchClient'); if(searchInput && '${c.name.replace(/'/g,"\\'")}') { searchInput.value = '${c.name.replace(/'/g,"\\'")}'; searchInput.dispatchEvent(new Event('input', { bubbles: true })); } }, 200);">
+          data-action="_mkSearchClickClient" data-arg="${_escAttr(c.name)}">
         <span class="text-lg">👤</span>
         <div class="flex-1 min-w-0">
           <div class="font-medium text-gray-800">${_esc(c.name)}</div>
@@ -538,7 +586,7 @@ function busquedaGlobal(query) {
       const statusColors = { pendiente:'text-yellow-500', confirmado:'text-blue-500', produccion:'text-purple-500', finalizado:'text-green-500', cancelado:'text-red-400' };
       const color = statusColors[p.status] || 'text-gray-500';
       html += `<div class="px-4 py-2 hover:bg-yellow-50 cursor-pointer flex items-center gap-3"
-          onmousedown="cerrarBusquedaGlobal(); showSection('pedidos'); setTimeout(()=>{ const el=document.getElementById('kanbanBuscar'); if(el){el.value='${(p.cliente||'').replace(/'/g,"\\'")}'; el.dispatchEvent(new Event('input')); }},200);">
+          data-action="_mkSearchClickPedido" data-arg="${_escAttr(p.cliente || '')}">
         <span class="text-lg">🛍️</span>
         <div class="flex-1 min-w-0">
           <div class="font-medium text-gray-800">${p.folio||'—'} — ${p.cliente||'Sin nombre'}</div>
@@ -561,8 +609,8 @@ function busquedaGlobal(query) {
   if (ventas.length > 0) {
     html += `<div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wide border-b border-t mt-1">💰 Ventas</div>`;
     ventas.slice(0,3).forEach(v => {
-      const escFolio = (v.folio||'').replace(/'/g,"\\'");
-      html += `<div class="px-4 py-2 hover:bg-green-50 cursor-pointer flex items-center gap-3" onmousedown="irAReportes(); setTimeout(function(){ var inp = document.getElementById('salesSearchInput'); if(inp){ inp.value='${escFolio}'; inp.dispatchEvent(new Event('input')); } }, 300);">
+      html += `<div class="px-4 py-2 hover:bg-green-50 cursor-pointer flex items-center gap-3"
+          data-action="_mkSearchClickVenta" data-arg="${_escAttr(v.folio || '')}">
         <span class="text-lg">💰</span>
         <div class="flex-1 min-w-0"><div class="font-medium text-gray-800">${v.customer||'Cliente General'}</div>
         <div class="text-xs text-gray-400">${v.date||'—'} · ${v.method||'—'}</div></div>

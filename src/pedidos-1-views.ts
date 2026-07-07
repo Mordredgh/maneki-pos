@@ -1,4 +1,4 @@
-﻿// ── Cambiar vista kanban / tabla ──
+// ── Cambiar vista kanban / tabla ──
 function setVistaPedidos(vista) {
     _pedidoVistaActual = vista;
     const kanban  = document.getElementById('vistaKanban');
@@ -598,18 +598,17 @@ function _inyectarBuscadorTabla() {
         <div style="flex:1;min-width:200px;position:relative;">
             <input id="tablaPedidosBuscar" type="text" placeholder="🔍 Buscar por cliente, folio, concepto..."
                 style="width:100%;padding:10px 14px 10px 36px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;background:#fff;"
-                onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#e5e7eb'"
-                oninput="_pedidosTablePage=1;renderTablaPedidos()">
+                data-oninput="_pedidosResetPageAndRender">
             <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.85rem;opacity:.4;">🔎</span>
         </div>
-        <select id="tablaFiltroPago" onchange="_pedidosTablePage=1;renderTablaPedidos()"
+        <select id="tablaFiltroPago" data-change="_pedidosResetPageAndRender"
             style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.8rem;background:#fff;cursor:pointer;">
             <option value="">💰 Pago: Todos</option>
             <option value="liquidado">✅ Liquidado</option>
             <option value="anticipo">🟡 Con anticipo</option>
             <option value="pendiente">🔴 Pendiente</option>
         </select>
-        <select id="tablaFiltroUrgencia" onchange="_pedidosTablePage=1;renderTablaPedidos()"
+        <select id="tablaFiltroUrgencia" data-change="_pedidosResetPageAndRender"
             style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.8rem;background:#fff;cursor:pointer;">
             <option value="">📅 Entrega: Todas</option>
             <option value="hoy">🔴 Hoy</option>
@@ -804,8 +803,8 @@ function renderTablaPedidos() {
     paginador.innerHTML = `
         <span>${totalItems} pedidos · Página ${_pedidosTablePage} de ${totalPages}</span>
         <div class="flex gap-1">
-            <button onclick="_pedidosTablePage=Math.max(1,_pedidosTablePage-1);renderTablaPedidos()" ${_pedidosTablePage===1?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">‹ Anterior</button>
-            <button onclick="_pedidosTablePage=Math.min(${totalPages},_pedidosTablePage+1);renderTablaPedidos()" ${_pedidosTablePage===totalPages?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">Siguiente ›</button>
+            <button data-action="_pedidosPrevPage" ${_pedidosTablePage===1?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">‹ Anterior</button>
+            <button data-action="_pedidosNextPage" data-arg="${totalPages}" ${_pedidosTablePage===totalPages?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">Siguiente ›</button>
         </div>`;
     // #11 Totales flotantes
     if (typeof _mkUpdatePedidosTotals === 'function') setTimeout(_mkUpdatePedidosTotals, 50);
@@ -855,19 +854,37 @@ function _renderFiltrosActivosBadges() {
     // Renderizar un badge por cada filtro activo + botón limpiar todo
     const _esc2 = _esc;
     _badgeContainer.innerHTML = filtrosActivos.map((f, i) =>
-        `<span data-badge-idx="${i}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600;background:#FFF9F0;color:#92622A;border:1px solid #e8d5b0;cursor:pointer;" title="Quitar filtro" onclick="window._quitarFiltroBadge(${i})">
+        `<span data-badge-idx="${i}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600;background:#FFF9F0;color:#92622A;border:1px solid #e8d5b0;cursor:pointer;" title="Quitar filtro" data-action="_quitarFiltroBadge" data-arg="${i}">
             ${_esc2(f.label)} <span style="font-size:.7rem;opacity:.7;">✕</span>
         </span>`
     ).join('') +
-    `<button onclick="window._limpiarTodosFiltros()" style="padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;cursor:pointer;">
+    `<button data-action="_limpiarTodosFiltros" style="padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;cursor:pointer;">
         ✕ Limpiar filtros
     </button>`;
 
-    // Exponer callbacks globales para los onclick inline
-    (window as any)._quitarFiltroBadge = (idx: number) => {
-        if (filtrosActivos[idx]) filtrosActivos[idx].reset();
+    // Exponer callbacks globales para los data-action
+    (window as any)._quitarFiltroBadge = (idx: any) => {
+        const i = typeof idx === 'string' ? parseInt(idx) : idx;
+        if (filtrosActivos[i]) filtrosActivos[i].reset();
     };
 }
+
+function _pedidosPrevPage() {
+    _pedidosTablePage = Math.max(1, _pedidosTablePage - 1);
+    renderTablaPedidos();
+}
+function _pedidosNextPage(totalPages) {
+    const pages = parseInt(totalPages as any) || 1;
+    _pedidosTablePage = Math.min(pages, _pedidosTablePage + 1);
+    renderTablaPedidos();
+}
+function _pedidosResetPageAndRender() {
+    _pedidosTablePage = 1;
+    renderTablaPedidos();
+}
+(window as any)._pedidosPrevPage = _pedidosPrevPage;
+(window as any)._pedidosNextPage = _pedidosNextPage;
+(window as any)._pedidosResetPageAndRender = _pedidosResetPageAndRender;
 
 (window as any)._limpiarTodosFiltros = function() {
     const _b = document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null;

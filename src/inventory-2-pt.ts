@@ -1,4 +1,4 @@
-﻿function injectPtModal() {
+function injectPtModal() {
     // Destruir y recrear siempre para que los cambios de código se reflejen
     const existing = document.getElementById('ptModal');
     if (existing) existing.remove();
@@ -779,6 +779,7 @@ async function guardarProductoTerminado() {
             saveProducts(); renderInventoryTable();
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);
+            if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('ptModal');
             closePtModal();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Producto actualizado','ok');
@@ -805,6 +806,7 @@ async function guardarProductoTerminado() {
             saveProducts(); renderInventoryTable();
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);
+            if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('ptModal');
             closePtModal();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Producto agregado exitosamente','ok');

@@ -1,4 +1,4 @@
-﻿// ============== REPORTS MODULE ==============
+// ============== REPORTS MODULE ==============
 // v1.1 — Limpiado de conflictos con inventory.js v2.1:
 //   • ELIMINADOS: let modoEdicion, let edicionProductoId (ya en window.* via inventory.js)
 //   • ELIMINADA: redefinición de editProduct (ahora solo en inventory.js)
@@ -1097,7 +1097,7 @@ function renderSalesHistory() {
             _loadMoreBtn = document.createElement('div');
             _loadMoreBtn.id = 'salesLoadMoreBtn';
             _loadMoreBtn.style.cssText = 'text-align:center;margin-top:12px;';
-            _loadMoreBtn.innerHTML = `<button onclick="cargarMasVentas()" style="padding:8px 20px;background:#F5EDD8;border:1px solid #FFD166;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más registros ↓</button>`;
+            _loadMoreBtn.innerHTML = `<button data-action="cargarMasVentas" style="padding:8px 20px;background:#F5EDD8;border:1px solid #FFD166;border-radius:10px;font-size:.82rem;font-weight:600;color:#92622A;cursor:pointer;">Cargar más registros ↓</button>`;
             const tableContainer = document.getElementById('salesHistoryTable')?.parentElement;
             if (tableContainer) tableContainer.appendChild(_loadMoreBtn);
         } else {

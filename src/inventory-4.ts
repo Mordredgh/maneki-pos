@@ -91,6 +91,7 @@ async function guardarMateriaPrima() {
         if (usaVariantes && variantesGuardar.length > 0) _cascadeVariantesMP(window.edicionProductoId, variantesGuardar);
         saveProducts(); renderInventoryTable();
         if (typeof updateDashboard === 'function') updateDashboard();
+        if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('mpModal');
         closeMateriaPrimaModal();
         if (window.MKS) MKS.notify();
         manekiToastExport('✅ Materia prima actualizada','ok');
@@ -110,6 +111,7 @@ async function guardarMateriaPrima() {
             tipo: 'creacion', cantidad: stockFinal, motivo: 'Alta de materia prima', stockAntes: 0, stockDespues: stockFinal });
         saveProducts(); renderInventoryTable();
         if (typeof updateDashboard === 'function') updateDashboard();
+        if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('mpModal');
         closeMateriaPrimaModal();
         if (window.MKS) MKS.notify();
         manekiToastExport('✅ Materia prima agregada','ok');
