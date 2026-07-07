@@ -18,12 +18,34 @@
         if (el.dataset.closeDd) {
             document.querySelectorAll('.inv-hdr-dd').forEach(function (d: any) { d.style.display = 'none'; });
         }
+        if (el.dataset.closeMenuDrop) {
+            var m = document.getElementById('_invMpMenuDrop');
+            if (m) m.remove();
+        }
         var arg = el.dataset.arg;
         var arg2 = el.dataset.arg2;
         var passEl = el.dataset.passEl;
         if (passEl === 'before') fn(el, arg);
         else if (passEl) fn(arg, el);
         else if (arg2 !== undefined) fn(arg, arg2);
+        else if (arg !== undefined) fn(arg);
+        else fn();
+    });
+
+    // ── Double Click delegation: [data-dblclick] ─────────────────
+    document.addEventListener('dblclick', function (e) {
+        var el = (e.target as HTMLElement).closest('[data-dblclick]') as HTMLElement;
+        if (!el) return;
+        var action = el.dataset.dblclick!;
+        var fn = (window as any)[action];
+        if (typeof fn !== 'function') {
+            console.warn('[CSP] Unknown dblclick action:', action);
+            return;
+        }
+        var arg = el.dataset.arg;
+        var passEl = el.dataset.passEl;
+        if (passEl === 'before') fn(el, arg);
+        else if (passEl) fn(arg, el);
         else if (arg !== undefined) fn(arg);
         else fn();
     });

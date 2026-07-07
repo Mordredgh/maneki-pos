@@ -485,7 +485,7 @@ function renderInventoryTable() {
             <td class="px-2 py-3" style="width:32px;">
               <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
                 style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;"
-                onchange="invBulkToggle(this)">
+                data-change="invBulkToggle" data-pass-el="before">
             </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
@@ -503,7 +503,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-sm inv-col-hidden-prov">${_esc(product.proveedor||'—')}</td>
             <td class="px-4 py-3 font-semibold" id="stock-cell-${pid}">
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
-                    <span ondblclick="editarStockInline('${pid}')" title="Doble clic para editar"
+                    <span data-dblclick="editarStockInline" data-arg="${pid}" title="Doble clic para editar"
                         style="cursor:pointer;padding:2px 10px;border-radius:8px;background:#f3f4f6;border:1px dashed #d1d5db;font-size:.95rem;">
                         ${stockEf} <span style="font-size:10px;color:#9ca3af;font-weight:400;">${_esc(product.unidad||'pza')}</span>
                     </span>
@@ -512,10 +512,10 @@ function renderInventoryTable() {
             <td class="px-4 py-3">${badge}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;align-items:center;">
-                    <button type="button" onclick="editProduct('${pid}')" title="Editar" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;"><i class="fas fa-pen"></i></button>
-                    <button type="button" onclick="ajustarStock('${pid}')" title="Ajustar stock" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">📦</button>
+                    <button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;"><i class="fas fa-pen"></i></button>
+                    <button type="button" data-action="ajustarStock" data-arg="${pid}" title="Ajustar stock" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">📦</button>
                     <div style="position:relative;display:inline-block;">
-                        <button type="button" onclick="_invMpMenu(this,'${pid}',${!!product.proveedorUrl},'${product.activo===false?'desarchivar':'archivar'}')" title="Más acciones" style="width:30px;height:30px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;font-weight:700;color:#6b7280;"><i class="fas fa-ellipsis"></i></button>
+                        <button type="button" data-action="_invMpMenu" data-arg="${pid}" data-pass-el="before" title="Más acciones" style="width:30px;height:30px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;font-weight:700;color:#6b7280;"><i class="fas fa-ellipsis"></i></button>
                     </div>
                 </div>
             </td>
@@ -531,7 +531,7 @@ function renderInventoryTable() {
             <td class="px-2 py-3" style="width:32px;">
               <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
                 style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;"
-                onchange="invBulkToggle(this)">
+                data-change="invBulkToggle" data-pass-el="before">
             </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
@@ -546,9 +546,9 @@ function renderInventoryTable() {
             <td class="px-4 py-3"><span style="font-size:11px;background:#f6ecff;color:#7d4fa3;padding:3px 10px;border-radius:99px;font-weight:700;">Sin stock</span></td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;">
-                    <button onclick="openServicioModal('${pid}')" title="Editar"
+                    <button data-action="openServicioModal" data-arg="${pid}" title="Editar"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>
-                    <button onclick="deleteProduct('${pid}')" title="Eliminar"
+                    <button data-action="deleteProduct" data-arg="${pid}" title="Eliminar"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
@@ -607,7 +607,7 @@ function renderInventoryTable() {
         const _hasVars = product.variants && product.variants.length > 0;
         const varsHTML = _hasVars
             ? `<div>
-                <button onclick="(()=>{window['_invVar_${pid}_open']=!window['_invVar_${pid}_open'];renderInventoryTable()})()" style="font-size:.68rem;color:#6b7280;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:99px;padding:2px 8px;cursor:pointer;font-weight:600;white-space:nowrap;">
+                <button data-action="_mkInvToggleVarCollapse" data-arg="${pid}" style="font-size:.68rem;color:#6b7280;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:99px;padding:2px 8px;cursor:pointer;font-weight:600;white-space:nowrap;">
                     ${_varOpen ? '▲' : '▶'} ${product.variants.length} variante${product.variants.length!==1?'s':''}
                 </button>
                 ${_varOpen ? `<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">` +
@@ -639,7 +639,7 @@ function renderInventoryTable() {
             <td class="px-2 py-3" style="width:32px;">
               <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
                 style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;"
-                onchange="invBulkToggle(this)">
+                data-change="invBulkToggle" data-pass-el="before">
             </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
@@ -658,29 +658,29 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
-            <td class="px-4 py-3 text-right text-gray-800 font-semibold" ondblclick="invInlineEditPrice('${pid}', this)" style="font-size:.95rem;cursor:pointer;" title="Doble-click para editar precio">$${Number(product.price||0).toFixed(2)}</td>
-            <td class="px-4 py-3" ondblclick="invInlineEditStock('${pid}', this)" style="cursor:pointer;" title="Doble-click para editar stock">${stockCell}</td>
+            <td class="px-4 py-3 text-right text-gray-800 font-semibold" data-dblclick="invInlineEditPrice" data-arg="${pid}" data-pass-el="true" style="font-size:.95rem;cursor:pointer;" title="Doble-click para editar precio">$${Number(product.price||0).toFixed(2)}</td>
+            <td class="px-4 py-3" data-dblclick="invInlineEditStock" data-arg="${pid}" data-pass-el="true" style="cursor:pointer;" title="Doble-click para editar stock">${stockCell}</td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
                     ${product.tipo === 'pack'
-                        ? `<button type="button" onclick="openPackModal('${pid}')" title="Editar Pack" aria-label="Editar pack"
+                        ? `<button type="button" data-action="openPackModal" data-arg="${pid}" title="Editar Pack" aria-label="Editar pack"
                             style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>`
-                        : `<button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar producto"
+                        : `<button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" aria-label="Editar producto"
                             style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>`
                     }
-                    <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar producto"
+                    <button type="button" data-action="duplicarProducto" data-arg="${pid}" title="Duplicar" aria-label="Duplicar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>
-                    ${product.tipo !== 'pack' ? `<button type="button" onclick="cambiarTipoProducto('${pid}')" title="Convertir a Materia Prima" aria-label="Convertir tipo de producto"
+                    ${product.tipo !== 'pack' ? `<button type="button" data-action="cambiarTipoProducto" data-arg="${pid}" title="Convertir a Materia Prima" aria-label="Convertir tipo de producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ''}
-                    ${product.movimientos && product.movimientos.length ? `<button type="button" onclick="verMovimientosProducto('${pid}')" title="Ver movimientos de stock (${product.movimientos.length})" aria-label="Ver movimientos de stock"
+                    ${product.movimientos && product.movimientos.length ? `<button type="button" data-action="verMovimientosProducto" data-arg="${pid}" title="Ver movimientos de stock (${product.movimientos.length})" aria-label="Ver movimientos de stock"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>` : ''}
-                    <button type="button" onclick="abrirMovimientoProducto('${pid}')" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
+                    <button type="button" data-action="abrirMovimientoProducto" data-arg="${pid}" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-chart-line"></i></button>
-                    <button type="button" onclick="archivarProducto('${pid}')" title="${product.activo===false?'Desarchivar producto (activar)':'Archivar producto (ocultar)'}" aria-label="Archivar/Desarchivar"
+                    <button type="button" data-action="archivarProducto" data-arg="${pid}" title="${product.activo===false?'Desarchivar producto (activar)':'Archivar producto (ocultar)'}" aria-label="Archivar/Desarchivar"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(107,114,128,0.25);background:rgba(107,114,128,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">${product.activo===false?'<i class="fas fa-lock-open"></i>':'<i class="fas fa-box-archive"></i>'}</button>
-                    <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar producto"
+                    <button type="button" data-action="deleteProduct" data-arg="${pid}" title="Eliminar" aria-label="Eliminar producto"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
@@ -752,7 +752,7 @@ function renderInventoryTable() {
             <td class="px-2 py-3" style="width:32px;">
               <input type="checkbox" class="inv-bulk-cb" data-id="${pid}"
                 style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;"
-                onchange="invBulkToggle(this)">
+                data-change="invBulkToggle" data-pass-el="before">
             </td>
             <td class="px-4 py-3">${imgHTML}</td>
             <td class="px-4 py-3">
@@ -773,11 +773,11 @@ function renderInventoryTable() {
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                    <button type="button" onclick="editProduct('${pid}')" title="Editar" aria-label="Editar servicio"
+                    <button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" aria-label="Editar servicio"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>
-                    <button type="button" onclick="duplicarProducto('${pid}')" title="Duplicar" aria-label="Duplicar servicio"
+                    <button type="button" data-action="duplicarProducto" data-arg="${pid}" title="Duplicar" aria-label="Duplicar service"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>
-                    <button type="button" onclick="deleteProduct('${pid}')" title="Eliminar" aria-label="Eliminar servicio"
+                    <button type="button" data-action="deleteProduct" data-arg="${pid}" title="Eliminar" aria-label="Eliminar service"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
@@ -815,7 +815,7 @@ function renderInventoryTable() {
             const cls = h.colId === 'sku' ? ' inv-col-hidden-sku' : h.colId === 'proveedor' ? ' inv-col-hidden-prov' : '';
             const alignCls = h.align === 'right' ? ' text-right' : ' text-left';
             return h.sortKey
-                ? `<th class="px-4 py-3${alignCls} text-xs font-semibold text-gray-500 uppercase tracking-wide sortable-th cursor-pointer select-none${cls}" onclick="sortInventory('${h.sortKey}')" style="white-space:nowrap;">${h.label} ↕</th>`
+                ? `<th class="px-4 py-3${alignCls} text-xs font-semibold text-gray-500 uppercase tracking-wide sortable-th cursor-pointer select-none${cls}" data-action="sortInventory" data-arg="${h.sortKey}" style="white-space:nowrap;">${h.label} ↕</th>`
                 : `<th class="px-4 py-3${alignCls} text-xs font-semibold text-gray-500 uppercase tracking-wide${cls}" style="white-space:nowrap;">${h.label}</th>`;
         }).join('');
 
@@ -828,14 +828,14 @@ function renderInventoryTable() {
                         gap:8px;padding:10px 16px;border-top:1px solid #f3f4f6;">
                 <span style="font-size:12px;color:#6b7280;">Mostrando <b>${startIdx+1}–${end}</b> de <b>${total}</b></span>
                 <div style="display:flex;gap:4px;">
-                    <button onclick="invSectionPage('${id}',${page-1})" ${page<=1?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page<=1?'default':'pointer'};opacity:${page<=1?0.4:1};font-size:13px;">‹</button>
+                    <button data-action="invSectionPage" data-arg="${id}" data-arg2="${page-1}" ${page<=1?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page<=1?'default':'pointer'};opacity:${page<=1?0.4:1};font-size:13px;">‹</button>
                     ${Array.from({length:Math.min(5,totalPgs)},(_,i)=>{
                         let p2 = page <= 3 ? i+1 : page + i - 2;
                         if (p2 < 1) p2 = null; if (p2 > totalPgs) p2 = null;
                         if (p2 === null) return '';
-                        return `<button onclick="invSectionPage('${id}',${p2})" style="min-width:30px;padding:4px 8px;border:1px solid ${p2===page?'#FFD166':'#e5e7eb'};border-radius:7px;background:${p2===page?'#FFD166':'#fff'};color:${p2===page?'#fff':'#374151'};font-weight:${p2===page?700:400};font-size:13px;cursor:${p2===page?'default':'pointer'};" ${p2===page?'disabled':''}>${p2}</button>`;
+                        return `<button data-action="invSectionPage" data-arg="${id}" data-arg2="${p2}" style="min-width:30px;padding:4px 8px;border:1px solid ${p2===page?'#FFD166':'#e5e7eb'};border-radius:7px;background:${p2===page?'#FFD166':'#fff'};color:${p2===page?'#fff':'#374151'};font-weight:${p2===page?700:400};font-size:13px;cursor:${p2===page?'default':'pointer'};" ${p2===page?'disabled':''}>${p2}</button>`;
                     }).join('')}
-                    <button onclick="invSectionPage('${id}',${page+1})" ${page>=totalPgs?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page>=totalPgs?'default':'pointer'};opacity:${page>=totalPgs?0.4:1};font-size:13px;">›</button>
+                    <button data-action="invSectionPage" data-arg="${id}" data-arg2="${page+1}" ${page>=totalPgs?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page>=totalPgs?'default':'pointer'};opacity:${page>=totalPgs?0.4:1};font-size:13px;">›</button>
                 </div>
             </div>`;
         }
@@ -846,7 +846,7 @@ function renderInventoryTable() {
         return `
         <div style="margin-bottom:32px;border-radius:16px;overflow:hidden;border:1.5px solid ${titleColor}33;box-shadow:0 2px 12px ${titleColor}11;">
             <!-- Header de sección (clicable para colapsar) -->
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:${titleBg};border-bottom:${_collapsed?'none':'1.5px solid '+titleColor+'33'};cursor:pointer;" onclick="(()=>{const k='_invSec_${id}_collapsed';window[k]=!window[k];renderInventoryTable()})()">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:${titleBg};border-bottom:${_collapsed?'none':'1.5px solid '+titleColor+'33'};cursor:pointer;" data-action="_mkInvToggleCollapse" data-arg="${id}">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <span style="font-size:.85rem;color:${titleColor};transition:transform .2s;">${_collapsed?'▶':'▼'}</span>
                     <span style="font-size:1.1rem;font-weight:800;color:${titleColor};">${title}</span>
@@ -854,7 +854,7 @@ function renderInventoryTable() {
                 </div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;" onclick="event.stopPropagation()">
                     ${extraBtnHTML || ''}
-                    <button onclick="${btnOnclick}" class="mk-btn-primary"
+                    <button data-action="_mkInvAddBtnAction" data-arg="${id}" class="mk-btn-primary"
                         style="padding:7px 16px;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         ${btnLabel}
                     </button>
@@ -928,11 +928,11 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#fffbeb,#fef9f0)',
             btnLabel: '+ Producto',
             btnOnclick: 'openAddProductModal()',
-            extraBtnHTML: `<button type="button" onclick="injectPackModal();openPackModal()" class="mk-toolbar-btn">🎁 Crear Pack</button><button type="button" onclick="abrirBulkPrecioModal()" class="mk-toolbar-btn">📊 Actualizar precios</button>`,
+            extraBtnHTML: `<button type="button" data-action="_mkInvCreatePack" class="mk-toolbar-btn">🎁 Crear Pack</button><button type="button" data-action="abrirBulkPrecioModal" class="mk-toolbar-btn">📊 Actualizar precios</button>`,
             products: pts,
             renderFila: renderFilaPT,
             headers: [
-                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
+                {label:'<input type="checkbox" class="inv-bulk-all" data-change="invBulkToggleAll" data-pass-el="before" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
                 {label:''},
                 {label:'Producto', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
@@ -956,7 +956,7 @@ function renderInventoryTable() {
             products: pvs,
             renderFila: renderFilaVariable,
             headers: [
-                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
+                {label:'<input type="checkbox" class="inv-bulk-all" data-change="invBulkToggleAll" data-pass-el="before" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
@@ -977,11 +977,11 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#faf5ff,#f5f3ff)',
             btnLabel: '+ Materia Prima',
             btnOnclick: 'injectMpModal();openAddMateriaPrimaModal()',
-            extraBtnHTML: `<button type="button" onclick="abrirBulkStockModal()" class="mk-toolbar-btn">📦 Ajustar stock masivo</button>`,
+            extraBtnHTML: `<button type="button" data-action="abrirBulkStockModal" class="mk-toolbar-btn">📦 Ajustar stock masivo</button>`,
             products: mps,
             renderFila: renderFilaMP,
             headers: [
-                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
+                {label:'<input type="checkbox" class="inv-bulk-all" data-change="invBulkToggleAll" data-pass-el="before" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
@@ -1004,7 +1004,7 @@ function renderInventoryTable() {
             products: svcs,
             renderFila: renderFilaServicio,
             headers: [
-                {label:'<input type="checkbox" class="inv-bulk-all" onchange="invBulkToggleAll(this)" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
+                {label:'<input type="checkbox" class="inv-bulk-all" data-change="invBulkToggleAll" data-pass-el="before" style="width:16px;height:16px;cursor:pointer;accent-color:#9669c4;">', sortKey: null},
                 {label:''},
                 {label:'Nombre', sortKey:'name'},
                 {label:'SKU', sortKey:'sku', colId:'sku'},
@@ -1205,7 +1205,11 @@ window.invResetPage = invResetPage;
 window.renderInventoryTable = renderInventoryTable;
 
 // I2: menú "···" para acciones secundarias en fila de materia prima
-function _invMpMenu(btn: HTMLElement, pid: string, hasProvUrl: boolean, archivarLabel: string) {
+function _invMpMenu(btn: HTMLElement, pid: string) {
+    const prod = (window.products || []).find((x: any) => String(x.id) === String(pid));
+    if (!prod) return;
+    const hasProvUrl = !!prod.proveedorUrl;
+    const archivarLabel = prod.activo === false ? 'desarchivar' : 'archivar';
     const _existing = document.getElementById('_invMpMenuDrop');
     if (_existing) { _existing.remove(); if (_existing.dataset.pid === pid) return; }
     const menu = document.createElement('div');
@@ -1214,14 +1218,14 @@ function _invMpMenu(btn: HTMLElement, pid: string, hasProvUrl: boolean, archivar
     menu.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:172px;overflow:hidden;font-size:.78rem;';
     const _btnStyle = (color: string, bg: string) => `style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:${color};text-align:left;" onmouseover="this.style.background='${bg}'" onmouseout="this.style.background='none'"`;
     menu.innerHTML = `
-        <button onclick="registrarMerma('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#d97706','#fffbeb')}>📉 Registrar merma</button>
-        <button onclick="duplicarProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#9669c4','#f5f3ff')}>📋 Duplicar</button>
-        <button onclick="cambiarTipoProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#b45309','#fef9c3')}>→📦 Convertir a PT</button>
-        <button onclick="abrirMovimientoProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#4338ca','#eef2ff')}>📈 Ver gráfica</button>
-        ${hasProvUrl ? `<button onclick="(()=>{const p=(window.products||[]).find(x=>String(x.id)==='${pid}');if(p?.proveedorUrl)window.open(p.proveedorUrl,'_blank');document.getElementById('_invMpMenuDrop')?.remove()})()" ${_btnStyle('#16a34a','#f0fdf4')}>🔗 Abrir proveedor</button>` : ''}
+        <button data-action="registrarMerma" data-arg="${pid}" data-close-menu-drop="true" ${_btnStyle('#d97706','#fffbeb')}>📉 Registrar merma</button>
+        <button data-action="duplicarProducto" data-arg="${pid}" data-close-menu-drop="true" ${_btnStyle('#9669c4','#f5f3ff')}>📋 Duplicar</button>
+        <button data-action="cambiarTipoProducto" data-arg="${pid}" data-close-menu-drop="true" ${_btnStyle('#b45309','#fef9c3')}>→📦 Convertir a PT</button>
+        <button data-action="abrirMovimientoProducto" data-arg="${pid}" data-close-menu-drop="true" ${_btnStyle('#4338ca','#eef2ff')}>📈 Ver gráfica</button>
+        ${hasProvUrl ? `<button data-action="_mkInvOpenProveedor" data-arg="${pid}" data-close-menu-drop="true" ${_btnStyle('#16a34a','#f0fdf4')}>🔗 Abrir proveedor</button>` : ''}
         <hr style="margin:4px 0;border:none;border-top:1px solid #f3f4f6;">
-        <button onclick="archivarProducto('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#6b7280','#f9fafb')}>📁 ${archivarLabel==='desarchivar'?'Desarchivar':'Archivar'}</button>
-        <button onclick="deleteProduct('${pid}');document.getElementById('_invMpMenuDrop')?.remove()" ${_btnStyle('#dc2626','#fef2f2')}>🗑️ Eliminar</button>
+        <button data-action="archivarProducto" data-arg="${pid}" data-close-menu-drop="true" ${_btnStyle('#6b7280','#f9fafb')}>📁 ${archivarLabel==='desarchivar'?'Desarchivar':'Archivar'}</button>
+        <button data-action="deleteProduct" data-arg="${pid}" data-close-menu-drop="true" ${_btnStyle('#dc2626','#fef2f2')}>🗑️ Eliminar</button>
     `;
     document.body.appendChild(menu);
     const rect = btn.getBoundingClientRect();
@@ -1232,6 +1236,48 @@ function _invMpMenu(btn: HTMLElement, pid: string, hasProvUrl: boolean, archivar
     }), 0);
 }
 (window as any)._invMpMenu = _invMpMenu;
+
+function _mkInvToggleVarCollapse(pid: string) {
+    const k = `_invVar_${pid}_open`;
+    (window as any)[k] = !(window as any)[k];
+    renderInventoryTable();
+}
+(window as any)._mkInvToggleVarCollapse = _mkInvToggleVarCollapse;
+
+function _mkInvOpenProveedor(pid: string) {
+    const p = (window.products || []).find((x: any) => String(x.id) === String(pid));
+    if (p?.proveedorUrl) window.open(p.proveedorUrl, '_blank');
+}
+(window as any)._mkInvOpenProveedor = _mkInvOpenProveedor;
+
+function _mkInvToggleCollapse(id: string) {
+    const k = `_invSec_${id}_collapsed`;
+    (window as any)[k] = !(window as any)[k];
+    renderInventoryTable();
+}
+(window as any)._mkInvToggleCollapse = _mkInvToggleCollapse;
+
+function _mkInvAddBtnAction(sectionId: string) {
+    if (sectionId === 'pt') {
+        if (typeof (window as any).openAddProductModal === 'function') (window as any).openAddProductModal();
+    } else if (sectionId === 'pv') {
+        if (typeof (window as any).injectVariableProductModal === 'function') (window as any).injectVariableProductModal();
+        if (typeof (window as any).openVariableProductModal === 'function') (window as any).openVariableProductModal();
+    } else if (sectionId === 'mp') {
+        if (typeof (window as any).injectMpModal === 'function') (window as any).injectMpModal();
+        if (typeof (window as any).openAddMateriaPrimaModal === 'function') (window as any).openAddMateriaPrimaModal();
+    } else if (sectionId === 'svc') {
+        if (typeof (window as any).injectSvcModal === 'function') (window as any).injectSvcModal();
+        if (typeof (window as any).openServicioModal === 'function') (window as any).openServicioModal();
+    }
+}
+(window as any)._mkInvAddBtnAction = _mkInvAddBtnAction;
+
+function _mkInvCreatePack() {
+    if (typeof (window as any).injectPackModal === 'function') (window as any).injectPackModal();
+    if (typeof (window as any).openPackModal === 'function') (window as any).openPackModal();
+}
+(window as any)._mkInvCreatePack = _mkInvCreatePack;
 
 // FIX P-1: Debounce para búsqueda de inventario (300ms) — reduce renders mientras el usuario escribe
 let _inventorySearchTimer: ReturnType<typeof setTimeout> | null = null;
