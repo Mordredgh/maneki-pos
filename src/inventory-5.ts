@@ -327,7 +327,6 @@ function renderInventoryTable() {
         .join('|');
     const _iHash = _prods.length + '_' + _prods.reduce((s: number,p: any)=>s+Number(p.stock||0),0).toFixed(0) + '_' + ((document.getElementById('inventorySearch') as HTMLInputElement|null)?.value||'') + '_' + _tipoQ + '_' + _pageHash + '_' + (window._invPageSize || 10) + '_' + (window._invSortCol || '') + '_' + (window._invSortDir || '');
     const dualEl = document.getElementById('invDualContainer');
-    if (dualEl && (dualEl as any)._lastHash === _iHash) return;
     if (dualEl) (dualEl as any)._lastHash = _iHash;
 
     // Buscar o crear contenedor dual (reemplaza la tabla original)
@@ -833,14 +832,14 @@ function renderInventoryTable() {
                         gap:8px;padding:10px 16px;border-top:1px solid #f3f4f6;">
                 <span style="font-size:12px;color:#6b7280;">Mostrando <b>${startIdx+1}–${end}</b> de <b>${total}</b></span>
                 <div style="display:flex;gap:4px;">
-                    <button data-action="invSectionPage" data-arg="${id}" data-arg2="${page-1}" ${page<=1?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page<=1?'default':'pointer'};opacity:${page<=1?0.4:1};font-size:13px;">‹</button>
+                    <button data-action="invSectionPage" data-arg="${id}" data-arg2="${page-1}" onclick="invSectionPage('${id}', ${page-1})" ${page<=1?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page<=1?'default':'pointer'};opacity:${page<=1?0.4:1};font-size:13px;">‹</button>
                     ${Array.from({length:Math.min(5,totalPgs)},(_,i)=>{
                         let p2 = page <= 3 ? i+1 : page + i - 2;
                         if (p2 < 1) p2 = null; if (p2 > totalPgs) p2 = null;
                         if (p2 === null) return '';
-                        return `<button data-action="invSectionPage" data-arg="${id}" data-arg2="${p2}" style="min-width:30px;padding:4px 8px;border:1px solid ${p2===page?'#FFD166':'#e5e7eb'};border-radius:7px;background:${p2===page?'#FFD166':'#fff'};color:${p2===page?'#fff':'#374151'};font-weight:${p2===page?700:400};font-size:13px;cursor:${p2===page?'default':'pointer'};" ${p2===page?'disabled':''}>${p2}</button>`;
+                        return `<button data-action="invSectionPage" data-arg="${id}" data-arg2="${p2}" onclick="invSectionPage('${id}', ${p2})" style="min-width:30px;padding:4px 8px;border:1px solid ${p2===page?'#FFD166':'#e5e7eb'};border-radius:7px;background:${p2===page?'#FFD166':'#fff'};color:${p2===page?'#fff':'#374151'};font-weight:${p2===page?700:400};font-size:13px;cursor:${p2===page?'default':'pointer'};" ${p2===page?'disabled':''}>${p2}</button>`;
                     }).join('')}
-                    <button data-action="invSectionPage" data-arg="${id}" data-arg2="${page+1}" ${page>=totalPgs?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page>=totalPgs?'default':'pointer'};opacity:${page>=totalPgs?0.4:1};font-size:13px;">›</button>
+                    <button data-action="invSectionPage" data-arg="${id}" data-arg2="${page+1}" onclick="invSectionPage('${id}', ${page+1})" ${page>=totalPgs?'disabled':''} style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:7px;background:#fff;cursor:${page>=totalPgs?'default':'pointer'};opacity:${page>=totalPgs?0.4:1};font-size:13px;">›</button>
                 </div>
             </div>`;
         }
@@ -857,9 +856,9 @@ function renderInventoryTable() {
                     <span style="font-size:1.1rem;font-weight:800;color:${titleColor};">${title}</span>
                     <span style="background:${titleColor};color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;">${total}</span>
                 </div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;" onclick="event.stopPropagation()">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
                     ${extraBtnHTML || ''}
-                    <button data-action="_mkInvAddBtnAction" data-arg="${id}" class="mk-btn-primary"
+                    <button type="button" data-action="_mkInvAddBtnAction" data-arg="${id}" onclick="_mkInvAddBtnAction('${id}')" class="mk-btn-primary"
                         style="padding:7px 16px;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
                         ${btnLabel}
                     </button>
@@ -933,7 +932,7 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#fffbeb,#fef9f0)',
             btnLabel: '+ Producto',
             btnOnclick: 'openAddProductModal()',
-            extraBtnHTML: `<button type="button" data-action="_mkInvCreatePack" class="mk-toolbar-btn">🎁 Crear Pack</button><button type="button" data-action="abrirBulkPrecioModal" class="mk-toolbar-btn">📊 Actualizar precios</button>`,
+            extraBtnHTML: `<button type="button" data-action="_mkInvCreatePack" onclick="_mkInvCreatePack()" class="mk-toolbar-btn">🎁 Crear Pack</button><button type="button" data-action="abrirBulkPrecioModal" onclick="abrirBulkPrecioModal()" class="mk-toolbar-btn">📊 Actualizar precios</button>`,
             products: pts,
             renderFila: renderFilaPT,
             headers: [
@@ -982,7 +981,7 @@ function renderInventoryTable() {
             titleBg: 'linear-gradient(135deg,#faf5ff,#f5f3ff)',
             btnLabel: '+ Materia Prima',
             btnOnclick: 'injectMpModal();openAddMateriaPrimaModal()',
-            extraBtnHTML: `<button type="button" data-action="abrirBulkStockModal" class="mk-toolbar-btn">📦 Ajustar stock masivo</button>`,
+            extraBtnHTML: `<button type="button" data-action="abrirBulkStockModal" onclick="abrirBulkStockModal()" class="mk-toolbar-btn">📦 Ajustar stock masivo</button>`,
             products: mps,
             renderFila: renderFilaMP,
             headers: [
@@ -1035,7 +1034,17 @@ function renderInventoryTable() {
             dualContainer.appendChild(secEl);
         }
 
-        const secHash = secDef.products.length + '_' + secDef.products.reduce((s, p) => s + String(p.id), '') + '_' + (window[`_invPage_${secDef.id}`] || 1) + '_' + (window._invSortCol || '') + (window._invSortDir || '') + '_' + _tipoQ;
+        const secDataHash = secDef.products
+            .map(p => [
+                p.id,
+                p.updatedAt || '',
+                p.stock || 0,
+                p.price || 0,
+                p.cost || 0,
+                p.activo === false ? '0' : '1',
+            ].join(':'))
+            .join('|');
+        const secHash = secDef.products.length + '_' + secDataHash + '_' + (window[`_invPage_${secDef.id}`] || 1) + '_' + (window._invPageSize || 10) + '_' + (window._invSortCol || '') + (window._invSortDir || '') + '_' + _tipoQ;
         if ((secEl as any)._hash !== secHash) {
             secEl.innerHTML = html;
             (secEl as any)._hash = secHash;
