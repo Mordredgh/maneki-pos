@@ -720,6 +720,9 @@ async function initApp() {
             window.pedidosFinalizados = pedidosFinalizados;
             window.stockMovimientos   = stockMovimientos;
             window.stockMovements     = stockMovimientos; // inventory.js usa este nombre
+            if (typeof window.pruneStockMovementsTableOnce === 'function') {
+                window.pruneStockMovementsTableOnce();
+            }
             window.gastosRecurrentes  = gastosRecurrentes;
             window.ingresosRecurrentes = window.ingresosRecurrentes || [];
             window.storeConfig        = storeConfig;

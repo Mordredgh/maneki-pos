@@ -907,30 +907,33 @@ function calcularDisponibilidadDesdeMP(product, pMap?: Map<string, any>, sCache?
     const findProd = lookup
         ? (id) => lookup.get(String(id))
         : (id) => (window.products||[]).find(x => String(x.id) === String(id));
-    const getStock = sCache
-        ? (p) => sCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : parseInt(p.stock) || 0)
-        : (p) => typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : parseInt(p.stock) || 0;
     const tieneMpFisica = product.mpComponentes.some(c => {
         const p = findProd(c.id);
         return !p || p.tipo !== 'servicio';
     });
+    product._tieneComponentesHuerfanos = false;
     if (!tieneMpFisica) return null;
-    let minPiezas = Infinity;
     const detalle = [];
     for (const comp of product.mpComponentes) {
         const mp = findProd(comp.id);
         if (mp && mp.tipo === 'servicio') continue;
         if (!mp) {
             product._tieneComponentesHuerfanos = true;
-            continue;
+            detalle.push({ nombre: comp.nombre || '?', stock: 0, qty: comp.qty || 1, posibles: 0 });
+            return { piezas: 0, detalle };
         }
-        const stockMp = getStock(mp);
+        const stockMp = sCache
+            ? (sCache.get(String(mp.id)) ?? (Array.isArray(mp.variants) && mp.variants.length ? mp.variants.reduce((s, v) => s + (parseFloat(v.qty) || 0), 0) : parseFloat(mp.stock) || 0))
+            : (Array.isArray(mp.variants) && mp.variants.length ? mp.variants.reduce((s, v) => s + (parseFloat(v.qty) || 0), 0) : parseFloat(mp.stock) || 0);
         const qtyNecesaria = comp.qty || 1;
-        const piezasPosibles = Math.floor(stockMp / qtyNecesaria);
+        const rendimiento = parseFloat(comp.rendimientoPorHoja) || parseFloat(product.rendimientoPorHoja) || 1;
+        const piezasPosibles = Math.floor(stockMp / qtyNecesaria) * rendimiento;
         detalle.push({ nombre: comp.nombre || (mp ? mp.name : '?'), stock: stockMp, qty: qtyNecesaria, posibles: piezasPosibles });
-        if (piezasPosibles < minPiezas) minPiezas = piezasPosibles;
     }
-    return { piezas: minPiezas === Infinity ? 0 : minPiezas, detalle };
+    const piezas = typeof window.calcularPiezasFabricables === 'function'
+        ? window.calcularPiezasFabricables(product)
+        : (detalle.length ? Math.min(...detalle.map(d => d.posibles)) : 0);
+    return { piezas, detalle };
 }
 window.calcularDisponibilidadDesdeMP = calcularDisponibilidadDesdeMP;
 

@@ -56,34 +56,80 @@ describe('calcSaldoPendiente', () => {
 
 // ── getStockEfectivo (source: inventory-1.ts) ──────────────────────────────────
 // Extracted with injected product lookup
-function getStockEfectivo(product: any, allProducts: any[] = []): number {
-  if (product.variants && product.variants.length > 0) {
-    return product.variants.reduce((sum: number, v: any) => sum + (parseInt(v.qty) || 0), 0);
+function calcularPiezasFabricables(product: any, allProducts: any[] = []): number {
+  if (!Array.isArray(product?.mpComponentes) || product.mpComponentes.length === 0) return 0;
+  let minPiezas = Infinity;
+  let tieneMpFisica = false;
+
+  for (const comp of product.mpComponentes) {
+    const mp = allProducts.find(x => String(x.id) === String(comp.id));
+    if (!mp) return 0;
+    if (mp.tipo === 'servicio') continue;
+
+    tieneMpFisica = true;
+    const stockMp = Array.isArray(mp.variants) && mp.variants.length > 0
+      ? mp.variants.reduce((sum: number, v: any) => sum + (parseFloat(v.qty) || 0), 0)
+      : parseFloat(mp.stock) || 0;
+    const qty = parseFloat(comp.qty) || 1;
+    const rendimiento = parseFloat(comp.rendimientoPorHoja) || parseFloat(product.rendimientoPorHoja) || 1;
+    const piezas = Math.floor(stockMp / qty) * rendimiento;
+    if (piezas < minPiezas) minPiezas = piezas;
   }
+
+  if (!tieneMpFisica) return 0;
+  return minPiezas === Infinity ? 0 : Math.floor(minPiezas);
+}
+
+function getStockEfectivo(product: any, allProducts: any[] = []): number {
+  const stockVariantes = product.variants && product.variants.length > 0
+    ? product.variants.reduce((sum: number, v: any) => sum + (parseInt(v.qty) || 0), 0)
+    : null;
   if (product.mpComponentes && product.mpComponentes.length > 0) {
     const allServices = product.mpComponentes.every((c: any) => {
       const mp = allProducts.find(x => String(x.id) === String(c.id));
       return mp && mp.tipo === 'servicio';
     });
-    if (allServices) return parseInt(product.stock) || 0;
+    if (allServices) return stockVariantes ?? (parseInt(product.stock) || 0);
 
-    let minPiezas = Infinity;
-    product.mpComponentes.forEach((c: any) => {
-      const mp = allProducts.find(x => String(x.id) === String(c.id));
-      if (mp && mp.tipo !== 'servicio') {
-        const stockMp = mp.stock || 0;
-        const qty = parseFloat(c.qty) || 1;
-        const pzas = Math.floor(stockMp / qty);
-        if (pzas < minPiezas) minPiezas = pzas;
-      }
-    });
-
-    const stockManual = parseInt(product.stock) || 0;
-    const stockFabricable = minPiezas === Infinity ? 0 : minPiezas;
-    return stockManual + stockFabricable;
+    const stockManual = stockVariantes ?? (parseInt(product.stock) || 0);
+    return stockManual + calcularPiezasFabricables(product, allProducts);
   }
+  if (stockVariantes !== null) return stockVariantes;
   return parseInt(product.stock) || 0;
 }
+
+describe('calcularPiezasFabricables', () => {
+  it('returns 0 when a physical component was deleted', () => {
+    const product = { mpComponentes: [{ id: 'missing', qty: 1 }] };
+    expect(calcularPiezasFabricables(product, [])).toBe(0);
+  });
+
+  it('uses rendimientoPorHoja as the inverse of MP discount', () => {
+    const mp = { id: 'hoja', tipo: 'materia_prima', stock: 3 };
+    const product = { rendimientoPorHoja: 12, mpComponentes: [{ id: 'hoja', qty: 1 }] };
+    expect(calcularPiezasFabricables(product, [mp])).toBe(36);
+  });
+
+  it('ignores service components and uses the limiting physical component', () => {
+    const svc = { id: 'svc', tipo: 'servicio', stock: 0 };
+    const mp1 = { id: 'mp1', tipo: 'materia_prima', stock: 20 };
+    const mp2 = { id: 'mp2', tipo: 'materia_prima', stock: 9 };
+    const product = {
+      mpComponentes: [
+        { id: 'svc', qty: 1 },
+        { id: 'mp1', qty: 2 },
+        { id: 'mp2', qty: 3 },
+      ],
+    };
+    expect(calcularPiezasFabricables(product, [svc, mp1, mp2])).toBe(3);
+  });
+
+  it('returns 0 when all components are services', () => {
+    const svc = { id: 'svc', tipo: 'servicio' };
+    const product = { mpComponentes: [{ id: 'svc', qty: 1 }] };
+    expect(calcularPiezasFabricables(product, [svc])).toBe(0);
+  });
+});
 
 describe('getStockEfectivo', () => {
   it('returns stock from variants sum', () => {
@@ -147,6 +193,16 @@ describe('getStockEfectivo', () => {
     const product = { stock: 0, mpComponentes: [{ id: 'mp1', qty: 1 }] };
     expect(getStockEfectivo(product, [mp])).toBe(0);
   });
+
+  it('adds variant stock plus MP fabricable stock', () => {
+    const mp = { id: 'mp1', tipo: 'materia_prima', stock: 4 };
+    const product = {
+      stock: 999,
+      variants: [{ qty: 2 }, { qty: 3 }],
+      mpComponentes: [{ id: 'mp1', qty: 2 }],
+    };
+    expect(getStockEfectivo(product, [mp])).toBe(7);
+  });
 });
 
 // ── Margin calculation (inline in inventory-5 renderFilaPT) ────────────────────
@@ -182,6 +238,18 @@ describe('descuento por variante específica', () => {
     const cantidadAFabricar = Math.max(0, item.quantity - stockFabricadoAntes);
     expect(stockFabricadoAntes).toBe(0);
     expect(cantidadAFabricar).toBe(5);
+  });
+});
+
+describe('movimiento de stock truncado', () => {
+  it('records the real delta and keeps requested quantity separately', () => {
+    const stockAntes = 3;
+    const cantidadSolicitada = -5;
+    const stockDespues = Math.max(0, stockAntes + cantidadSolicitada);
+    const cantidad = stockDespues - stockAntes;
+    expect(cantidad).toBe(-3);
+    expect(stockAntes + cantidad).toBe(stockDespues);
+    expect(cantidadSolicitada).toBe(-5);
   });
 });
 
@@ -316,20 +384,26 @@ function calcularDisponibilidadDesdeMP(product: any, allProducts: any[]): { piez
     const p = findProd(c.id);
     return !p || p.tipo !== 'servicio';
   });
+  product._tieneComponentesHuerfanos = false;
   if (!tieneMpFisica) return null;
-  let minPiezas = Infinity;
   const detalle: any[] = [];
   for (const comp of product.mpComponentes) {
     const mp = findProd(comp.id);
     if (mp && mp.tipo === 'servicio') continue;
-    if (!mp) continue;
-    const stockMp = parseInt(mp.stock) || 0;
+    if (!mp) {
+      product._tieneComponentesHuerfanos = true;
+      detalle.push({ nombre: comp.nombre || '?', stock: 0, qty: comp.qty || 1, posibles: 0 });
+      return { piezas: 0, detalle };
+    }
+    const stockMp = Array.isArray(mp.variants) && mp.variants.length > 0
+      ? mp.variants.reduce((s: number, v: any) => s + (parseFloat(v.qty) || 0), 0)
+      : parseFloat(mp.stock) || 0;
     const qtyNecesaria = comp.qty || 1;
-    const piezasPosibles = Math.floor(stockMp / qtyNecesaria);
+    const rendimiento = parseFloat(comp.rendimientoPorHoja) || parseFloat(product.rendimientoPorHoja) || 1;
+    const piezasPosibles = Math.floor(stockMp / qtyNecesaria) * rendimiento;
     detalle.push({ nombre: comp.nombre || mp.name, stock: stockMp, qty: qtyNecesaria, posibles: piezasPosibles });
-    if (piezasPosibles < minPiezas) minPiezas = piezasPosibles;
   }
-  return { piezas: minPiezas === Infinity ? 0 : minPiezas, detalle };
+  return { piezas: calcularPiezasFabricables(product, allProducts), detalle };
 }
 
 describe('calcularDisponibilidadDesdeMP', () => {

@@ -36,28 +36,15 @@ async function _descontarInventarioPedido(pedido) {
         const _tieneMpComp = Array.isArray(prod.mpComponentes) && prod.mpComponentes.length > 0;
         let _stockDisponible;
         if (prod.tipo === 'producto_variable' && _tieneMpComp) {
-            const _rph = prod.rendimientoPorHoja || 1;
-            let _minHojas = Infinity;
-            for (const comp of prod.mpComponentes) {
-                const mp = prodMap.get(String(comp.id));
-                if (mp && mp.tipo !== 'servicio') {
-                    const qtyComp = parseFloat(comp.qty) || 1;
-                    _minHojas = Math.min(_minHojas, Math.floor((mp.stock || 0) / qtyComp));
-                }
-            }
-            _stockDisponible = (_minHojas === Infinity ? 0 : _minHojas) * _rph;
+            _stockDisponible = typeof window.calcularPiezasFabricables === 'function'
+                ? window.calcularPiezasFabricables(prod)
+                : 0;
         } else if (_tieneMpComp && Array.isArray(prod.variants) && prod.variants.length > 0) {
             const _stockVariantes = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
-            let _minFabricable = Infinity;
-            for (const comp of prod.mpComponentes) {
-                const mp = prodMap.get(String(comp.id));
-                if (mp && mp.tipo !== 'servicio') {
-                    const stockMp = mp.stock || 0;
-                    const qtyComp = parseFloat(comp.qty) || 1;
-                    _minFabricable = Math.min(_minFabricable, Math.floor(stockMp / qtyComp));
-                }
-            }
-            _stockDisponible = _stockVariantes + (_minFabricable === Infinity ? 0 : _minFabricable);
+            const _fabricable = typeof window.calcularPiezasFabricables === 'function'
+                ? window.calcularPiezasFabricables(prod)
+                : 0;
+            _stockDisponible = _stockVariantes + _fabricable;
         } else if (prod.tipo === 'producto_variable') {
             // PV sin mpComponentes: usa su propio stock numérico
             _stockDisponible = parseInt(prod.stock) || 0;
@@ -114,9 +101,11 @@ async function _descontarInventarioPedido(pedido) {
 
         if (typeof registrarMovimiento === 'function') {
             const _stockDespuesPT = _ptVarSeleccionada ? (parseInt(_ptVarSeleccionada.qty) || 0) : prod.stock;
+            const _deltaRealPT = _stockDespuesPT - antesPT;
             registrarMovimiento({
                 productoId: prod.id, productoNombre: prod.name,
-                tipo: 'salida', cantidad: -cantidad,
+                tipo: 'salida', cantidad: _deltaRealPT,
+                cantidadSolicitada: -cantidad,
                 motivo: `Producción pedido ${pedido.folio}`,
                 stockAntes: antesPT, stockDespues: _stockDespuesPT
             });
@@ -169,9 +158,11 @@ async function _descontarInventarioPedido(pedido) {
                 }
 
                 if (typeof registrarMovimiento === 'function') {
+                    const _deltaRealMP = (mp.stock || 0) - antesMP;
                     registrarMovimiento({
                         productoId: mp.id, productoNombre: mp.name,
-                        tipo: 'salida', cantidad: -cantMP,
+                        tipo: 'salida', cantidad: _deltaRealMP,
+                        cantidadSolicitada: -cantMP,
                         motivo: `MP para ${prod.name}${item.variante ? ` (${item.variante})` : ''} — pedido ${pedido.folio}`,
                         stockAntes: antesMP, stockDespues: mp.stock
                     });

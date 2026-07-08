@@ -1160,23 +1160,34 @@ async function _migrarBase64AStorage(p) {
 // Para productos terminados con mpComponentes, calcula el stock real desde MPs
 // antes de escribir a la tabla relacional, para que Lovable muestre el stock correcto.
 function _calcStockParaSupabase(p) {
-    // Solo calcular si es producto terminado con componentes MP
-    if (!p.mpComponentes || p.mpComponentes.length === 0) return p.stock || 0;
-    const tieneMpFisica = p.mpComponentes.some(c => {
-        const mp = (window.products || []).find(x => String(x.id) === String(c.id));
-        return !mp || mp.tipo !== 'servicio';
-    });
-    if (!tieneMpFisica) return p.stock || 0;
+    const stockVariantes = Array.isArray(p.variants) && p.variants.length > 0
+        ? p.variants.reduce((sum, v) => sum + (parseFloat(v.qty) || 0), 0)
+        : null;
+    const stockBase = stockVariantes !== null ? stockVariantes : (parseFloat(p.stock) || 0);
+    if (!p.mpComponentes || p.mpComponentes.length === 0) return stockBase;
+    const calc = (window as any).calcularPiezasFabricables;
+    const fabricable = typeof calc === 'function' ? calc(p) : _calcPiezasFabricablesFallback(p);
+    return stockBase + fabricable;
+}
+
+function _calcPiezasFabricablesFallback(p) {
     let minPiezas = Infinity;
+    let tieneMpFisica = false;
     for (const comp of p.mpComponentes) {
         const mp = (window.products || []).find(x => String(x.id) === String(comp.id));
         if (mp && mp.tipo === 'servicio') continue;
-        const stockMp = mp ? (mp.stock || 0) : 0;
-        const qty = comp.qty || 1;
-        const posibles = Math.floor(stockMp / qty);
+        if (!mp) return 0;
+        tieneMpFisica = true;
+        const stockMp = Array.isArray(mp.variants) && mp.variants.length > 0
+            ? mp.variants.reduce((sum, v) => sum + (parseFloat(v.qty) || 0), 0)
+            : (parseFloat(mp.stock) || 0);
+        const qty = parseFloat(comp.qty) || 1;
+        const rendimiento = parseFloat(comp.rendimientoPorHoja) || parseFloat(p.rendimientoPorHoja) || 1;
+        const posibles = Math.floor(stockMp / qty) * rendimiento;
         if (posibles < minPiezas) minPiezas = posibles;
     }
-    return minPiezas === Infinity ? 0 : minPiezas;
+    if (!tieneMpFisica) return 0;
+    return minPiezas === Infinity ? 0 : Math.floor(minPiezas);
 }
 
 function saveProducts() {

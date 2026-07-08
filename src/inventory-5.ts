@@ -27,15 +27,8 @@ function _fuzzyMatch(query: string, target: string, threshold = 2): boolean {
 // ── Calcular cuántas unidades se pueden producir desde MP ──────────────────
 function calcularProducibles(prod) {
     if (!Array.isArray(prod.mpComponentes) || prod.mpComponentes.length === 0) return null;
-    let minFabricable = Infinity;
-    for (const comp of prod.mpComponentes) {
-        const mp = (window.products || []).find(p => String(p.id) === String(comp.id));
-        if (!mp) return 0;
-        const stockMp = typeof getStockEfectivo==='function' ? getStockEfectivo(mp) : (mp.stock || 0);
-        const qty = parseFloat(comp.qty) || 1;
-        minFabricable = Math.min(minFabricable, Math.floor(stockMp / qty));
-    }
-    return minFabricable === Infinity ? 0 : minFabricable;
+    if (typeof window.calcularPiezasFabricables === 'function') return window.calcularPiezasFabricables(prod);
+    return 0;
 }
 window.calcularProducibles = calcularProducibles;
 

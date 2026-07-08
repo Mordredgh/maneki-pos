@@ -121,20 +121,43 @@ window._kitComponentes         = window._kitComponentes         ?? [];
 
 // ── Historial de movimientos ───────────────────────────────────────────────
 function saveStockMovements() {
-    // Sincronizar alias y persistir en clave KV (para offline via sbLoad).
-    // La escritura relacional a stock_movements ocurre en registrarMovimiento()
-    // como insert atómico — estas dos rutas son complementarias, no duplicadas.
+    // Sincronizar alias en memoria. La persistencia real ocurre en stock_movements.
     window.stockMovimientos = window.stockMovements;
-    sbSave('stockMovimientos', window.stockMovements);
 }
 
-function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, motivo, stockAntes, stockDespues }) {
+let _stockMovementsPrunedThisSession = false;
+async function pruneStockMovementsTableOnce() {
+    if (_stockMovementsPrunedThisSession) return;
+    if (typeof db === 'undefined' || !db) return;
+    _stockMovementsPrunedThisSession = true;
+    try {
+        const { data, error } = await (db as any)
+            .from('stock_movements')
+            .select('id')
+            .order('fecha', { ascending: false })
+            .range(500, 10000);
+        if (error) {
+            console.warn('[Stock] No se pudo listar stock_movements para recorte:', error.message);
+            return;
+        }
+        const ids = (data || []).map((r: any) => r.id).filter(Boolean);
+        if (!ids.length) return;
+        const { error: delError } = await (db as any).from('stock_movements').delete().in('id', ids);
+        if (delError) console.warn('[Stock] No se pudo recortar stock_movements:', delError.message);
+    } catch (e: any) {
+        console.warn('[Stock] Error recortando stock_movements:', e?.message || e);
+    }
+}
+window.pruneStockMovementsTableOnce = pruneStockMovementsTableOnce;
+
+function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, cantidadSolicitada, motivo, stockAntes, stockDespues }) {
     const _movId  = mkId();
     const _movIso = new Date().toISOString();
     window.stockMovements.unshift({
         id:             _movId,
         fecha:          _fechaHoy() + 'T' + new Date().toLocaleTimeString('es-MX'),
         productoId, productoNombre, tipo, cantidad,
+        cantidadSolicitada,
         motivo:         motivo || '',
         stockAntes, stockDespues
     });
@@ -162,6 +185,36 @@ function _genId() {
     return 'p' + mkId().replace(/-/g, '');
 }
 
+function _stockFisicoParaFabricacion(mp: any): number {
+    if (Array.isArray(mp?.variants) && mp.variants.length > 0) {
+        return mp.variants.reduce((sum: number, v: any) => sum + (parseFloat(v.qty) || 0), 0);
+    }
+    return parseFloat(mp?.stock) || 0;
+}
+
+function calcularPiezasFabricables(product: any): number {
+    if (!Array.isArray(product?.mpComponentes) || product.mpComponentes.length === 0) return 0;
+    let minPiezas = Infinity;
+    let tieneMpFisica = false;
+
+    for (const comp of product.mpComponentes) {
+        const mp = (window.products || []).find((x: any) => String(x.id) === String(comp.id));
+        if (!mp) return 0;
+        if (mp.tipo === 'servicio') continue;
+
+        tieneMpFisica = true;
+        const stockMp = _stockFisicoParaFabricacion(mp);
+        const qty = parseFloat(comp.qty) || 1;
+        const rendimiento = parseFloat(comp.rendimientoPorHoja) || parseFloat(product.rendimientoPorHoja) || 1;
+        const piezas = Math.floor(stockMp / qty) * rendimiento;
+        if (piezas < minPiezas) minPiezas = piezas;
+    }
+
+    if (!tieneMpFisica) return 0;
+    return minPiezas === Infinity ? 0 : Math.floor(minPiezas);
+}
+window.calcularPiezasFabricables = calcularPiezasFabricables;
+
 // Si el producto tiene variantes, el stock es la suma de todas las variantes
 // BUG-1 FIX: si además tiene mpComponentes, sumar el fabricable desde MP al stock de variantes
 function getStockEfectivo(product) {
@@ -170,23 +223,7 @@ function getStockEfectivo(product) {
 
     // Calcular fabricable desde MP (reutilizable)
     function _calcFabricableMP() {
-        const allServices = product.mpComponentes.every(c => {
-            const mp = (window.products||[]).find(x=>String(x.id)===String(c.id));
-            return mp && mp.tipo === 'servicio';
-        });
-        if (allServices) return 0;
-        let minPiezas = Infinity;
-        product.mpComponentes.forEach(c => {
-            const mp = (window.products||[]).find(x=>String(x.id)===String(c.id));
-            if (mp && mp.tipo !== 'servicio') {
-                const stockMp = parseFloat(mp.stock) || 0;
-                const qty = parseFloat(c.qty) || 1;
-                const rendimiento = parseFloat(c.rendimientoPorHoja) || 1;
-                const pzas = Math.floor((stockMp / qty) * rendimiento);
-                if (pzas < minPiezas) minPiezas = pzas;
-            }
-        });
-        return minPiezas === Infinity ? 0 : minPiezas;
+        return calcularPiezasFabricables(product);
     }
 
     if (tieneVariantes) {
