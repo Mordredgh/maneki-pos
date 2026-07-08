@@ -602,7 +602,7 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
 
             // BUG-2 FIX: ajustar stock cuando el pedido ya tiene inventarioDescontado === true
             if (pActual.inventarioDescontado === true) {
-                _ajustarStockDiferencia(pActual.productosInventario, window.pedidoProductosSeleccionados || []);
+                await _ajustarStockDiferencia(pActual.productosInventario, window.pedidoProductosSeleccionados || [], pActual);
             }
 
             // BUG-PED-01 + BUG-PED-007 FIX: sincronizar pagos[] cuando cambia el anticipo.
@@ -682,6 +682,43 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
         window.pedidoProductosSeleccionados = [];
         window.pedidoEmpaquesSeleccionados = [];
         await savePedidos();
+        if (anticipo > 0) {
+            const pagoAnticipo = pedido.pagos && pedido.pagos[0] ? pedido.pagos[0] : null;
+            const anticipoId = pagoAnticipo?.id || mkId();
+            const fechaAnticipo = pagoAnticipo?.fecha || _fechaHoy();
+            const horaAnticipo = pagoAnticipo?.hora || new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+            if (!window.salesHistory) window.salesHistory = [];
+            if (!window.salesHistory.some((s: any) => s.id === anticipoId)) {
+                window.salesHistory.push({
+                    id: anticipoId,
+                    type: 'anticipo',
+                    folio: pedido.folio,
+                    date: fechaAnticipo,
+                    time: horaAnticipo,
+                    customer: pedido.cliente || 'Cliente',
+                    concept: `Anticipo pedido ${pedido.folio}`,
+                    products: [],
+                    total: anticipo,
+                    method: 'Efectivo',
+                    note: 'Anticipo inicial'
+                });
+                if (typeof saveSalesHistory === 'function') saveSalesHistory();
+            }
+            if (Array.isArray(window.incomes) && !window.incomes.some((i: any) => i.id === anticipoId)) {
+                window.incomes.push({
+                    id: anticipoId,
+                    concept: `Anticipo pedido ${pedido.folio}`,
+                    amount: anticipo,
+                    date: fechaAnticipo,
+                    folioOrigen: pedido.folio,
+                    pedidoId: pedido.id,
+                    method: 'Efectivo',
+                    metodo: 'Efectivo',
+                    type: 'anticipo'
+                });
+                if (typeof saveIncomes === 'function') saveIncomes();
+            }
+        }
         if (window.MKS) MKS.sale();
         manekiToastExport('✅ Pedido creado: ' + pedido.folio, 'ok');
     }
@@ -699,30 +736,19 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
 });
 
 // ── BUG-2: Ajustar stock cuando se edita un pedido que ya descontó inventario ──
-function _ajustarStockDiferencia(antesItems, despuesItems) {
-    const prodMap = new Map((window.products||[]).map(p => [String(p.id), p]));
-    const mapAntes = {};
-    (antesItems||[]).forEach(i => { mapAntes[String(i.id)] = (mapAntes[String(i.id)]||0) + (i.quantity||i.cantidad||1); });
-    const mapDespues = {};
-    (despuesItems||[]).forEach(i => { mapDespues[String(i.id)] = (mapDespues[String(i.id)]||0) + (i.quantity||i.cantidad||1); });
-    const todosIds = new Set([...Object.keys(mapAntes), ...Object.keys(mapDespues)]);
-    let cambios = 0;
-    todosIds.forEach(id => {
-        const cant_antes = mapAntes[id] || 0;
-        const cant_despues = mapDespues[id] || 0;
-        const diff = cant_despues - cant_antes;
-        if (diff === 0) return;
-        const prod = prodMap.get(id);
-        if (!prod || prod.tipo === 'servicio') return;
-        if (diff > 0) {
-            prod.stock = Math.max(0, (prod.stock||0) - diff);
-        } else {
-            prod.stock = (prod.stock||0) + Math.abs(diff);
-        }
-        cambios++;
-    });
-    if (cambios > 0) { saveProducts(); if (typeof renderInventoryTable === 'function') renderInventoryTable(); }
-    return cambios;
+async function _ajustarStockDiferencia(antesItems, despuesItems, pedidoBase?) {
+    const antesPedido = {
+        ...(pedidoBase || {}),
+        productosInventario: (antesItems || []).map(i => ({...i}))
+    };
+    const despuesPedido = {
+        ...(pedidoBase || {}),
+        productosInventario: (despuesItems || []).map(i => ({...i}))
+    };
+    if (typeof _regresarInventarioCompleto === 'function') _regresarInventarioCompleto(antesPedido);
+    if (typeof _descontarInventarioPedido === 'function') await _descontarInventarioPedido(despuesPedido);
+    if (typeof renderInventoryTable === 'function') renderInventoryTable();
+    return 1;
 }
 window._ajustarStockDiferencia = _ajustarStockDiferencia;
 
@@ -884,4 +910,3 @@ function _aplicarDatosWA() {
 window.abrirParserWA = abrirParserWA;
 window._analizarWAMsg = _analizarWAMsg;
 window._aplicarDatosWA = _aplicarDatosWA;
-

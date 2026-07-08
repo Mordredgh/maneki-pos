@@ -7,10 +7,12 @@
 //  always return today's date instead of a historical one.)
 
 // FIX 5 — CxC unificada: calcula saldo pendiente de un pedido usando pagos[] como fuente de verdad
+const mkRound2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+window.mkRound2 = mkRound2;
 const calcSaldoPendiente = (p) => {
-    const sumPagos = (p.pagos || []).reduce((s, ab) => s + Number(ab.monto || 0), 0);
+    const sumPagos = (p.pagos || []).reduce((s, ab) => mkRound2(s + Number(ab.monto || 0)), 0);
     const totalPagado = sumPagos > 0 ? sumPagos : Number(p.anticipo || 0);
-    return Math.max(0, Number(p.total || 0) - totalPagado);
+    return mkRound2(Math.max(0, Number(p.total || 0) - totalPagado));
 };
 window.calcSaldoPendiente = calcSaldoPendiente;
 
@@ -61,22 +63,22 @@ function renderBalanceMensual() {
         s.type !== 'anticipo'    // BUG-S07 FIX: anticipos sintéticos no son ventas directas
     );
     // BUG-BAL-01 FIX: calcular como números puros; _money solo en display
-    const totalVentas = ventasMes.reduce((s, v) => s + (Number(v.total) || 0), 0);
+    const totalVentas = ventasMes.reduce((s, v) => mkRound2(s + (Number(v.total) || 0)), 0);
 
     // Pedidos finalizados del mes (total cobrado real, no solo anticipo)
     const pedidosFinMes = (window.pedidosFinalizados||[])
         .filter(p => ((p.fechaFinalizado||p.fecha||'')).startsWith(mesStr));
     // BUG-BAL-01 FIX: calcular como números puros; _money solo en display
-    const totalPedidos = pedidosFinMes.reduce((s, p) => s + (Number(p.total) || 0), 0);
+    const totalPedidos = pedidosFinMes.reduce((s, p) => mkRound2(s + (Number(p.total) || 0)), 0);
     const numPedidos = pedidosFinMes.length;
 
     // Gastos del mes (excluir los que vinieron de cuentas por pagar ya pagadas — se contaron en totalPayables en su momento)
     const gastosMes = (window.expenses||[]).filter(e => e.date && e.date.startsWith(mesStr) && !e.fromPayable);
     // BUG-BAL-01 FIX: calcular como números puros; _money solo en display
-    const totalGastos = gastosMes.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const totalGastos = gastosMes.reduce((s, e) => mkRound2(s + (Number(e.amount) || 0)), 0);
 
     // Neto
-    const neto = totalVentas + totalPedidos - totalGastos;
+    const neto = mkRound2(totalVentas + totalPedidos - totalGastos);
 
     const el = id => document.getElementById(id);
     if (el('balMesVentas')) el('balMesVentas').textContent = '$' + totalVentas.toFixed(2);
@@ -568,31 +570,31 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             const listaIncomes = (window.incomes||[]);
             const totalIncomeManual = listaIncomes
                 .filter(i => !i.fromPOS && !i.folioOrigen)
-                .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+                .reduce((sum, i) => mkRound2(sum + (Number(i.amount) || 0)), 0);
 
             // Pedidos finalizados: p.total es el ingreso completo independiente de cómo se pagó
             const totalPedidosFin = (window.pedidosFinalizados||[])
-                .reduce((sum, p) => sum + Number(p.total||0), 0);
+                .reduce((sum, p) => mkRound2(sum + Number(p.total||0)), 0);
 
             // Ventas directas — desde salesHistory (sin type y no canceladas)
             const totalPOS = (window.salesHistory||[])
                 .filter(s => s.type !== 'pedido' && s.type !== 'abono' && s.type !== 'anticipo' && s.method !== 'Cancelado')
-                .reduce((sum, s) => sum + Number(s.total||0), 0);
+                .reduce((sum, s) => mkRound2(sum + Number(s.total||0)), 0);
 
-            const totalIncome = totalIncomeManual + totalPedidosFin + totalPOS;
+            const totalIncome = mkRound2(totalIncomeManual + totalPedidosFin + totalPOS);
 
             // FIX BC-05: exclude expenses that originated from a paid payable (already counted via markAsPaid)
             const totalExpenses = (window.expenses||[])
                 .filter(e => !e.fromPayable)
-                .reduce((sum, e) => sum + (Number(e.amount || e.monto) || 0), 0);
+                .reduce((sum, e) => mkRound2(sum + (Number(e.amount || e.monto) || 0)), 0);
             // Cuentas por cobrar = receivables manuales + saldos pendientes de pedidos
             // FIX 5: use calcSaldoPendiente() helper for unified CxC calculation
             const totalReceivables =
-                receivables.filter(r => r.status === 'pending').reduce((sum, r) => sum + (Number(r.amount)||0), 0) +
+                receivables.filter(r => r.status === 'pending').reduce((sum, r) => mkRound2(sum + (Number(r.amount)||0)), 0) +
                 (window.pedidos||[])
                     .filter(p => !['finalizado','cancelado','entregado'].includes((p.status||'').toLowerCase()))
-                    .reduce((sum, p) => sum + calcSaldoPendiente(p), 0);
-            const totalPayables = payables.filter(p => p.status === 'pending').reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+                    .reduce((sum, p) => mkRound2(sum + calcSaldoPendiente(p)), 0);
+            const totalPayables = payables.filter(p => p.status === 'pending').reduce((sum, p) => mkRound2(sum + (Number(p.amount) || 0)), 0);
             
             document.getElementById('totalIncome').textContent = `$${totalIncome.toFixed(2)}`;
             document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
@@ -740,6 +742,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             if (!container) return;
             const hoy = new Date(); hoy.setHours(0,0,0,0);
             const conSaldo = (window.pedidos || [])
+                .filter(p => !['finalizado','cancelado','entregado'].includes((p.status||'').toLowerCase()))
                 .filter(p => calcSaldoPendiente(p) > 0)
                 .map(p => {
                     const fechaRef = p.fechaPedido ? new Date(p.fechaPedido + 'T00:00:00') : null;

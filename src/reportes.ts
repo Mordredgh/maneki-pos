@@ -761,11 +761,11 @@ function updateMonthlyStats(ventasCache?: any[]) {
     // FIX 6: exclude cancelled orders from monthly stats
     const mesStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
     const _allV = (ventasCache || _getAllVentas()).filter(function(s) {
-        if (!s.date || s.type === 'abono' || s.type === 'anticipo') return false;
+        if (!s.date) return false;
         if (s.method === 'Cancelado' || s.metodo === 'cancelado') return false;
         return s.date && String(s.date).startsWith(mesStr);
     });
-    const monthlySales = _allV.reduce(function(sum,s){ return sum + Number(s.total||0); }, 0);
+    const monthlySales = _allV.reduce(function(sum,s){ return window.mkRound2 ? window.mkRound2(sum + Number(s.total||0)) : sum + Number(s.total||0); }, 0);
     const monthlyUnits = _allV.reduce(function(sum,s){
         return sum + (s.products||[]).reduce(function(a,p){ return a+Number(p.quantity||1); }, 0);
     }, 0);
@@ -783,11 +783,11 @@ function updateMonthlyStats(ventasCache?: any[]) {
     const prevYear  = currentMonth === 0 ? currentYear - 1 : currentYear;
     const prevMesStr = `${prevYear}-${String(prevMonth+1).padStart(2,'0')}`;
     const _prevV = (ventasCache || _getAllVentas()).filter(function(s) {
-        if (!s.date || s.type === 'abono' || s.type === 'anticipo') return false;
+        if (!s.date) return false;
         if (s.method === 'Cancelado' || s.metodo === 'cancelado') return false;
         return s.date && String(s.date).startsWith(prevMesStr);
     });
-    const prevSales  = _prevV.reduce(function(sum,s){ return sum + Number(s.total||0); }, 0);
+    const prevSales  = _prevV.reduce(function(sum,s){ return window.mkRound2 ? window.mkRound2(sum + Number(s.total||0)) : sum + Number(s.total||0); }, 0);
     const prevProfit = prevSales - _prevV.reduce(function(total, sale) {
         var items = sale.items || sale.products || sale.productos || [];
         return total + items.reduce(function(s, item) {
@@ -810,7 +810,7 @@ function updateMonthlyStats(ventasCache?: any[]) {
 
 // P-2: parámetro opcional ventasCache para evitar recalcular _getAllVentas en initReports
 function updatePaymentMethods(ventasCache?: any[]) {
-    const _pmVentas = (ventasCache || _getAllVentas()).filter(function(s){ return s.type !== 'abono' && s.type !== 'anticipo'; });
+    const _pmVentas = (ventasCache || _getAllVentas()).filter(function(s){ return s.method !== 'Cancelado' && s.metodo !== 'cancelado'; });
     const el        = id => document.getElementById(id);
     // BM-08 FIX: usar suma de montos en lugar de conteo de transacciones
     const totalMonto = _pmVentas.reduce(function(s, v){ return s + Number(v.total || v.amount || v.monto || 0); }, 0);
@@ -1033,7 +1033,7 @@ function renderSalesHistory() {
     const fechaDesde = (document.getElementById('reporteFechaDesde')||{}).value || '';
     const fechaHasta = (document.getElementById('reporteFechaHasta')||{}).value || '';
 
-    const allSales = _getAllVentas().filter(s => s.type !== 'anticipo').slice().reverse();
+    const allSales = _getAllVentas().slice().reverse();
     const filtered = allSales.filter((sale, i) => {
         const customer = (sale.customer || 'cliente general').toLowerCase();
         const folio    = (sale.folio || sale.id || String((window.salesHistory||[]).length - i)).toLowerCase();
@@ -1060,8 +1060,8 @@ function renderSalesHistory() {
             <p class="mk-empty-sub">Registra pedidos o ventas para verlas aquí.</p>
         </div></td></tr>`;
     } else {
-        const typeColors  = { abono:'text-yellow-600 bg-yellow-50', pedido:'text-purple-600 bg-purple-50', pos:'text-green-600 bg-green-50' };
-        const typeLabels  = { abono:'Abono', pedido:'Pedido', pos:'POS' };
+        const typeColors  = { anticipo:'text-blue-600 bg-blue-50', abono:'text-yellow-600 bg-yellow-50', pedido:'text-purple-600 bg-purple-50', pos:'text-green-600 bg-green-50' };
+        const typeLabels  = { anticipo:'Anticipo', abono:'Abono', pedido:'Pedido', pos:'POS' };
         tbody.innerHTML = pageItems.map(sale => {
             const t   = sale.type || 'pos';
             const tag = `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${typeColors[t]||typeColors.pos}">${typeLabels[t]||'POS'}</span>`;
@@ -1232,7 +1232,7 @@ function descargarReporteVentas() {
     const rows = _csvVentas.map(s => [
         s.folio||s.id, s.date, s.time||'',
         `"${s.customer}"`,
-        s.type==='abono'?'Abono':s.type==='pedido'?'Pedido':'POS',
+        s.type==='anticipo'?'Anticipo':s.type==='abono'?'Abono':s.type==='pedido'?'Pedido':'POS',
         `"${(s.products||[]).map(p=>`${p.name} x${p.quantity}`).join('; ')}"`,
         s.total.toFixed(2), s.method||''
     ]);
@@ -1246,7 +1246,7 @@ function descargarReporteVentas() {
 window.descargarReporteVentas = descargarReporteVentas;
 
 // ── Modal detalle de venta ─────────────────────────────────────────────────
-const tipos = { abono:'Abono', pedido:'Pedido', pos:'Venta POS' };
+const tipos = { anticipo:'Anticipo', abono:'Abono', pedido:'Pedido', pos:'Venta POS' };
 
 function abrirDetalleSale(idx) {
     const sale = (window.salesHistory||[])[idx];

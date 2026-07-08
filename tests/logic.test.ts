@@ -475,25 +475,26 @@ function calcBalanceTotals(state: any) {
   const pedidosFinalizados = state.pedidosFinalizados || [];
   const salesHistory = state.salesHistory || [];
   const expenses = state.expenses || [];
+  const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
   const totalIncomeManual = incomes
     .filter((i: any) => !i.fromPOS && !i.folioOrigen)
-    .reduce((s: number, i: any) => s + (Number(i.amount) || 0), 0);
+    .reduce((s: number, i: any) => round2(s + (Number(i.amount) || 0)), 0);
 
   const totalPedidosFin = pedidosFinalizados
-    .reduce((s: number, p: any) => s + Number(p.total || 0), 0);
+    .reduce((s: number, p: any) => round2(s + Number(p.total || 0)), 0);
 
   const totalPOS = salesHistory
     .filter((s: any) => s.type !== 'pedido' && s.type !== 'abono' && s.type !== 'anticipo' && s.method !== 'Cancelado')
-    .reduce((sum: number, s: any) => sum + Number(s.total || 0), 0);
+    .reduce((sum: number, s: any) => round2(sum + Number(s.total || 0)), 0);
 
-  const totalIncome = totalIncomeManual + totalPedidosFin + totalPOS;
+  const totalIncome = round2(totalIncomeManual + totalPedidosFin + totalPOS);
 
   const totalExpenses = expenses
     .filter((e: any) => !e.fromPayable)
-    .reduce((s: number, e: any) => s + (Number(e.amount ?? e.monto) || 0), 0);
+    .reduce((s: number, e: any) => round2(s + (Number(e.amount ?? e.monto) || 0)), 0);
 
-  return { totalIncomeManual, totalPedidosFin, totalPOS, totalIncome, totalExpenses, balance: totalIncome - totalExpenses };
+  return { totalIncomeManual, totalPedidosFin, totalPOS, totalIncome, totalExpenses, balance: round2(totalIncome - totalExpenses) };
 }
 
 describe('calcBalanceTotals', () => {
@@ -601,6 +602,86 @@ describe('calcBalanceTotals', () => {
     expect(t.totalIncome).toBe(1750);
     expect(t.totalExpenses).toBe(100);
     expect(t.balance).toBe(1650);
+  });
+
+  it('redondea centavos acumulados para evitar saldos fantasma', () => {
+    const t = calcBalanceTotals({
+      incomes: [{ amount: 0.1 }, { amount: 0.2 }],
+      expenses: [{ amount: 0.1 }],
+    });
+    expect(t.totalIncome).toBe(0.3);
+    expect(t.balance).toBe(0.2);
+  });
+});
+
+function crearRegistrosAnticipoPedido(pedido: any, state: { salesHistory: any[]; incomes: any[] }) {
+  const anticipo = Number(pedido.anticipo || 0);
+  if (anticipo <= 0) return;
+  const pagoAnticipo = pedido.pagos && pedido.pagos[0] ? pedido.pagos[0] : null;
+  const anticipoId = pagoAnticipo?.id || 'anticipo-test';
+  if (!state.salesHistory.some((s: any) => s.id === anticipoId)) {
+    state.salesHistory.push({
+      id: anticipoId,
+      type: 'anticipo',
+      folio: pedido.folio,
+      total: anticipo,
+      method: 'Efectivo',
+    });
+  }
+  if (!state.incomes.some((i: any) => i.id === anticipoId)) {
+    state.incomes.push({
+      id: anticipoId,
+      type: 'anticipo',
+      folioOrigen: pedido.folio,
+      pedidoId: pedido.id,
+      amount: anticipo,
+      method: 'Efectivo',
+      metodo: 'Efectivo',
+    });
+  }
+}
+
+function ajustarPedidoReportesSinDobleConteo(salesHistory: any[]) {
+  const anticiposPorFolio: Record<string, number> = {};
+  salesHistory.forEach((s: any) => {
+    if ((s.type === 'anticipo' || s.type === 'abono') && s.folio) {
+      anticiposPorFolio[s.folio] = (anticiposPorFolio[s.folio] || 0) + Number(s.total || 0);
+    }
+  });
+  return salesHistory.map((s: any) => {
+    if (s.type === 'pedido' && s.folio && anticiposPorFolio[s.folio] && !s.totalPedido) {
+      const totalOriginal = Number(s.total || 0);
+      return { ...s, totalPedido: totalOriginal, total: Math.max(0, totalOriginal - anticiposPorFolio[s.folio]) };
+    }
+    return s;
+  });
+}
+
+describe('pedidos cashflow fase 4', () => {
+  it('crear pedido con anticipo registra salesHistory e income con metodo real', () => {
+    const state = { salesHistory: [] as any[], incomes: [] as any[] };
+    crearRegistrosAnticipoPedido({
+      id: 'p-1',
+      folio: 'PE-100',
+      anticipo: 300,
+      pagos: [{ id: 'pg-1', monto: 300 }],
+    }, state);
+    expect(state.salesHistory).toEqual([
+      expect.objectContaining({ id: 'pg-1', type: 'anticipo', folio: 'PE-100', total: 300, method: 'Efectivo' }),
+    ]);
+    expect(state.incomes).toEqual([
+      expect.objectContaining({ id: 'pg-1', type: 'anticipo', folioOrigen: 'PE-100', amount: 300, method: 'Efectivo' }),
+    ]);
+  });
+
+  it('reportes suma anticipo + abono + saldo final sin duplicar el total del pedido', () => {
+    const ventas = ajustarPedidoReportesSinDobleConteo([
+      { id: 'a-1', type: 'anticipo', folio: 'PE-200', total: 400 },
+      { id: 'b-1', type: 'abono', folio: 'PE-200', total: 100 },
+      { id: 'p-1', type: 'pedido', folio: 'PE-200', total: 1000 },
+    ]);
+    expect(ventas.find((v: any) => v.type === 'pedido').total).toBe(500);
+    expect(ventas.reduce((s: number, v: any) => s + v.total, 0)).toBe(1000);
   });
 });
 
@@ -762,7 +843,7 @@ describe('descontarVariantePT', () => {
 //   c) revertir totalPurchases del cliente
 //   d) F1-S25: devolver el PLAN de borrados en BD (dbDeletes) que el flujo real debe emitir,
 //      porque saveIncomes()/saveSalesHistory() son upsert-only y no borran filas.
-function limpiarAlReactivar(p: any, state: { salesHistory: any[]; incomes: any[]; clients: any[] }) {
+function limpiarAlReactivar(p: any, state: { salesHistory: any[]; incomes: any[]; clients: any[] }, fuente = 'finalizados') {
   // a) salesHistory — F2: 'pedido' y 'abono' (cobro al entregar) del mismo folio
   const shAEliminar = state.salesHistory.filter(s => s.folio === p.folio && (s.type === 'pedido' || s.type === 'abono'));
   const shIdsEliminados = shAEliminar.map(s => s.id);
@@ -780,7 +861,7 @@ function limpiarAlReactivar(p: any, state: { salesHistory: any[]; incomes: any[]
     (p.clienteId && String(c.id) === String(p.clienteId)) ||
     (c.name || '').toLowerCase().trim() === (p.cliente || '').toLowerCase().trim()
   );
-  if (cli && Number(p.total || 0) > 0) {
+  if (fuente === 'finalizados' && cli && Number(p.total || 0) > 0) {
     cli.totalPurchases = Math.max(0, (Number(cli.totalPurchases) || 0) - Number(p.total || 0));
   }
 
@@ -887,6 +968,26 @@ describe('reactivarPedido cleanup (C1)', () => {
       clients: [{ id: '42', name: 'Ana López', totalPurchases: 5000 }],
     };
     limpiarAlReactivar({ folio: 'PE-010', total: 1000, clienteId: '42' }, state);
+    expect(state.clients[0].totalPurchases).toBe(4000);
+  });
+
+  it('N5: reactivar desde cancelados no revierte totalPurchases', () => {
+    const state = {
+      salesHistory: [],
+      incomes: [],
+      clients: [{ id: '42', name: 'Ana', totalPurchases: 5000 }],
+    };
+    limpiarAlReactivar({ folio: 'PE-010', total: 1000, clienteId: '42' }, state, 'cancelados');
+    expect(state.clients[0].totalPurchases).toBe(5000);
+  });
+
+  it('N5: reactivar desde finalizados si revierte totalPurchases', () => {
+    const state = {
+      salesHistory: [],
+      incomes: [],
+      clients: [{ id: '42', name: 'Ana', totalPurchases: 5000 }],
+    };
+    limpiarAlReactivar({ folio: 'PE-010', total: 1000, clienteId: '42' }, state, 'finalizados');
     expect(state.clients[0].totalPurchases).toBe(4000);
   });
 

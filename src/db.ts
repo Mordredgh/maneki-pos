@@ -214,7 +214,8 @@ function _rtTransformarFila(tabla, row) {
         id: row.id, concept: row.concept||null, amount: Number(row.amount||0),
         date: row.date||null, client: row.client||null,
         fromPOS: row.from_pos===true, folioOrigen: row.folio_origen||null,
-        pedidoId: row.pedido_id||null, _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
+        pedidoId: row.pedido_id||null, method: row.method || row.metodo || null,
+        _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
     };
     if (tabla === 'expenses') return {
         id: row.id, concept: row.concept||null, amount: Number(row.amount||0),
@@ -944,6 +945,7 @@ const _RELATIONAL_TABLES = {
         fromPOS: row.from_pos === true,
         folioOrigen: row.folio_origen || null,
         pedidoId: row.pedido_id || null,
+        method: row.method || row.metodo || null,
         _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null
     })},
     expenses: { table: 'expenses', min: 0, orderBy: 'date', limit: 2000, map: (row: any) => ({
@@ -1405,13 +1407,19 @@ function saveIncomes() {
                     amount: Number(i.amount||i.monto)||0, date: i.date||i.fecha||null,
                     client: i.client||i.cliente||null, from_pos: i.fromPOS===true,
                     folio_origen: i.folioOrigen||null, pedido_id: i.pedidoId||null,
+                    method: i.method || i.metodo || null,
                     updated_at: _tsSaveI
                 };
             });
             // Solo si hay filas con datos
             if (rows.length && db) {
                 const { error } = await db.from('incomes').upsert(rows,{onConflict:'id'});
-                if (error) console.warn('[incomes]', error);
+                if (error && /method|schema cache|column/i.test(String(error.message || error.details || error))) {
+                    const rowsSinMethod = rows.map(({ method, ...row }) => row);
+                    const retry = await db.from('incomes').upsert(rowsSinMethod,{onConflict:'id'});
+                    if (retry.error) console.warn('[incomes]', retry.error);
+                    else _mirrorLocal('incomes', window.incomes || []);
+                } else if (error) console.warn('[incomes]', error);
                 else _mirrorLocal('incomes', window.incomes || []);
             } else {
                 _mirrorLocal('incomes', window.incomes || []);

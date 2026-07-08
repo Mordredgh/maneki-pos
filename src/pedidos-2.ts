@@ -517,7 +517,10 @@ async function setPedidoStatus(status) {
                             concept: `Cobro al entregar ${window.pedidos[idx].folio}`,
                             amount: _saldoACobrar,
                             date: _fechaHoyStr,
-                            folioOrigen: window.pedidos[idx].folio
+                            folioOrigen: window.pedidos[idx].folio,
+                            method: 'Efectivo',
+                            metodo: 'Efectivo',
+                            type: 'cobro_entrega'
                         });
                         if (typeof saveIncomes === 'function') saveIncomes();
                     }
@@ -899,7 +902,9 @@ async function confirmarAbonoPedido() {
             concept: `Abono pedido ${p.folio}`,
             amount: monto,
             date: _fechaStr,
-            folioOrigen: p.folio
+            folioOrigen: p.folio,
+            method: _abonoPedidoMetodo === 'cash' ? 'Efectivo' : _abonoPedidoMetodo === 'card' ? 'Tarjeta' : 'Transferencia',
+            metodo: _abonoPedidoMetodo
         });
     }
 
@@ -1296,7 +1301,7 @@ function reactivarPedido(id) {
         if (typeof window._invalidarCacheVentas === 'function') window._invalidarCacheVentas();
 
         // d) Revertir totalPurchases del cliente
-        if (p.cliente && Array.isArray(window.clients) && Number(p.total || 0) > 0) {
+        if (fuente === 'finalizados' && p.cliente && Array.isArray(window.clients) && Number(p.total || 0) > 0) {
             const _cliRev = window.clients.find((c: any) =>
                 (p.clienteId && String(c.id) === String(p.clienteId)) ||
                 (c.name || '').toLowerCase().trim() === (p.cliente || '').toLowerCase().trim()
@@ -1944,7 +1949,7 @@ window.editarPedidoFinalizado = editarPedidoFinalizado;
 // ── Interceptar submit para pedidos finalizados ──
 (function patchPedidoFormForFinalizados() {
     const _origSubmit = document.getElementById('pedidoForm').onsubmit;
-    document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+    document.getElementById('pedidoForm').addEventListener('submit', async function(e) {
         const editId = document.getElementById('editPedidoId').value;
         if (!editId.startsWith('__finalizado__')) return; // manejo normal
         e.preventDefault();
@@ -1953,6 +1958,10 @@ window.editarPedidoFinalizado = editarPedidoFinalizado;
         const realId = editId.replace('__finalizado__', '');
         const idx = (window.pedidosFinalizados || []).findIndex(x => String(x.id) === String(realId));
         if (idx === -1) { manekiToastExport('⚠️ No se encontró el pedido.', 'warn'); return; }
+        const pedidoAnterior = {
+            ...window.pedidosFinalizados[idx],
+            productosInventario: (window.pedidosFinalizados[idx].productosInventario || []).map((i: any) => ({...i}))
+        };
 
         const cliente   = document.getElementById('pedidoCliente').value.trim();
         const telefono  = document.getElementById('pedidoTelefono').value.trim();
@@ -1996,6 +2005,33 @@ window.editarPedidoFinalizado = editarPedidoFinalizado;
             notas, lugarEntrega, costoMateriales,
             productosInventario: [..._editFinItems]
         };
+        const _pFinEditado = window.pedidosFinalizados[idx];
+        if (_pFinEditado.inventarioDescontado === true || _pFinEditado._inventarioYaFinalizado === true) {
+            if (typeof _regresarInventarioCompleto === 'function') _regresarInventarioCompleto(pedidoAnterior);
+            if (_editFinItems.length > 0 && _editFinItems[0].id !== 'libre' && typeof _descontarInventarioPedido === 'function') {
+                await _descontarInventarioPedido(_pFinEditado);
+                _pFinEditado.inventarioDescontado = true;
+                _pFinEditado._inventarioYaFinalizado = true;
+            }
+        }
+        if (Array.isArray(window.salesHistory)) {
+            const sh = window.salesHistory.find((s: any) => s.folio === _pFinEditado.folio && s.type === 'pedido');
+            if (sh) {
+                sh.total = Math.max(0, Number(total || 0) - Number(anticipo || 0));
+                sh.totalPedido = Number(total || 0);
+                sh.anticipo = Number(anticipo || 0);
+                sh.customer = cliente || sh.customer;
+                sh.concept = concepto || sh.concept;
+                sh.products = (_editFinItems || []).map((it: any) => ({
+                    id: it.id || '',
+                    name: it.name || it.nombre || concepto || 'Pedido',
+                    quantity: Number(it.quantity || it.cantidad || 1),
+                    price: Number(it.price || it.precio || 0),
+                    subtotal: Number(it.quantity || 1) * Number(it.price || it.precio || 0)
+                }));
+                if (typeof saveSalesHistory === 'function') saveSalesHistory();
+            }
+        }
 
         // Actualizar también el ROI historial si existe entrada para este pedido
         if (typeof roiHistorial !== 'undefined') {
