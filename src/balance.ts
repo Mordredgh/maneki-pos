@@ -390,11 +390,19 @@ function _renderMovimientosBalance() {
 }
 
 function limpiarMovimientos() {
+    if (typeof (window as any).limpiarMovimientosInventario === 'function') {
+        (window as any).limpiarMovimientosInventario();
+        return;
+    }
     showConfirm('Se borrará todo el historial de movimientos de stock. Esta acción no se puede deshacer.', '⚠️ Limpiar historial').then(ok => {
         if (!ok) return;
         window.stockMovimientos = [];
         window.stockMovements = []; // alias si existe
-        saveStockMovimientos();
+        if (typeof db !== 'undefined' && db) {
+            (db as any).from('stock_movements').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(({ error }: any) => {
+                if (error) console.warn('[Balance] Error limpiando stock_movements relacional:', error.message);
+            });
+        }
         _renderMovimientosBalance();
         manekiToastExport('🗑️ Historial limpiado', 'ok');
     });

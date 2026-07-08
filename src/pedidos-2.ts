@@ -71,27 +71,30 @@ async function _descontarInventarioPedido(pedido) {
         }
 
         // Descontar stock del producto terminado (PT)
-        const antesPT = prod.stock || 0;
+        let _ptVarSeleccionada: any = null;
+        if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+            if (item.variante) {
+                const _varTxt = String(item.variante);
+                const _colIdx = _varTxt.indexOf(':');
+                const _vType  = _colIdx !== -1 ? _varTxt.slice(0, _colIdx).trim() : _varTxt;
+                const _vValue = _colIdx !== -1 ? _varTxt.slice(_colIdx + 1).trim() : '';
+                _ptVarSeleccionada = prod.variants.find(v =>
+                    (v.type || v.tipo || '') === _vType && (v.value || v.valor || '') === _vValue
+                ) || null;
+            } else {
+                _ptVarSeleccionada = prod.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0] || null;
+            }
+        }
+        const antesPT = _ptVarSeleccionada ? (parseInt(_ptVarSeleccionada.qty) || 0) : (prod.stock || 0);
         // FIX 1: record rollback BEFORE modifying stock (including variant snapshots)
-        _rollback.push({ id: prod.id, stockBefore: antesPT, variantsBefore: Array.isArray(prod.variants) && prod.variants.length > 0 ? prod.variants.map(v => ({...v})) : null });
+        _rollback.push({ id: prod.id, stockBefore: prod.stock || 0, variantsBefore: Array.isArray(prod.variants) && prod.variants.length > 0 ? prod.variants.map(v => ({...v})) : null });
 
         if (Array.isArray(prod.variants) && prod.variants.length > 0) {
             // Producto CON variantes: descontar de la variante correspondiente
             // y dejar que syncStockFromVariants recalcule prod.stock.
             // NO tocar prod.stock directamente (syncStockFromVariants lo sobreescribiría).
-            if (item.variante) {
-                // Variante conocida: descontar directo
-                const _colIdx = item.variante.indexOf(':');
-                const _vType  = _colIdx !== -1 ? item.variante.slice(0, _colIdx).trim() : item.variante;
-                const _vValue = _colIdx !== -1 ? item.variante.slice(_colIdx + 1).trim() : '';
-                const _ptVar  = prod.variants.find(v =>
-                    (v.type || v.tipo || '') === _vType && (v.value || v.valor || '') === _vValue
-                );
-                if (_ptVar) { _ptVar.qty = Math.max(0, (_ptVar.qty || 0) - cantidad); }
-            } else {
-                // Sin variante especificada: descontar de la variante con mayor stock disponible
-                const _varMayor = prod.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0];
-                if (_varMayor) { _varMayor.qty = Math.max(0, (parseInt(_varMayor.qty)||0) - cantidad); }
+            if (_ptVarSeleccionada) {
+                _ptVarSeleccionada.qty = Math.max(0, (parseInt(_ptVarSeleccionada.qty) || 0) - cantidad);
             }
             // Recalcular prod.stock desde la suma de variantes actualizadas
             if (typeof syncStockFromVariants === 'function') syncStockFromVariants(prod);
@@ -110,11 +113,12 @@ async function _descontarInventarioPedido(pedido) {
         }
 
         if (typeof registrarMovimiento === 'function') {
+            const _stockDespuesPT = _ptVarSeleccionada ? (parseInt(_ptVarSeleccionada.qty) || 0) : prod.stock;
             registrarMovimiento({
                 productoId: prod.id, productoNombre: prod.name,
                 tipo: 'salida', cantidad: -cantidad,
                 motivo: `Producción pedido ${pedido.folio}`,
-                stockAntes: antesPT, stockDespues: prod.stock
+                stockAntes: antesPT, stockDespues: _stockDespuesPT
             });
         }
         descontados++;

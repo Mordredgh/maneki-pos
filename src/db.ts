@@ -770,6 +770,33 @@ async function sbSave(key, data) {
 // Si la tabla tiene menos de `min` registros, sbLoad cae al store como fallback.
 // P9: registro del último sync por tabla para delta queries en reconexión
 const _lastSyncAt: Record<string, string> = {};
+const _lastRelationalLoadStatus: Record<string, 'ok' | 'empty' | 'error'> = {};
+const _LOCAL_MIRROR_LIMITS: Record<string, number> = {
+    salesHistory: 1000,
+    pedidosFinalizados: 500,
+    stockMovimientos: 1000
+};
+
+function _mirrorLocal(key: string, data: any) {
+    try {
+        const limit = _LOCAL_MIRROR_LIMITS[key];
+        const payload = Array.isArray(data) && limit ? data.slice(-limit) : data;
+        localStorage.setItem('maneki_' + key, JSON.stringify(payload));
+    } catch(e: any) {
+        if (e?.name === 'QuotaExceededError') console.warn(`[DB] Espejo local lleno para ${key}; se omite fallback local.`);
+        else console.warn(`[DB] No se pudo actualizar espejo local ${key}:`, e?.message || e);
+    }
+}
+
+function _loadLocalMirror(key: string) {
+    try {
+        const local = localStorage.getItem('maneki_' + key);
+        return local ? JSON.parse(local) : null;
+    } catch(e) {
+        console.warn('Error en localStorage fallback:', e);
+        return null;
+    }
+}
 
 const _RELATIONAL_TABLES = {
     products: { table: 'products', min: 1, orderBy: 'updated_at', limit: 2000, map: row => ({
@@ -861,17 +888,25 @@ async function _loadFromTable(key) {
     const cfg = _RELATIONAL_TABLES[key];
     if (!cfg || !db) return null;
     try {
+        _lastRelationalLoadStatus[key] = 'ok';
         let query = db.from(cfg.table).select('*');
         if ((cfg as any).filter) query = (cfg as any).filter(query);
         if (cfg.orderBy) query = query.order(cfg.orderBy, { ascending: false });
         if (cfg.limit) query = query.limit(cfg.limit);
         const { data, error } = await _withTimeout(query, 10000);
-        if (error || !data) return null;
-        if (cfg.min > 0 && data.length < cfg.min) return null;
+        if (error || !data) {
+            _lastRelationalLoadStatus[key] = 'error';
+            return null;
+        }
+        if (cfg.min > 0 && data.length < cfg.min) {
+            _lastRelationalLoadStatus[key] = 'empty';
+            return key === 'categories' ? null : [];
+        }
         const mapped = data.map(cfg.map);
         if ((window as any).MK_DEBUG) console.log(`[DB] ✓ ${key} loaded from ${cfg.table} (${mapped.length} rows)`);
         return mapped;
     } catch(e) {
+        _lastRelationalLoadStatus[key] = 'error';
         console.warn(`[DB] _loadFromTable(${key}) failed, falling back to store:`, e?.message);
         return null;
     }
@@ -929,6 +964,10 @@ async function sbLoad(key, def) {
     if (relational !== null) {
         return relational;
     }
+    if (_RELATIONAL_TABLES[key] && _lastRelationalLoadStatus[key] === 'error') {
+        const mirror = _loadLocalMirror(key);
+        if (mirror !== null) return mirror;
+    }
 
     // 1) Intentar Supabase store (datos más frescos / multi-dispositivo)
     // ✅ FIX: usar .maybeSingle() en lugar de .single()
@@ -944,12 +983,8 @@ async function sbLoad(key, def) {
     } catch(e) { console.warn('sbLoad Supabase no disponible, usando localStorage:', key); }
 
     // 2) Fallback: localStorage
-    try {
-        const local = localStorage.getItem('maneki_' + key);
-        if (local) {
-            return JSON.parse(local);
-        }
-    } catch(e) { console.warn('Error en localStorage fallback:', e); }
+    const mirror = _loadLocalMirror(key);
+    if (mirror !== null) return mirror;
 
     return def;
 }
@@ -1193,7 +1228,7 @@ function saveProducts() {
             }));
             const { error } = await db.from('products').upsert(rows, { onConflict: 'id' });
             if (error) { console.error('saveProducts relacional error:', error); _mkSI('error'); }
-            else _mkSI('saved');
+            else { _mirrorLocal('products', products); _mkSI('saved'); }
         } catch(e) {
             console.error('saveProducts relacional excepción:', e);
             _mkSI('error');
@@ -1215,7 +1250,13 @@ function saveClients() {
                 tags: c.tags||[],
                 updated_at: new Date().toISOString()
             }));
-            if (rows.length) await db.from('clients').upsert(rows, {onConflict:'id'}).catch(e=>console.warn('[clients]',e));
+            if (rows.length && db) {
+                const { error } = await db.from('clients').upsert(rows, {onConflict:'id'});
+                if (error) console.warn('[clients]', error);
+                else _mirrorLocal('clients', window.clients || []);
+            } else {
+                _mirrorLocal('clients', window.clients || []);
+            }
         } catch(e){ console.warn('[saveClients] Error al guardar en Supabase:', e?.message); }
     })();
 }
@@ -1244,6 +1285,7 @@ function saveSalesHistory() {
             }));
             const { error } = await db.from('sales_history').upsert(rows, { onConflict: 'id' });
             if (error) console.error('saveSalesHistory relacional error:', error);
+            else _mirrorLocal('salesHistory', salesHistory);
         } catch(e) {
             console.error('saveSalesHistory relacional excepción:', e);
         }
@@ -1265,7 +1307,13 @@ function saveIncomes() {
                 };
             });
             // Solo si hay filas con datos
-            if (rows.length && db) await db.from('incomes').upsert(rows,{onConflict:'id'}).catch(e=>console.warn('[incomes]',e));
+            if (rows.length && db) {
+                const { error } = await db.from('incomes').upsert(rows,{onConflict:'id'});
+                if (error) console.warn('[incomes]', error);
+                else _mirrorLocal('incomes', window.incomes || []);
+            } else {
+                _mirrorLocal('incomes', window.incomes || []);
+            }
         } catch(e){ console.warn('[saveIncomes] Error al guardar en Supabase:', e?.message); }
     })();
 }
@@ -1283,7 +1331,13 @@ function saveExpenses() {
                     notas: e.notas||null, from_payable: e.fromPayable===true
                 };
             });
-            if (rows.length && db) await db.from('expenses').upsert(rows,{onConflict:'id'}).catch(e=>console.warn('[expenses]',e));
+            if (rows.length && db) {
+                const { error } = await db.from('expenses').upsert(rows,{onConflict:'id'});
+                if (error) console.warn('[expenses]', error);
+                else _mirrorLocal('expenses', window.expenses || []);
+            } else {
+                _mirrorLocal('expenses', window.expenses || []);
+            }
         } catch(e){ console.warn('[saveExpenses] Error al guardar en Supabase:', e?.message); }
     })();
 }
@@ -1342,7 +1396,7 @@ function savePedidos() {
             }));
             const { error } = await db.from('orders').upsert(rows, { onConflict: 'id' });
             if (error) { console.error('savePedidos relacional error:', error); _mkSI('error'); }
-            else _mkSI('saved');
+            else { _mirrorLocal('pedidos', pedidos); _mkSI('saved'); }
         } catch(e) {
             console.error('savePedidos relacional excepción:', e);
             _mkSI('error');
@@ -1398,6 +1452,7 @@ function savePedidosFinalizados() {
             }));
             const { error } = await db.from('orders_finalizados').upsert(rows, { onConflict: 'id' });
             if (error) console.error('savePedidosFinalizados relacional error:', error);
+            else _mirrorLocal('pedidosFinalizados', pedidosFinalizados);
         } catch(e) {
             console.error('savePedidosFinalizados relacional excepción:', e);
         }

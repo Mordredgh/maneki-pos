@@ -150,6 +150,41 @@ describe('getStockEfectivo', () => {
 });
 
 // ── Margin calculation (inline in inventory-5 renderFilaPT) ────────────────────
+function stockFabricadoAntesParaPedido(prod: any, item: any): number {
+  let selected: any = null;
+  if (Array.isArray(prod.variants) && prod.variants.length > 0) {
+    if (item.variante) {
+      const varTxt = String(item.variante);
+      const colIdx = varTxt.indexOf(':');
+      const vType = colIdx !== -1 ? varTxt.slice(0, colIdx).trim() : varTxt;
+      const vValue = colIdx !== -1 ? varTxt.slice(colIdx + 1).trim() : '';
+      selected = prod.variants.find((v: any) =>
+        (v.type || v.tipo || '') === vType && (v.value || v.valor || '') === vValue
+      ) || null;
+    } else {
+      selected = prod.variants.slice().sort((a: any, b: any) => (parseInt(b.qty) || 0) - (parseInt(a.qty) || 0))[0] || null;
+    }
+  }
+  return selected ? (parseInt(selected.qty) || 0) : (prod.stock || 0);
+}
+
+describe('descuento por variante específica', () => {
+  it('fabrica MP cuando la variante pedida está agotada aunque otra variante tenga stock', () => {
+    const prod = {
+      stock: 100,
+      variants: [
+        { type: 'Talla', value: 'M', qty: 0 },
+        { type: 'Talla', value: 'L', qty: 100 },
+      ],
+    };
+    const item = { variante: 'Talla: M', quantity: 5 };
+    const stockFabricadoAntes = stockFabricadoAntesParaPedido(prod, item);
+    const cantidadAFabricar = Math.max(0, item.quantity - stockFabricadoAntes);
+    expect(stockFabricadoAntes).toBe(0);
+    expect(cantidadAFabricar).toBe(5);
+  });
+});
+
 function calcMarginPct(cost: number, price: number): number {
   if (!cost || !price || price === 0) return 0;
   return (price - cost) / price * 100;
