@@ -571,6 +571,13 @@ document.addEventListener('DOMContentLoaded', function () {
     initApp();
 });
 
+async function _waitForDbReady(maxMs = 2500) {
+    const start = Date.now();
+    while (typeof window._dbReady === 'undefined' && Date.now() - start < maxMs) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+}
+
 async function initApp() {
     // Inyectar skeleton screens mientras carga la data inicial
     ['inventoryTable','pedidosTable','clientsTable'].forEach(id => {
@@ -580,6 +587,7 @@ async function initApp() {
     });
 
     try {
+        await _waitForDbReady();
         categories = await sbLoad('categories', defaultCategories);
 
         const [

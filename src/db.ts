@@ -27,6 +27,21 @@ const _rtTablaAKey = {
     'expenses':           'expenses'
 };
 
+const _deviceId = (() => {
+    try {
+        const key = 'maneki_device_id';
+        let id = localStorage.getItem(key);
+        if (!id) {
+            id = mkId();
+            localStorage.setItem(key, id);
+        }
+        return id;
+    } catch (_) {
+        return mkId();
+    }
+})();
+(window as any)._mkDeviceId = _deviceId;
+
 let db = null;
 (async () => {
     try {
@@ -85,6 +100,13 @@ function mkId(): string {
 }
 (window as any).mkId = mkId;
 
+function _stampLocalSave(records: any[], ts: string) {
+    (records || []).forEach((r: any) => {
+        r._updatedAt = ts;
+        r._updatedBy = _deviceId;
+    });
+}
+
 function mkHandleError(err: any, context: string): void {
     const msg = err?.message || String(err);
     console.error(`[Bicho Capricho ${context}]`, msg, err);
@@ -136,7 +158,7 @@ function _rtTransformarFila(tabla, row) {
         imageUrl: row.image_url||null, tags: row.tags||[], variants: row.variants||[],
         mpComponentes: row.mp_componentes||[], proveedor: row.proveedor||null,
         notas: row.notas||null, publicarTienda: row.publicar_tienda||false,
-        _updatedAt: row.updated_at||null
+        _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
     };
     if (tabla === 'orders') return {
         id: row.id, folio: row.folio||null, cliente: row.cliente||null,
@@ -154,7 +176,7 @@ function _rtTransformarFila(tabla, row) {
         pagos: row.pagos||[], empaques: row.empaques||[],
         historialEstados: row.historial_estados||[], fechaUltimoEstado: row.fecha_ultimo_estado||null,
         fechaPedido: row.fecha_pedido||row.fecha||null, empaquesDescontados: row.empaques_descontados===true,
-        _updatedAt: row.updated_at||null
+        _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
     };
     if (tabla === 'orders_finalizados') return {
         id: row.id, folio: row.folio||null, cliente: row.cliente||null,
@@ -172,33 +194,33 @@ function _rtTransformarFila(tabla, row) {
         pagos: row.pagos||[], empaques: row.empaques||[],
         historialEstados: row.historial_estados||[],
         fechaPedido: row.fecha_pedido||row.fecha||null, empaquesDescontados: row.empaques_descontados===true,
-        _updatedAt: row.updated_at||null
+        _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
     };
     if (tabla === 'sales_history') return {
         id: row.id, folio: row.folio||null, date: row.date||null, time: row.time||null,
         customer: row.customer||null, concept: row.concept||null, note: row.note||null,
         products: row.products||[], subtotal: row.subtotal||0, discount: row.discount||0,
         tax: row.tax||0, total: row.total||0, method: row.method||null,
-        _updatedAt: row.updated_at||null
+        _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
     };
     if (tabla === 'clients') return {
         id: row.id, name: row.name||'', phone: row.phone||null,
         facebook: row.facebook||null, email: row.email||null,
         type: row.type||'regular', notas: row.notas||null,
         totalPurchases: row.total_purchases||0, lastPurchase: row.last_purchase||null,
-        tags: row.tags||[], _updatedAt: row.updated_at||null
+        tags: row.tags||[], _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
     };
     if (tabla === 'incomes') return {
         id: row.id, concept: row.concept||null, amount: Number(row.amount||0),
         date: row.date||null, client: row.client||null,
         fromPOS: row.from_pos===true, folioOrigen: row.folio_origen||null,
-        pedidoId: row.pedido_id||null, _updatedAt: row.updated_at||null
+        pedidoId: row.pedido_id||null, _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
     };
     if (tabla === 'expenses') return {
         id: row.id, concept: row.concept||null, amount: Number(row.amount||0),
         date: row.date||null, category: row.category||null,
         etiqueta: row.etiqueta||null, notas: row.notas||null,
-        fromPayable: row.from_payable===true, _updatedAt: row.updated_at||null
+        fromPayable: row.from_payable===true, _updatedAt: row.updated_at||null, _updatedBy: row._updated_by || row.updated_by || row._updatedBy || null
     };
     return null;
 }
@@ -313,6 +335,8 @@ async function _applyRTRelacional(tabla, payload) {
             }
             const _lastSync = _lastSyncAt[tabla];
             let query = db.from(tabla).select('*').limit(2000);
+            const relCfg = _RELATIONAL_TABLES[key];
+            if (relCfg && (relCfg as any).filter) query = (relCfg as any).filter(query);
             if (_lastSync) query = query.gt('updated_at', _lastSync);
             const { data } = await query;
             if (!data) return;
@@ -338,14 +362,15 @@ async function _applyRTRelacional(tabla, payload) {
                 const i = arr.findIndex(x => String(x.id) === String(transformed.id));
                 if (i >= 0) {
                     const localReg = arr[i];
-                    // BUG-RT-ECO FIX: descartar ecos propios y payloads stale.
-                    // Si el registro local tiene _updatedAt igual o más nuevo que el payload,
-                    // este evento es el eco de nuestro propio save (o uno viejo encolado
-                    // mientras el modal estaba abierto) — aplicarlo regresaría el pedido
-                    // a un estado anterior (artículos borrados que reaparecen, etc.)
-                    if (localReg && localReg._updatedAt && transformed._updatedAt &&
-                        transformed._updatedAt <= localReg._updatedAt) {
-                        if ((window as any).MK_DEBUG) console.log('[Realtime] eco stale descartado:', tabla, transformed.id);
+                    // D3: anti-eco por identidad. Si el payload trae _updatedBy de este
+                    // dispositivo, es nuestro eco. Para tablas sin esa metadata, solo se
+                    // descarta la coincidencia exacta sellada por este dispositivo.
+                    const ownPayload = transformed._updatedBy && transformed._updatedBy === _deviceId;
+                    const ownExactEcho = localReg && localReg._updatedBy === _deviceId &&
+                        localReg._updatedAt && transformed._updatedAt &&
+                        transformed._updatedAt === localReg._updatedAt;
+                    if (ownPayload || ownExactEcho) {
+                        if ((window as any).MK_DEBUG) console.log('[Realtime] eco propio descartado:', tabla, transformed.id);
                         return;
                     }
                     // Evitar que el stock derivado de DB sobreescriba el stock físico local
@@ -383,15 +408,63 @@ async function _applyRTDesktop(key) {
     try {
         const fresh = await sbLoad(key, null);
         if (fresh === null) return;
+        if (_isOwnStorePayload(fresh)) {
+            if ((window as any).MK_DEBUG) console.log('[Realtime] eco propio store descartado:', key);
+            return;
+        }
         await _applyRTDesktopConDatos(key, fresh);
     } catch(e) {
         console.warn('[Realtime] Error aplicando cambio:', key, e);
     }
 }
 
+function _isOwnStorePayload(fresh: any): boolean {
+    if (Array.isArray(fresh)) {
+        const stamped = fresh.filter((x: any) => x && x._updatedBy);
+        return stamped.length > 0 && stamped.every((x: any) => x._updatedBy === _deviceId);
+    }
+    return !!(fresh && typeof fresh === 'object' && fresh._updatedBy === _deviceId);
+}
+
 // _applyRTDesktopConDatos — aplica datos ya cargados y re-renderiza la UI.
 // Compartido por _applyRTDesktop (canal store) y _applyRTRelacional (tablas relacionales).
 async function _applyRTDesktopConDatos(key, fresh) {
+    const _kvRender: Record<string, () => void> = {
+        quotes: () => {
+            if (typeof renderQuotesTable === 'function') renderQuotesTable();
+        },
+        receivables: () => {
+            if (typeof renderReceivablesList === 'function') renderReceivablesList();
+            if (typeof (window as any).renderBalance === 'function') (window as any).renderBalance();
+        },
+        payables: () => {
+            if (typeof renderPayablesList === 'function') renderPayablesList();
+            if (typeof (window as any).renderBalance === 'function') (window as any).renderBalance();
+        },
+        gastosRecurrentes: () => {
+            if (typeof renderRecurrentesPanel === 'function') renderRecurrentesPanel();
+            if (typeof (window as any).renderBalance === 'function') (window as any).renderBalance();
+        },
+        storeConfig: () => {
+            if (typeof loadStoreConfigUI === 'function') loadStoreConfigUI();
+            if (typeof loadLogoUI === 'function') loadLogoUI();
+            if (typeof updateStorePreview === 'function') updateStorePreview();
+        }
+    };
+
+    if (_kvRender[key]) {
+        (window as any)[key] = fresh;
+        try {
+            if (key === 'quotes') quotes = fresh;
+            else if (key === 'receivables') receivables = fresh;
+            else if (key === 'payables') payables = fresh;
+            else if (key === 'gastosRecurrentes') gastosRecurrentes = fresh;
+            else if (key === 'storeConfig') storeConfig = fresh;
+        } catch (_) {}
+        _kvRender[key]();
+        return;
+    }
+
     if (!Array.isArray(fresh)) return;
     if (key === 'pedidos') {
         // Cross-ref: excluir pedidos que ya existen en pedidosFinalizados (resurrecciones por race)
@@ -699,6 +772,13 @@ const _sbSavePendingCbs: Record<string, Array<{resolve: (v?: any) => void, rejec
 const _lsWriteTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 async function sbSave(key, data) {
     const dataConTimestamp = data;
+    const _tsKV = new Date().toISOString();
+    if (Array.isArray(dataConTimestamp)) {
+        _stampLocalSave(dataConTimestamp, _tsKV);
+    } else if (dataConTimestamp && typeof dataConTimestamp === 'object') {
+        dataConTimestamp._updatedAt = _tsKV;
+        dataConTimestamp._updatedBy = _deviceId;
+    }
 
     // P-5: localStorage cache con debounce de 1s — capturar snapshot ahora, escribir diferido
     if (_lsWriteTimers[key]) clearTimeout(_lsWriteTimers[key]);
@@ -806,11 +886,13 @@ const _RELATIONAL_TABLES = {
         esEmpaque: row.es_empaque, usaVariantes: row.usa_variantes,
         rendimientoPorHoja: row.rendimiento_por_hoja, puntoReorden: row.punto_reorden,
         historialCostos: row.historial_costos, compraPaquete: row.compra_paquete,
-        kitComponentes: row.kit_componentes, isKit: row.is_kit
+        kitComponentes: row.kit_componentes, isKit: row.is_kit,
+        _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null
     })},
-    salesHistory: { table: 'sales_history', min: 1, orderBy: 'date', limit: 1000, map: row => ({ ...row }) },
+    salesHistory: { table: 'sales_history', min: 1, orderBy: 'date', limit: 1000, map: row => ({ ...row, _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null }) },
     clients: { table: 'clients', min: 1, orderBy: 'updated_at', limit: 2000, map: row => ({
-        ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase
+        ...row, totalPurchases: row.total_purchases, lastPurchase: row.last_purchase,
+        _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null
     })},
     categories: { table: 'categories', min: 1, map: row => ({ ...row }) },
     pedidos: { table: 'orders', min: 1, orderBy: 'updated_at', limit: 2000,
@@ -833,7 +915,8 @@ const _RELATIONAL_TABLES = {
         pagos: row.pagos || [], empaques: row.empaques || [],
         historialEstados: row.historial_estados || [],
         fechaUltimoEstado: row.fecha_ultimo_estado, fechaPedido: row.fecha_pedido,
-        empaquesDescontados: row.empaques_descontados === true
+        empaquesDescontados: row.empaques_descontados === true,
+        _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null
     })},
     pedidosFinalizados: { table: 'orders_finalizados', min: 1, orderBy: 'fecha_finalizado', limit: 500, map: row => ({
         id: row.id, folio: row.folio, cliente: row.cliente, telefono: row.telefono,
@@ -849,7 +932,8 @@ const _RELATIONAL_TABLES = {
         prioridad: row.prioridad || 'normal', notasInternas: row.notas_internas,
         pagos: row.pagos || [], empaques: row.empaques || [],
         historialEstados: row.historial_estados || [],
-        fechaPedido: row.fecha_pedido, empaquesDescontados: row.empaques_descontados === true
+        fechaPedido: row.fecha_pedido, empaquesDescontados: row.empaques_descontados === true,
+        _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null
     })},
     incomes: { table: 'incomes', min: 0, orderBy: 'date', limit: 2000, map: (row: any) => ({
         id: row.id,
@@ -859,7 +943,8 @@ const _RELATIONAL_TABLES = {
         client: row.client || row.cliente || null,
         fromPOS: row.from_pos === true,
         folioOrigen: row.folio_origen || null,
-        pedidoId: row.pedido_id || null
+        pedidoId: row.pedido_id || null,
+        _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null
     })},
     expenses: { table: 'expenses', min: 0, orderBy: 'date', limit: 2000, map: (row: any) => ({
         id: row.id,
@@ -869,7 +954,8 @@ const _RELATIONAL_TABLES = {
         category: row.category || row.categoria || null,
         etiqueta: row.etiqueta || null,
         notas: row.notas || null,
-        fromPayable: row.from_payable === true
+        fromPayable: row.from_payable === true,
+        _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null
     })},
     stockMovimientos: { table: 'stock_movements', min: 1, orderBy: 'fecha', limit: 1000, map: (row: any) => ({
         id: row.id,
@@ -1201,7 +1287,7 @@ function saveProducts() {
         // Sellar _updatedAt en objetos locales para que el guard anti-eco funcione:
         // cuando Supabase devuelva el eco de este save, _updatedAt <= local → se descarta
         const _tsSaveP = new Date().toISOString();
-        products.forEach((p: any) => { p._updatedAt = _tsSaveP; });
+        _stampLocalSave(products, _tsSaveP);
 
         const rows = products.map(p => ({
                 id:               String(p.id),
@@ -1251,6 +1337,8 @@ function saveClients() {
 
         // Tabla relacional
         try {
+            const _tsSaveC = new Date().toISOString();
+            _stampLocalSave(window.clients || [], _tsSaveC);
             const rows = (window.clients||[]).map(c => ({
                 id: String(c.id), name: c.name||'', phone: c.phone||null,
                 facebook: c.facebook||null, email: c.email||null,
@@ -1259,7 +1347,7 @@ function saveClients() {
                 last_purchase: c.lastPurchase||null,
                 is_vip: c.type==='vip',
                 tags: c.tags||[],
-                updated_at: new Date().toISOString()
+                updated_at: _tsSaveC
             }));
             if (rows.length && db) {
                 const { error } = await db.from('clients').upsert(rows, {onConflict:'id'});
@@ -1277,7 +1365,7 @@ function saveSalesHistory() {
         // Persistir en tabla relacional public.sales_history
         try {
             const _tsSaveSH = new Date().toISOString();
-            salesHistory.forEach((s: any) => { s._updatedAt = _tsSaveSH; });
+            _stampLocalSave(salesHistory, _tsSaveSH);
             const rows = salesHistory.map(s => ({
                 id:         String(s.id),
                 folio:      s.folio    || null,
@@ -1307,6 +1395,8 @@ function saveIncomes() {
     return (async () => {
 
         try {
+            const _tsSaveI = new Date().toISOString();
+            _stampLocalSave(window.incomes || [], _tsSaveI);
             const rows = (window.incomes||[]).map(i => {
                 // Garantizar que todos los ingresos tienen id antes del upsert (onConflict:'id' requiere id uniforme)
                 if (i.id == null) i.id = (typeof mkId === 'function' ? mkId() : Date.now().toString(36) + Math.random().toString(36).slice(2));
@@ -1314,7 +1404,8 @@ function saveIncomes() {
                     id: String(i.id), concept: i.concept||i.concepto||null,
                     amount: Number(i.amount||i.monto)||0, date: i.date||i.fecha||null,
                     client: i.client||i.cliente||null, from_pos: i.fromPOS===true,
-                    folio_origen: i.folioOrigen||null, pedido_id: i.pedidoId||null
+                    folio_origen: i.folioOrigen||null, pedido_id: i.pedidoId||null,
+                    updated_at: _tsSaveI
                 };
             });
             // Solo si hay filas con datos
@@ -1332,6 +1423,8 @@ function saveExpenses() {
     return (async () => {
 
         try {
+            const _tsSaveE = new Date().toISOString();
+            _stampLocalSave(window.expenses || [], _tsSaveE);
             const rows = (window.expenses||[]).map(e => {
                 // Garantizar id antes del upsert (onConflict:'id' requiere id uniforme) — igual que saveIncomes
                 if (e.id == null) e.id = (typeof mkId === 'function' ? mkId() : Date.now().toString(36) + Math.random().toString(36).slice(2));
@@ -1339,7 +1432,8 @@ function saveExpenses() {
                     id: String(e.id), concept: e.concept||e.concepto||null,
                     amount: Number(e.amount||e.monto)||0, date: e.date||e.fecha||null,
                     category: e.category||e.categoria||null, etiqueta: e.etiqueta||null,
-                    notas: e.notas||null, from_payable: e.fromPayable===true
+                    notas: e.notas||null, from_payable: e.fromPayable===true,
+                    updated_at: _tsSaveE
                 };
             });
             if (rows.length && db) {
@@ -1370,7 +1464,8 @@ function savePedidos() {
             // BUG-RT-ECO FIX: sellar _updatedAt local = updated_at enviado, para que
             // el guard de realtime pueda detectar y descartar el eco de este save
             const _tsSave = new Date().toISOString();
-            const rows = pedidos.map(p => ((p as any)._updatedAt = _tsSave, {
+            _stampLocalSave(pedidos, _tsSave);
+            const rows = pedidos.map(p => ({
                 id:                   String(p.id),
                 folio:                p.folio               || null,
                 cliente:              p.cliente             || null,
@@ -1426,7 +1521,8 @@ function savePedidosFinalizados() {
         try {
             // BUG-RT-ECO FIX: mismo sello que savePedidos
             const _tsSaveF = new Date().toISOString();
-            const rows = pedidosFinalizados.map(p => ((p as any)._updatedAt = _tsSaveF, {
+            _stampLocalSave(pedidosFinalizados, _tsSaveF);
+            const rows = pedidosFinalizados.map(p => ({
                 id:                    String(p.id),
                 folio:                 p.folio                || null,
                 cliente:               p.cliente              || null,

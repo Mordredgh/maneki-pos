@@ -253,6 +253,28 @@ describe('movimiento de stock truncado', () => {
   });
 });
 
+function shouldDiscardRealtime(localReg: any, incoming: any, deviceId: string): boolean {
+  const ownPayload = incoming._updatedBy && incoming._updatedBy === deviceId;
+  const ownExactEcho = localReg && localReg._updatedBy === deviceId &&
+    localReg._updatedAt && incoming._updatedAt &&
+    incoming._updatedAt === localReg._updatedAt;
+  return !!(ownPayload || ownExactEcho);
+}
+
+describe('anti-eco por deviceId', () => {
+  it('discards own echo', () => {
+    const local = { id: '1', _updatedAt: '2026-01-01T10:00:00.000Z', _updatedBy: 'dev-a' };
+    const incoming = { id: '1', _updatedAt: '2026-01-01T10:00:00.000Z' };
+    expect(shouldDiscardRealtime(local, incoming, 'dev-a')).toBe(true);
+  });
+
+  it('applies remote writes even if their timestamp is older', () => {
+    const local = { id: '1', _updatedAt: '2026-01-01T10:00:00.000Z', _updatedBy: 'dev-a' };
+    const incoming = { id: '1', _updatedAt: '2026-01-01T09:00:00.000Z', _updatedBy: 'dev-b' };
+    expect(shouldDiscardRealtime(local, incoming, 'dev-a')).toBe(false);
+  });
+});
+
 function calcMarginPct(cost: number, price: number): number {
   if (!cost || !price || price === 0) return 0;
   return (price - cost) / price * 100;
