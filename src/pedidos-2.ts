@@ -1256,7 +1256,7 @@ function reactivarPedido(id) {
 
     const p = fuente === 'finalizados' ? window.pedidosFinalizados[idx] : window.pedidos[idx];
     showConfirm(
-        `¿Reactivar el pedido <strong>${_esc(p.folio||p.id)}</strong> de <strong>${_esc(p.cliente||'—')}</strong>?<br><small style="color:#6b7280;">Volverá al kanban como "Confirmado".</small>`,
+        `¿Reactivar el pedido ${p.folio||p.id} de ${p.cliente||'—'}? Volverá al kanban como "Confirmado".`,
         '↩ Reactivar pedido'
     ).then(ok => {
         if (!ok) return;
