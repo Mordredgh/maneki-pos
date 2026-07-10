@@ -150,7 +150,7 @@ async function pruneStockMovementsTableOnce() {
 }
 window.pruneStockMovementsTableOnce = pruneStockMovementsTableOnce;
 
-function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, cantidadSolicitada, motivo, stockAntes, stockDespues }) {
+function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, cantidadSolicitada = cantidad, motivo, stockAntes, stockDespues }) {
     const _movId  = mkId();
     const _movIso = new Date().toISOString();
     window.stockMovements.unshift({

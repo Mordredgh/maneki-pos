@@ -1,0 +1,20 @@
+{
+  "project": "bicho-capricho-pos",
+  "permissions": {
+    "bash": {
+      "allow": ["node scripts/build.js", "npx vitest", "npx vitest run", "git add", "git commit", "git diff", "git status", "git log"],
+      "deny": ["git push", "rm -rf", "npm publish", "git reset --hard", "git checkout --"]
+    },
+    "browser": {
+      "allow_preview": false,
+      "note": "Regla explícita del dueño: nunca usar preview_*/navegador salvo que lo pida. Verificación manual en producción."
+    },
+    "external": {
+      "coolify_deploy": "manual-only",
+      "note": "deploy.ps1 (push + trigger Coolify) solo si el usuario lo pide explícitamente, nunca automático dentro del loop."
+    }
+  },
+  "limits": {
+    "max_autonomous_iterations": 40
+  }
+}

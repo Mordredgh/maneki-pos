@@ -17,7 +17,17 @@
         try {
             if (cfg.logo) {
                 var c = document.getElementById('sidebarLogoContainer');
-                if (c) c.innerHTML = '<img src="' + cfg.logo + '" style="width:52px;height:52px;object-fit:contain;border-radius:12px;" alt="Logo">';
+                // ponytail: config-init corre antes que app-data.ts/config.ts (_validateImgUrl/_safeLogo no
+                // están cargadas aún) — check de protocolo mínimo duplicado a propósito, no via innerHTML.
+                var logoOk = false;
+                try { var _u = new URL(cfg.logo, location.href); logoOk = (_u.protocol === 'https:' || _u.protocol === 'http:' || _u.protocol === 'data:'); } catch(e) {}
+                if (c && logoOk) {
+                    var img = document.createElement('img');
+                    img.src = cfg.logo;
+                    img.alt = 'Logo';
+                    img.style.cssText = 'width:52px;height:52px;object-fit:contain;border-radius:12px;';
+                    c.replaceChildren(img);
+                }
             }
             var h1 = document.querySelector('#sidebar .sidebar-store-name');
             var p  = document.querySelector('#sidebar .sidebar-store-slogan');

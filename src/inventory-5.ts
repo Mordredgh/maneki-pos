@@ -1979,8 +1979,6 @@ function abrirReabastecimiento() {
         <td style="padding:6px 10px;text-align:center;font-size:.82rem;font-weight:700;color:#FFD166;">${sugerido}</td>
         <td style="padding:6px 10px;font-size:.78rem;color:#6b7280;">${_e(p.unidad||'pza')}</td></tr>`;
     }).join('');
-    const waTxt = encodeURIComponent(`Hola, necesito reabastecer:\n${items.map((p:any)=>{const st=Number(p.stock)||0;const min=Number(p.stockMin)||5;return `• ${p.name}: ${Math.max(1,min*2-st)} ${p.unidad||'pza'}`}).join('\n')}`);
-    const waUrl = p?.proveedorUrl?.startsWith('http') ? p.proveedorUrl : `https://wa.me/?text=${waTxt}`;
     return `<div style="margin-bottom:18px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
       <div style="background:#f9fafb;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
         <b style="font-size:.88rem;">${provEsc} (${items.length})</b>
