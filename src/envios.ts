@@ -139,7 +139,7 @@ function initAutocompleteEnvio() {
         _nominatimTimeout = setTimeout(() => buscarNominatim(q), 400);
     });
     document.addEventListener('click', function(e) {
-        if (!inp.contains(e.target) && !_nominatimDropdown.contains(e.target)) {
+        if (!inp.contains(e.target as Node) && !_nominatimDropdown.contains(e.target as Node)) {
             _nominatimDropdown.style.display = 'none';
         }
     });

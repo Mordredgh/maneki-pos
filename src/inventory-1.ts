@@ -280,7 +280,7 @@ function mostrarListaCompras(esRerender?) {
     });
 
     // Acumular necesidades por producto+variante
-    const necesidades = {};
+    const necesidades: Record<string, any> = {};
     pedidosPendientes.forEach(ped => {
         (ped.productosInventario || []).forEach(item => {
             const key = (item.id || item.name) + '|' + (item.variante || item.variant || '');
@@ -320,7 +320,7 @@ function mostrarListaCompras(esRerender?) {
     // A1: Enriquecer resultados con costo unitario del producto
     resultado.forEach(r => {
         const prod = (window.products || []).find(p => String(p.id) === String(r.id));
-        r.costoUnit = prod ? (parseFloat(prod.cost) || 0) : 0;
+        r.costoUnit = prod ? (Number(prod.cost) || 0) : 0;
         r.costoTotal = r.faltan * r.costoUnit;
     });
 
@@ -514,7 +514,7 @@ function setupImageUpload() {
             reader.onload = ev => {
                 const img = document.getElementById(isMp ? 'mpPreviewImg' : 'previewImg');
                 const pre = document.getElementById(isMp ? 'mpImagePreview' : 'imagePreview');
-                if (img) img.src = ev.target.result;
+                if (img) img.src = ev.target.result as string; // readAsDataURL siempre resuelve string
                 if (pre) pre.classList.remove('hidden');
             };
             reader.readAsDataURL(file);
@@ -583,7 +583,7 @@ function checkStockAlerts() {
     const mpBadge = document.getElementById('sidebarBadgeMP');
     if (mpBadge) {
         const total = mpBajas.length + mpAgotadas.length;
-        if (total > 0) { mpBadge.textContent = total; mpBadge.style.display = 'inline-block'; }
+        if (total > 0) { mpBadge.textContent = String(total); mpBadge.style.display = 'inline-block'; }
         else mpBadge.style.display = 'none';
     }
 
@@ -714,7 +714,7 @@ function confirmarStockInline(id) {
     // Sincronizar variantes si existen (distribuir en la primera)
     if (Array.isArray(p.variants) && p.variants.length > 0) {
         const diff = nuevo - antes;
-        if (diff !== 0 && p.variants[0]) p.variants[0].qty = Math.max(0, (parseInt(p.variants[0].qty)||0) + diff);
+        if (diff !== 0 && p.variants[0]) p.variants[0].qty = Math.max(0, (Number(p.variants[0].qty)||0) + diff);
         if (typeof syncStockFromVariants==='function') syncStockFromVariants(p);
     }
     registrarMovimiento({ productoId:p.id, productoNombre:p.name, tipo:'ajuste',
@@ -744,10 +744,10 @@ window.poblarFiltroProveedores = poblarFiltroProveedores;
 function invInlineEditStock(id, td) {
     const product = (window.products||[]).find(p => String(p.id) === String(id));
     if (!product) return;
-    const prev = parseFloat(product.stock)||0;
+    const prev = Number(product.stock)||0;
     const input = document.createElement('input');
     input.type = 'number'; input.min = '0'; input.step = '0.01';
-    input.value = prev;
+    input.value = String(prev);
     input.style.cssText = 'width:60px;padding:2px 6px;border:1.5px solid #9669c4;border-radius:6px;font-size:.85rem;text-align:center;';
     const commit = async () => {
         const nv = parseFloat(input.value);
@@ -765,7 +765,7 @@ function invInlineEditStock(id, td) {
     input.addEventListener('blur', commit);
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') input.blur();
-        if (e.key === 'Escape') { input.value = prev; input.blur(); }
+        if (e.key === 'Escape') { input.value = String(prev); input.blur(); }
     });
     td.innerHTML = '';
     td.appendChild(input);
@@ -777,7 +777,7 @@ window.invInlineEditStock = invInlineEditStock;
 function invInlineEditPrice(id, td) {
     const product = (window.products||[]).find((p: any) => String(p.id) === String(id));
     if (!product) return;
-    const prev = parseFloat(product.price)||0;
+    const prev = Number(product.price)||0;
     const input = document.createElement('input');
     input.type = 'number'; input.min = '0'; input.step = '0.01';
     input.value = prev.toFixed(2);
@@ -1004,7 +1004,7 @@ function ptRenderGaleria() {
     // Renderizar URLs ya guardadas
     urls.forEach((url, i) => {
         const div = document.createElement('div');
-        div.style = 'position:relative;width:120px;height:120px;';
+        div.style.cssText = 'position:relative;width:120px;height:120px;';
         div.innerHTML = `<img src="${url}" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #e5e7eb;">
             <button type="button" onclick="ptEliminarFotoGaleria('url',${i})"
                 style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;background:#ef4444;color:#fff;border:none;border-radius:50%;font-size:.75rem;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;">✕</button>`;
@@ -1013,17 +1013,17 @@ function ptRenderGaleria() {
     // Renderizar archivos nuevos (preview local)
     files.forEach((file, i) => {
         const div = document.createElement('div');
-        div.style = 'position:relative;width:120px;height:120px;';
+        div.style.cssText = 'position:relative;width:120px;height:120px;';
         div.dataset.fileIdx = i;
         const img = document.createElement('img');
-        img.style = 'width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #FFD166;opacity:.85;';
+        img.style.cssText = 'width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #FFD166;opacity:.85;';
         const reader = new FileReader();
-        reader.onload = ev => { img.src = ev.target.result; };
+        reader.onload = ev => { img.src = ev.target.result as string; };
         reader.readAsDataURL(file);
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.innerHTML = '✕';
-        btn.style = 'position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:#ef4444;color:#fff;border:none;border-radius:50%;font-size:.7rem;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;';
+        btn.style.cssText = 'position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:#ef4444;color:#fff;border:none;border-radius:50%;font-size:.7rem;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;';
         btn.onclick = () => ptEliminarFotoGaleria('file', i);
         div.appendChild(img); div.appendChild(btn);
         cont.appendChild(div);
@@ -1160,7 +1160,7 @@ async function importarInventarioCSV(input) {
 
     for (let i = 1; i < lines.length; i++) {
         const cols = parseCsvLine(lines[i]);
-        const row = {};
+        const row: Record<string, string> = {};
         headers.forEach((h, idx) => { row[h] = (cols[idx] || '').trim(); });
 
         if (!row.nombre) { errores++; continue; }
@@ -1179,7 +1179,7 @@ async function importarInventarioCSV(input) {
 
         const sku = row.sku || ('IMP-' + mkId().split('-')[0].toUpperCase());
 
-        const baseProduct = {
+        const baseProduct: Record<string, any> = {
             id: mkId(),
             name: row.nombre,
             sku,
@@ -1207,7 +1207,7 @@ async function importarInventarioCSV(input) {
         }
 
         if (!window.products) window.products = [];
-        window.products.push(baseProduct);
+        window.products.push(baseProduct as ManekiProduct);
         importados++;
     }
 
@@ -1258,7 +1258,7 @@ async function guardarSnapshotInventario() {
     fecha,
     hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}),
     totalProductos: window.products.length,
-    valorTotal: window.products.reduce((s,p) => s + (parseFloat(p.cost)||0)*(parseFloat(p.stock)||0), 0),
+    valorTotal: window.products.reduce((s,p) => s + (Number(p.cost)||0)*(Number(p.stock)||0), 0),
     items: window.products.map(p => ({
       id: p.id, name: p.name, tipo: p.tipo||'pt',
       stock: p.stock||0, cost: p.cost||0, price: p.price||0,

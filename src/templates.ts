@@ -34,7 +34,7 @@
         const _prev = window.showSection;
         window.showSection = function(name) {
             _activate(name + '-section');
-            return _prev.apply(this, arguments);
+            return _prev.apply(this, arguments as any);
         };
         window.showSection._mk4 = _prev._mk4;
     }, 150);

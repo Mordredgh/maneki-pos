@@ -69,7 +69,7 @@ function setPedidoPrioridad(valor, btn) {
 }
 window.setPedidoPrioridad = setPedidoPrioridad;
 
-function openPedidoModal(id) {
+function openPedidoModal(id = null) {
     const form = document.getElementById('pedidoForm');
     if (form) form.reset();
     // MEJORA 2: limpiar notasInternas al abrir modal (no está en el form nativo)
@@ -410,7 +410,7 @@ function calcPedidoTotal() {
     const costoProductos = items.reduce((s, it) => {
         const prod = (window.products || []).find(p => String(p.id) === String(it.id));
         if (!prod || !Array.isArray(prod.mpComponentes) || !prod.mpComponentes.length) return s;
-        const costoUnitProd = prod.mpComponentes.reduce((sc, c) => sc + (parseFloat(c.costUnit) || 0) * (parseFloat(c.qty) || 1), 0);
+        const costoUnitProd = prod.mpComponentes.reduce((sc, c) => sc + (Number(c.costUnit) || 0) * (Number(c.qty) || 1), 0);
         const rph = prod.rendimientoPorHoja || 0;
         const hojas = rph > 0 ? Math.ceil((it.quantity || 1) / rph) : (it.quantity || 1);
         return s + costoUnitProd * hojas;
@@ -418,7 +418,7 @@ function calcPedidoTotal() {
     // Sumar costo de empaques seleccionados
     const costoEmpaques = (window.pedidoEmpaquesSeleccionados || []).reduce((s, emp) => {
         const mp = (window.products || []).find(p => String(p.id) === String(emp.id));
-        return s + (parseFloat(mp?.cost || 0)) * (emp.quantity || 1);
+        return s + (Number(mp?.cost || 0)) * (emp.quantity || 1);
     }, 0);
     const costoMat = costoProductos + costoEmpaques;
 

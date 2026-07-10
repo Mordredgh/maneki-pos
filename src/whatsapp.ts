@@ -27,7 +27,7 @@ function _waFooter() {
     const key = 'maneki_wa_promo_idx';
     const prev = parseInt(localStorage.getItem(key) || '-1');
     const next = (prev + 1) % _WA_PROMOS.length;
-    localStorage.setItem(key, next);
+    localStorage.setItem(key, String(next));
     return `\n${_WA_PROMOS[next]}\n📘 Síguenos: ${_WA_FB}`;
 }
 

@@ -231,7 +231,7 @@ function packHandlePhoto(input) {
     reader.onload = e => {
         const img = document.getElementById('packImagePreviewImg');
         const preview = document.getElementById('packImagePreview');
-        if (img) img.src = e.target.result;
+        if (img) img.src = e.target.result as string;
         if (preview) preview.style.display = 'block';
     };
     reader.readAsDataURL(file);
@@ -659,7 +659,7 @@ async function guardarPack() {
                 packMpDirectos: JSON.parse(JSON.stringify(mpDirs)),
                 mpComponentes, historialPrecios: []
             };
-            window.products.push(np);
+            window.products.push(np as ManekiProduct);
             saveProducts(); renderInventoryTable();
                     if (typeof updateDashboard === 'function') updateDashboard();
             closePackModal();

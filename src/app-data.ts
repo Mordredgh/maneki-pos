@@ -244,7 +244,7 @@ function loadLogoUI() {
 // Motor genérico compartido por los 3 pickers de emoji de la app (categoría nueva,
 // categoría editar, equipos) — cada uno sigue exponiendo sus mismas funciones globales
 // (renderXGrid/filterX/selectX) como wrappers delgados, así el HTML no cambia.
-function _renderEmojiPickerGrid(gridId, cats, keywordMap, filter, btnClass, onSelectFnName) {
+function _renderEmojiPickerGrid(gridId, cats, keywordMap: Record<string, any[]>, filter, btnClass, onSelectFnName) {
     const grid = document.getElementById(gridId);
     if (!grid) return;
     const q = (filter || '').toLowerCase().trim();

@@ -48,7 +48,7 @@ let db = null;
         let cfg = null;
         // Intentar config inyectada externamente
         if (!cfg && window.__mkCfg) {
-            try { cfg = await window.__mkCfg.getSupabase(); } catch(e) { console.warn('[DB] __mkCfg.getSupabase() falló:', e); }
+            try { cfg = await window.__mkCfg.getSupabase(); } catch(e: any) { console.warn('[DB] __mkCfg.getSupabase() falló:', e); }
         }
         // Config embebida. La seguridad del anon key se garantiza mediante RLS en Supabase.
         if (!cfg) {
@@ -86,7 +86,7 @@ let db = null;
         // Usar typeof para evitar ReferenceError si _pendingSync aún no fue declarada (TDZ con let)
         if (typeof sincronizarPendientes === 'function' && window._pendingSync) sincronizarPendientes();
         if (typeof _setupRealtime === 'function') _setupRealtime();
-    } catch(e) {
+    } catch(e: any) {
         console.error('[db.js] No se pudo inicializar Supabase:', e);
         window._dbReady = false;
     }
@@ -117,7 +117,7 @@ function mkHandleError(err: any, context: string): void {
 (window as any).mkHandleError = mkHandleError;
 
 // ── Timeout wrapper para queries Supabase (evita UI freeze) ──────────
-function _withTimeout(promise, ms) {
+function _withTimeout(promise, ms = 8000) {
     ms = ms || 8000;
     return Promise.race([
         promise,
@@ -293,7 +293,7 @@ function _setupRealtime() {
     });
 
     window.addEventListener('beforeunload', () => {
-        (window._mkRTChannels || []).forEach(ch => { try { ch.unsubscribe(); } catch(e) { console.warn('[DB] Error al desuscribir canal realtime:', e); } });
+        (window._mkRTChannels || []).forEach(ch => { try { ch.unsubscribe(); } catch(e: any) { console.warn('[DB] Error al desuscribir canal realtime:', e); } });
     });
 }
 
@@ -328,7 +328,7 @@ async function _applyRTRelacional(tabla, payload) {
                 const transformed = _rtTransformarFila(tabla, rowData);
                 if (transformed) {
                     if (!Array.isArray(window[key])) (window as any)[key] = [];
-                    (window[key] as any[]).push(transformed);
+                    ((window as any)[key] as any[]).push(transformed);
                     await _applyRTDesktopConDatos(key, window[key] || []);
                     if ((window as any).MK_DEBUG) console.log('[Realtime] ' + tabla + ' (INSERT fast-path) aplicado in-place');
                 }
@@ -394,7 +394,7 @@ async function _applyRTRelacional(tabla, payload) {
 
         await _applyRTDesktopConDatos(key, window[key] || []);
         if ((window as any).MK_DEBUG) console.log('[Realtime] ' + tabla + ' (' + eventType + ') aplicado in-place');
-    } catch(e) {
+    } catch(e: any) {
         console.warn('[Realtime] Error en _applyRTRelacional:', tabla, e);
     }
 }
@@ -414,7 +414,7 @@ async function _applyRTDesktop(key) {
             return;
         }
         await _applyRTDesktopConDatos(key, fresh);
-    } catch(e) {
+    } catch(e: any) {
         console.warn('[Realtime] Error aplicando cambio:', key, e);
     }
 }
@@ -528,7 +528,7 @@ function _comprimirFile(file) {
                 canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', 0.82);
             };
             img.onerror = () => resolve(file);
-            img.src = ev.target.result;
+            img.src = ev.target.result as string;
         };
         reader.onerror = () => resolve(file);
         reader.readAsDataURL(file);
@@ -550,14 +550,14 @@ async function subirImagenStorage(file) {
             .from('product-images')
             .getPublicUrl(fileName);
         return urlData.publicUrl;
-    } catch(e) {
+    } catch(e: any) {
         console.warn('Supabase Storage no disponible, guardando imagen localmente:', e);
         // Convertir imagen a base64 como respaldo offline
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 // Comprimir si es muy grande (max ~200KB en base64)
-                const base64 = ev.target.result;
+                const base64 = ev.target.result as string;
                 if (base64.length > 270000) {
                     // Reducir calidad usando canvas
                     const img = new Image();
@@ -678,7 +678,7 @@ function openModal(idOrEl) {
     } else {
         // Fallback: mover foco al primer elemento interactivo
         requestAnimationFrame(() => {
-            const first = modal.querySelector<HTMLElement>('button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+            const first = modal.querySelector('button,input,select,textarea,[tabindex]:not([tabindex="-1"])') as HTMLElement | null;
             if (first) first.focus();
         });
     }
@@ -744,7 +744,7 @@ function _ocultarBannerOfflineConexion() {
     const banner = document.getElementById('mk-offline-banner');
     if (banner) {
         banner.style.animation = 'toastOut 0.3s ease forwards';
-        setTimeout(() => { try { banner.remove(); } catch(e) { console.warn('[DB] Error al remover banner offline:', e); } }, 320);
+        setTimeout(() => { try { banner.remove(); } catch(e: any) { console.warn('[DB] Error al remover banner offline:', e); } }, 320);
     }
 }
 
@@ -831,7 +831,7 @@ async function sbSave(key, data) {
                     if (typeof window._mkUpdateSyncTime === 'function') window._mkUpdateSyncTime();
                     pending.forEach(p => p.resolve());
                 }
-            } catch(e) {
+            } catch(e: any) {
                 console.error('sbSave error de red:', e);
                 window._pendingSync = true;
                 actualizarIndicadorConexion(false);
@@ -873,7 +873,7 @@ function _loadLocalMirror(key: string) {
     try {
         const local = localStorage.getItem('maneki_' + key);
         return local ? JSON.parse(local) : null;
-    } catch(e) {
+    } catch(e: any) {
         console.warn('Error en localStorage fallback:', e);
         return null;
     }
@@ -993,7 +993,7 @@ async function _loadFromTable(key) {
         const mapped = data.map(cfg.map);
         if ((window as any).MK_DEBUG) console.log(`[DB] ✓ ${key} loaded from ${cfg.table} (${mapped.length} rows)`);
         return mapped;
-    } catch(e) {
+    } catch(e: any) {
         _lastRelationalLoadStatus[key] = 'error';
         console.warn(`[DB] _loadFromTable(${key}) failed, falling back to store:`, e?.message);
         return null;
@@ -1011,7 +1011,7 @@ async function _loadMoreFromTable(key, offset, pageSize) {
         const { data, error } = await _withTimeout(query, 10000);
         if (error || !data) return [];
         return data.map(cfg.map);
-    } catch(e) {
+    } catch(e: any) {
         console.warn(`[DB] _loadMoreFromTable(${key}) failed:`, e?.message);
         return [];
     }
@@ -1038,7 +1038,7 @@ async function _migrateToRelationalIfEmpty() {
             if ((window as any).MK_DEBUG) console.log(`[DB] Migrating ${localData.length} ${key} to ${cfg.table}...`);
             if (saveFn) await saveFn();
             if ((window as any).MK_DEBUG) console.log(`[DB] ✓ ${key} migrated to relational table`);
-        } catch(e) {
+        } catch(e: any) {
             console.warn(`[DB] Migration ${key} failed:`, e?.message);
         }
     }
@@ -1066,9 +1066,9 @@ async function sbLoad(key, def) {
             try {
                 const parsed = JSON.parse(data.value);
                 return parsed;
-            } catch(e) { console.warn('Error parseando dato Supabase:', e); }
+            } catch(e: any) { console.warn('Error parseando dato Supabase:', e); }
         }
-    } catch(e) { console.warn('sbLoad Supabase no disponible, usando localStorage:', key); }
+    } catch(e: any) { console.warn('sbLoad Supabase no disponible, usando localStorage:', key); }
 
     // 2) Fallback: localStorage
     const mirror = _loadLocalMirror(key);
@@ -1106,7 +1106,7 @@ async function getNextFolio(tipo, _retry = 0) {
                 return data;
             }
             throw new Error(error?.message || 'RPC sin resultado');
-        } catch(e) {
+        } catch(e: any) {
             console.warn('[getNextFolio] RPC falló, usando fallback offline:', e?.message || e);
             // Fallback offline: máximo conocido + 1 (puede repetirse si dos dispositivos usan esto)
             if (tipo === 'venta') {
@@ -1133,7 +1133,7 @@ function sbSaveConFeedback(key, data, nombreAmigable) {
             await sbSave(key, data);
             // Toast de éxito solo si no hubo excepción
             manekiToastExport(`✅ ${nombreAmigable || key} guardado.`, 'ok');
-        } catch(e) {
+        } catch(e: any) {
             manekiToastExport(`❌ Error al guardar ${nombreAmigable || key}. Revisa tu conexión.`, 'err');
             console.error('sbSave error:', key, e);
         }
@@ -1159,7 +1159,7 @@ function saveCategories() {
             // creía que había guardado bien.
             const { error } = await db.from('categories').upsert(rows, { onConflict: 'id' });
             if (error) throw error;
-        } catch(e) { console.warn('[saveCategories] Error al guardar en Supabase:', (e as any)?.message); throw e; }
+        } catch(e: any) { console.warn('[saveCategories] Error al guardar en Supabase:', (e as any)?.message); throw e; }
     })();
 }
 // ── deleteCategoryFromDB — borra de public.categories al eliminar categoría ──
@@ -1167,7 +1167,7 @@ async function deleteCategoryFromDB(id: string): Promise<void> {
     try {
         const { error } = await db.from('categories').delete().eq('id', String(id));
         if (error) console.error('deleteCategoryFromDB error:', error);
-    } catch(e) { console.error('deleteCategoryFromDB excepción:', e); }
+    } catch(e: any) { console.error('deleteCategoryFromDB excepción:', e); }
 }
 (window as any).deleteCategoryFromDB = deleteCategoryFromDB;
 let stockMovimientos = [];
@@ -1175,7 +1175,7 @@ function saveStockMovimientos() { (async () => { await sbSave('stockMovimientos'
 
 // ── Comprime un data URL base64 usando Canvas (max 1200px, calidad 0.82) ──
 // Devuelve un nuevo data URL JPEG comprimido, siempre < 1 MB aprox.
-function _comprimirBase64(dataUrl) {
+function _comprimirBase64(dataUrl): Promise<string> {
     return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
@@ -1238,7 +1238,7 @@ async function _migrarBase64AStorage(p) {
         delete p._migrationFailed;
         if ((window as any).MK_DEBUG) console.log(`✅ Imagen migrada a Storage: ${p.name} →`, urlData.publicUrl);
         return urlData.publicUrl;
-    } catch(e) {
+    } catch(e: any) {
         console.warn(`No se pudo migrar imagen de "${p.name}" a Storage:`, e);
         return null;
     }
@@ -1267,8 +1267,8 @@ function _calcPiezasFabricablesFallback(p) {
         if (!mp) return 0;
         tieneMpFisica = true;
         const stockMp = Array.isArray(mp.variants) && mp.variants.length > 0
-            ? mp.variants.reduce((sum, v) => sum + (parseFloat(v.qty) || 0), 0)
-            : (parseFloat(mp.stock) || 0);
+            ? mp.variants.reduce((sum, v) => sum + (Number(v.qty) || 0), 0)
+            : (Number(mp.stock) || 0);
         const qty = parseFloat(comp.qty) || 1;
         const rendimiento = parseFloat(comp.rendimientoPorHoja) || parseFloat(p.rendimientoPorHoja) || 1;
         const posibles = Math.floor(stockMp / qty) * rendimiento;
@@ -1328,7 +1328,7 @@ function saveProducts() {
             const { error } = await db.from('products').upsert(rows, { onConflict: 'id' });
             if (error) { console.error('saveProducts relacional error:', error); _mkSI('error'); }
             else { _mirrorLocal('products', products); _mkSI('saved'); }
-        } catch(e) {
+        } catch(e: any) {
             console.error('saveProducts relacional excepción:', e);
             _mkSI('error');
         }
@@ -1358,7 +1358,7 @@ function saveClients() {
             } else {
                 _mirrorLocal('clients', window.clients || []);
             }
-        } catch(e){ console.warn('[saveClients] Error al guardar en Supabase:', e?.message); }
+        } catch(e: any){ console.warn('[saveClients] Error al guardar en Supabase:', e?.message); }
     })();
 }
 // ── saveSalesHistory — escribe en public.sales_history ──
@@ -1387,7 +1387,7 @@ function saveSalesHistory() {
             const { error } = await db.from('sales_history').upsert(rows, { onConflict: 'id' });
             if (error) console.error('saveSalesHistory relacional error:', error);
             else _mirrorLocal('salesHistory', salesHistory);
-        } catch(e) {
+        } catch(e: any) {
             console.error('saveSalesHistory relacional excepción:', e);
         }
     })();
@@ -1424,7 +1424,7 @@ function saveIncomes() {
             } else {
                 _mirrorLocal('incomes', window.incomes || []);
             }
-        } catch(e){ console.warn('[saveIncomes] Error al guardar en Supabase:', e?.message); }
+        } catch(e: any){ console.warn('[saveIncomes] Error al guardar en Supabase:', e?.message); }
     })();
 }
 function saveExpenses() {
@@ -1451,7 +1451,7 @@ function saveExpenses() {
             } else {
                 _mirrorLocal('expenses', window.expenses || []);
             }
-        } catch(e){ console.warn('[saveExpenses] Error al guardar en Supabase:', e?.message); }
+        } catch(e: any){ console.warn('[saveExpenses] Error al guardar en Supabase:', e?.message); }
     })();
 }
 let gastosRecurrentes = [];
@@ -1511,7 +1511,7 @@ function savePedidos() {
             const { error } = await db.from('orders').upsert(rows, { onConflict: 'id' });
             if (error) { console.error('savePedidos relacional error:', error); _mkSI('error'); }
             else { _mirrorLocal('pedidos', pedidos); _mkSI('saved'); }
-        } catch(e) {
+        } catch(e: any) {
             console.error('savePedidos relacional excepción:', e);
             _mkSI('error');
         }
@@ -1568,7 +1568,7 @@ function savePedidosFinalizados() {
             const { error } = await db.from('orders_finalizados').upsert(rows, { onConflict: 'id' });
             if (error) console.error('savePedidosFinalizados relacional error:', error);
             else _mirrorLocal('pedidosFinalizados', pedidosFinalizados);
-        } catch(e) {
+        } catch(e: any) {
             console.error('savePedidosFinalizados relacional excepción:', e);
         }
     });
@@ -1584,7 +1584,7 @@ function deletePedidoActivo(id: string): Promise<void> {
         try {
             const { error } = await db.from('orders').delete().eq('id', String(id));
             if (error) console.error('deletePedidoActivo error:', error);
-        } catch(e) { console.error('deletePedidoActivo excepción:', e); }
+        } catch(e: any) { console.error('deletePedidoActivo excepción:', e); }
     });
 }
 (window as any).deletePedidoActivo = deletePedidoActivo;
@@ -1596,7 +1596,7 @@ function deletePedidoFinalizado(id: string): Promise<void> {
         try {
             const { error } = await db.from('orders_finalizados').delete().eq('id', String(id));
             if (error) console.error('deletePedidoFinalizado error:', error);
-        } catch(e) { console.error('deletePedidoFinalizado excepción:', e); }
+        } catch(e: any) { console.error('deletePedidoFinalizado excepción:', e); }
     });
 }
 (window as any).deletePedidoFinalizado = deletePedidoFinalizado;
@@ -1606,7 +1606,7 @@ async function deleteClientFromDB(id: string): Promise<void> {
     try {
         const { error } = await db.from('clients').delete().eq('id', String(id));
         if (error) console.error('deleteClientFromDB error:', error);
-    } catch(e) { console.error('deleteClientFromDB excepción:', e); }
+    } catch(e: any) { console.error('deleteClientFromDB excepción:', e); }
 }
 (window as any).deleteClientFromDB = deleteClientFromDB;
 
@@ -1615,7 +1615,7 @@ async function deleteSalesHistoryEntry(id: string): Promise<void> {
     try {
         const { error } = await db.from('sales_history').delete().eq('id', String(id));
         if (error) console.error('deleteSalesHistoryEntry error:', error);
-    } catch(e) { console.error('deleteSalesHistoryEntry excepción:', e); }
+    } catch(e: any) { console.error('deleteSalesHistoryEntry excepción:', e); }
 }
 (window as any).deleteSalesHistoryEntry = deleteSalesHistoryEntry;
 
@@ -1627,7 +1627,7 @@ async function deleteIncomeFromDB(id: string): Promise<void> {
     try {
         const { error } = await db.from('incomes').delete().eq('id', String(id));
         if (error) console.error('deleteIncomeFromDB error:', error);
-    } catch(e) { console.error('deleteIncomeFromDB excepción:', e); }
+    } catch(e: any) { console.error('deleteIncomeFromDB excepción:', e); }
 }
 (window as any).deleteIncomeFromDB = deleteIncomeFromDB;
 
@@ -1645,7 +1645,7 @@ async function deleteIncomesByFolio(folio: string, pedidoId?: string): Promise<v
             const { error } = await db.from('incomes').delete().eq('pedido_id', String(pedidoId));
             if (error) console.error('deleteIncomesByFolio (pedidoId) error:', error);
         }
-    } catch(e) { console.error('deleteIncomesByFolio excepción:', e); }
+    } catch(e: any) { console.error('deleteIncomesByFolio excepción:', e); }
 }
 (window as any).deleteIncomesByFolio = deleteIncomesByFolio;
 
@@ -1656,6 +1656,6 @@ async function deleteExpenseFromDB(id: string): Promise<void> {
     try {
         const { error } = await db.from('expenses').delete().eq('id', String(id));
         if (error) console.error('deleteExpenseFromDB error:', error);
-    } catch(e) { console.error('deleteExpenseFromDB excepción:', e); }
+    } catch(e: any) { console.error('deleteExpenseFromDB excepción:', e); }
 }
 (window as any).deleteExpenseFromDB = deleteExpenseFromDB;

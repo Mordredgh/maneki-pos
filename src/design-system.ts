@@ -490,7 +490,7 @@ function _initEditableGoal() {
                 const newVal = parseFloat(inlineInput.value);
                 if (newVal > 0) {
                     goalInput.value = newVal;
-                    localStorage.setItem('mk_monthly_goal', newVal);
+                    localStorage.setItem('mk_monthly_goal', String(newVal));
                     if (window.updateDashboard) window.updateDashboard();
                     if (window.manekiToastExport) manekiToastExport('Meta mensual actualizada: $'+newVal.toLocaleString('es-MX'), 'ok');
                 }
@@ -711,7 +711,7 @@ function _patchRenderAnalisis() {
         const _orig = window.renderAnalisis;
         window.renderAnalisis = function() {
             const wk = _getWorker();
-            if (!wk || !window.salesHistory) { _orig.apply(this,arguments); return; }
+            if (!wk || !window.salesHistory) { _orig.apply(this, arguments as any); return; }
             const tbody = document.getElementById('analisisTabla');
             if (tbody) tbody.innerHTML=Array(5).fill(
                 `<tr>${Array(8).fill(`<td class="px-6 py-3"><div class="mk-skeleton" style="height:13px;width:75%;"></div></td>`).join('')}</tr>`
@@ -761,7 +761,7 @@ function _patchRenderAnalisis() {
                 var vacio = document.getElementById('analisisVacio');
                 if (vacio) vacio.classList[rows.length===0?'remove':'add']('hidden');
             };
-            wk.onerror = ()=>_orig.apply(this,arguments);
+            wk.onerror = ()=>_orig.apply(this, arguments as any);
             const _mpSet = {}; (window.products||[]).forEach(function(p){ if(p.tipo==="materia_prima"||p.tipo==="servicio"){ if(p.name)_mpSet[p.name]=1; if(p.id)_mpSet["id:"+String(p.id)]=1; } }); wk.postMessage({salesHistory:window.salesHistory||[],pedidosFinalizados:window.pedidosFinalizados||[],period,orden,desde,hasta,mpSet:_mpSet});
         };
         window.renderAnalisis._mk4 = true;
@@ -783,12 +783,12 @@ function _patchSoundActions() {
     }
     if (!window.deleteProduct._mk4) {
         const _o=window.deleteProduct;
-        window.deleteProduct=function(){MKS.del();_o.apply(this,arguments);};
+        (window as any).deleteProduct=function(){MKS.del();_o.apply(this, arguments as any);};
         window.deleteProduct._mk4=true;
     }
     if (!window.deleteClient._mk4) {
         const _o=window.deleteClient;
-        window.deleteClient=function(){MKS.del();_o.apply(this,arguments);};
+        window.deleteClient=function(){MKS.del();_o.apply(this, arguments as any);};
         window.deleteClient._mk4=true;
     }
     return true;
@@ -798,8 +798,8 @@ function _patchSoundActions() {
 // Cada módulo debe disparar al final de su carga:
 //   document.dispatchEvent(new CustomEvent('maneki:ready', { detail: { module: 'reportes' } }))
 // Esto elimina los 4 setInterval de polling y hace el sistema predecible.
-document.addEventListener('maneki:ready', function(e) {
-    const mod = e?.detail?.module || '';
+document.addEventListener('maneki:ready', function(e: Event) {
+    const mod = (e as CustomEvent)?.detail?.module || '';
     if (mod === 'reportes' || mod === 'showSection') _patchShowSection();
     if (mod === 'analisis' || mod === 'renderAnalisis') _patchRenderAnalisis();
     if (mod === 'app' || mod === 'toast') _patchSoundActions();

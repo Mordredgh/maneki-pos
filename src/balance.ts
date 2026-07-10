@@ -189,7 +189,7 @@ function _renderGraficaCategorias(gastosMes, mesStr) {
     if (!gastosMes.length) { container.innerHTML = ''; return; }
 
     // Agrupar por categoría
-    const mapa = {};
+    const mapa: Record<string, number> = {};
     gastosMes.forEach(e => {
         const cat = e.categoria || 'Otros';
         mapa[cat] = (mapa[cat] || 0) + Number(e.amount || 0);
@@ -689,7 +689,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             // calcular días
             lista = lista.map(rec => {
                 const fechaCreacion = rec.createdAt ? new Date(rec.createdAt) : (rec.dueDate ? new Date(rec.dueDate + 'T00:00:00') : null);
-                const diasPendiente = fechaCreacion ? Math.round((hoy - fechaCreacion) / 86400000) : 0;
+                const diasPendiente = fechaCreacion ? Math.round((hoy.getTime() - fechaCreacion.getTime()) / 86400000) : 0;
                 return { ...rec, diasPendiente };
             });
 
@@ -746,7 +746,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                 .filter(p => calcSaldoPendiente(p) > 0)
                 .map(p => {
                     const fechaRef = p.fechaPedido ? new Date(p.fechaPedido + 'T00:00:00') : null;
-                    const dias = fechaRef ? Math.round((hoy - fechaRef) / 86400000) : 0;
+                    const dias = fechaRef ? Math.round((hoy.getTime() - fechaRef.getTime()) / 86400000) : 0;
                     return { ...p, dias, _saldo: calcSaldoPendiente(p) };
                 })
                 .sort((a,b) => b.dias - a.dias);
@@ -797,9 +797,9 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             const inputEl = document.getElementById('transactionConcept') as HTMLInputElement|null;
             if (!inputEl) return;
             inputEl.setAttribute('list', 'transactionConceptSuggestions');
-            let dl = document.getElementById('transactionConceptSuggestions');
+            let dl: HTMLElement | null = document.getElementById('transactionConceptSuggestions');
             if (!dl) {
-                dl = document.createElement('datalist');
+                dl = document.createElement('datalist') as unknown as HTMLElement;
                 dl.id = 'transactionConceptSuggestions';
                 inputEl.insertAdjacentElement('afterend', dl);
             }
@@ -965,7 +965,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         window.openExpenseModal = openExpenseModal;
         window.openReceivableModal = openReceivableModal;
         window.openPayableModal = openPayableModal;
-        window.renderBalance = typeof mkDebounce === 'function' ? mkDebounce(renderBalance, 200) : renderBalance;
+        window.renderBalance = (typeof mkDebounce === 'function' ? mkDebounce(renderBalance, 200) : renderBalance) as () => void;
         window.renderIncomeList = renderIncomeList;
         window.renderExpenseList = renderExpenseList;
         window.renderReceivablesList = renderReceivablesList;
@@ -1016,7 +1016,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     e.preventDefault();
 
     // FIX-SPINNER: deshabilitar botón mientras se guarda
-    const submitBtn = e.target.querySelector('[type="submit"]');
+    const submitBtn = (e.target as HTMLFormElement).querySelector('[type="submit"]') as HTMLButtonElement | null;
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Guardando...'; }
     const _restoreBtn = () => { if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '💾 Guardar'; } };
 
@@ -1073,7 +1073,8 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         client: client,
         cliente: client,
         categoria: document.getElementById('transactionCategoria')?.value || '',
-        etiqueta: document.getElementById('transactionEtiqueta')?.value || ''
+        etiqueta: document.getElementById('transactionEtiqueta')?.value || '',
+        recurrente: false
     };
 
     if (type === 'income') {
@@ -1245,7 +1246,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             const pedidosActivos = (window.pedidos||[]).filter(p => {
                 if (!p.entrega) return false;
                 const fe = new Date(p.entrega + 'T00:00:00');
-                const diff = Math.round((fe - hoy) / 86400000);
+                const diff = Math.round((fe.getTime() - hoy.getTime()) / 86400000);
                 return diff >= 0 && diff <= 30 &&
                     !['finalizado','cancelado','entregado'].includes((p.status||'').toLowerCase());
             });
@@ -1280,7 +1281,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
 
             pedidosActivos.forEach(p => {
                 const fe = new Date(p.entrega + 'T00:00:00');
-                const diff = Math.round((fe - hoy) / 86400000);
+                const diff = Math.round((fe.getTime() - hoy.getTime()) / 86400000);
                 const saldo = typeof calcSaldoPendiente === 'function'
                     ? calcSaldoPendiente(p)
                     : Math.max(0, Number(p.total||0) - Number(p.anticipo||0));
@@ -1299,7 +1300,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                     const diaReal = Math.min(diaGasto, ultimoDia);
                     const fechaGasto = new Date(ano, mes, diaReal);
                     fechaGasto.setHours(0,0,0,0);
-                    const diff = Math.round((fechaGasto - hoy) / 86400000);
+                    const diff = Math.round((fechaGasto.getTime() - hoy.getTime()) / 86400000);
                     const bk = buckets.find(b => diff >= b.min && diff <= b.max);
                     if (bk) bk.gastos += Number(gr.amount||0);
                 });

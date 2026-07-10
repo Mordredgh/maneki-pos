@@ -94,6 +94,6 @@ window.showSection._mk4 = true;
 })();
 
 window.safeCall = function(fn, ...args) {
-    if (typeof window[fn] === 'function') window[fn](...args);
-    else document.addEventListener('DOMContentLoaded', () => { if (typeof window[fn] === 'function') window[fn](...args); });
+    if (typeof window[fn] === 'function') (window as any)[fn](...args);
+    else document.addEventListener('DOMContentLoaded', () => { if (typeof window[fn] === 'function') (window as any)[fn](...args); });
 };

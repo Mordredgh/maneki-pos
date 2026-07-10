@@ -1,7 +1,7 @@
 // ── Validación de email ──────────────────────────────────────────────────────
 function _validEmail(e) { return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
-const _escAttr = window._esc;
+const _escAttrLocal = window._esc;
 
 // ── N9: Segmentación RFM ─────────────────────────────────────────────────────
 const _RFM_SEGMENTS = [
@@ -113,10 +113,10 @@ function renderRFMPanel() {
 
     const cards = _RFM_SEGMENTS.map(seg => {
         const lista = counts[seg.key] || [];
-        const preview = lista.slice(0, 3).map(n => `<span style="font-size:.7rem;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1px 8px;color:#374151">${(_escAttr || _esc)(n)}</span>`).join(' ');
+        const preview = lista.slice(0, 3).map(n => `<span style="font-size:.7rem;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1px 8px;color:#374151">${(_escAttrLocal || _esc)(n)}</span>`).join(' ');
         const mas = lista.length > 3 ? `<span style="font-size:.7rem;color:#9ca3af">+${lista.length - 3} más</span>` : '';
         // N-TOOLTIP-002: tooltip extendido con descripción completa
-        const tooltipDesc = (_escAttr || _esc)(rfmDescriptions[seg.label] || seg.desc);
+        const tooltipDesc = (_escAttrLocal || _esc)(rfmDescriptions[seg.label] || seg.desc);
         return `<div style="background:${seg.bg};border-radius:14px;padding:14px;cursor:help;transition:box-shadow .15s"
             onclick="window._rfmVerSegmento('${seg.key}')"
             title="${tooltipDesc}"
@@ -283,7 +283,7 @@ function _tagActividad(cliente) {
 
     const hoy = new Date();
     const ultimo = new Date(stats.ultimoPedido);
-    const diffDias = Math.floor((hoy - ultimo) / (1000 * 60 * 60 * 24));
+    const diffDias = Math.floor((hoy.getTime() - ultimo.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDias <= 60) {
         return { label: 'Activo', color: _tagStyles['activo'], clase: 'activo' };
@@ -481,7 +481,7 @@ function _renderFiltrosActividad() {
                 thead.innerHTML = cols.map(c => {
                     const al = c.key === 'totalPurchases' ? 'text-right' : 'text-left';
                     return c.key
-                        ? `<th class="px-6 py-3 ${al} text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-amber-600 select-none" onclick="sortClientes('${_escAttr(c.key)}')">${c.label} ${_sortArrow(c.key)}</th>`
+                        ? `<th class="px-6 py-3 ${al} text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-amber-600 select-none" onclick="sortClientes('${_escAttrLocal(c.key)}')">${c.label} ${_sortArrow(c.key)}</th>`
                         : `<th class="px-6 py-3 ${al} text-xs font-semibold text-gray-500 uppercase tracking-wider">${c.label}</th>`;
                 }).join('');
             }
@@ -528,12 +528,12 @@ function _renderFiltrosActividad() {
                     n.cliente && n.cliente.toLowerCase() === (client.name||'').toLowerCase()
                 ).sort((a,b) => (b.fechaCreacion||b.fecha||'').localeCompare(a.fechaCreacion||a.fecha||''));
                 const snippetNota = notasCliente.length > 0
-                    ? `<div class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]" title="${_escAttr(notasCliente[0].texto)}">📝 ${_esc((notasCliente[0].texto||'').substring(0,40))}${(notasCliente[0].texto||'').length>40?'…':''}</div>`
+                    ? `<div class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]" title="${_escAttrLocal(notasCliente[0].texto)}">📝 ${_esc((notasCliente[0].texto||'').substring(0,40))}${(notasCliente[0].texto||'').length>40?'…':''}</div>`
                     : '';
 
                 // MEJORA 4: notas del cliente en la tarjeta
                 const notasClienteSnippet = client.notas
-                    ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? '…' : ''}</div>`
+                    ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttrLocal(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? '…' : ''}</div>`
                     : '';
 
                 // MEJORA 1: stats del cliente — leer desde cache pre-calculado
@@ -552,7 +552,7 @@ function _renderFiltrosActividad() {
 
                 // MEJORA 3: botón WhatsApp
                 const waBtn = client.phone
-                    ? `<button onclick="_abrirWhatsApp('${_escAttr(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer" title="Abrir WhatsApp">📱 WhatsApp</button>`
+                    ? `<button onclick="_abrirWhatsApp('${_escAttrLocal(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer" title="Abrir WhatsApp">📱 WhatsApp</button>`
                     : '';
 
                 return `
@@ -589,13 +589,13 @@ ${!client.phone && !client.facebook ? '—' : ''}
                     </td>
                     <td class="px-6 py-4">
     <div class="flex items-center gap-3">
-        <button onclick="editClient('${_escAttr(client.id)}')" class="text-yellow-500 hover:text-yellow-700" title="Editar">
+        <button onclick="editClient('${_escAttrLocal(client.id)}')" class="text-yellow-500 hover:text-yellow-700" title="Editar">
             <i class="fas fa-edit"></i>
         </button>
-        <button onclick="openClientHistory('${_escAttr(client.id)}')" class="text-blue-500 hover:text-blue-700" title="Ver historial">
+        <button onclick="openClientHistory('${_escAttrLocal(client.id)}')" class="text-blue-500 hover:text-blue-700" title="Ver historial">
             <i class="fas fa-history"></i>
         </button>
-        <button onclick="deleteClient('${_escAttr(client.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+        <button onclick="deleteClient('${_escAttrLocal(client.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar">
             <i class="fas fa-trash"></i>
         </button>
     </div>
@@ -607,8 +607,8 @@ ${!client.phone && !client.facebook ? '—' : ''}
         }
 
         function updateClientStats() {
-            document.getElementById('totalClients').textContent = clients.length;
-            document.getElementById('vipClients').textContent = clients.filter(c => c.isVIP || c.type === 'vip').length;
+            document.getElementById('totalClients').textContent = String(clients.length);
+            document.getElementById('vipClients').textContent = String(clients.filter(c => c.isVIP || c.type === 'vip').length);
             const totalPurchases = clients.reduce((sum, c) => sum + (Number(c.totalPurchases)||0), 0);
             document.getElementById('totalPurchases').textContent = fmtMoney(totalPurchases);
         }
@@ -798,11 +798,11 @@ function closeAddClientModal() {
                     const tagBadge = `<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:.68rem;font-weight:700;${tag.color}">${tag.label}</span>`;
                     // MEJORA 4: notas en búsqueda
                     const notasSnippet = client.notas
-                        ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttr(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? '…' : ''}</div>`
+                        ? `<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttrLocal(client.notas)}">📝 ${_esc(client.notas.substring(0, 60))}${client.notas.length > 60 ? '…' : ''}</div>`
                         : '';
                     // MEJORA 3: WhatsApp en búsqueda
                     const waBtn = client.phone
-                        ? `<button onclick="_abrirWhatsApp('${_escAttr(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;margin-top:4px">📱 WhatsApp</button>`
+                        ? `<button onclick="_abrirWhatsApp('${_escAttrLocal(client.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer;margin-top:4px">📱 WhatsApp</button>`
                         : '';
                     return `
                     <tr class="hover:bg-gray-50">
@@ -836,13 +836,13 @@ ${!client.phone && !client.facebook ? '—' : ''}
                         </td>
                         <td class="px-6 py-4">
     <div class="flex items-center gap-3">
-        <button onclick="editClient('${_escAttr(client.id)}')" class="text-yellow-500 hover:text-yellow-700" title="Editar">
+        <button onclick="editClient('${_escAttrLocal(client.id)}')" class="text-yellow-500 hover:text-yellow-700" title="Editar">
             <i class="fas fa-edit"></i>
         </button>
-        <button onclick="openClientHistory('${_escAttr(client.id)}')" class="text-blue-500 hover:text-blue-700" title="Ver historial">
+        <button onclick="openClientHistory('${_escAttrLocal(client.id)}')" class="text-blue-500 hover:text-blue-700" title="Ver historial">
             <i class="fas fa-history"></i>
         </button>
-        <button onclick="deleteClient('${_escAttr(client.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+        <button onclick="deleteClient('${_escAttrLocal(client.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar">
             <i class="fas fa-trash"></i>
         </button>
     </div>

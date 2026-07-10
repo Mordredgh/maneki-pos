@@ -6,6 +6,15 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const OUT = path.join(ROOT, 'js');
 
+// ── Step 0: Typecheck — tsc --noEmit, falla rápido antes de tests/compile ──────
+console.log('Typecheck...');
+try {
+  execSync('npx tsc --noEmit', { cwd: ROOT, stdio: 'inherit' });
+} catch (e) {
+  console.error('\n  ✖ Typecheck falló. Corrige errores TypeScript antes de buildear.\n');
+  process.exit(1);
+}
+
 // ── Step 0a: Tests de regresión — no se puede deployar con lógica rota ─────────
 console.log('Tests...');
 try {

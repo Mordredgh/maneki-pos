@@ -239,9 +239,9 @@ function injectPtModal() {
                 reader.onload = ev => {
                     const img = document.getElementById('ptPreviewImg');
                     const pre = document.getElementById('ptImagePreview');
-                    if (img) img.src = ev.target.result;
+                    if (img) img.src = ev.target.result as string;
                     if (pre) pre.classList.remove('hidden');
-                    window.currentProductImage = ev.target.result;
+                    window.currentProductImage = ev.target.result as string;
                 };
                 reader.readAsDataURL(file);
             });
@@ -565,7 +565,7 @@ function calcularDisponibilidadPt() {
     });
     if (!isFinite(minPiezas)) minPiezas = 0;
     if (num) {
-        num.textContent = minPiezas;
+        num.textContent = String(minPiezas);
         num.style.color = minPiezas>0?'#059669':'#ef4444';
     }
     if (det) det.innerHTML = detalles.join('<br>');
@@ -802,7 +802,7 @@ async function guardarProductoTerminado() {
                 movimientos: [],
             };
             syncStockFromVariants(np);
-            window.products.push(np);
+            window.products.push(np as ManekiProduct);
             saveProducts(); renderInventoryTable();
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);

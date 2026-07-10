@@ -491,7 +491,7 @@ function initMargenCategoriaChart() {
 
     // Fallback: si no hay categorías definidas, agrupar por campo category de products
     if (labels.length === 0) {
-        var catMap = {};
+        var catMap: Record<string, number[]> = {};
         productos.forEach(function(p) {
             if (Number(p.price||0) <= 0 || Number(p.cost||0) <= 0) return;
             var k = String(p.category || 'Sin categoría');
@@ -749,8 +749,8 @@ function updateInventoryStats() {
     }).length;
     const el = id => document.getElementById(id);
     if (el('inventoryValue'))  el('inventoryValue').textContent  = `$${inventoryValue.toFixed(2)}`;
-    if (el('activeProducts'))  el('activeProducts').textContent  = activeProducts;
-    if (el('lowStockCount'))   el('lowStockCount').textContent   = lowStockCount;
+    if (el('activeProducts'))  el('activeProducts').textContent  = String(activeProducts);
+    if (el('lowStockCount'))   el('lowStockCount').textContent   = String(lowStockCount);
 }
 
 // P-2: parámetro opcional ventasCache para evitar recalcular _getAllVentas en initReports
@@ -854,7 +854,7 @@ function renderTopProducts(ventasCache?: any[]) {
         return tipo === 'materia_prima' || tipo === 'servicio';
     }
 
-    const productSales = {};
+    const productSales: Record<string, { name: string; sales: number; revenue: number }> = {};
     _todasVentas.forEach(function(sale) {
         (sale.products || []).forEach(function(item) {
             if (esMPOServicio(item)) return; // excluir materias primas y servicios
@@ -919,7 +919,7 @@ function initCategoryChart() {
             if (valor > 0) { labels.push(cat.name); data.push(valor); }
         });
     } else {
-        const catMap = {};
+        const catMap: Record<string, number> = {};
         _getAllVentas().forEach(sale => {
             (sale.products||[]).forEach(item => {
                 const prod = (window.products||[]).find(p => String(p.id)===String(item.id)||p.name===item.name);
@@ -1392,7 +1392,7 @@ function renderAnalisis() {
     const { desde, hasta, label } = getAnalisisFechas();
     const orden = document.getElementById('analisisOrden')?.value || 'unidades';
     const ventasFiltradas = _getAllVentas().filter(s => s.date >= desde && s.date <= hasta);
-    const mapaProductos = {};
+    const mapaProductos: Record<string, { nombre: string; unidades: number; ingresos: number; costoUnitario: number; emoji: string; vecesEnVentas: number }> = {};
     ventasFiltradas.forEach(venta => {
         (venta.products||[]).forEach(item => {
             const key = item.name || item.id || 'Desconocido';
@@ -1418,8 +1418,8 @@ function renderAnalisis() {
     const maxIngresos   = lista.length > 0 ? lista[0].ingresos : 1;
 
     const el = id => document.getElementById(id);
-    if (el('analisisKpiProductos'))  el('analisisKpiProductos').textContent  = lista.length;
-    if (el('analisisKpiUnidades'))   el('analisisKpiUnidades').textContent   = totalUnidades;
+    if (el('analisisKpiProductos'))  el('analisisKpiProductos').textContent  = String(lista.length);
+    if (el('analisisKpiUnidades'))   el('analisisKpiUnidades').textContent   = String(totalUnidades);
     if (el('analisisKpiIngresos'))   el('analisisKpiIngresos').textContent   = '$'+totalIngresos.toFixed(2);
     if (el('analisisKpiGanancia'))   el('analisisKpiGanancia').textContent   = '$'+totalGanancia.toFixed(2);
     if (el('analisisPeriodoLabel'))  el('analisisPeriodoLabel').textContent  = label;
@@ -1522,7 +1522,7 @@ function renderAnalisisABC(lista, totalGanancia) {
 function exportarAnalisisCSV() {
     const { desde, hasta } = getAnalisisFechas();
     const ventasFiltradas  = _getAllVentas().filter(s => s.date>=desde && s.date<=hasta);
-    const mapaProductos    = {};
+    const mapaProductos: Record<string, { nombre: string; unidades: number; ingresos: number; costoUnitario: number }> = {};
     ventasFiltradas.forEach(v => {
         (v.products||[]).forEach(item => {
             const key = item.name||item.id||'Desconocido';
@@ -1538,7 +1538,7 @@ function exportarAnalisisCSV() {
         const costoTotal=p.costoUnitario*p.unidades, ganancia=p.ingresos-costoTotal;
         return { ...p, costoTotal, ganancia, margen:p.ingresos>0?(ganancia/p.ingresos*100).toFixed(1):0 };
     }).sort((a,b)=>b.unidades-a.unidades);
-    const rows=[['Producto','Unidades','Ingresos','Costo estimado','Ganancia','Margen %']];
+    const rows: (string|number)[][] = [['Producto','Unidades','Ingresos','Costo estimado','Ganancia','Margen %']];
     lista.forEach(p=>rows.push([p.nombre,p.unidades,p.ingresos.toFixed(2),p.costoTotal.toFixed(2),p.ganancia.toFixed(2),p.margen]));
     const csv=rows.map(r=>r.join(',')).join('\n');
     const blob=new Blob([csv],{type:'text/csv'});
@@ -1597,7 +1597,7 @@ function actualizarBadgePOS() {
         badge.style.display = 'none';
         btnPos.appendChild(badge);
     }
-    if (hoy > 0) { badge.textContent=hoy>99?'99+':hoy; badge.style.display='inline-block'; badge.title=`${hoy} venta${hoy!==1?'s':''} hoy`; }
+    if (hoy > 0) { badge.textContent=hoy>99?'99+':String(hoy); badge.style.display='inline-block'; badge.title=`${hoy} venta${hoy!==1?'s':''} hoy`; }
     else badge.style.display = 'none';
 }
 window.actualizarBadgePOS = actualizarBadgePOS;
@@ -1607,16 +1607,9 @@ async function cambiarPIN() {
     const nuevo  = document.getElementById('pinNuevo')?.value?.trim()  || '';
     if (!actual||!nuevo) { manekiToastExport('⚠️ Completa ambos campos del PIN','warn'); return; }
     if (nuevo.length<4)  { manekiToastExport('⚠️ El nuevo PIN debe tener al menos 4 dígitos','warn'); return; }
-    if (typeof require==='undefined') { manekiToastExport('❌ Solo disponible en la app de escritorio','err'); return; }
-    try {
-        const { ipcRenderer } = require('electron');
-        const res = await ipcRenderer.invoke('change-pin', { pinActual:actual, pinNuevo:nuevo });
-        if (res.ok) {
-            manekiToastExport('✅ PIN actualizado correctamente','ok');
-            if(document.getElementById('pinActual')) document.getElementById('pinActual').value='';
-            if(document.getElementById('pinNuevo'))  document.getElementById('pinNuevo').value='';
-        } else { manekiToastExport('❌ '+(res.error||'Error al cambiar PIN'),'err'); }
-    } catch(e) { manekiToastExport('❌ Error: '+e.message,'err'); }
+    // App 100% web (PWA) — sin backend de escritorio para cambiar PIN. Rama Electron
+    // muerta (require() nunca resuelve en navegador) removida; ver reglas del proyecto.
+    manekiToastExport('❌ Cambio de PIN no disponible en esta versión web','err');
 }
 window.cambiarPIN = cambiarPIN;
 

@@ -36,7 +36,7 @@ interface HTMLElement {
     checkValidity(): boolean;
     _mkBound: boolean;
     _mkSubmitBound: boolean;
-    _syncHandler: Function;
+    _syncHandler: EventListener;
     _lastVal: any;
     _timer: any;
     _mkDirty: boolean;
@@ -143,6 +143,7 @@ interface ManekiPedido {
     redes?: string;
     facebook?: string;
     fechaPedido?: string;
+    fecha?: string;
     entrega?: string;
     concepto?: string;
     cantidad?: number;
@@ -190,9 +191,13 @@ interface ManekiPedidoItem {
     nombre?: string;
     price?: number;
     precio?: number;
+    cost?: number;
+    costo?: number;
     quantity?: number;
     cantidad?: number;
+    qty?: number;
     variante?: string;
+    variant?: string;
 }
 
 interface ManekiEstadoEntry {
@@ -376,8 +381,8 @@ interface Window {
     // Functions — core
     _fechaHoy: () => string;
     _fechaLocalDe: (d: Date) => string;
-    _esc: (s: string) => string;
-    _escAttr: (s: string) => string;
+    _esc: (s: any) => string;
+    _escAttr: (s: any) => string;
     _safeLogo: (url: string) => string;
     _normSearch: (s: string) => string;
     mkId: () => string;
@@ -406,7 +411,7 @@ interface Window {
     manekiToastExport: (msg: string, tipo?: string) => void;
     _mkTrapFocus: (el: HTMLElement) => void;
     _mkReleaseFocus: (el: HTMLElement) => void;
-    _mkModalSaved: (el: HTMLElement) => void;
+    _mkModalSaved: (el: any) => void;
 
     // Functions — renders
     renderInventoryTable: () => void;
@@ -480,27 +485,27 @@ declare var MK: ManekiNamespace;
 declare var productMap: Map<string, ManekiProduct>;
 
 // ── Functions inside IIFEs/closures (need declare to be visible cross-file) ──
-declare function _esc(s: string): string;
-declare function _escAttr(s: string): string;
+declare function _esc(s: any): string;
+declare function _escAttr(s: any): string;
 declare function renderClientsTable(): void;
 declare function checkAlertasEntregas(): void;
 declare function renderBalance(): void;
 declare function showConfirm(message: string, title?: string): Promise<boolean>;
 
 // ── Cross-file helpers (TS2304 missing name contexts) ────────────────────────
-declare function _mkColorDot(color: string): string;
+declare function _mkColorDot(tipo: any, valor: any): string;
 declare function _mkAvatar(name: string): string;
-declare function _mkColorEmoji(name: string): string;
+declare function _mkColorEmoji(tipo: any, valor: any): string;
 declare function _mkUpdatePedidosTotals(): void;
-declare function _mkTimeline(entries: any[]): string;
-declare function _sumLineas(items: any[]): number;
+declare function _mkTimeline(currentStatus: string): string;
+declare function _sumLineas(items: any[], precioKey?: string, cantKey?: string): number;
 declare function openProductModal(tipo?: string, id?: string): void;
 declare function renderKanban(): void;
 declare function mkDebounce(fn: Function, ms: number): Function;
-declare function setupSearchFilter(inputId: string, containerId: string, renderFn: Function): void;
+declare function setupSearchFilter(inputId?: string, containerId?: string, renderFn?: Function): void;
 declare function renderQuotesTable(): void;
 declare function guardarDatos(): void;
-declare function _money(n: number): string;
+declare function _money(v: any): number;
 declare function fmtMoney(amount: any): string;
 declare function eliminarPedidoFinalizado(id: string): void;
 declare function _invalidarCacheVentas(): void;

@@ -62,8 +62,8 @@ function openClientHistory(clientId) {
     ].filter(Boolean).sort().reverse();
 
     document.getElementById('historyTotalSpent').textContent    = '$' + totalGastado.toFixed(2);
-    document.getElementById('historyTotalSales').textContent    = ventas.length;
-    document.getElementById('historyTotalPedidos').textContent  = pedidosCliente.length + abonosCliente.length;
+    document.getElementById('historyTotalSales').textContent    = String(ventas.length);
+    document.getElementById('historyTotalPedidos').textContent  = String(pedidosCliente.length + abonosCliente.length);
     document.getElementById('historyLastPurchase').textContent  = todasFechas[0] || '—';
 
     // Render ventas
@@ -129,7 +129,7 @@ function openClientHistory(clientId) {
     if (notasEl) notasEl.textContent = client.notas || 'Sin notas';
 
     // Productos más comprados
-    const prodMap = {};
+    const prodMap: Record<string, number> = {};
     ventas.forEach(v => (v.products || []).forEach(p => {
         prodMap[p.name] = (prodMap[p.name] || 0) + (p.quantity || 1);
     }));
@@ -445,7 +445,7 @@ function eliminarTag(tag) {
         return;
     }
     var _origClose = closeAddProductModal;
-    closeAddProductModal = function () {
+    (window as any).closeAddProductModal = function () {
         _tagsActuales = [];
         renderTagsSeleccionados([]);
         document.querySelectorAll('#tagsPredefinidos .tag-btn').forEach(btn => {
@@ -826,7 +826,7 @@ async function initApp() {
 // Uso: MK.pedidos, MK.products, MK.save('pedidos'), etc.
 // Las variables window.* siguen funcionando — esto es un wrapper.
 // ══════════════════════════════════════════════════════════════
-window.MK = window.MK || {};
+(window as any).MK = window.MK || {};
 Object.defineProperties(window.MK, {
     // Data accessors (live references)
     products:           { get: () => window.products || [] },
@@ -847,7 +847,7 @@ Object.defineProperties(window.MK, {
 });
 
 // Convenience methods
-window.MK.save = function(key) {
+(window.MK as any).save = function(key) {
     if (typeof sbSave === 'function') return sbSave(key, window[key]);
     console.warn('[MK] sbSave not available');
 };
@@ -863,7 +863,7 @@ window.MK.version = '2.7.0';
 // Getter/setter facade: MK.state.X reads/writes window.X.
 // Existing window.* references keep working — this adds a single debugging
 // surface: JSON.stringify(MK.state) to snapshot, console.table(MK.state).
-window.MK.state = {};
+(window.MK as any).state = {};
 const _mkStateKeys = [
     // Inventory modals
     '_ptVariants','_ptMpComponentes','_mpVariantes','_mpTagsActuales',

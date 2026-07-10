@@ -8,9 +8,9 @@
         const logoUrl = new URL('logo.png', window.location.href).href;
         const resp    = await fetch(logoUrl);
         const blob    = await resp.blob();
-        logoBase64    = await new Promise(res => {
+        logoBase64    = await new Promise<string>(res => {
             const r = new FileReader();
-            r.onload = () => res(r.result);
+            r.onload = () => res(r.result as string);
             r.readAsDataURL(blob);
         });
     } catch(_) { /* sin logo — continúa igual */ }
@@ -369,7 +369,7 @@ async function duplicarPedido(id) {
     if (!original) return;
     const nuevoId = mkId();
     const hoy = _fechaHoy();
-    const copia = {
+    const copia: ManekiPedido = {
         ...original,
         id: nuevoId,
         folio: await generarFolioPedido(),
@@ -427,7 +427,7 @@ async function exportarPedidoPDF(id) {
     try {
         const resp = await fetch(new URL('logo.png',window.location.href).href);
         const blob = await resp.blob();
-        logoBase64 = await new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(blob);});
+        logoBase64 = await new Promise<string>(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result as string);rd.readAsDataURL(blob);});
     } catch(_){}
 
     const total = Number(p.total||0);
@@ -773,7 +773,7 @@ function agregarProductoPedido() {
     if (p.tipo === 'producto_variable' && typeof pvGetPrecio === 'function') {
         precioFinal = pvGetPrecio(p, qty);
     } else {
-        precioFinal = precioCustom !== null ? precioCustom : (parseFloat(p.price) || 0);
+        precioFinal = precioCustom !== null ? precioCustom : (Number(p.price) || 0);
     }
     const varSel = document.getElementById('pedidoVarianteSelect');
     const tieneVariantes = _variantesPedido(p).length > 0;
@@ -896,7 +896,7 @@ function renderPedidoEmpaquesList() {
     if (!items.length) { list.innerHTML = ''; return; }
     list.innerHTML = items.map((emp, i) => {
         const mp = (window.products || []).find(p => String(p.id) === String(emp.id));
-        const costoUnit = parseFloat(mp?.cost || 0);
+        const costoUnit = Number(mp?.cost || 0);
         const costoTotal = (costoUnit * (emp.quantity || 1)).toFixed(2);
         return `
         <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-blue-100 rounded-lg text-sm">
@@ -1160,12 +1160,12 @@ function checkAlertasCobro() {
         if (_saldoAlert <= 0) return false;
         if (!p.entrega) return false;
         const fe = new Date(p.entrega + 'T00:00:00');
-        const diff = Math.round((fe - hoy) / 86400000);
+        const diff = Math.round((fe.getTime() - hoy.getTime()) / 86400000);
         return diff <= 5;
     }).sort((a, b) => {
         const da = new Date(a.entrega + 'T00:00:00');
         const db = new Date(b.entrega + 'T00:00:00');
-        return da - db;
+        return da.getTime() - db.getTime();
     });
 
     if (pendientes.length === 0) {
@@ -1175,7 +1175,7 @@ function checkAlertasCobro() {
 
     banner.classList.remove('hidden');
     const vencidos = pendientes.filter(p => {
-        const diff = Math.round((new Date(p.entrega + 'T00:00:00') - hoy) / 86400000);
+        const diff = Math.round((new Date(p.entrega + 'T00:00:00').getTime() - hoy.getTime()) / 86400000);
         return diff < 0;
     }).length;
     sub.textContent = pendientes.length + ' pedido' + (pendientes.length > 1 ? 's' : '') + ' con saldo pendiente'
@@ -1185,7 +1185,7 @@ function checkAlertasCobro() {
     lista.innerHTML = pendientes.map(p => {
         const _saldoAlert = calcSaldoPendiente(p);
         const fe = new Date(p.entrega + 'T00:00:00');
-        const diff = Math.round((fe - hoy) / 86400000);
+        const diff = Math.round((fe.getTime() - hoy.getTime()) / 86400000);
         let etiquetaDiff = '';
         if (diff < 0)       etiquetaDiff = '<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-size:.65rem;font-weight:700;">\u26d4 Vencido ' + Math.abs(diff) + 'd</span>';
         else if (diff === 0) etiquetaDiff = '<span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 6px;font-size:.65rem;font-weight:700;">\uD83D\uDD34 Hoy</span>';

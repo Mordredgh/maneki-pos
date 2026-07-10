@@ -37,7 +37,7 @@ function clearAllData() {
             });
 
             manekiToastExport('✅ Todos los datos borrados correctamente', 'ok');
-        } catch(err) {
+        } catch(err: any) {
             console.error('clearAllData error:', err);
             manekiToastExport('❌ Error al borrar datos: ' + (err.message || ''), 'err');
         }
@@ -66,7 +66,7 @@ function manekiExportar(tipo) {
 
     const fmt = (v) => {
         if (!v) return '';
-        try { const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString('es-MX'); }
+        try { const d = new Date(v); return isNaN(d.getTime()) ? String(v) : d.toLocaleDateString('es-MX'); }
         catch { return String(v); }
     };
     const num = (v) => isNaN(parseFloat(v)) ? '0.00' : parseFloat(v).toFixed(2);
@@ -126,7 +126,7 @@ function manekiExportar(tipo) {
         };
         filas.push(['SKU','Nombre','Categoría','Stock','Precio Costo ($)','Precio Venta ($)','Margen %','Variantes']);
         datos.forEach(p => {
-            const costo = parseFloat(p.cost||0), venta = parseFloat(p.price||0);
+            const costo = Number(p.cost||0), venta = Number(p.price||0);
             const margen = costo > 0 ? ((venta-costo)/costo*100).toFixed(1)+'%' : '—';
             filas.push([p.sku||'', p.name||'', getCat(p.category), p.stock||0,
                 costo.toFixed(2), venta.toFixed(2), margen, (p.variants||[]).join(', ')||'—']);
@@ -142,7 +142,7 @@ function manekiExportar(tipo) {
         XLSX.utils.book_append_sheet(wb, ws, nombreHoja);
         XLSX.writeFile(wb, nombreArchivo);
         manekiToastExport(`✅ ${filas.length-1} registros exportados → ${nombreArchivo}`, 'ok');
-    } catch(err) {
+    } catch(err: any) {
         console.error('manekiExportar error:', err);
         manekiToastExport('❌ Error al generar archivo: ' + (err.message||''), 'err');
     }
@@ -292,7 +292,7 @@ function renderComparativaSemanal() {
             <div class="flex justify-between items-center mb-3">
                 <h4 class="font-bold text-gray-700 text-sm">📊 Esta semana vs anterior</h4>
                 <span class="text-xs font-semibold px-2 py-1 rounded-full ${up ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">
-                    ${up ? '▲' : '▼'} ${Math.abs(pct)}%
+                    ${up ? '▲' : '▼'} ${Math.abs(Number(pct))}%
                 </span>
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -1091,7 +1091,7 @@ function _mkRunCmdk(idx: number) {
     const cmd = _mkCmdkFiltered[idx];
     if (!cmd) return;
     mkCloseCommandPalette();
-    setTimeout(() => { try { cmd.run(); } catch(err) { manekiToastExport('Error al ejecutar comando', 'err'); } }, 60);
+    setTimeout(() => { try { cmd.run(); } catch(err: any) { manekiToastExport('Error al ejecutar comando', 'err'); } }, 60);
 }
 (window as any)._mkRunCmdkGlobal = _mkRunCmdk;
 
@@ -1241,11 +1241,11 @@ function _busquedaOverlayRender(q) {
 
     // Evento click en resultados
     contenedor.querySelectorAll('.busq-resultado').forEach(el => {
-        el.addEventListener('mousedown', function(ev) {
+        el.addEventListener('mousedown', function(this: Element, ev) {
             ev.preventDefault();
             _seleccionarResultadoBusqueda(this);
         });
-        el.addEventListener('mouseover', function() {
+        el.addEventListener('mouseover', function(this: Element) {
             _resaltarResultado(this);
         });
     });
@@ -1453,7 +1453,7 @@ function _renderErrorLog() {
     if (!lista) return;
     const log = window._errorLog || [];
     if (countEl) {
-        countEl.textContent = log.length;
+        countEl.textContent = String(log.length);
         countEl.style.display = log.length ? 'inline' : 'none';
     }
     if (!log.length) {
@@ -1595,7 +1595,7 @@ function _aplicarModoDispositivo() {
             document.body.classList.add('compact-mode');
         }
         // Si pref === '0': el usuario lo desactivó explícitamente, respetar
-    } else if (anterior === 'mobile' && dispositivo !== 'mobile') {
+    } else if (anterior === 'mobile') {
         // Al pasar de mobile a desktop: respetar preferencia guardada
         const pref = localStorage.getItem('maneki_compactMode');
         if (!pref) document.body.classList.remove('compact-mode');
@@ -1634,7 +1634,7 @@ function initResponsive() {
     if (typeof _origShowSection === 'function') {
         window.showSection = function(...args) {
             if (window._dispositivoActual !== 'desktop') closeSidebar();
-            const result = _origShowSection.apply(this, args);
+            const result = (_origShowSection as Function).apply(this, args);
             // FIX-8: actualizar bottom nav según sección activa
             if (args[0] && typeof _actualizarBottomNavActivo === 'function') {
                 _actualizarBottomNavActivo(args[0]);
@@ -1787,9 +1787,9 @@ window.manekiUndoToast = manekiUndoToast;
 
 // C19: Focus-trap para accesibilidad en modales
 (window as any)._mkTrapFocus = function(modal: HTMLElement) {
-    const focusables = Array.from(modal.querySelectorAll<HTMLElement>(
+    const focusables = (Array.from(modal.querySelectorAll(
         'button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
-    )).filter(el => el.offsetParent !== null);
+    )) as HTMLElement[]).filter(el => el.offsetParent !== null);
     if (!focusables.length) return;
     const first = focusables[0];
     const last = focusables[focusables.length - 1];

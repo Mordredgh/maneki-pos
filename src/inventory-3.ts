@@ -340,7 +340,7 @@ function injectMpModal() {
                 reader.onload = ev => {
                     const img = document.getElementById('mpPreviewImg');
                     const pre = document.getElementById('mpImagePreview');
-                    if (img) img.src = ev.target.result;
+                    if (img) img.src = ev.target.result as string;
                     if (pre) pre.classList.remove('hidden');
                 };
                 reader.readAsDataURL(file);

@@ -26,7 +26,7 @@ window._mkMigrationPrep = {
         const keys = ['products','pedidos','pedidosFinalizados','salesHistory',
                       'clients','expenses','incomes','categories','quotes',
                       'receivables','payables','equipos','stockMovimientos'];
-        const report = {};
+        const report: Record<string, any> = {};
         let totalKB = 0;
 
         for (const key of keys) {

@@ -11,7 +11,7 @@ const _csp = (p: any): number => typeof (window as any).calcSaldoPendiente === '
             // MEJ-16: usar diasHastaEntrega() centralizado (definida en _updateDashboardImpl)
             const _dias = (p) => (typeof window.diasHastaEntrega === 'function')
                 ? window.diasHastaEntrega(p.entrega || p.fechaEntrega)
-                : (() => { const [y,m,d] = (p.entrega||p.fechaEntrega||'').split('-').map(Number); const hoy=new Date(); hoy.setHours(0,0,0,0); return Math.round((new Date(y,m-1,d)-hoy)/86400000); })();
+                : (() => { const [y,m,d] = (p.entrega||p.fechaEntrega||'').split('-').map(Number); const hoy=new Date(); hoy.setHours(0,0,0,0); return Math.round((new Date(y,m-1,d).getTime()-hoy.getTime())/86400000); })();
 
             const pedidosAlerta = pedidos.filter(p => {
                 if (!estadosActivos.includes(p.status)) return false;
@@ -170,7 +170,7 @@ window.diasHastaEntrega = function(fechaStr) {
         const [y, m, d] = fechaStr.split('-').map(Number);
         const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
         const entrega = new Date(y, m - 1, d);
-        return Math.round((entrega - hoy) / 86400000);
+        return Math.round((entrega.getTime() - hoy.getTime()) / 86400000);
     } catch(e) { return null; }
 };
 
@@ -503,7 +503,7 @@ function _updateDashboardImpl() {
     }
     _kpiAnim(ar, accountsReceivable);
     if (ap) {
-        ap.textContent = activePedidos;
+        ap.textContent = String(activePedidos);
         // Feature: KPI pedidos activos clickeable — navega a pedidos
         const apCard = ap.closest('[class*="card"], .rounded-xl, [style*="border-radius"]') as HTMLElement | null;
         if (apCard && !apCard._mkKpiClick) {
@@ -706,7 +706,7 @@ function _updateDashboardImpl() {
     }
 
     // ── Material más usado ──
-    const materialConteo = {};
+    const materialConteo: Record<string, number> = {};
     [...(pedidosFinalizados || []), ...pedidos.filter(p => (p.status||'').toLowerCase() === 'finalizado')]
         .forEach(p => {
             (p.productosInventario || []).forEach(item => {
@@ -773,7 +773,7 @@ function _renderDiaMasRentable() {
     fuentes.forEach(s => {
         if (!s.date) return;
         const d = new Date(s.date + 'T12:00:00');
-        if (isNaN(d)) return;
+        if (isNaN(d.getTime())) return;
         const dia = d.getDay();
         totales[dia] += Number(s.total||0);
         fechasVistas[dia].add(s.date);
@@ -852,7 +852,7 @@ function actualizarSidebarBadges() {
         ).length;
         const prevVal = badgePedidos._lastVal;
         if (activos > 0) {
-            badgePedidos.textContent = activos > 99 ? '99+' : activos;
+            badgePedidos.textContent = activos > 99 ? '99+' : String(activos);
             badgePedidos.style.display = 'inline-block';
             // Animación pop solo si el número cambió
             if (prevVal !== activos) {
@@ -869,7 +869,7 @@ function actualizarSidebarBadges() {
                 if (!f || ['finalizado','cancelado'].includes((p.status||'').toLowerCase())) return false;
                 const dias = (typeof window.diasHastaEntrega === 'function')
                     ? window.diasHastaEntrega(f)
-                    : (() => { const [y,m,d] = f.split('-').map(Number); const h=new Date(); h.setHours(0,0,0,0); return Math.round((new Date(y,m-1,d)-h)/86400000); })();
+                    : (() => { const [y,m,d] = f.split('-').map(Number); const h=new Date(); h.setHours(0,0,0,0); return Math.round((new Date(y,m-1,d).getTime()-h.getTime())/86400000); })();
                 return dias !== null && dias >= 0 && dias <= 2;
             }).length;
             badgePedidos.className = 'sidebar-badge' + (urgentes > 0 ? '' : ' badge-warn') + ' badge-new';
@@ -888,7 +888,7 @@ function actualizarSidebarBadges() {
         ).length;
         const prevVal = badgeInv._lastVal;
         if (bajos > 0) {
-            badgeInv.textContent = bajos > 99 ? '99+' : bajos;
+            badgeInv.textContent = bajos > 99 ? '99+' : String(bajos);
             badgeInv.style.display = 'inline-block';
             if (prevVal !== bajos) {
                 badgeInv.classList.remove('badge-new');
@@ -922,11 +922,11 @@ function checkPedidosSinMovimiento() {
         if (!estadosActivos.includes(p.status)) return false;
         const ref = new Date(p.fechaUltimoEstado || p.fechaCreacion);
         ref.setHours(0,0,0,0);
-        return Math.round((hoy - ref) / 86400000) >= DIAS;
+        return Math.round((hoy.getTime() - ref.getTime()) / 86400000) >= DIAS;
     }).map(p => {
         const ref = new Date(p.fechaUltimoEstado || p.fechaCreacion);
         ref.setHours(0,0,0,0);
-        return { ...p, diasSinMov: Math.round((hoy - ref) / 86400000) };
+        return { ...p, diasSinMov: Math.round((hoy.getTime() - ref.getTime()) / 86400000) };
     }).sort((a, b) => b.diasSinMov - a.diasSinMov);
 
     const banner = document.getElementById('alertaSinMovimiento');

@@ -40,7 +40,7 @@ async function _descontarInventarioPedido(pedido) {
                 ? window.calcularPiezasFabricables(prod)
                 : 0;
         } else if (_tieneMpComp && Array.isArray(prod.variants) && prod.variants.length > 0) {
-            const _stockVariantes = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+            const _stockVariantes = prod.variants.reduce((s, v) => s + (Number(v.qty) || 0), 0);
             const _fabricable = typeof window.calcularPiezasFabricables === 'function'
                 ? window.calcularPiezasFabricables(prod)
                 : 0;
@@ -69,7 +69,7 @@ async function _descontarInventarioPedido(pedido) {
                     (v.type || v.tipo || '') === _vType && (v.value || v.valor || '') === _vValue
                 ) || null;
             } else {
-                _ptVarSeleccionada = prod.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0] || null;
+                _ptVarSeleccionada = prod.variants.slice().sort((a, b) => (Number(b.qty)||0) - (Number(a.qty)||0))[0] || null;
             }
         }
         const antesPT = _ptVarSeleccionada ? (parseInt(_ptVarSeleccionada.qty) || 0) : (prod.stock || 0);
@@ -85,7 +85,7 @@ async function _descontarInventarioPedido(pedido) {
             }
             // Recalcular prod.stock desde la suma de variantes actualizadas
             if (typeof syncStockFromVariants === 'function') syncStockFromVariants(prod);
-            else prod.stock = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+            else prod.stock = prod.variants.reduce((s, v) => s + (Number(v.qty) || 0), 0);
         } else {
             // Producto SIN variantes: descontar prod.stock directamente
             const _deficit = antesPT - cantidad;
@@ -129,8 +129,8 @@ async function _descontarInventarioPedido(pedido) {
                 const _rph = prod.rendimientoPorHoja || 1;
                 // BUG-5 FIX: usar _cantidadAFabricar (unidades sin stock en vitrina)
                 const cantMP = _rph > 0
-                    ? Math.ceil(_cantidadAFabricar / _rph) * (parseFloat(comp.qty) || 1)
-                    : (parseFloat(comp.qty) || 1) * _cantidadAFabricar;
+                    ? Math.ceil(_cantidadAFabricar / _rph) * (Number(comp.qty) || 1)
+                    : (Number(comp.qty) || 1) * _cantidadAFabricar;
                 const antesMP = mp.stock || 0;
                 // FIX 1: record rollback for MP before modifying (including variant snapshots)
                 _rollback.push({ id: mp.id, stockBefore: antesMP, variantsBefore: Array.isArray(mp.variants) && mp.variants.length > 0 ? mp.variants.map(v => ({...v})) : null });
@@ -289,11 +289,11 @@ function _regresarInventarioPedido(pedido) {
                 if (_ptVar) { _ptVar.qty = (_ptVar.qty || 0) + cantidad; }
             } else {
                 // Sin variante registrada: devolver a la de mayor stock (espejo del descuento)
-                const _varMayor = prod.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0];
+                const _varMayor = prod.variants.slice().sort((a, b) => (Number(b.qty)||0) - (Number(a.qty)||0))[0];
                 if (_varMayor) _varMayor.qty = (_varMayor.qty || 0) + cantidad;
             }
             if (typeof syncStockFromVariants === 'function') syncStockFromVariants(prod);
-            else prod.stock = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+            else prod.stock = prod.variants.reduce((s, v) => s + (Number(v.qty) || 0), 0);
         }
 
         if (typeof registrarMovimiento === 'function') {
@@ -315,8 +315,8 @@ function _regresarInventarioPedido(pedido) {
             if (!mp || mp.tipo === 'servicio') return;
             const _rph = prod.rendimientoPorHoja || 0;
             const cantMP = _rph > 0
-                ? Math.ceil(cantidad / _rph) * (parseFloat(c.qty) || 1)
-                : (parseFloat(c.qty) || 1) * cantidad;
+                ? Math.ceil(cantidad / _rph) * (Number(c.qty) || 1)
+                : (Number(c.qty) || 1) * cantidad;
             const antes = mp.stock || 0;
             mp.stock = antes + cantMP;
             if (typeof registrarMovimiento === 'function') {
@@ -349,11 +349,11 @@ function _regresarInventarioCompleto(pedido) {
                 const _ptVar  = prod.variants.find(v => (v.type||v.tipo||'')===_vType && (v.value||v.valor||'')===_vValue);
                 if (_ptVar) _ptVar.qty = (_ptVar.qty || 0) + cantidad;
             } else {
-                const _varMayor = prod.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0];
+                const _varMayor = prod.variants.slice().sort((a, b) => (Number(b.qty)||0) - (Number(a.qty)||0))[0];
                 if (_varMayor) _varMayor.qty = (_varMayor.qty || 0) + cantidad;
             }
             if (typeof syncStockFromVariants === 'function') syncStockFromVariants(prod);
-            else prod.stock = prod.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+            else prod.stock = prod.variants.reduce((s, v) => s + (Number(v.qty) || 0), 0);
         } else {
             prod.stock = antesPT + cantidad;
         }
@@ -373,7 +373,7 @@ function _regresarInventarioCompleto(pedido) {
                 if (!mp || mp.tipo === 'servicio') return;
                 // FIX-2: usar la misma fórmula que _descontarInventarioPedido (considera rendimientoPorHoja)
                 const rph = prod.rendimientoPorHoja || 1;
-                const cantMP = Math.ceil(cantidad / rph) * (parseFloat(comp.qty) || 1);
+                const cantMP = Math.ceil(cantidad / rph) * (Number(comp.qty) || 1);
                 const antesMP = mp.stock || 0;
 
                 // Devolver a la variante específica si aplica; sin variante → mayor stock
@@ -387,13 +387,13 @@ function _regresarInventarioCompleto(pedido) {
                         );
                         if (mpVar) mpVar.qty = (mpVar.qty || 0) + cantMP;
                     } else {
-                        const _varMayorMP = mp.variants.slice().sort((a, b) => (parseInt(b.qty)||0) - (parseInt(a.qty)||0))[0];
+                        const _varMayorMP = mp.variants.slice().sort((a, b) => (Number(b.qty)||0) - (Number(a.qty)||0))[0];
                         if (_varMayorMP) _varMayorMP.qty = (_varMayorMP.qty || 0) + cantMP;
                     }
                     if (typeof syncStockFromVariants === 'function') {
                         syncStockFromVariants(mp);
                     } else {
-                        mp.stock = mp.variants.reduce((s, v) => s + (parseInt(v.qty) || 0), 0);
+                        mp.stock = mp.variants.reduce((s, v) => s + (Number(v.qty) || 0), 0);
                     }
                 } else {
                     mp.stock = antesMP + cantMP;
@@ -1441,7 +1441,7 @@ function renderHistorialPedidos() {
             }
             if (!fechaFin && p.fechaFinalizado) fechaFin = p.fechaFinalizado.split('T')[0];
             if (!fechaFin) return;
-            const diff = Math.round((new Date(fechaFin + 'T00:00:00') - new Date(fechaInicio + 'T00:00:00')) / 86400000);
+            const diff = Math.round((new Date(fechaFin + 'T00:00:00').getTime() - new Date(fechaInicio + 'T00:00:00').getTime()) / 86400000);
             if (diff >= 0 && diff < 365) { totalDias += diff; conteo++; }
         });
         el.textContent = conteo > 0
@@ -1695,7 +1695,7 @@ function mostrarResumenMensual() {
 function renderTopClientes() {
     const el = document.getElementById('topClientesWidget');
     if (!el) return;
-    const mapa = {};
+    const mapa: Record<string, { nombre: string; pedidos: number; total: number }> = {};
     const addEntry = (nombre, total) => {
         if (!nombre) return;
         if (!mapa[nombre]) mapa[nombre] = { nombre, pedidos: 0, total: 0 };

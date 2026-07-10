@@ -105,7 +105,7 @@ async function guardarMateriaPrima() {
             compraPaquete: usaPaquete ? { cantidad: paqueteCantidad, precio: paquetePrecio } : null,
             esEmpaque,
         };
-        window.products.unshift(np);
+        window.products.unshift(np as ManekiProduct);
         window._invCurrentPage = 1;
         if (stockFinal > 0) registrarMovimiento({ productoId: np.id, productoNombre: np.name,
             tipo: 'creacion', cantidad: stockFinal, motivo: 'Alta de materia prima', stockAntes: 0, stockDespues: stockFinal });
@@ -395,8 +395,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const _observer = new MutationObserver((mutations) => {
             for (const m of mutations) {
                 if (m.attributeName === 'class' || m.attributeName === 'style') {
-                    const el = m.target;
-                    const isVisible = !el.classList.contains('hidden') && 
+                    const el = m.target as HTMLElement;
+                    const isVisible = !el.classList.contains('hidden') &&
                                       el.style.display !== 'none' &&
                                       el.offsetParent !== null;
                     if (isVisible) setTimeout(patchInventoryButtons, 80);
@@ -637,7 +637,7 @@ function confirmarAjusteStock() {
     }
 
     const antes = getStockEfectivo(p); // Effective total stock before
-    const _stockOriginal = parseInt(p.stock) || 0;
+    const _stockOriginal = Number(p.stock) || 0;
     p.stock = Math.max(0, _stockOriginal + delta);
 
     // Costo promedio ponderado — solo cuando es entrada con nuevo costo

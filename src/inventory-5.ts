@@ -185,7 +185,7 @@ function _bulkStockPreview() {
     list.innerHTML = `
         <div style="font-size:.72rem;font-weight:700;color:#6b7280;margin-bottom:6px;">${prods.length} producto${prods.length!==1?'s':''} afectados:</div>
         ${prods.slice(0, 20).map(p => {
-            const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0);
+            const stk = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (Number(p.stock)||0);
             const nuevo = Math.max(0, stk + cantidad);
             return `<div style="display:flex;justify-content:space-between;padding:5px 8px;border-bottom:1px solid #f3f4f6;font-size:.76rem;">
                 <span>${_esc(p.name)}</span>
@@ -204,7 +204,7 @@ async function _bulkStockAplicar() {
         p.tipo === 'materia_prima' && (!catFiltro || String(p.category) === catFiltro)
     );
     if (prods.length === 0) { manekiToastExport('Sin productos para ajustar', 'warn'); return; }
-    const _gse = typeof getStockEfectivo === 'function' ? getStockEfectivo : (p: any) => parseInt(p.stock)||0;
+    const _gse = typeof getStockEfectivo === 'function' ? getStockEfectivo : (p: any) => Number(p.stock)||0;
     prods.forEach(p => {
         const antes = _gse(p);
         p.stock = Math.max(0, antes + cantidad);
@@ -232,7 +232,7 @@ function _bulkPrecioGetAfectados() {
         return true;
     }).map(p => {
         const campoKey = (soloMP && !soloPT) ? 'cost' : 'price';
-        const precioActual = parseFloat(p[campoKey]) || 0;
+        const precioActual = Number(p[campoKey]) || 0;
         const precioNuevo  = Math.max(0, Math.round(precioActual * (1 + pct / 100) * 100) / 100);
         return { p, campoKey, precioActual, precioNuevo };
     }).filter(r => r.precioActual > 0);
@@ -338,7 +338,7 @@ function renderInventoryTable() {
 
     // P2: pre-cachear getStockEfectivo para evitar recalcular en cada fila del render
     const _stockCache: Map<string, number> = new Map(
-        allProducts.map(p => [String(p.id), typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock) || 0)])
+        allProducts.map(p => [String(p.id), typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (Number(p.stock) || 0)])
     );
     (window as any)._invStockCache = _stockCache;
 
@@ -782,7 +782,7 @@ function renderInventoryTable() {
     }
 
     // ── Construir HTML de cada sección ────────────────────────────────────────
-    function buildSection({ id, title, titleColor, titleBg, btnLabel, btnOnclick, btnColor, extraBtnHTML, products: list, renderFila, headers, emptyMsg }) {
+    function buildSection({ id, title, titleColor, titleBg, btnLabel, btnOnclick, btnColor = null, extraBtnHTML = '', products: list, renderFila, headers, emptyMsg }) {
         // Filtro por tipo: ocultar sección si no corresponde al tipo seleccionado
         const _tipoFiltro = (document.getElementById('inventoryTipoFilter') as HTMLSelectElement|null)?.value || '';
         if (_tipoFiltro === 'materia' && id !== 'mp') return '';
@@ -875,11 +875,11 @@ function renderInventoryTable() {
     const activeProds = allProducts.filter(p => !p.deletedAt);
     const totalProductos = activeProds.length;
     const valorInventario = activeProds.reduce((s, p) => {
-        const stk = _stockCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0));
+        const stk = _stockCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (Number(p.stock)||0));
         return s + (Number(p.cost)||0) * Math.max(0, stk);
     }, 0);
     const bajoStock = activeProds.filter(p => {
-        const stk = _stockCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (parseInt(p.stock)||0));
+        const stk = _stockCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (Number(p.stock)||0));
         return stk <= (p.stockMin||5);
     }).length;
     const ptConPrecio = activeProds.filter(p => (!p.tipo || p.tipo === 'producto' || p.tipo === 'producto_interno' || p.tipo === 'pack') && Number(p.price) > 0);
@@ -1186,7 +1186,7 @@ function _renderInventoryPagination(page, totalPages, totalItems, startIdx, page
 function invGoToPage(p) {
     const pageNum = typeof p === 'string' ? parseInt(p) : p;
     const targetPage = pageNum || 1;
-    const visibleSection = Array.from(document.querySelectorAll<HTMLElement>('[id^="invSec_"]'))
+    const visibleSection = (Array.from(document.querySelectorAll('[id^="invSec_"]')) as HTMLElement[])
         .find(section => section.offsetParent !== null && section.textContent?.includes('Mostrando'));
     const sectionId = visibleSection?.id?.replace('invSec_', '');
 

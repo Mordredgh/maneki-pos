@@ -2,9 +2,9 @@ let backupDataPendiente = null;
 
 function abrirModalBackup() {
     // Actualizar resumen
-    document.getElementById('bkProductos').textContent = (window.products || []).length;
-    document.getElementById('bkVentas').textContent = (window.salesHistory || []).length;
-    document.getElementById('bkPedidos').textContent = ((window.pedidos || []).length + (window.pedidosFinalizados || []).length);
+    document.getElementById('bkProductos').textContent = String((window.products || []).length);
+    document.getElementById('bkVentas').textContent = String((window.salesHistory || []).length);
+    document.getElementById('bkPedidos').textContent = String((window.pedidos || []).length + (window.pedidosFinalizados || []).length);
 
     // Reset zona de drop
     document.getElementById('dropZoneFileName').classList.add('hidden');
@@ -75,7 +75,7 @@ async function exportarBackupComprimido() {
     for (let i = 0; i < datosStr.length; i++) {
         hash = ((hash << 5) - hash + datosStr.charCodeAt(i)) | 0;
     }
-    backup.checksum = hash;
+    (backup as any).checksum = hash;
 
     const pakoUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js';
     if (typeof window.pako === 'undefined') {
@@ -149,7 +149,7 @@ function procesarArchivoBackup(file) {
             try {
                 const pakoUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js';
                 if (typeof window.pako === 'undefined') await window._mkLoadCDN(pakoUrl);
-                const compressed = new Uint8Array(e.target.result);
+                const compressed = new Uint8Array(e.target.result as ArrayBuffer);
                 const jsonStr = window.pako.ungzip(compressed, { to: 'string' });
                 const data = JSON.parse(jsonStr);
                 _activarBackupPendiente(data, file.name);
@@ -165,7 +165,7 @@ function procesarArchivoBackup(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            const data = JSON.parse(e.target.result);
+            const data = JSON.parse(e.target.result as string);
             _activarBackupPendiente(data, file.name);
         } catch(err) {
             manekiToastExport('El archivo no es un backup válido de Bicho Capricho.', 'err');
@@ -224,7 +224,7 @@ function restaurarBackup() {
             cerrarBackupModal();
             manekiToastExport('✅ Backup restaurado exitosamente. La página se recargará.', 'ok');
             setTimeout(() => location.reload(), 500);
-        } catch(err) {
+        } catch(err: any) {
             manekiToastExport('❌ Error al restaurar: ' + err.message, 'error');
         }
     })();

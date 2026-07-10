@@ -52,7 +52,7 @@ function renderListaProduccion() {
     lista.sort((a, b) => {
         if (!a.entrega) return 1;
         if (!b.entrega) return -1;
-        return new Date(a.entrega) - new Date(b.entrega);
+        return new Date(a.entrega).getTime() - new Date(b.entrega).getTime();
     });
 
     if (lista.length === 0) {
@@ -71,7 +71,7 @@ function renderListaProduccion() {
 
     container.innerHTML = lista.map((p, idx) => {
         const entrega = p.entrega ? new Date(p.entrega + 'T00:00:00') : null;
-        const diff = entrega ? Math.round((entrega - hoy) / 86400000) : null;
+        const diff = entrega ? Math.round((entrega.getTime() - hoy.getTime()) / 86400000) : null;
         let urgBg = 'bg-white border-gray-100', urgText = '';
         if (diff !== null && diff < 0) { urgBg = 'bg-red-100 border-red-300'; urgText = '<span class="text-xs font-bold text-red-700">⛔ Vencido ' + Math.abs(diff) + 'd</span>'; }
         else if (diff === 0) { urgBg = 'bg-red-50 border-red-200'; urgText = '<span class="text-xs font-bold text-red-600 animate-pulse">🔴 ¡Hoy!</span>'; }
@@ -334,7 +334,7 @@ async function subirFotoReferencia() {
             const { data: { publicUrl } } = db.storage.from(FOTO_BUCKET).getPublicUrl(path);
             nuevasUrls.push(publicUrl);
             nuevasPaths.push(path);
-        } catch(e) {
+        } catch(e: any) {
             console.error('[Foto] Error completo:', e);
             manekiToastExport(`❌ Error: ${e.message || JSON.stringify(e)}`, 'warn');
         }

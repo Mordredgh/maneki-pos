@@ -260,9 +260,9 @@ function openVariableProductModal(editId) {
                 reader.onload = ev => {
                     const img = document.getElementById('pvPreviewImg');
                     const pre = document.getElementById('pvImagePreview');
-                    if (img) img.src = ev.target.result;
+                    if (img) img.src = ev.target.result as string;
                     if (pre) pre.classList.remove('hidden');
-                    window._pvProductImage = ev.target.result;
+                    window._pvProductImage = ev.target.result as string;
                 };
                 reader.readAsDataURL(file);
             });
@@ -370,7 +370,7 @@ async function guardarProductoVariable(e) {
             cost: costoHoja, price: tabla[tabla.length - 1].precio,
             stock: 0, image: '🎨', category, tags, notas, imageUrl,
         };
-        window.products.unshift(np);
+        window.products.unshift(np as ManekiProduct);
         manekiToastExport('✅ Producto variable creado', 'ok');
     }
 

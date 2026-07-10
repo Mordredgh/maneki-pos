@@ -69,7 +69,7 @@ function _calcularCostoProduccionPedido() {
         const qty = item.quantity || item.cantidad || 1;
         // Prioridad: costoMateriales explícito, luego mpComponentes, luego prod.costo
         if (Array.isArray(prod.mpComponentes) && prod.mpComponentes.length > 0) {
-            const costoUnit = prod.mpComponentes.reduce((s, c) => s + (parseFloat(c.costUnit) || 0) * (parseFloat(c.qty) || 1), 0);
+            const costoUnit = prod.mpComponentes.reduce((s, c) => s + (Number(c.costUnit) || 0) * (Number(c.qty) || 1), 0);
             const rph = prod.rendimientoPorHoja || 0;
             const hojas = rph > 0 ? Math.ceil(qty / rph) : qty;
             costoTotal += costoUnit * hojas;
@@ -188,13 +188,13 @@ function updatePedidosStats() {
     const elCobrar = document.getElementById('pedidosPorCobrar');
     const elAnticipo = document.getElementById('pedidosAnticipos');
     const elMes = document.getElementById('pedidosMes');
-    if (elActivos) elActivos.textContent = activos.length;
+    if (elActivos) elActivos.textContent = String(activos.length);
     if (elCobrar) elCobrar.textContent = '$' + porCobrar.toFixed(2);
     if (elAnticipo) elAnticipo.textContent = '$' + anticipos.toFixed(2);
-    if (elMes) elMes.textContent = esMes;
+    if (elMes) elMes.textContent = String(esMes);
     // Actualizar badge de count en el header de la sección
     const elBadge = document.getElementById('pedidosCountBadge');
-    if (elBadge) elBadge.textContent = activos.length;
+    if (elBadge) elBadge.textContent = String(activos.length);
 }
 
 // ── Render Kanban ──
@@ -264,7 +264,7 @@ function renderKanbanBoard() {
         lista = lista.filter(p => {
             if (!p.entrega) return false;
             const entrega = new Date(p.entrega + 'T00:00:00');
-            const diff = Math.round((entrega - hoy) / 86400000);
+            const diff = Math.round((entrega.getTime() - hoy.getTime()) / 86400000);
             if (_kanbanUrgenciaFiltro === 'vencido') return diff < 0;
             if (_kanbanUrgenciaFiltro === 'hoy')     return diff === 0;
             if (_kanbanUrgenciaFiltro === 'pronto')  return diff >= 0 && diff <= 2;
@@ -297,7 +297,7 @@ function renderKanbanBoard() {
         ));
         totalVisible += items.length;
         if (badge) {
-            badge.textContent = items.length;
+            badge.textContent = String(items.length);
             // N-KANBAN-003: badge de conteo con estilo consistente en todas las columnas
             badge.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:.7rem;font-weight:800;background:rgba(255,255,255,0.6);border-radius:9999px;margin-left:6px;color:inherit;';
         }
@@ -444,7 +444,7 @@ function kanbanCardHTML(p) {
     const _saldo = (window as any)._kSaldoPreMap?.get(String(p.id)) ?? calcSaldoPendiente(p);
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     const entrega = p.entrega ? new Date(p.entrega + 'T00:00:00') : null;
-    const diff = entrega ? Math.round((entrega - hoy) / 86400000) : null;
+    const diff = entrega ? Math.round((entrega.getTime() - hoy.getTime()) / 86400000) : null;
     // U3-S26: pedido vencido = fecha de entrega pasada y aún no finalizado/cancelado.
     // Se usa para borde rojo de escaneo (ambas vistas) + badge en la vista compacta.
     const _esVencido = diff !== null && diff < 0 && !['finalizado','cancelado'].includes((p.status||'').toLowerCase());

@@ -244,12 +244,12 @@ window._togglePagosEquipo = _togglePagosEquipo;
 // MEJ-5: registrar un pago en el historial de un equipo
 // Llamar desde confirmarRoiEquipos y confirmarRoiManual para mantener el historial
 // pedidoId y folio son opcionales — se usan en FIX-8 para poder revertir pagos al cancelar pedidos
-function _registrarPagoEquipo(eqId, monto, concepto, pedidoId, folio) {
+function _registrarPagoEquipo(eqId, monto, concepto, pedidoId = null, folio = null) {
     const idx = equipos.findIndex(e => e.id === eqId);
     if (idx === -1) return;
     if (!equipos[idx].historialPagos) equipos[idx].historialPagos = [];
     const fecha = _fechaHoy();
-    const entrada = {
+    const entrada: Record<string, any> = {
         id: Date.now(),
         fecha,
         monto: Number(monto) || 0,
@@ -383,7 +383,7 @@ function actualizarCalculoRoi() {
     const totalRoi = ganancia * (roiConfig.porcentaje / 100);
     const porEquipo = count > 0 ? totalRoi / count : 0;
 
-    document.getElementById('roiEquiposCount').textContent = count;
+    document.getElementById('roiEquiposCount').textContent = String(count);
     document.getElementById('roiPorEquipoDisplay').textContent = '$' + porEquipo.toLocaleString('es-MX', {minimumFractionDigits:2});
 
     // Highlight selected labels

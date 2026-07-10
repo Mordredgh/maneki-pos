@@ -99,10 +99,10 @@
         }
 
         // Script no existe: crear, insertar, esperar
-        var p = new Promise(function (resolve) {
+        var p = new Promise<void>(function (resolve) {
             var el = document.createElement('script');
             el.src = src;
-            el.onload  = resolve;
+            el.onload  = () => resolve();
             el.onerror = function () {
                 console.warn('[Bicho Capricho Lazy] No se pudo cargar:', src);
                 resolve();
@@ -115,14 +115,14 @@
 
     // ── Inyecta un <link> CSS y resuelve cuando carga ────────────
     function _cargarCSS(href) {
-        return new Promise(function (resolve) {
+        return new Promise<void>(function (resolve) {
             if (document.querySelector('link[href="' + href + '"]')) {
                 resolve(); return;
             }
             var el = document.createElement('link');
             el.rel  = 'stylesheet';
             el.href = href;
-            el.onload  = resolve;
+            el.onload  = () => resolve();
             el.onerror = function () {
                 console.warn('[Bicho Capricho Lazy] No se pudo cargar CSS:', href);
                 resolve();
