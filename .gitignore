@@ -1,6 +1,9 @@
 # Dependencias
 node_modules/
 
+# graphify (mapa de código local, regenerar con graphify --update)
+graphify-out/
+
 # Build de Electron
 dist/
 

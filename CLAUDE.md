@@ -1592,3 +1592,5 @@ nginx -t && systemctl reload nginx
 5. Al compilar TS siempre usar: `npx esbuild src/X.ts --outfile=js/X.js --sourcemap --target=es2020 --minify`
 6. Al terminar: `git push github fresh-start:master`
 7. **Si hay nueva versión:** actualizar la sección **Changelog del Programa** con las novedades en formato de viñetas cortas para el usuario final (no técnicas)
+
+> Ver AGENTS.md en la raiz de este repo — reglas compartidas entre Claude, Codex y Antigravity (mapa de codigo graphify, cuando actualizarlo).
