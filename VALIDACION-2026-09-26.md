@@ -49,3 +49,7 @@ Pendientes reales:
 4. Resolver conflictos requiere comparar cambios conservados; no limpiar almacenamiento local con pendientes. No hay cierre de sesion explicito en interfaz; dispositivo autorizado conserva datos offline.
 
 Reversion de RLS (solo si fuera necesaria, requiere revisar exposicion): retirar unicamente politicas pos_admin_guard de las 19 tablas, pos_guard_insert/update/delete de products/categories, pos_published_products y pos_admin_categories. Politicas anteriores se conservaron. No revertir a frontend anterior sin plan: RPC requiere administrador.
+
+## Cierre de store: 2026-09-26
+El propietario confirma que el bot ya no existe. Aplicada scripts/2026-09-26-store-rls.sql: cuatro guardas restrictivas; lectura publica limitada a las cinco claves de presentacion existentes y toda escritura exige administrador. Queda resuelto el pendiente anterior sobre exposicion de claves privadas de store.
+Validacion SQL real: ROLE anon no ve claves privadas e INSERT rechazado por RLS; ROLE authenticated con administrador existente escribe mediante pos_apply_store. ROLLBACK de ambas pruebas; cero filas QA restantes. POS recargado: sesion valida, Supabase conectado y datos de inventario cargados. No se modificaron datos de negocio ni JS/CSS; no requiere nuevo build o despliegue. Pruebas fisicas de impresion/instalacion PWA siguen pendientes.

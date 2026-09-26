@@ -48,3 +48,5 @@ Proveedor DNS confirmado: Hostinger. Cambio realizado desde sesion autorizada de
 
 ## Actualizacion de produccion
 2026-09-26: https://1742889c.bicho-capricho-pos.pages.dev, SW maneki-1ed0b2f342. 140 pruebas, 36 TS y build:check correctos. Login Supabase administrador ademas de Basic Auth. RLS parcial aplicada; store pendiente por compatibilidad del bot. Detalles vigentes en VALIDACION-2026-09-26.md.
+
+2026-09-26, cierre posterior: propietario confirma bot eliminado. RLS de store aplicada y probada; ya no queda pendiente de compatibilidad. Lectura de claves privadas y escritura anonima bloqueadas, administrador operativo.

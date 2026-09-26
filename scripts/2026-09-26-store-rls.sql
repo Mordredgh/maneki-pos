@@ -1,4 +1,4 @@
--- Pendiente decision del propietario: corta el workflow antiguo del bot que usa anon.
+-- Aplicada 2026-09-26: propietario confirma que el bot ya no existe. Verificada con roles anon/authenticated y ROLLBACK.
 BEGIN;
 SET LOCAL lock_timeout='5s';
 CREATE POLICY pos_store_read_guard ON public.store AS RESTRICTIVE FOR SELECT TO public

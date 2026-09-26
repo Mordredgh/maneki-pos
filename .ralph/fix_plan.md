@@ -23,7 +23,7 @@
 - [x] Auditar dependencias, despliegue, interfaz y seguridad; limitaciones en AUDITORIA-2026-09-26.md.
 - [x] Ejecutar build completo (108 tests), build:check y revisar diff final.
 - [x] Documentar resultados, limitaciones y memoria Obsidian; actualizar grafo AST.
-- [ ] Cerrar lectura anonima de datos privados con Auth/roles y politicas compatibles. <!-- PARCIAL: 19 tablas protegidas y login validado; store espera decision sobre bot anonimo. -->
+- [x] Cerrar lectura anonima de tablas privadas y claves privadas de store; Auth/roles y POS verificados.
 - [x] Aplicar incomes.method; SQL real con RLS y ROLLBACK verificado.
 - [ ] Validar transacciones reales en staging e impresion fisica. <!-- BLOQUEADO: sin staging ni impresora conectada; produccion migrada a Cloudflare, contenedor ya no forma parte del despliegue. -->
 
@@ -102,5 +102,5 @@
 - [x] Instalar RPC optimistas, verificar conflictos y reenvios en SQL real sin datos QA persistentes.
 - [x] Bloquear segunda pestaña; comprobar arranque offline; corregir indicador y ticket.
 - [x] Publicar 1742889c, SW maneki-1ed0b2f342; 140 pruebas y build:check correctos.
-- [ ] Aplicar store RLS cuando propietario resuelva corte del bot anonimo; sigue exposicion residual.
+- [x] Aplicar store RLS: bot retirado segun propietario. Lectura privada/escritura anonima bloqueadas; RPC admin y POS verificados.
 - [ ] Impresion e instalacion PWA fisicas; falta equipo/modelo de impresora.
