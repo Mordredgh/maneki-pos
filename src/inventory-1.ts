@@ -163,21 +163,13 @@ function registrarMovimiento({ productoId, productoNombre, tipo, cantidad, canti
     });
     if (window.stockMovements.length > 500) { window.stockMovements.splice(500); window.stockMovimientos = window.stockMovements; } // BUG-012 FIX: splice in-place para no romper la referencia; sincronizar alias stockMovimientos
     saveStockMovements();
-    // Escritura directa a tabla relacional stock_movements
-    if (typeof db !== 'undefined' && db) {
-        (db as any).from('stock_movements').insert({
-            id: _movId,
-            producto_id: String(productoId),
-            producto_nombre: productoNombre || null,
-            tipo, cantidad,
-            motivo: motivo || null,
-            stock_antes: stockAntes != null ? Number(stockAntes) : null,
-            stock_despues: stockDespues != null ? Number(stockDespues) : null,
-            fecha: _movIso
-        }).then(({ error }: any) => {
-            if (error) console.warn('[Stock] Fallo insert stock_movements:', error.message);
-        });
-    }
+    return _trackSave(_upsertRelational('stock_movements', [{
+        id: _movId, producto_id: String(productoId), producto_nombre: productoNombre || null,
+        tipo, cantidad, motivo: motivo || null,
+        stock_antes: stockAntes != null ? Number(stockAntes) : null,
+        stock_despues: stockDespues != null ? Number(stockDespues) : null,
+        fecha: _movIso
+    }]).then(() => {}));
 }
 window.registrarMovimiento = registrarMovimiento;
 

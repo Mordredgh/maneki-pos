@@ -44,16 +44,16 @@ function deleteBalanceItem(type, id) {
             window.incomes = incomes;
             saveIncomes();
             // DELETE explícito: saveIncomes usa upsert relacional y no borra filas
-            if (typeof db !== 'undefined' && db) {
-                db.from('incomes').delete().eq('id', id).catch(e => console.warn('[deleteBalanceItem] income delete:', e));
+            if (typeof deleteIncomeFromDB === 'function') {
+                deleteIncomeFromDB(id).catch(e => console.warn('[deleteBalanceItem] income delete:', e));
             }
         } else if (type === 'expense') {
             expenses = expenses.filter(e => String(e.id) !== String(id));
             window.expenses = expenses;
             saveExpenses();
             // DELETE explícito: saveExpenses usa upsert relacional y no borra filas
-            if (typeof db !== 'undefined' && db) {
-                db.from('expenses').delete().eq('id', id).catch(e => console.warn('[deleteBalanceItem] expense delete:', e));
+            if (typeof deleteExpenseFromDB === 'function') {
+                deleteExpenseFromDB(id).catch(e => console.warn('[deleteBalanceItem] expense delete:', e));
             }
         }
         renderBalance();

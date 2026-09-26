@@ -1,0 +1,396 @@
+import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { createContext, runInContext } from 'node:vm';
+import { transformSync } from 'esbuild';
+import { randomUUID } from 'node:crypto';
+
+// Ejecuta el módulo real; solo sustituye navegador y transporte de Supabase.
+function app(schema: Record<string, string[]> = {}, initialStorage?: Map<string, string>) {
+  const stored = new Map<string, string>(initialStorage);
+  const rows: Record<string, any[]> = {};
+  let failure = false;
+  let loseAck = false;
+  const api = { from(table: string) {
+    const query: any = {
+      select() { return query; }, order() { return query; }, limit() { return query; },
+      not() { return query; }, delete() { query.deleting = true; return query; },
+      eq(field: string, key: string) { query.key = key; query.field = field; return query; },
+      async maybeSingle() { return { data: (rows[table] || []).find(r => r.key === query.key) ?? null, error: null }; },
+      then(resolve: any, reject: any) {
+        if (failure) return Promise.resolve({data: null, error: {message: 'Fallo de red simulado'}}).then(resolve, reject);
+        if (query.deleting) rows[table] = (rows[table] || []).filter(r => String(r[query.field]) !== String(query.key));
+        return Promise.resolve({ data: rows[table] || [], error: null }).then(resolve, reject);
+      },
+      async insert(data: any) { return query.upsert([data]); },
+      async upsert(data: any[]) {
+        if (failure) return { error: { message: 'Fallo de red simulado' } };
+        const unknown = schema[table] && data.flatMap(Object.keys).find(k => !schema[table].includes(k));
+        if (unknown) return { error: { code: 'PGRST204', message: `Could not find the '${unknown}' column in the schema cache` } };
+        for (const row of structuredClone(Array.isArray(data) ? data : [data])) {
+          const key = table === 'store' ? 'key' : 'id';
+          const existing = rows[table] || (rows[table] = []);
+          const i = existing.findIndex(r => r[key] === row[key]);
+          if (i < 0) existing.push(row); else existing[i] = row;
+        }
+        if (loseAck) { loseAck = false; return {error: {message: 'Respuesta perdida'}}; }
+        return { error: null };
+      }
+    };
+    return query;
+  }};
+  const ctx: any = createContext({
+    console: { log() {}, warn() {}, error() {} },
+    localStorage: { getItem: (k: string) => stored.get(k) ?? null,
+      setItem: (k: string, v: string) => stored.set(k, v) },
+    document: { addEventListener() {}, getElementById() { return null; }, querySelector() { return null; }, querySelectorAll() { return []; } },
+    addEventListener() {}, setTimeout: (fn: any, ms: number) => { const t = setTimeout(fn, ms); t.unref(); return t; },
+    clearTimeout, crypto: { randomUUID },
+    __mkCfg: { getSupabase: () => new Promise(() => {}) },
+    products: [], clients: [], salesHistory: [], incomes: [], expenses: [], categories: [],
+    testApi: api
+  });
+  ctx.window = ctx;
+  runInContext(transformSync(readFileSync('src/db.ts', 'utf8'), { loader: 'ts', target: 'es2020' }).code, ctx);
+  runInContext('db = testApi', ctx);
+  return { ctx, rows, stored, loseAck: () => { loseAck = true; }, fail: () => { failure = true; }, recover: () => { failure = false; }, load(file: string) {
+    runInContext(transformSync(readFileSync(file, 'utf8'), { loader: 'ts', target: 'es2020' }).code, ctx);
+  } };
+}
+
+function businessApp() {
+  const a = app();
+  const fields: Record<string, any> = {};
+  const submits: Array<(e: any) => Promise<void>> = [];
+  a.ctx.document.readyState = 'loading';
+  a.ctx.document.getElementById = (id: string) => fields[id] || null;
+  for (const id of ['pedidoForm','editPedidoId','pedidoCliente','pedidoTelefono','pedidoRedes','pedidoFecha',
+    'pedidoEntrega','pedidoConcepto','pedidoAnticipo','pedidoNotas','pedidoLugarEntrega','pedidoCostoMateriales',
+    'pedidoPrioridad','pedidoOcasion','pedidoPrecioLibre','pedidoStatusId']) {
+    fields[id] = {value:'', style:{}, addEventListener(event: string, fn: any) {
+      if (id === 'pedidoForm' && event === 'submit') submits.push(fn);
+    }};
+  }
+  a.ctx.manekiToastExport = () => {};
+  a.ctx._fechaHoy = () => '2026-09-26';
+  a.ctx.showConfirm = async () => true;
+  a.ctx.closeModal = () => {};
+  a.ctx.setInterval = () => 0;
+  a.load('src/pedidos-1-modal.ts');
+  a.load('src/pedidos-1-views.ts');
+  a.load('src/pedidos-2.ts');
+  a.load('src/balance.ts');
+  a.load('src/reportes.ts');
+  // Solo presentacion/confirmaciones del navegador; reglas y persistencia son reales.
+  a.ctx.renderPedidosTable = () => {};
+  a.ctx.updatePedidosStats = () => {};
+  a.ctx._fotosArray = () => ({paths:[]});
+  return {...a, fields, submit: () => submits[0]({preventDefault() {}})};
+}
+
+describe('Persistencia real del POS', () => {
+  it('al finalizar y cobrar saldo conserva el cobro en ventas y Balance', async () => {
+    const a = businessApp();
+    a.ctx.pedidos = [{id:'o1', folio:'PE-TEST', total:100, anticipo:25, resta:75, pagos:[{id:'a1',monto:25}]}];
+    a.ctx.salesHistory = [{id:'a1',folio:'PE-TEST',type:'anticipo',total:25}];
+    a.fields.pedidoStatusId.value = 'o1';
+    await a.ctx.setPedidoStatus('finalizado');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await a.ctx.sincronizarPendientes();
+    expect(await a.ctx.sbLoad('pedidos', [])).toEqual([]);
+    expect((await a.ctx.sbLoad('pedidosFinalizados', []))[0]).toMatchObject({id:'o1',status:'finalizado'});
+    expect((await a.ctx.sbLoad('salesHistory', [])).reduce((n: number, s: any)=>n+s.total,0)).toBe(100);
+    expect((await a.ctx.sbLoad('incomes', []))[0]).toMatchObject({amount:75});
+  });
+  it('cancelar sin materiales persiste el estado y no crea cobros', async () => {
+    const a = businessApp();
+    a.ctx.pedidos = [{id:'o1',folio:'PE-CANCEL',total:100,status:'confirmado',pagos:[]}];
+    a.fields.pedidoStatusId.value = 'o1';
+    await a.ctx.setPedidoStatus('cancelado');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await a.ctx.sincronizarPendientes();
+    expect((await a.ctx.sbLoad('pedidos', []))[0]).toMatchObject({status:'cancelado'});
+    expect(await a.ctx.sbLoad('salesHistory', [])).toEqual([]);
+  });
+  it('crea pedido con anticipo offline y lo recupera en Balance y Reportes', async () => {
+    const first = businessApp();
+    first.fields.pedidoCliente.value = 'Cliente Prueba';
+    first.fields.pedidoConcepto.value = 'Servicio';
+    first.fields.pedidoPrecioLibre.value = '100';
+    first.fields.pedidoAnticipo.value = '25';
+    first.fail();
+    await first.submit();
+    await first.ctx.sincronizarPendientes();
+    const next = app({}, first.stored);
+    await next.ctx.sincronizarPendientes();
+    expect((await next.ctx.sbLoad('pedidos', []))[0]).toMatchObject({total:100, anticipo:25, resta:75});
+    expect(await next.ctx.sbLoad('salesHistory', [])).toEqual([expect.objectContaining({type:'anticipo', total:25})]);
+    expect(await next.ctx.sbLoad('incomes', [])).toEqual([expect.objectContaining({amount:25})]);
+  });
+  it('una respuesta perdida no duplica la venta al reintentar', async () => {
+    const { ctx, loseAck } = app();
+    ctx.salesHistory = [{id:'s-ack', total:45, type:'pos'}];
+    loseAck();
+    await expect(ctx.saveSalesHistory()).rejects.toMatchObject({pendingSync:true});
+    await ctx.sincronizarPendientes();
+    await ctx.sincronizarPendientes();
+    expect(await ctx.sbLoad('salesHistory', [])).toEqual([expect.objectContaining({id:'s-ack', total:45})]);
+  });
+  it('si el dispositivo no puede guardar la cola, rechaza antes de escribir remotamente', async () => {
+    const { ctx } = app();
+    ctx.salesHistory = [{id:'sin-espacio', total:45}];
+    ctx.localStorage.setItem = () => { throw new Error('Disco lleno'); };
+    await expect(ctx.saveSalesHistory()).rejects.toThrow('Disco lleno');
+    expect(await ctx.sbLoad('salesHistory', [])).toEqual([]);
+  });
+  it('una notificacion remota no pisa el cambio local pendiente', async () => {
+    const { ctx, fail } = app();
+    ctx.products = [{id:'p1', name:'Taza', stock:3}];
+    fail();
+    await expect(ctx.saveProducts()).rejects.toBeDefined();
+    await ctx._applyRTRelacional('products', {eventType:'UPDATE',new:{id:'p1',name:'Taza',stock:5}});
+    expect(ctx.products[0].stock).toBe(3);
+  });
+  it.each([
+    ['products','saveProducts'], ['clients','saveClients'], ['categories','saveCategories'],
+    ['pedidos','savePedidos'], ['pedidosFinalizados','savePedidosFinalizados'],
+    ['incomes','saveIncomes'], ['expenses','saveExpenses']
+  ])('reenvia %s desde disco sin depender de los arrays abiertos', async (key, save) => {
+    const first = app();
+    first.ctx[key] = [{id:'offline-1', name:'Prueba', amount:25, total:100}];
+    first.fail();
+    await expect(first.ctx[save]()).rejects.toBeDefined();
+    const next = app({}, first.stored);
+    await next.ctx.sincronizarPendientes();
+    expect((await next.ctx.sbLoad(key, [])).map((r: any)=>r.id)).toEqual(['offline-1']);
+    expect(next.ctx._pendingSync).toBe(false);
+  });
+  it('un abono offline conserva saldo e ingreso y venta al reconectar', async () => {
+    const first = app();
+    first.ctx.document.readyState = 'loading';
+    first.load('src/pedidos-1-views.ts');
+    first.ctx.document.getElementById = (id: string) => id === 'pedidoForm' ? {onsubmit: null, addEventListener() {}} : null;
+    first.load('src/pedidos-2.ts');
+    const fields: any = { abonoPedidoId: {value:'o1'}, abonoPedidoMonto: {value:'30'}, abonoPedidoNota: {value:'Prueba'} };
+    first.ctx.document.getElementById = (id: string) => fields[id] || null;
+    first.ctx.manekiToastExport = () => {};
+    first.ctx._abonoPedidoMetodo = 'cash';
+    first.ctx.renderPedidosTable = () => {};
+    first.ctx.pedidos = [{id:'o1', folio:'PE-TEST', total:100, anticipo:0, resta:100, pagos:[]}];
+    first.fail();
+    await first.ctx.confirmarAbonoPedido();
+    expect(first.ctx.pedidos[0].resta).toBe(70);
+    const next = app({}, first.stored);
+    await next.ctx.sincronizarPendientes();
+    expect((await next.ctx.sbLoad('pedidos', []))[0]).toMatchObject({anticipo:30, resta:70});
+    expect(await next.ctx.sbLoad('incomes', [])).toEqual([expect.objectContaining({amount:30})]);
+    expect(await next.ctx.sbLoad('salesHistory', [])).toEqual([expect.objectContaining({total:30, type:'abono'})]);
+  });
+  it('conserva el kardex offline y lo reenvia una sola vez', async () => {
+    const first = app();
+    first.load('src/inventory-1.ts');
+    first.ctx._fechaHoy = () => '2026-09-26';
+    first.ctx.stockMovements = [];
+    first.fail();
+    await expect(first.ctx.registrarMovimiento({ productoId: 'p1', productoNombre: 'Taza', tipo: 'salida', cantidad: -2, stockAntes: 5, stockDespues: 3 })).rejects.toBeDefined();
+    const next = app({}, first.stored);
+    await next.ctx.sincronizarPendientes();
+    await next.ctx.sincronizarPendientes();
+    expect(await next.ctx.sbLoad('stockMovimientos', [])).toEqual([expect.objectContaining({productoId: 'p1', cantidad: -2, stockDespues: 3})]);
+  });
+  it('recupera un borrado fallido sin resucitar el pedido al reiniciar', async () => {
+    const first = app();
+    first.ctx.pedidos = [{ id: 'o1', total: 125 }];
+    await first.ctx.savePedidos();
+    first.fail();
+    await expect(first.ctx.deletePedidoActivo('o1')).rejects.toBeDefined();
+    const next = app({}, first.stored);
+    next.rows.orders = first.rows.orders;
+    expect(await next.ctx.sbLoad('pedidos', [])).toEqual([]);
+    await next.ctx.sincronizarPendientes();
+    expect(await next.ctx.sbLoad('pedidos', [])).toEqual([]);
+    expect(next.ctx._pendingSync).toBe(false);
+  });
+  it('reenvia una venta pendiente tras reiniciar sin perderla al leer el servidor', async () => {
+    const first = app();
+    first.ctx.salesHistory = [{ id: 'offline-sale', type: 'pos', total: 125 }];
+    first.fail();
+    await expect(first.ctx.saveSalesHistory()).rejects.toBeDefined();
+    const next = app({}, first.stored);
+    expect((await next.ctx.sbLoad('salesHistory', [])).map((s: any) => s.id)).toContain('offline-sale');
+    await next.ctx.sincronizarPendientes();
+    next.stored.delete('maneki_salesHistory');
+    expect(await next.ctx.sbLoad('salesHistory', [])).toEqual([expect.objectContaining({ id: 'offline-sale', total: 125 })]);
+    expect(next.ctx._pendingSync).toBe(false);
+  });
+  it('conserva la descripción web y ocasión del pedido al guardar y recargar', async () => {
+    const { ctx } = app();
+    ctx.products = [{ id: 'p1', name: 'Taza', descripcionWeb: 'Taza personalizada' }];
+    ctx.pedidos = [{ id: 'o1', ocasion: 'Cumpleaños' }];
+    await ctx.saveProducts();
+    await ctx.savePedidos();
+    expect((await ctx.sbLoad('products', []))[0].descripcionWeb).toBe('Taza personalizada');
+    expect((await ctx.sbLoad('pedidos', []))[0].ocasion).toBe('Cumpleaños');
+  });
+  it('guarda ventas en el esquema real y conserva el tipo de cobro al recargar', async () => {
+    const { ctx } = app({ sales_history: ['id', 'folio', 'date', 'time', 'customer', 'concept', 'note',
+      'products', 'subtotal', 'discount', 'tax', 'total', 'method', 'created_at', 'type',
+      'discount_percent', 'tax_percent', 'pedido_id', 'folio_origen'] });
+    ctx.salesHistory = [{ id: 's1', folio: 'PE-9001', type: 'anticipo', total: 200, method: 'Tarjeta' }];
+    await ctx.saveSalesHistory();
+    expect(await ctx.sbLoad('salesHistory', [])).toEqual([
+      expect.objectContaining({ id: 's1', type: 'anticipo', total: 200, method: 'Tarjeta' })
+    ]);
+  });
+  it('guarda ingresos y gastos aunque sus tablas no tengan updated_at ni method', async () => {
+    const { ctx } = app({
+      incomes: ['id', 'concept', 'amount', 'date', 'client', 'from_pos', 'folio_origen', 'pedido_id'],
+      expenses: ['id', 'concept', 'amount', 'date', 'category', 'etiqueta', 'notas', 'from_payable']
+    });
+    ctx.incomes = [{ id: 'i1', amount: 50, method: 'Tarjeta' }];
+    ctx.expenses = [{ id: 'e1', amount: 25 }];
+    await ctx.saveIncomes();
+    await ctx.saveExpenses();
+    expect((await ctx.sbLoad('incomes', []))[0]?.amount).toBe(50);
+    expect((await ctx.sbLoad('expenses', []))[0]?.amount).toBe(25);
+  });
+  it.each([
+    ['products', 'saveProducts'], ['clients', 'saveClients'], ['salesHistory', 'saveSalesHistory'],
+    ['incomes', 'saveIncomes'], ['expenses', 'saveExpenses'], ['pedidos', 'savePedidos'],
+    ['pedidosFinalizados', 'savePedidosFinalizados']
+  ])('conserva %s en el dispositivo cuando falla la red', async (key, save) => {
+    const { ctx, stored, fail } = app();
+    ctx[key] = [{ id: 'local-1', name: 'Pendiente', total: 125 }];
+    fail();
+    await expect(ctx[save]()).rejects.toMatchObject({ message: 'Fallo de red simulado' });
+    expect(JSON.parse(stored.get('maneki_' + key) || '[]')).toEqual([
+      expect.objectContaining({ id: 'local-1', total: 125 })
+    ]);
+  });
+  it('Realtime conserva campos de inventario y tipo de venta igual que una recarga', async () => {
+    const { ctx } = app();
+    await ctx._applyRTRelacional('products', { eventType: 'INSERT', new: {
+      id: 'p1', name: 'Papel', tipo: 'materia_prima', rendimiento_por_hoja: 6,
+      unidad: 'hoja', es_empaque: true, description: 'Papel especial'
+    } });
+    await ctx._applyRTRelacional('sales_history', { eventType: 'INSERT', new: { id: 's1', type: 'anticipo', total: 200 } });
+    expect(ctx.products[0]).toMatchObject({ rendimientoPorHoja: 6, unidad: 'hoja', esEmpaque: true, descripcionWeb: 'Papel especial' });
+    expect(ctx.salesHistory[0].type).toBe('anticipo');
+  });
+  it('aplica un DELETE de Realtime cuyo campo new está vacío', async () => {
+    const { ctx } = app();
+    ctx.products = [{ id: 'p1' }, { id: 'p2' }];
+    await ctx._applyRTRelacional('products', { eventType: 'DELETE', new: {}, old: { id: 'p1' } });
+    expect(ctx.products.map((p: any) => p.id)).toEqual(['p2']);
+  });
+  it('reporta una vez un pedido histórico con venta legacy duplicada', () => {
+    const { ctx, load } = app();
+    load('src/reportes.ts');
+    ctx.salesHistory = [{ id: 's1', type: 'venta', folio: 'PE-1', total: 1000 }];
+    ctx.pedidosFinalizados = [{ id: 'p1', folio: 'PE-1', total: 1000 }];
+    expect(ctx._getAllVentas().reduce((n: number, s: any) => n + s.total, 0)).toBe(1000);
+  });
+  it.each([[200, 800], [1000, 0]])('reporta anticipo %s y saldo %s sin descontar dos veces', (anticipo, saldo) => {
+    const { ctx, load } = app();
+    load('src/reportes.ts');
+    ctx.salesHistory = [
+      { id: 'a1', type: 'anticipo', folio: 'PE-1', total: anticipo },
+      { id: 's1', type: 'pedido', folio: 'PE-1', total: saldo }
+    ];
+    ctx.pedidosFinalizados = [{ id: 'p1', folio: 'PE-1', total: 1000 }];
+    expect(ctx._getAllVentas().reduce((n: number, s: any) => n + s.total, 0)).toBe(1000);
+  });
+  it('un pedido histórico totalmente anticipado no vuelve a contar el total al cerrar', () => {
+    const { ctx, load } = app();
+    load('src/reportes.ts');
+    ctx.salesHistory = [{ id: 'a1', type: 'anticipo', folio: 'PE-1', total: 1000 }];
+    ctx.pedidosFinalizados = [{ id: 'p1', folio: 'PE-1', total: 1000 }];
+    expect(ctx._getAllVentas().reduce((n: number, s: any) => n + s.total, 0)).toBe(1000);
+  });
+  it('actualiza reportes al cambiar centavos sin cambiar la cantidad de ventas', () => {
+    const { ctx, load } = app();
+    load('src/reportes.ts');
+    ctx.salesHistory = [{ id: 's1', type: 'pos', total: 100.10 }];
+    ctx._getAllVentas();
+    ctx.salesHistory = [{ id: 's1', type: 'pos', total: 100.20 }];
+    expect(ctx._getAllVentas()[0].total).toBe(100.20);
+  });
+  it('calcula disponibilidad con el módulo de inventario real', () => {
+    const { ctx, load } = app();
+    load('src/inventory-1.ts');
+    ctx.products = [{ id: 'mp1', tipo: 'materia_prima', stock: 5 }];
+    expect(ctx.calcularPiezasFabricables({ mpComponentes: [{ id: 'mp1', qty: 2 }], rendimientoPorHoja: 4 })).toBe(8);
+  });
+  it('el arranque no duplica anticipos ya guardados con su id original', () => {
+    const { ctx, load } = app();
+    load('src/config.ts');
+    ctx.salesHistory = [{ id: 'anticipo-original', type: 'anticipo', folio: 'PE-1', total: 200 }];
+    ctx.pedidos = [{ id: 'p1', folio: 'PE-1', total: 1000, anticipo: 200 }];
+    ctx._inyectarAnticiposEnSalesHistory();
+    expect(ctx.salesHistory.reduce((n: number, s: any) => n + s.total, 0)).toBe(200);
+  });
+  it('rechaza un respaldo con productos malformados antes de habilitar restauración', () => {
+    const { ctx, load } = app();
+    ctx.document.getElementById = (id: string) => id === 'backupModal' ? { addEventListener() {} } : null;
+    ctx.setInterval = () => 0;
+    load('src/backup.ts');
+    expect(() => ctx._activarBackupPendiente({ version: '2.1', datos: { products: 'corrupto' } }, 'backup.json'))
+      .toThrow('products');
+  });
+  it('restaura categorías en la tabla que usa la carga inicial', async () => {
+    const { ctx, load } = app();
+    ctx.document.getElementById = (id: string) => id === 'backupModal' ? { addEventListener() {} } : null;
+    ctx.setInterval = () => 0;
+    load('src/backup.ts');
+    await ctx.restaurarDatosBackup({ categories: [{ id: 'tazas', name: 'Tazas' }] });
+    expect(await ctx.sbLoad('categories', [])).toEqual([expect.objectContaining({ id: 'tazas', name: 'Tazas' })]);
+  });
+  it('restaura el kardex en la tabla relacional de movimientos', async () => {
+    const { ctx, load } = app();
+    ctx.document.getElementById = (id: string) => id === 'backupModal' ? { addEventListener() {} } : null;
+    ctx.setInterval = () => 0;
+    load('src/backup.ts');
+    await ctx.restaurarDatosBackup({ stockMovimientos: [{ id: 'm1', productoId: 'p1', tipo: 'salida',
+      cantidad: -2, stockAntes: 5, stockDespues: 3, fecha: '2026-09-26T10:00:00Z' }] });
+    expect((await ctx.sbLoad('stockMovimientos', []))[0]).toMatchObject({ id: 'm1', cantidad: -2, stockDespues: 3 });
+  });
+  it('reintenta los datos KV al reconectar antes de marcarlos sincronizados', async () => {
+    const { ctx, stored, fail, recover } = app();
+    fail();
+    await expect(ctx.sbSave('quotes', [{ id: 'q1', total: 50 }])).rejects.toThrow();
+    recover();
+    await ctx.sincronizarPendientes();
+    stored.delete('maneki_quotes');
+    expect(await ctx.sbLoad('quotes', [])).toEqual([expect.objectContaining({ id: 'q1', total: 50 })]);
+    expect(ctx._pendingSync).toBe(false);
+  });
+  it('recupera la cola KV después de cerrar y volver a abrir la app', async () => {
+    const first = app();
+    first.fail();
+    await expect(first.ctx.sbSave('quotes', [{ id: 'q2' }])).rejects.toThrow();
+    const next = app({}, first.stored);
+    await next.ctx.sincronizarPendientes();
+    next.stored.delete('maneki_quotes');
+    expect(await next.ctx.sbLoad('quotes', [])).toEqual([expect.objectContaining({ id: 'q2' })]);
+  });
+  it('Realtime no devuelve pedidos finalizados al tablero activo', async () => {
+    const { ctx } = app();
+    await ctx._applyRTRelacional('orders', { eventType: 'INSERT', new: { id: 'p1', status: 'finalizado' } });
+    expect(ctx.pedidos).toEqual([]);
+  });
+  it('Realtime recarga gastos sin depender de una columna updated_at inexistente', async () => {
+    const { ctx, rows } = app();
+    await ctx._applyRTRelacional('expenses', { eventType: 'UPDATE' });
+    rows.expenses = [{ id: 'e1', amount: 25 }];
+    await ctx._applyRTRelacional('expenses', { eventType: 'UPDATE' });
+    expect(ctx.expenses).toEqual([expect.objectContaining({ id: 'e1', amount: 25 })]);
+  });
+  it.each([['quotes', 'saveQuotes'], ['receivables', 'saveReceivables'], ['payables', 'savePayables']])(
+    '%s permite esperar la confirmación del guardado', async (key, save) => {
+      const { ctx } = app();
+      ctx[key] = [{ id: 'kv1' }];
+      const pending = ctx[save]();
+      expect(typeof pending?.then).toBe('function');
+      await pending;
+      expect(ctx._pendingSync).toBe(false);
+    });
+});

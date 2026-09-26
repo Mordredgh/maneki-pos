@@ -578,6 +578,37 @@ async function _waitForDbReady(maxMs = 2500) {
     }
 }
 
+function _inyectarAnticiposEnSalesHistory() {
+    const shIds = new Set((salesHistory || []).map(s => String(s.id || '')).filter(Boolean));
+    [...(window.pedidos || []), ...(window.pedidosFinalizados || [])].forEach(p => {
+        // Para cada pedido, el anticipo inicial es lo que no está ya en salesHistory
+        const sumAbonosEnSH = (salesHistory || [])
+            .filter(s => s.folio === p.folio && ['anticipo', 'abono', 'pedido'].includes(s.type))
+            .reduce((acc, s) => acc + Number(s.total || 0), 0);
+        // anticipo inicial = total pagado (p.anticipo) - abonos ya en salesHistory
+        const anticipoInicial = Math.max(0, Number(p.anticipo || 0) - sumAbonosEnSH);
+        if (anticipoInicial <= 0) return;
+        // Generar id estable — mismo pedido siempre produce mismo id
+        const syntheticId = 'anticipo-init-' + String(p.id || p.folio || '');
+        if (shIds.has(syntheticId)) return; // ya inyectado
+        const fecha = (p.fechaCreacion || p.fecha || new Date().toISOString()).split('T')[0];
+        salesHistory.push({
+            id: syntheticId,
+            type: 'anticipo',
+            folio: p.folio || '',
+            date: fecha,
+            customer: p.cliente || '',
+            concept: 'Anticipo pedido ' + (p.folio || ''),
+            products: [],
+            total: anticipoInicial,
+            method: p.metodoPago || 'Efectivo',
+            note: 'Anticipo inicial (generado automáticamente)'
+        });
+        shIds.add(syntheticId);
+    });
+    window.salesHistory = salesHistory;
+}
+
 async function initApp() {
     // Inyectar skeleton screens mientras carga la data inicial
     ['inventoryTable','pedidosTable','clientsTable'].forEach(id => {
@@ -675,7 +706,7 @@ async function initApp() {
                 txt.className   = 'text-green-700';
                 if (_sbConectado === false) {
                     if (typeof mostrarBannerConexion === 'function')
-                        mostrarBannerConexion(true, 'Conexión restaurada — sincronizando datos...');
+                        mostrarBannerConexion(true, 'Conexión restaurada — revisa los guardados pendientes.');
                 }
                 _sbConectado = true;
             } catch (e) {
@@ -750,36 +781,7 @@ async function initApp() {
         // El anticipo inicial (pagos[0] o p.anticipo sin pagos) NO queda en salesHistory.
         // Al inyectarlo aquí, dashboard.js y ui-extras.js ya no necesitan buscarlo — 
         // leen solo salesHistory y los valores son siempre consistentes entre recargas.
-        (function _inyectarAnticiposEnSalesHistory() {
-            const shIds = new Set((salesHistory || []).map(s => String(s.id || '')).filter(Boolean));
-            [...(window.pedidos || []), ...(window.pedidosFinalizados || [])].forEach(p => {
-                // Para cada pedido, el anticipo inicial es lo que no está ya en salesHistory
-                const sumAbonosEnSH = (salesHistory || [])
-                    .filter(s => s.folio === p.folio && s.type === 'abono')
-                    .reduce((acc, s) => acc + Number(s.total || 0), 0);
-                // anticipo inicial = total pagado (p.anticipo) - abonos ya en salesHistory
-                const anticipoInicial = Math.max(0, Number(p.anticipo || 0) - sumAbonosEnSH);
-                if (anticipoInicial <= 0) return;
-                // Generar id estable — mismo pedido siempre produce mismo id
-                const syntheticId = 'anticipo-init-' + String(p.id || p.folio || '');
-                if (shIds.has(syntheticId)) return; // ya inyectado
-                const fecha = (p.fechaCreacion || p.fecha || new Date().toISOString()).split('T')[0];
-                salesHistory.push({
-                    id: syntheticId,
-                    type: 'anticipo',
-                    folio: p.folio || '',
-                    date: fecha,
-                    customer: p.cliente || '',
-                    concept: 'Anticipo pedido ' + (p.folio || ''),
-                    products: [],
-                    total: anticipoInicial,
-                    method: p.metodoPago || 'Efectivo',
-                    note: 'Anticipo inicial (generado automáticamente)'
-                });
-                shIds.add(syntheticId);
-            });
-            window.salesHistory = salesHistory;
-        })();
+        _inyectarAnticiposEnSalesHistory();
 
         // ✅ FIX Forced Reflow: renders DOM divididos en 3 frames separados
         // Cada requestAnimationFrame da al navegador ~16ms para pintar

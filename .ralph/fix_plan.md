@@ -1,5 +1,32 @@
 # Fix plan — Auditoría S34 Bicho Capricho POS
 
+## Migracion Cloudflare Pages 2026-09-26
+
+- [x] Confirmar cuenta Cloudflare disponible y autorizacion de migracion/despliegue.
+- [x] Preparar empaquetado explicito de assets sin fuentes, secretos ni respaldos; prueba rojo/verde.
+- [x] Validar build completo (116 pruebas), typecheck y paquete protegido de publicacion (65 archivos).
+- [x] Basic Auth en Worker para todas las rutas; secretos cifrados POS_USER/POS_PASSWORD. Usuario eligio contrasena.
+- [x] Publicar en Cloudflare Pages; HTTP 401 sin acceso/clave incorrecta y 200 autorizado; JS, SW y manifest 200.
+- [ ] Validar navegacion PWA publicada en navegador: IAB devuelve ERR_BLOCKED_BY_CLIENT ante Basic Auth; HTTP verificado.
+- [x] Asociar dominio existente y verificar DNS/HTTPS. Cloudflare active; CNAME confirmado por 1.1.1.1, 8.8.8.8 y autoritativo. HTTPS validado: 401 anonimo y 200 autorizado.
+- [x] Documentar despliegue y actualizar memoria Obsidian.
+
+## Auditoria 2026-09-26
+
+- [x] Contrastar esquema Supabase por GET sin escribir datos de negocio.
+- [x] Corregir escrituras de sales_history/incomes/expenses incompatibles con columnas reales.
+- [x] Conservar descripcionWeb y ocasion en la carga relacional.
+- [x] Unificar transformacion Realtime y corregir DELETE con new vacio.
+- [x] Conservar respaldo local ante fallos de red en siete entidades.
+- [x] Corregir doble deduplicacion y descuento de anticipos en reportes.
+- [x] Revisar sincronizacion, errores de guardado y cache de reportes.
+- [x] Auditar dependencias, despliegue, interfaz y seguridad; limitaciones en AUDITORIA-2026-09-26.md.
+- [x] Ejecutar build completo (108 tests), build:check y revisar diff final.
+- [x] Documentar resultados, limitaciones y memoria Obsidian; actualizar grafo AST.
+- [ ] Cerrar lectura anonima de datos privados con Auth/roles y politicas compatibles. <!-- BLOQUEADO: faltan usuarios autorizados y acceso administrativo; consulta enviada al usuario. -->
+- [ ] Aplicar migracion aditiva incomes.method y verificar persistencia de metodo. <!-- BLOQUEADO: SQL preparado; falta acceso administrativo Supabase. -->
+- [ ] Validar transacciones reales en staging e impresion fisica. <!-- BLOQUEADO: sin staging ni impresora conectada; produccion migrada a Cloudflare, contenedor ya no forma parte del despliegue. -->
+
 ## Fase 1 — Críticos (integridad de datos)
 
 - [x] D1: Espejo localStorage en save* (products/pedidos/pedidosFinalizados/clients/salesHistory/incomes/expenses) + sbLoad distingue fallo de red vs vacío legítimo
@@ -58,3 +85,12 @@
 - [x] Fase 4: `node scripts/build.js` limpio
 - [x] Fase 5 completa: `node scripts/build.js` limpio con gate de typecheck activo (0 errores tsc + 79 tests + lint + 34/34 TS compile + 8 bundles). H1-H7 todos resueltos.
 - [x] Tests Vitest nuevos agregados (7 casos de fase 2/4 — confirmado en corrida: 79 tests pasan, incluye tests de fase 4 con nombres exactos del plan)
+
+
+## Puntos 3, 4 y 5 — 2026-09-26
+
+- [x] Pruebas de negocio y persistencia: 133 correctas; detalle y limites en VALIDACION-2026-09-26.md.
+- [x] Cola relacional persistente, reenvio tras reinicio, kardex y borrados individuales; regresiones verificadas.
+- [x] Publicar y validar HTTP 401/200, assets y SW maneki-e4be814737 en dominio original.
+- [ ] Prueba fisica de impresion/PWA y operaciones contra staging real. <!-- BLOQUEADO: sin equipo fisico/staging; IAB bloquea Basic Auth. -->
+- [x] Preparar cambios verificados para commit y push en github/fresh-start.

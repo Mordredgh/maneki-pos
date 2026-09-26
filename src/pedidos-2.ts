@@ -190,6 +190,7 @@ async function _descontarInventarioPedido(pedido) {
         try {
             await saveProducts();
         } catch(saveErr) {
+            if ((saveErr as any)?.pendingSync) return descontados;
             // Restaurar productos desde snapshot si saveProducts falla
             if (_rollbackData) {
                 window.products = JSON.parse(JSON.stringify(_rollbackData));
@@ -233,6 +234,7 @@ function _descontarEmpaquesInventario(pedido) {
         // saveProducts() es async — usar .catch() para manejar el fallo correctamente
         // (un try/catch sincrónico no puede capturar rechazos de Promises no awaited)
         saveProducts().catch(e => {
+            if (e?.pendingSync) return;
             stockOriginal.forEach(({ mp, antes, variantsBefore }) => {
                 mp.stock = antes;
                 if (variantsBefore && Array.isArray(mp.variants)) {
@@ -478,7 +480,7 @@ async function setPedidoStatus(status) {
             ? '⚠️ Este pedido tiene total $0.00. ¿Deseas finalizarlo de todas formas sin precio registrado?'
             : '¿Marcar como finalizado? El pedido pasará al historial.';
         const _confirTitle = _totalActual === 0 ? '⚠️ Pedido sin precio' : '🎉 Finalizar';
-        showConfirm(_confirMsg, _confirTitle).then(async ok => {
+        return showConfirm(_confirMsg, _confirTitle).then(async ok => {
             if (!ok) return;
             if (!window.pedidosFinalizados) window.pedidosFinalizados = [];
 
@@ -510,6 +512,8 @@ async function setPedidoStatus(status) {
                         concept: `Cobro al entregar ${window.pedidos[idx].folio}`,
                         products: [], total: _saldoACobrar, method: 'Efectivo', note: 'Cobro al entregar'
                     });
+                    // Persistir el cobro aunque el saldo final sea cero.
+                    saveSalesHistory();
                     // Registrar en incomes para Balance
                     if (Array.isArray(window.incomes)) {
                         window.incomes.push({
@@ -646,7 +650,7 @@ async function setPedidoStatus(status) {
         const pedido = window.pedidos[idx];
         const tieneProductos = (pedido.productosInventario || []).length > 0;
 
-        showConfirm(`¿Cancelar el pedido ${pedido.folio || ''}?`, '❌ Sí, cancelar').then(ok => {
+        return showConfirm(`¿Cancelar el pedido ${pedido.folio || ''}?`, '❌ Sí, cancelar').then(ok => {
             if (!ok) return;
 
             const aplicarCancelacion = (esMerma) => {
@@ -878,11 +882,6 @@ async function confirmarAbonoPedido() {
     const abonoId = mkId();
     const _fechaStr = _d.getFullYear()+'-'+String(_d.getMonth()+1).padStart(2,'0')+'-'+String(_d.getDate()).padStart(2,'0');
 
-    // ── ROLLBACK FIX: guardar copias antes de mutar para poder restaurar si falla el save ──
-    const _pagosBefore       = p.pagos.slice();
-    const _incomesBefore     = Array.isArray(window.incomes)     ? window.incomes.slice()     : undefined;
-    const _salesHistBefore   = window.salesHistory !== undefined ? window.salesHistory.slice() : undefined;
-
     p.pagos.push({
         id: abonoId,
         tipo: 'abono',
@@ -925,24 +924,19 @@ async function confirmarAbonoPedido() {
         });
     }
 
-    // ── Persistir todo al final; si falla, revertir mutaciones en memoria ──
-    try {
-        await savePedidos();
-        if (Array.isArray(window.incomes) && typeof saveIncomes === 'function') saveIncomes();
-        if (window.salesHistory !== undefined) {
-            if (typeof saveSalesHistory === 'function') saveSalesHistory();
-        }
-        if (typeof window._invalidarCacheVentas === 'function') window._invalidarCacheVentas();
-    } catch (_saveErr) {
-        // Revertir mutaciones en memoria para mantener consistencia
-        p.pagos = _pagosBefore;
-        normalizarResta();
-        if (_incomesBefore !== undefined)   window.incomes      = _incomesBefore;
-        if (_salesHistBefore !== undefined) window.salesHistory = _salesHistBefore;
-        console.error('confirmarAbonoPedido: fallo al guardar, se revirtieron cambios.', _saveErr);
-        manekiToastExport('❌ Error al guardar el abono. Intenta de nuevo.', 'error');
-        _abonoEnProceso = false;
-        if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    // Encolar todas las tablas aunque una falle: el abono conserva su id al reintentar.
+    const writes = await Promise.allSettled([savePedidos(), saveIncomes(), saveSalesHistory()]);
+    const failures = writes.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (typeof window._invalidarCacheVentas === 'function') window._invalidarCacheVentas();
+    if (failures.length) {
+        // No revertir un pago ya almacenado en el journal: se duplicaría al reintentarlo.
+        document.getElementById('abonoPedidoMonto').value = '';
+        cerrarAbonoPedido();
+        renderPedidosTable();
+        const durable = failures.every(r => r.reason?.pendingSync);
+        manekiToastExport(durable
+            ? 'Abono guardado en este dispositivo, pendiente de sincronizar. No vuelvas a cobrarlo.'
+            : 'No se pudo respaldar todo el abono. Conserva la sesión y exporta un respaldo; no repitas el cobro.', 'warn');
         return;
     }
 

@@ -891,7 +891,7 @@ async function deleteProduct(id) {
         saveProducts(); renderInventoryTable();
         if (typeof updateDashboard === 'function') updateDashboard();
         try {
-            await db.from('products').delete().eq('id', String(id));
+            await _deleteRelational('products', 'id', String(id));
         } catch(e) {
             console.warn('deleteProduct: no se pudo borrar de products:', e);
         }

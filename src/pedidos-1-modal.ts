@@ -644,7 +644,10 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
 
             // Guardar alias móvil (whatsapp/facebook) para compatibilidad bidireccional
             window.pedidos[idx] = { ...pActual, cliente, telefono, redes, whatsapp: telefono, facebook: redes, fechaPedido, entrega, concepto, cantidad, costo, total, anticipo, resta, notas, notasInternas, lugarEntrega, costoMateriales, prioridad, ocasion, pagos: pagosActualizados, productosInventario: (window.pedidoProductosSeleccionados || []).map(i => ({...i})), empaques: (window.pedidoEmpaquesSeleccionados || []).map(e => ({...e})) };
-            await savePedidos();
+            await savePedidos().catch(e => {
+            if (!e?.pendingSync) throw e;
+            manekiToastExport('Pedido guardado localmente; pendiente de sincronizar.', 'warn');
+        });
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Pedido actualizado.', 'ok');
         }
@@ -681,7 +684,10 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
         window.pedidos.push(pedido);
         window.pedidoProductosSeleccionados = [];
         window.pedidoEmpaquesSeleccionados = [];
-        await savePedidos();
+        await savePedidos().catch(e => {
+            if (!e?.pendingSync) throw e;
+            manekiToastExport('Pedido guardado localmente; pendiente de sincronizar.', 'warn');
+        });
         if (anticipo > 0) {
             const pagoAnticipo = pedido.pagos && pedido.pagos[0] ? pedido.pagos[0] : null;
             const anticipoId = pagoAnticipo?.id || mkId();

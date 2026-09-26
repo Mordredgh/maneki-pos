@@ -226,7 +226,7 @@ function eliminarPedido(id) {
             }
         }
         try {
-            await db.from('orders').delete().eq('id', String(id));
+            await _deleteRelational('orders', 'id', String(id));
         } catch(e) {
             console.warn('eliminarPedido: no se pudo borrar de orders:', e);
             manekiToastExport('Pedido eliminado localmente. Error al sincronizar con la nube.', 'warn');

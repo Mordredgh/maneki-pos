@@ -23,6 +23,9 @@ npm-debug.log*
 # Variables de entorno
 .env
 .env.local
+.dev.vars
+.dev.vars.*
+.wrangler/
 
 # Local Netlify folder
 .netlify

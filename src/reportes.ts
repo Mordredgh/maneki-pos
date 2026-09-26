@@ -16,8 +16,8 @@ window._invalidarCacheVentas = function() { _allVentasCache = null; _allVentasCa
 function _getAllVentas() {
     const sh = window.salesHistory || [];
     const pf = window.pedidosFinalizados || [];
-    // Incluir suma de totales de salesHistory Y pedidosFinalizados para detectar ediciones sin cambio de cantidad
-    const cacheKey = `${sh.length}_${pf.length}_${sh.reduce((s,v)=>s+Number(v.total||0),0).toFixed(0)}_${pf.reduce((s,p)=>s+Number(p.total||0),0).toFixed(0)}`;
+    // ponytail: comparar entradas completas evita reutilizar fechas, tipos o centavos viejos.
+    const cacheKey = JSON.stringify([sh, pf]);
     if (_allVentasCache && _allVentasCacheKey === cacheKey) return _allVentasCache;
 
     // 1. Folios ya en salesHistory como type:'pedido' → no duplicar desde pedidosFinalizados
@@ -33,7 +33,6 @@ function _getAllVentas() {
         if (s.type !== 'venta' || !s.folio) return;
         if (pf.some(function(p) { return p.folio === s.folio; })) {
             idsLegacyPedido[s.id] = true;  // excluir de shFiltrado
-            foliosEnSH[s.folio] = true;    // pfComoVentas lo incluirá una sola vez con total correcto
         }
     });
 
@@ -47,7 +46,6 @@ function _getAllVentas() {
         var folioEnConcepto = (s.concept || s.concepto || '').match(/PE-\d+/);
         if (folioEnConcepto) {
             idsLegacyPedido[s.id] = true;
-            foliosEnSH[folioEnConcepto[0]] = true; // evitar que también entre desde pfComoVentas
             return;
         }
         // Deduplicar: intentar match por folio primero (más preciso), luego por cliente+total+fecha+concepto
@@ -81,7 +79,6 @@ function _getAllVentas() {
         });
         if (matchPedido) {
             idsLegacyPedido[s.id] = true;
-            foliosEnSH[matchPedido.folio] = true;
         }
     });
 
@@ -123,7 +120,9 @@ function _getAllVentas() {
             var yaCobrado = anticiposPorFolio[s.folio];
             // Solo ajustar si el total del registro parece ser el total completo del pedido
             // (es decir, no fue ya corregido con el fix de saldo pendiente)
-            if (!s.totalPedido && totalOriginal > yaCobrado) {
+            const pedido = pf.find(p => p.folio === s.folio);
+            const esTotalCompleto = pedido && totalOriginal === Number(pedido.total || 0);
+            if (!s.totalPedido && esTotalCompleto) {
                 // Crear una copia shallow para no mutar el objeto original de salesHistory
                 return Object.assign({}, s, {
                     totalPedido: totalOriginal,

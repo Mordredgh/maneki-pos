@@ -1765,7 +1765,7 @@ window.manekiUndoToast = manekiUndoToast;
 
     const banner = document.createElement('div');
     banner.id = 'mk-offline-banner';
-    banner.innerHTML = '<span class="pulse"></span> Sin conexión a internet — los cambios se guardan localmente y se sincronizarán al reconectarse';
+    banner.innerHTML = '<span class="pulse"></span> Sin conexión a internet — mantén esta sesión abierta y revisa los guardados pendientes al reconectarte';
     if (document.body) document.body.appendChild(banner);
     else document.addEventListener('DOMContentLoaded', () => document.body.appendChild(banner));
 

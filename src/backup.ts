@@ -117,7 +117,16 @@ function cargarArchivoBackup(event) {
 }
 
 function _activarBackupPendiente(data, fileName) {
-    if (!data.datos) throw new Error('Formato inválido');
+    if (!data || !data.datos || typeof data.datos !== 'object' || Array.isArray(data.datos)) throw new Error('Formato inválido');
+    const arrays = ['products', 'salesHistory', 'pedidos', 'pedidosFinalizados', 'abonos',
+        'receivables', 'payables', 'incomes', 'expenses', 'categories', 'quotes', 'equipos',
+        'roiHistorial', 'envioAnillos', 'notas', 'clients', 'gastosRecurrentes', 'stockMovimientos'];
+    for (const key of arrays) {
+        const value = data.datos[key];
+        if (value !== undefined && (!Array.isArray(value) || value.some(item => !item || typeof item !== 'object' || Array.isArray(item)))) {
+            throw new Error(`Formato inválido: ${key}`);
+        }
+    }
 
     // SEC-4: Validar versión del backup antes de habilitar la restauración
     const EXPECTED_VERSION = '2.1';
@@ -175,51 +184,70 @@ function procesarArchivoBackup(file) {
     reader.readAsText(file);
 }
 
+async function restaurarDatosBackup(d) {
+    if (d.products !== undefined)     { window.products = d.products; products = d.products; await saveProducts(); }
+    if (d.salesHistory !== undefined) { window.salesHistory = d.salesHistory; salesHistory = d.salesHistory; await saveSalesHistory(); }
+    if (d.pedidos !== undefined)      { window.pedidos = d.pedidos; pedidos = d.pedidos; await savePedidos(); }
+    // R2-C3 FIX: abonos tiene su propia clave en Supabase/SQLite (ui-extras.js usa sbSave('abonos',...)).
+    // Restaurar la clave para que tras el reload la app cargue los abonos correctamente.
+    if (d.abonos !== undefined) {
+        window.abonos = Array.isArray(d.abonos) ? d.abonos : [];
+        await sbSave('abonos', window.abonos);
+    }
+    if (d.pedidosFinalizados !== undefined) { window.pedidosFinalizados = d.pedidosFinalizados; pedidosFinalizados = d.pedidosFinalizados; await savePedidosFinalizados(); }
+    if (d.notas !== undefined)             { window.notas = d.notas; await sbSave('notas', window.notas); }
+    if (d.receivables !== undefined)       { window.receivables = d.receivables; receivables = d.receivables; await sbSave('receivables', d.receivables); }
+    if (d.payables !== undefined)          { window.payables = d.payables; await sbSave('payables', window.payables); }
+    if (d.incomes !== undefined)      { window.incomes = d.incomes; incomes = d.incomes; await saveIncomes(); }
+    if (d.expenses !== undefined)     { window.expenses = d.expenses; expenses = d.expenses; await saveExpenses(); }
+    if (d.categories !== undefined)   { window.categories = d.categories; categories = d.categories; await saveCategories(); }
+    if (d.quotes !== undefined)       { window.quotes = d.quotes; quotes = d.quotes; await sbSave('quotes', d.quotes); }
+    if (d.equipos !== undefined)      { equipos = d.equipos; await sbSave('equipos', equipos); }
+    if (d.roiHistorial !== undefined) { roiHistorial = d.roiHistorial; await sbSave('roiHistorial', roiHistorial); }
+    if (d.roiConfig !== undefined)    { roiConfig = d.roiConfig; await sbSave('roiConfig', roiConfig); }
+    if (d.envioAnillos !== undefined) { envioAnillos = d.envioAnillos; await sbSave('envioAnillos', envioAnillos); }
+    // BUG-008 FIX: restaurar campos que faltaban
+    if (d.clients !== undefined)           { window.clients = d.clients; clients = d.clients; await saveClients(); }
+    if (d.storeConfig !== undefined)        { window.storeConfig = d.storeConfig; storeConfig = d.storeConfig; await sbSave('storeConfig', d.storeConfig); }
+    if (d.gastosRecurrentes !== undefined)  { window.gastosRecurrentes = d.gastosRecurrentes; gastosRecurrentes = d.gastosRecurrentes; await sbSave('gastosRecurrentes', d.gastosRecurrentes); }
+    if (d.stockMovimientos !== undefined) {
+        const rows = d.stockMovimientos.map(m => ({
+            id: String(m.id), producto_id: String(m.productoId), producto_nombre: m.productoNombre || null,
+            tipo: m.tipo, cantidad: Number(m.cantidad), motivo: m.motivo || null,
+            stock_antes: m.stockAntes == null ? null : Number(m.stockAntes),
+            stock_despues: m.stockDespues == null ? null : Number(m.stockDespues),
+            fecha: m.fecha ? new Date(m.fecha).toISOString() : null
+        }));
+        if (rows.length) {
+            const { error } = await _upsertRelational('stock_movements', rows);
+            if (error) throw error;
+        }
+        window.stockMovimientos = d.stockMovimientos;
+        window.stockMovements = d.stockMovimientos;
+    }
+    // Restaurar folioCounter para evitar folios duplicados
+    if (d.folioCounter !== undefined && Number(d.folioCounter) > 0) {
+        window._folioCounter = Number(d.folioCounter);
+        await sbSave('folioCounter', String(window._folioCounter));
+        try { localStorage.setItem('maneki_folioCounter', String(window._folioCounter)); } catch(_){}
+    }
+
+}
+
 function restaurarBackup() {
     if (!backupDataPendiente) return;
     const d = backupDataPendiente.datos;
     const fecha = backupDataPendiente.fecha ? new Date(backupDataPendiente.fecha).toLocaleDateString('es-MX') : 'desconocida';
 
     showConfirm(
-        `⚠️ ACCIÓN IRREVERSIBLE\n\nSe reemplazarán TODOS los datos actuales con el backup del ${fecha}.\n\nSe recomienda exportar un backup de seguridad antes de continuar.\n\n¿Estás completamente seguro?`,
-        '🔴 Restaurar backup — esto borrará todo'
+        `Se importará el backup del ${fecha}.\n\nLos registros con el mismo ID se actualizarán. Los registros existentes en las tablas que no estén en el backup se conservarán. Las listas de configuración se reemplazarán.\n\nExporta un respaldo de seguridad antes de continuar.`,
+        'Restaurar backup'
     ).then(ok => {
     if (!ok) return;
 
     (async () => {
         try {
-            if (d.products !== undefined)     { window.products = d.products; products = d.products; await saveProducts(); }
-            if (d.salesHistory !== undefined) { window.salesHistory = d.salesHistory; salesHistory = d.salesHistory; await saveSalesHistory(); }
-            if (d.pedidos !== undefined)      { window.pedidos = d.pedidos; pedidos = d.pedidos; await savePedidos(); }
-            // R2-C3 FIX: abonos tiene su propia clave en Supabase/SQLite (ui-extras.js usa sbSave('abonos',...)).
-            // Restaurar la clave para que tras el reload la app cargue los abonos correctamente.
-            if (d.abonos !== undefined) {
-                window.abonos = Array.isArray(d.abonos) ? d.abonos : [];
-                await sbSave('abonos', window.abonos);
-            }
-            if (d.pedidosFinalizados !== undefined) { window.pedidosFinalizados = d.pedidosFinalizados; pedidosFinalizados = d.pedidosFinalizados; await savePedidosFinalizados(); }
-            if (d.notas !== undefined)             { window.notas = d.notas; await sbSave('notas', window.notas); }
-            if (d.receivables !== undefined)       { window.receivables = d.receivables; receivables = d.receivables; await sbSave('receivables', d.receivables); }
-            if (d.payables !== undefined)          { window.payables = d.payables; await sbSave('payables', window.payables); }
-            if (d.incomes !== undefined)      { window.incomes = d.incomes; incomes = d.incomes; await saveIncomes(); }
-            if (d.expenses !== undefined)     { window.expenses = d.expenses; expenses = d.expenses; await saveExpenses(); }
-            if (d.categories !== undefined)   { window.categories = d.categories; categories = d.categories; await sbSave('categories', d.categories); }
-            if (d.quotes !== undefined)       { window.quotes = d.quotes; quotes = d.quotes; await sbSave('quotes', d.quotes); }
-            if (d.equipos !== undefined)      { equipos = d.equipos; await sbSave('equipos', equipos); }
-            if (d.roiHistorial !== undefined) { roiHistorial = d.roiHistorial; await sbSave('roiHistorial', roiHistorial); }
-            if (d.roiConfig !== undefined)    { roiConfig = d.roiConfig; await sbSave('roiConfig', roiConfig); }
-            if (d.envioAnillos !== undefined) { envioAnillos = d.envioAnillos; await sbSave('envioAnillos', envioAnillos); }
-            // BUG-008 FIX: restaurar campos que faltaban
-            if (d.clients !== undefined)           { window.clients = d.clients; clients = d.clients; await saveClients(); }
-            if (d.storeConfig !== undefined)        { window.storeConfig = d.storeConfig; storeConfig = d.storeConfig; await sbSave('storeConfig', d.storeConfig); }
-            if (d.gastosRecurrentes !== undefined)  { window.gastosRecurrentes = d.gastosRecurrentes; gastosRecurrentes = d.gastosRecurrentes; await sbSave('gastosRecurrentes', d.gastosRecurrentes); }
-            if (d.stockMovimientos !== undefined)   { window.stockMovimientos = d.stockMovimientos; window.stockMovements = d.stockMovimientos; await sbSave('stockMovimientos', window.stockMovimientos); }
-            // Restaurar folioCounter para evitar folios duplicados
-            if (d.folioCounter !== undefined && Number(d.folioCounter) > 0) {
-                window._folioCounter = Number(d.folioCounter);
-                await sbSave('folioCounter', String(window._folioCounter));
-                try { localStorage.setItem('maneki_folioCounter', String(window._folioCounter)); } catch(_){}
-            }
+            await restaurarDatosBackup(d);
 
             cerrarBackupModal();
             manekiToastExport('✅ Backup restaurado exitosamente. La página se recargará.', 'ok');
