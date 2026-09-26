@@ -1,8 +1,13 @@
-﻿async function imprimirTicketPedido(id) {
+async function imprimirTicketPedido(id) {
     const p = [...(window.pedidosFinalizados || []), ...(window.pedidos || [])].find(x => String(x.id) === String(id));
     if (!p) return;
 
-    // Convertir logo a base64 para que funcione en la ventana nueva (Electron / file://)
+    const win = window.open('', '_blank', 'width=480,height=750,scrollbars=yes');
+    if (!win) {
+        manekiToastExport('⚠️ El navegador bloqueó la ventana de impresión. Permite popups para este sitio.', 'warn');
+        return;
+    }
+    // Abrir durante el gesto del usuario; esperar el logo despues evita bloqueo de popup.
     let logoBase64 = '';
     try {
         const logoUrl = new URL('logo.png', window.location.href).href;
@@ -38,8 +43,8 @@
                 const vTipo  = colonIdx !== -1 ? it.variante.slice(0, colonIdx).trim() : '';
                 const vValor = colonIdx !== -1 ? it.variante.slice(colonIdx + 1).trim() : it.variante.trim();
                 varianteHtml = `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">
-                    ${vTipo ? `<span style="background:#f3f4f6;color:#6b7280;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;text-transform:uppercase;">${vTipo}</span>` : ''}
-                    <span style="background:#fffbeb;color:#92400e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;text-transform:uppercase;">${vValor}</span>
+                    ${vTipo ? `<span style="background:#f3f4f6;color:#6b7280;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;text-transform:uppercase;">${_esc(vTipo)}</span>` : ''}
+                    <span style="background:#fffbeb;color:#92400e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;text-transform:uppercase;">${_esc(vValor)}</span>
                 </div>`;
             }
             const precioStr   = precio > 0 ? `$${precio.toFixed(2)}`   : '<span style="color:#d1d5db;">—</span>';
@@ -47,7 +52,7 @@
             return `
             <tr>
                 <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;vertical-align:top;">
-                    <div style="font-weight:600;color:#1f2937;font-size:13px;">${it.name || '—'}</div>
+                    <div style="font-weight:600;color:#1f2937;font-size:13px;">${_esc(it.name || '—')}</div>
                     ${varianteHtml}
                 </td>
                 <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;text-align:center;color:#6b7280;font-size:13px;vertical-align:middle;">${qty}</td>
@@ -55,7 +60,7 @@
                 <td style="padding:10px 12px;border-bottom:1px solid #f3f4f6;text-align:right;font-weight:700;color:#1f2937;font-size:13px;vertical-align:middle;">${subtotalStr}</td>
             </tr>`;
           }).join('')
-        : `<tr><td colspan="4" style="padding:16px 12px;text-align:center;color:#9ca3af;font-style:italic;font-size:13px;">${p.concepto || 'Pedido personalizado'}</td></tr>`;
+        : `<tr><td colspan="4" style="padding:16px 12px;text-align:center;color:#9ca3af;font-style:italic;font-size:13px;">${_esc(p.concepto || 'Pedido personalizado')}</td></tr>`;
 
     const logoHtml = logoBase64
         ? `<img src="${logoBase64}" style="height:72px;object-fit:contain;margin-bottom:8px;" alt="Bicho Capricho">`
@@ -70,16 +75,11 @@
     const lugarHtml = p.lugarEntrega ? `
         <div style="margin-top:4px;font-size:11px;color:#9ca3af;">📍 ${_esc(p.lugarEntrega)}</div>` : '';
 
-    const win = window.open('', '_blank', 'width=480,height=750,scrollbars=yes');
-    if (!win) {
-        manekiToastExport('⚠️ El navegador bloqueó la ventana de impresión. Permite popups para este sitio.', 'warn');
-        return;
-    }
     win.document.write(`<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Comprobante ${p.folio} — Bicho Capricho</title>
+<title>Comprobante ${_esc(p.folio)} — Bicho Capricho</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -271,26 +271,26 @@
   <!-- CABECERA -->
   <div class="header">
     ${logoHtml}
-    <div class="brand-name">MANEKI STORE</div>
+    <div class="brand-name">BICHO CAPRICHO</div>
     <div class="brand-sub">Personalización con amor</div>
   </div>
 
   <!-- INFO DEL PEDIDO -->
   <div class="info-block">
-    <div class="folio-badge">✦ ${p.folio}</div>
+    <div class="folio-badge">✦ ${_esc(p.folio)}</div>
     <div class="info-grid">
       <div class="info-cell full">
         <div class="info-label">Cliente</div>
-        <div class="info-value" style="font-size:15px;">${p.cliente || '—'}</div>
+        <div class="info-value" style="font-size:15px;">${_esc(p.cliente || '—')}</div>
         ${lugarHtml}
       </div>
       <div class="info-cell">
         <div class="info-label">Fecha</div>
-        <div class="info-value">${fecha}</div>
+        <div class="info-value">${_esc(fecha)}</div>
       </div>
       <div class="info-cell">
         <div class="info-label">Entrega</div>
-        <div class="info-value" style="color:${(entrega && entrega !== '—' && fecha && fecha !== '—' && entrega < fecha) ? '#dc2626' : '#1f2937'};">${entrega}</div>
+        <div class="info-value" style="color:${(entrega && entrega !== '—' && fecha && fecha !== '—' && entrega < fecha) ? '#dc2626' : '#1f2937'};">${_esc(entrega)}</div>
       </div>
       ${p.concepto ? `
       <div class="info-cell full">

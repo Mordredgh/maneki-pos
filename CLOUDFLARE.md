@@ -45,3 +45,6 @@ Dominio asociado en Pages por API el 2026-09-26. Hostinger actualizado: eliminad
 La lectura anonima de datos de Supabase detectada en AUDITORIA-2026-09-26.md sigue pendiente: proteger el sitio no sustituye Auth/RLS de la base de datos.
 
 Proveedor DNS confirmado: Hostinger. Cambio realizado desde sesion autorizada del propietario. El editor no permite convertir A en CNAME (422 conflicto RRset); se sustituyo solo pos. Reversion: retirar CNAME pos y restaurar A 195.26.247.101 TTL 14400.
+
+## Actualizacion de produccion
+2026-09-26: https://1742889c.bicho-capricho-pos.pages.dev, SW maneki-1ed0b2f342. 140 pruebas, 36 TS y build:check correctos. Login Supabase administrador ademas de Basic Auth. RLS parcial aplicada; store pendiente por compatibilidad del bot. Detalles vigentes en VALIDACION-2026-09-26.md.

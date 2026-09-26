@@ -1,5 +1,5 @@
 -- Bicho Core: hoqcrljgmamaumtdrtzi
--- Preparada durante la auditoria. NO ejecutada contra produccion.
+-- Aplicada y verificada en produccion el 2026-09-26; prueba revertida con method efectivo.
 -- Aditiva: conserva filas existentes y deja NULL donde no se conoce el metodo.
 BEGIN;
 SET LOCAL lock_timeout = '5s';

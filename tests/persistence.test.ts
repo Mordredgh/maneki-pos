@@ -88,6 +88,42 @@ function businessApp() {
 }
 
 describe('Persistencia real del POS', () => {
+  it('una respuesta tardia no anuncia conexion cuando el navegador esta offline', () => {
+    const a=app();
+    const fields:any={supabaseStatusDot:{},supabaseStatusText:{},supabaseStatus:{style:{}},'mk-offline-banner':{style:{},remove(){}}};
+    a.ctx.document.getElementById=(id:string)=>fields[id] || null;
+    a.ctx.navigator={onLine:false};
+    a.ctx.actualizarIndicadorConexion(true);
+    expect(fields.supabaseStatusText.textContent).toBe('Sin conexión (local)');
+  });
+  it('una cotizacion remota cambiada no es sobrescrita por otro dispositivo', async () => {
+    const a=app();
+    a.rows.store=[{key:'quotes',value:'[{"id":"q1","total":100}]'}];
+    const local=await a.ctx.sbLoad('quotes',[]);
+    a.rows.store[0].value='[{"id":"q1","total":120}]'; local[0].total=110;
+    a.ctx.testApi.rpc=async (name:string,args:any)=>{
+      expect(name).toBe('pos_apply_store');
+      expect(args.p_expected).toContain('[{"id":"q1","total":100}]');
+      return {error:{code:'40001',message:'Conflicto en cotizacion'}};
+    };
+    await expect(a.ctx.sbSave('quotes',local)).rejects.toThrow('Conflicto');
+    expect(JSON.parse(a.rows.store[0].value)[0].total).toBe(120);
+    expect((await a.ctx.sbLoad('quotes',[]))[0].total).toBe(110);
+  });
+  it('un cambio remoto concurrente rechaza el guardado y conserva la copia local pendiente', async () => {
+    const a=app();
+    a.rows.products=[{id:'p-concurrent',name:'Original',stock:10,price:100}];
+    a.ctx.products=await a.ctx.sbLoad('products',[]);
+    a.rows.products[0].stock=8;
+    a.ctx.products[0].stock=9;
+    a.ctx.testApi.rpc=async (_name:string,args:any) => {
+      expect(args.p_expected['p-concurrent'].stock).toBe(10);
+      return {error:{code:'40001',message:'Conflicto: cambio en otro dispositivo'}};
+    };
+    await expect(a.ctx.saveProducts()).rejects.toMatchObject({pendingSync:true});
+    expect(a.rows.products[0].stock).toBe(8);
+    expect(JSON.parse(a.stored.get('maneki_pendingRows')!)[0].rows[0].stock).toBe(9);
+  });
   it('al finalizar y cobrar saldo conserva el cobro en ventas y Balance', async () => {
     const a = businessApp();
     a.ctx.pedidos = [{id:'o1', folio:'PE-TEST', total:100, anticipo:25, resta:75, pagos:[{id:'a1',monto:25}]}];

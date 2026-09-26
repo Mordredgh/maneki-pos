@@ -42,15 +42,20 @@ const _deviceId = (() => {
 })();
 (window as any)._mkDeviceId = _deviceId;
 
-const _pendingKV: Record<string, string> = _loadLocalMirror('pendingKV') || {};
-type PendingRowWrite = { table: string; rows?: any[]; field?: string; value?: string };
+const _kvState = _loadLocalMirror('kvState') || {};
+const _pendingKV: Record<string, string> = _kvState.pending || _loadLocalMirror('pendingKV') || {};
+const _kvBases: Record<string, string | null> = _kvState.bases || {};
+const _kvExpected: Record<string, Array<string | null>> = _kvState.expected || {};
+type PendingRowWrite = { table: string; rows?: any[]; field?: string; value?: string; expected?: Record<string, any> };
 const _pendingRows: PendingRowWrite[] = _loadLocalMirror('pendingRows') || [];
+const _rowBases: Record<string, Record<string, any>> = _loadLocalMirror('rowBases') || {};
 let _rowFlush: Promise<void> | null = null;
 const _kvWriteQueues: Record<string, Promise<void>> = {};
 
 let db = null;
-(async () => {
+(window as any)._posDBReady = (async () => {
     try {
+        if ((window as any)._posTabReady && !await (window as any)._posTabReady) return;
         let cfg = null;
         // Intentar config inyectada externamente
         if (!cfg && window.__mkCfg) {
@@ -88,6 +93,7 @@ let db = null;
             return;
         }
         db = supabase.createClient(cfg.url, cfg.key);
+        if (typeof requirePOSAdmin === 'function') await requirePOSAdmin(db);
         window._dbReady = true;
         // Usar typeof para evitar ReferenceError si _pendingSync aún no fue declarada (TDZ con let)
         if (typeof sincronizarPendientes === 'function' && window._pendingSync) sincronizarPendientes();
@@ -157,6 +163,7 @@ window._esc = function(str) {
 // Transforma una fila relacional al esquema local del CRM
 function _rtTransformarFila(tabla, row) {
     if (!row) return null;
+    _rememberRowBases(tabla, [row]);
     // ponytail: carga inicial y Realtime comparten el contrato relacional.
     const cfg = _RELATIONAL_TABLES[_rtTablaAKey[tabla]];
     return cfg ? cfg.map(row) : null;
@@ -615,10 +622,12 @@ function openModal(idOrEl) {
 window.openModal = openModal;
 
 function actualizarIndicadorConexion(online) {
+    online = Boolean(online) && (typeof navigator === 'undefined' || navigator.onLine !== false);
     const dot  = document.getElementById('supabaseStatusDot');
     const txt  = document.getElementById('supabaseStatusText');
     const box  = document.getElementById('supabaseStatus');
     _offlineMode = !online;
+    if (box) clearTimeout(box._flashTimer);
     if (!dot || !txt) return;
     if (online) {
         dot.className = 'w-2 h-2 rounded-full bg-green-500 flex-shrink-0 inline-block';
@@ -633,7 +642,6 @@ function actualizarIndicadorConexion(online) {
             box._flashTimer = setTimeout(() => {
                 box.style.background = '';
                 box.style.border = '';
-                txt.textContent = 'Supabase conectado';
             }, 2000);
         }
         _ocultarBannerOfflineConexion();
@@ -686,7 +694,7 @@ async function sincronizarPendientes() {
 
 function _persistPendingKV() {
     window._pendingSync = Object.keys(_pendingKV).length > 0 || _pendingRows.length > 0;
-    _mirrorLocal('pendingKV', _pendingKV);
+    localStorage.setItem('maneki_kvState', JSON.stringify({pending:_pendingKV,bases:_kvBases,expected:_kvExpected}));
 }
 
 // ponytail: journal ordenado por dispositivo; cada upsert es idempotente por id.
@@ -698,11 +706,19 @@ function _persistPendingRows() {
 }
 function _queueRowWrite(op: PendingRowWrite): Promise<{ error: null }> {
     const snapshot = JSON.parse(JSON.stringify(op));
+    const bases = JSON.parse(JSON.stringify(_rowBases[op.table] || {}));
+    for (const pending of _pendingRows.filter(p => p.table === op.table)) {
+        if (pending.rows) pending.rows.forEach(row => bases[row.id] = {...bases[row.id], ...row});
+        else Object.keys(bases).forEach(id => { if (String(bases[id][pending.field!]) === pending.value) delete bases[id]; });
+    }
+    snapshot.expected = {};
+    if (op.rows) op.rows.forEach(row => snapshot.expected[row.id] = bases[row.id] || null);
+    else Object.values(bases).forEach((row:any) => { if (String(row[op.field!]) === op.value) snapshot.expected[row.id] = row; });
     _pendingRows.push(snapshot);
     try { _persistPendingRows(); }
     catch (e) { _pendingRows.pop(); return Promise.reject(e); }
     return _flushPendingRows().then(() => ({ error: null })).catch(error => {
-        throw Object.assign(new Error(error?.message || 'Sincronización pendiente'), { pendingSync: _pendingRows.includes(snapshot) });
+        throw Object.assign(new Error(error?.message || 'Sincronización pendiente'), { code:error?.code, pendingSync: _pendingRows.includes(snapshot) });
     });
 }
 function _upsertRelational(table: string, rows: any[]): Promise<{ error: null }> {
@@ -721,21 +737,55 @@ function _flushPendingRows(): Promise<void> {
         while (_pendingRows.length) {
             if (!db) throw new Error('Sin conexión a Supabase');
             const op = _pendingRows[0];
-            let result = op.rows
+            if (typeof db.rpc === 'function' && !op.expected) throw Object.assign(new Error('Pendiente de una version anterior: exporta el respaldo y revisa antes de sincronizar.'),{code:'40001'});
+            let result = typeof db.rpc === 'function'
+                ? await _withTimeout(db.rpc('pos_apply_write', {p_table:op.table, p_rows:op.rows || null,
+                    p_expected:op.expected, p_field:op.field || null, p_value:op.value || null}), 15000)
+                : op.rows
                 ? await db.from(op.table).upsert(op.rows, { onConflict: 'id' })
                 : await db.from(op.table).delete().eq(op.field, op.value);
-            if (op.table === 'incomes' && op.rows && result.error &&
+            if (typeof db.rpc !== 'function' && op.table === 'incomes' && op.rows && result.error &&
                 /method/i.test(String(result.error.message || '')) &&
                 ['PGRST204', '42703'].includes(result.error.code)) {
                 result = await db.from(op.table).upsert(op.rows.map(({ method, ...r }) => r), { onConflict: 'id' });
             }
             if (result.error) throw result.error;
+            if (op.rows) _rememberRowBases(op.table, result.data || op.rows);
+            else {
+                const bases = _rowBases[op.table] || {};
+                Object.keys(bases).forEach(id => { if (String(bases[id][op.field!]) === op.value) delete bases[id]; });
+                _mirrorLocal('rowBases', _rowBases);
+            }
             _pendingRows.shift();
             try { _persistPendingRows(); }
             catch (e) { _pendingRows.unshift(op); throw e; }
         }
-    })().finally(() => { _rowFlush = null; });
+    })().catch(error => {
+        if (error?.code === '40001') _showSyncConflict(error.message);
+        throw error;
+    }).finally(() => { _rowFlush = null; });
     return _rowFlush;
+}
+function _showSyncConflict(message: string) {
+    if (!document.body || typeof document.createElement !== 'function') return;
+    let banner=document.getElementById('pos-sync-conflict');
+    if (banner) return;
+    banner=document.createElement('section'); banner.id='pos-sync-conflict';
+    banner.setAttribute('role','alert');
+    banner.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:100000;background:#fff3cd;color:#382b00;padding:16px;font:15px system-ui';
+    banner.textContent=message+' La sincronizacion esta detenida. Conserva esta ventana y revisa ambos cambios antes de continuar. ';
+    const button=document.createElement('button'); button.textContent='Descargar pendientes';
+    button.onclick=()=>{
+        const url=URL.createObjectURL(new Blob([JSON.stringify({version:2,fecha:new Date().toISOString(),pendingRows:_pendingRows,pendingKV:_pendingKV,expectedKV:_kvExpected},null,2)],{type:'application/json'}));
+        const link=document.createElement('a'); link.href=url; link.download='bicho-pendientes.json'; link.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+    };
+    banner.appendChild(button); document.body.appendChild(banner);
+}
+function _rememberRowBases(table: string, rows: any[]) {
+    const bases = _rowBases[table] || (_rowBases[table] = {});
+    rows.forEach(row => { if (row.id != null) bases[row.id] = JSON.parse(JSON.stringify(row)); });
+    _mirrorLocal('rowBases', _rowBases);
 }
 function _overlayPendingRows(key: string, data: any[]): any[] {
     const cfg = _RELATIONAL_TABLES[key];
@@ -759,9 +809,21 @@ function _writePendingKV(key: string, snapshot: string): Promise<void> {
     const task = (_kvWriteQueues[key] || Promise.resolve()).catch(() => {}).then(async () => {
         if (_pendingKV[key] !== snapshot) return;
         if (!db) throw new Error('Sin conexión a Supabase');
-        const { error } = await _withTimeout(db.from('store').upsert({ key, value: snapshot }, { onConflict: 'key' }));
-        if (error) throw new Error(error.message || 'Error de Supabase');
-        if (_pendingKV[key] === snapshot) delete _pendingKV[key];
+        if (typeof db.rpc === 'function' && !_kvExpected[key]) throw new Error('Pendiente KV anterior: revisa el respaldo antes de sincronizar.');
+        const expected=[...(_kvExpected[key] || [null])];
+        // Guardar el valor intentado permite recuperar una respuesta perdida sin pisar cambios ajenos.
+        _kvExpected[key] = [...new Set([...expected,snapshot])];
+        _persistPendingKV();
+        const { error } = await _withTimeout(typeof db.rpc === 'function'
+            ? db.rpc('pos_apply_store',{p_key:key,p_value:snapshot,p_expected:expected})
+            : db.from('store').upsert({ key, value: snapshot }, { onConflict: 'key' }));
+        if (error) {
+            if(error.code==='40001') _showSyncConflict(error.message);
+            throw new Error(error.message || 'Error de Supabase');
+        }
+        _kvBases[key]=snapshot;
+        if (_pendingKV[key] === snapshot) { delete _pendingKV[key]; delete _kvExpected[key]; }
+        else _kvExpected[key]=[snapshot];
         _persistPendingKV();
     });
     _kvWriteQueues[key] = task;
@@ -794,6 +856,7 @@ async function sbSave(key, data) {
 
     const dataSnapshot = JSON.stringify(dataConTimestamp);
     _mirrorLocal(key, dataConTimestamp);
+    if (!_kvExpected[key]) _kvExpected[key]=[_kvBases[key] ?? null];
     _pendingKV[key] = dataSnapshot;
     _persistPendingKV();
 
@@ -968,6 +1031,7 @@ async function _loadFromTable(key) {
             _lastRelationalLoadStatus[key] = 'error';
             return null;
         }
+        _rememberRowBases(cfg.table, data);
         if (cfg.min > 0 && data.length < cfg.min) {
             _lastRelationalLoadStatus[key] = 'empty';
             return key === 'categories' ? null : [];
@@ -992,6 +1056,7 @@ async function _loadMoreFromTable(key, offset, pageSize) {
         query = query.range(offset, offset + pageSize - 1);
         const { data, error } = await _withTimeout(query, 10000);
         if (error || !data) return [];
+        _rememberRowBases(cfg.table, data);
         return data.map(cfg.map);
     } catch(e: any) {
         console.warn(`[DB] _loadMoreFromTable(${key}) failed:`, e?.message);
@@ -1048,6 +1113,8 @@ async function sbLoad(key, def) {
         if (!error && data) {
             try {
                 const parsed = JSON.parse(data.value);
+                _kvBases[key]=data.value;
+                _persistPendingKV();
                 return parsed;
             } catch(e: any) { console.warn('Error parseando dato Supabase:', e); }
         }

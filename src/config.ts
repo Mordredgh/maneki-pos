@@ -610,6 +610,11 @@ function _inyectarAnticiposEnSalesHistory() {
 }
 
 async function initApp() {
+    if ((window as any)._posTabReady && !await (window as any)._posTabReady) return;
+    if ((window as any)._posDBReady) {
+        await (window as any)._posDBReady;
+        if (!window._dbReady) return;
+    }
     // Inyectar skeleton screens mientras carga la data inicial
     ['inventoryTable','pedidosTable','clientsTable'].forEach(id => {
         const tb = document.getElementById(id);

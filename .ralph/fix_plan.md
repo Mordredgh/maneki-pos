@@ -23,8 +23,8 @@
 - [x] Auditar dependencias, despliegue, interfaz y seguridad; limitaciones en AUDITORIA-2026-09-26.md.
 - [x] Ejecutar build completo (108 tests), build:check y revisar diff final.
 - [x] Documentar resultados, limitaciones y memoria Obsidian; actualizar grafo AST.
-- [ ] Cerrar lectura anonima de datos privados con Auth/roles y politicas compatibles. <!-- BLOQUEADO: faltan usuarios autorizados y acceso administrativo; consulta enviada al usuario. -->
-- [ ] Aplicar migracion aditiva incomes.method y verificar persistencia de metodo. <!-- BLOQUEADO: SQL preparado; falta acceso administrativo Supabase. -->
+- [ ] Cerrar lectura anonima de datos privados con Auth/roles y politicas compatibles. <!-- PARCIAL: 19 tablas protegidas y login validado; store espera decision sobre bot anonimo. -->
+- [x] Aplicar incomes.method; SQL real con RLS y ROLLBACK verificado.
 - [ ] Validar transacciones reales en staging e impresion fisica. <!-- BLOQUEADO: sin staging ni impresora conectada; produccion migrada a Cloudflare, contenedor ya no forma parte del despliegue. -->
 
 ## Fase 1 — Críticos (integridad de datos)
@@ -94,3 +94,13 @@
 - [x] Publicar y validar HTTP 401/200, assets y SW maneki-e4be814737 en dominio original.
 - [ ] Prueba fisica de impresion/PWA y operaciones contra staging real. <!-- BLOQUEADO: sin equipo fisico/staging; IAB bloquea Basic Auth. -->
 - [x] Preparar cambios verificados para commit y push en github/fresh-start.
+
+## Seguridad y concurrencia 2026-09-26
+- [x] Login administrador probado por propietario y datos cargados tras RLS.
+- [x] Aplicar incomes.method y comprobar bajo ROLE authenticated con ROLLBACK.
+- [x] Corregir autoasignacion/recursion de user_roles; guardar 19 tablas privadas con RLS.
+- [x] Instalar RPC optimistas, verificar conflictos y reenvios en SQL real sin datos QA persistentes.
+- [x] Bloquear segunda pestaña; comprobar arranque offline; corregir indicador y ticket.
+- [x] Publicar 1742889c, SW maneki-1ed0b2f342; 140 pruebas y build:check correctos.
+- [ ] Aplicar store RLS cuando propietario resuelva corte del bot anonimo; sigue exposicion residual.
+- [ ] Impresion e instalacion PWA fisicas; falta equipo/modelo de impresora.
