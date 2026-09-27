@@ -121,7 +121,7 @@ function renderEquiposGrid() {
             <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
             <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
             <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
-            <button onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#FFD166;">+ Agregar equipo</button>
+            <button onclick="openEquipoModal()" class="btn-primary mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#FFD166;">+ Agregar equipo</button>
         </div>`;
         return;
     }

@@ -155,3 +155,12 @@
 - [x] Mostrar entregas vencidas y enlaces directos a pedidos, cobros e inventario.
 - [x] Actualizar alertas ante cambios de estado, saldo o stock sin variar conteos.
 - [x] Probar 170 casos, tipos, lint y flujo visual en staging; publicar y verificar HTTP/SW.
+
+## Uniformidad visual de Inventario y Balance 2026-09-27
+
+- [x] Unificar tamaño, color, estados y foco de botones de Inventario y Balance.
+- [x] Etiquetar acciones de Balance y controles solo icono de Inventario.
+- [x] Evitar que la columna Acciones se pierda al desplazar la tabla; adaptar barra de sección y acciones a móvil.
+- [x] Comprobar visualmente escritorio/móvil, publicar y verificar dominio/SW.
+
+- [x] Extender controles compartidos a Pedidos, Clientes, Categorias, Cotizaciones, Reportes y Equipos; corregir contraste amarillo y etiquetas de iconos.

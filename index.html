@@ -699,7 +699,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                                         <div class="flex gap-2">
                                             <input type="text" id="envioDestinoDireccion" placeholder="Escribe colonia, calle o dirección..."
                                                 class="flex-1 px-4 py-3 border border-gray-200 rounded-xl outline-none text-sm focus:ring-2 focus:ring-amber-300">
-                                            <button type="button" data-action="buscarDestinoCotizador" class="px-4 py-3 rounded-xl text-white text-sm font-semibold flex-shrink-0" style="background:#FFD166" aria-label="Buscar dirección">
+                                            <button type="button" data-action="buscarDestinoCotizador" class="btn-primary px-4 py-3 rounded-xl text-white text-sm font-semibold flex-shrink-0" style="background:#FFD166" aria-label="Buscar dirección">
                                                 <i class="fas fa-search" aria-hidden="true"></i>
                                             </button>
                                         </div>
@@ -747,7 +747,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="mk-card overflow-hidden" style="min-height:80px;">
                             <div class="p-4 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-map-marker-alt" style="margin-right:6px;color:#8a6510;"></i>Mapa de cobertura</h3>
-                                <button type="button" data-action="abrirConfigAnillos" class="text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#FFD166">
+                                <button type="button" data-action="abrirConfigAnillos" class="btn-primary text-xs px-3 py-1.5 rounded-lg text-white font-semibold" style="background:#FFD166">
                                     <i class="fas fa-edit mr-1"></i> Editar anillos
                                 </button>
                             </div>
@@ -896,9 +896,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <i class="fas fa-cash-register mk-tb-ico" style="color:#10B981;"></i> <span class="hidden sm:inline">Corte de caja</span>
                     </button>
                     <div class="flex items-center gap-1 bg-white rounded-xl border border-gray-200 px-1 py-1">
-                        <button type="button" data-action="cambiarMesBalance" data-arg="-1" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">‹</button>
+                        <button type="button" data-action="cambiarMesBalance" data-arg="-1" class="pos-balance-month-btn" aria-label="Mes anterior">‹</button>
                         <span id="balanceMesLabel" class="text-sm font-semibold text-gray-700 min-w-28 text-center px-2"></span>
-                        <button type="button" data-action="cambiarMesBalance" data-arg="1" class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center text-sm">›</button>
+                        <button type="button" data-action="cambiarMesBalance" data-arg="1" class="pos-balance-month-btn" aria-label="Mes siguiente">›</button>
                     </div>
                 </div>
                 </div>
@@ -945,7 +945,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="mk-card p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Ingresos</h3>
-                            <button type="button" data-action="openIncomeModal" class="w-8 h-8 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" data-action="openIncomeModal" class="pos-balance-action"><i class="fas fa-plus" aria-hidden="true"></i> Añadir ingreso</button>
                         </div>
                         <input type="text" id="buscarIngresos" placeholder="Buscar ingreso..." data-oninput="_mkDebounceInc"
                             class="w-full mb-3 px-3 py-2 bg-gray-50 border-0 rounded-lg text-sm outline-none focus:ring-2 focus:ring-amber-200">
@@ -956,8 +956,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Egresos</h3>
                             <div class="flex gap-1.5">
-                                <button type="button" data-action="toggleRecurrentesPanel" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center text-sm transition-colors" title="Recurrentes">↺</button>
-                                <button type="button" data-action="openExpenseModal" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center text-lg transition-colors">+</button>
+                                <button type="button" data-action="toggleRecurrentesPanel" class="pos-balance-action pos-balance-action--quiet" title="Gastos recurrentes"><i class="fas fa-sync" aria-hidden="true"></i> Recurrentes</button>
+                                <button type="button" data-action="openExpenseModal" class="pos-balance-action"><i class="fas fa-plus" aria-hidden="true"></i> Añadir egreso</button>
                             </div>
                         </div>
                         <input type="text" id="buscarEgresos" placeholder="Buscar egreso..." data-oninput="_mkDebounceExp"
@@ -976,7 +976,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="mk-card p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Cuentas por Cobrar</h3>
-                            <button type="button" data-action="openReceivableModal" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" data-action="openReceivableModal" class="pos-balance-action"><i class="fas fa-plus" aria-hidden="true"></i> Nueva cuenta</button>
                         </div>
 
                         <div id="cxcResumen" class="flex gap-2 mb-3 flex-wrap"></div>
@@ -997,7 +997,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <div class="mk-card p-5">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-base font-bold text-gray-800">Cuentas por Pagar</h3>
-                            <button type="button" data-action="openPayableModal" class="w-8 h-8 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center text-lg transition-colors">+</button>
+                            <button type="button" data-action="openPayableModal" class="pos-balance-action"><i class="fas fa-plus" aria-hidden="true"></i> Nueva cuenta</button>
                         </div>
                         <div class="space-y-2 max-h-80 overflow-y-auto" id="payablesList"></div>
                     </div>
@@ -1478,7 +1478,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <div class="flex items-center gap-2 ml-auto">
                     <input type="number" id="roiPorcentajeGlobal" min="1" max="100" value="10" class="w-20 border-2 border-gray-200 rounded-xl px-3 py-2 text-center font-bold text-lg focus:border-amber-400 focus:outline-none" data-change="saveRoiConfig">
                     <span class="font-bold text-gray-600 text-lg">%</span>
-                    <button type="button" data-action="saveRoiConfig" class="ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#FFD166;">Guardar</button>
+                    <button type="button" data-action="saveRoiConfig" class="btn-primary ml-2 px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background:#FFD166;">Guardar</button>
                 </div>
             </div>
 
@@ -1487,7 +1487,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
                     <p class="text-lg font-medium">Aún no tienes equipos registrados</p>
                     <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
-                    <button type="button" data-action="openEquipoModal" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#FFD166;">+ Agregar equipo</button>
+                    <button type="button" data-action="openEquipoModal" class="btn-primary mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#FFD166;">+ Agregar equipo</button>
                 </div>
             </div>
         </div>
@@ -2342,7 +2342,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <div class="flex gap-3 mt-6">
             <button type="button" data-action="closeEditCategoryModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" data-action="saveEditCategory" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Guardar cambios</button>
+            <button type="button" data-action="saveEditCategory" class="btn-primary flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Guardar cambios</button>
         </div>
     </div>
 </div>
@@ -3204,7 +3204,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <div class="flex gap-3 mt-6">
             <button type="button" data-action="closeEquipoModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" data-action="saveEquipo" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Guardar</button>
+            <button type="button" data-action="saveEquipo" class="btn-primary flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Guardar</button>
         </div>
     </div>
 </div>
@@ -3240,7 +3240,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div class="flex gap-3">
             <button type="button" data-action="cerrarRoiEquiposModal" class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Omitir</button>
-            <button type="button" data-action="confirmarRoiEquipos" class="flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Registrar ROI</button>
+            <button type="button" data-action="confirmarRoiEquipos" class="btn-primary flex-1 px-4 py-3 rounded-xl text-white font-semibold" style="background:#FFD166;">Registrar ROI</button>
         </div>
     </div>
 </div>
@@ -3272,7 +3272,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <div class="flex gap-3 mt-6">
             <button type="button" data-action="cerrarRoiManualModal" class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="button" data-action="confirmarRoiManual" class="flex-1 px-4 py-2.5 rounded-xl text-white font-semibold" style="background:#FFD166;">Registrar</button>
+            <button type="button" data-action="confirmarRoiManual" class="btn-primary flex-1 px-4 py-2.5 rounded-xl text-white font-semibold" style="background:#FFD166;">Registrar</button>
         </div>
     </div>
 </div>
@@ -3293,7 +3293,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     <input type="text" id="qrManualInput" placeholder="SKU, código o nombre..."
                         class="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2"
                         data-onkeydown="_qrManualBuscar">
-                    <button type="button" data-action="_qrManualBuscar" class="px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#FFD166">Buscar</button>
+                    <button type="button" data-action="_qrManualBuscar" class="btn-primary px-4 py-2 rounded-xl text-sm font-semibold text-white" style="background:#FFD166">Buscar</button>
                 </div>
             </div>
         </div>

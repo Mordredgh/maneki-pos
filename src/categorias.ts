@@ -33,10 +33,10 @@
                         <div class="flex items-start justify-between mb-4">
                             <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style="background: ${escColor}20">${iconHtml}</div>
                             <div class="flex gap-1">
-                                <button data-catid="${escCatId}" data-cataction="edit" class="cat-action-btn p-1.5 rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-50 transition-colors" title="Editar categoría">
+                                <button data-catid="${escCatId}" data-cataction="edit" class="cat-action-btn" title="Editar categoría" aria-label="Editar categoría">
                                     <i class="fas fa-edit text-sm"></i>
                                 </button>
-                                <button data-catid="${escCatId}" data-cataction="delete" class="cat-action-btn p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Eliminar categoría">
+                                <button data-catid="${escCatId}" data-cataction="delete" class="cat-action-btn" title="Eliminar categoría" aria-label="Eliminar categoría">
                                     <i class="fas fa-trash text-sm"></i>
                                 </button>
                             </div>

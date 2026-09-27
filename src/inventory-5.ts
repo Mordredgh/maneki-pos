@@ -500,19 +500,18 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-sm inv-col-hidden-prov">${_esc(product.proveedor||'—')}</td>
             <td class="px-4 py-3 font-semibold" id="stock-cell-${pid}">
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
-                    <button type="button" data-action="editarStockInline" aria-label="Ajustar existencias" data-arg="${pid}" title="Ajustar existencias"
-                        style="cursor:pointer;padding:2px 10px;border-radius:8px;background:#f3f4f6;border:1px dashed #d1d5db;font-size:.95rem;">
+                    <button type="button" class="pos-inv-edit pos-inv-edit--stock" data-action="editarStockInline" aria-label="Ajustar existencias" data-arg="${pid}" title="Ajustar existencias">
                         ${stockEf} <span style="font-size:10px;color:#9ca3af;font-weight:400;">${_esc(product.unidad||'pza')}</span>
                     </button>
                 </div>
             </td>
             <td class="px-4 py-3">${badge}</td>
             <td class="px-2 py-3">
-                <div style="display:flex;gap:3px;align-items:center;">
-                    <button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;"><i class="fas fa-pen"></i></button>
-                    <button type="button" data-action="ajustarStock" data-arg="${pid}" title="Ajustar stock" style="width:30px;height:30px;border-radius:7px;border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;">📦</button>
+                <div class="pos-inv-actions">
+                    <button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" aria-label="Editar" class="pos-inv-icon"><i class="fas fa-pen"></i></button>
+                    <button type="button" data-action="ajustarStock" data-arg="${pid}" title="Ajustar stock" aria-label="Ajustar stock" class="pos-inv-icon">📦</button>
                     <div style="position:relative;display:inline-block;">
-                        <button type="button" data-action="_invMpMenu" data-arg="${pid}" data-pass-el="before" title="Más acciones" style="width:30px;height:30px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;font-weight:700;color:#6b7280;"><i class="fas fa-ellipsis"></i></button>
+                        <button type="button" data-action="_invMpMenu" data-arg="${pid}" data-pass-el="before" title="Más acciones" aria-label="Más acciones" class="pos-inv-icon"><i class="fas fa-ellipsis"></i></button>
                     </div>
                 </div>
             </td>
@@ -542,11 +541,11 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-right" style="font-size:.95rem;font-weight:700;color:#7d4fa3;">$${Number(product.cost||0).toFixed(2)}</td>
             <td class="px-4 py-3"><span style="font-size:11px;background:#f6ecff;color:#7d4fa3;padding:3px 10px;border-radius:99px;font-weight:700;">Sin stock</span></td>
             <td class="px-2 py-3">
-                <div style="display:flex;gap:3px;">
+                <div class="pos-inv-actions">
                     <button data-action="openServicioModal" data-arg="${pid}" title="Editar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>
+                        aria-label="Editar" class="pos-inv-icon"><i class="fas fa-pen"></i></button>
                     <button data-action="deleteProduct" data-arg="${pid}" title="Eliminar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
+                        aria-label="Eliminar" class="pos-inv-icon"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -655,30 +654,30 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
-            <td class="px-4 py-3 text-right text-gray-800 font-semibold" style="font-size:.95rem;"><button type="button" class="pos-inv-edit" data-action="invInlineEditPrice" data-arg="${pid}" aria-label="Editar precio">$${Number(product.price||0).toFixed(2)} · Editar</button></td>
-            <td class="px-4 py-3">${stockCell}<button type="button" class="pos-inv-edit" data-action="invInlineEditStock" data-arg="${pid}">Ajustar stock</button></td>
+            <td class="px-4 py-3 text-right text-gray-800 font-semibold" style="font-size:.95rem;"><button type="button" class="pos-inv-edit" data-action="invInlineEditPrice" data-arg="${pid}" aria-label="Editar precio">$${Number(product.price||0).toFixed(2)} <span>Editar</span></button></td>
+            <td class="px-4 py-3">${stockCell}<button type="button" class="pos-inv-edit pos-inv-edit--stock" data-action="invInlineEditStock" data-arg="${pid}">Ajustar stock</button></td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
-                <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                <div class="pos-inv-actions">
                     ${product.tipo === 'pack'
                         ? `<button type="button" data-action="openPackModal" data-arg="${pid}" title="Editar Pack" aria-label="Editar pack"
-                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>`
+                            class="pos-inv-icon"><i class="fas fa-pen"></i></button>`
                         : `<button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" aria-label="Editar producto"
-                            style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>`
+                            class="pos-inv-icon"><i class="fas fa-pen"></i></button>`
                     }
                     <button type="button" data-action="duplicarProducto" data-arg="${pid}" title="Duplicar" aria-label="Duplicar producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>
+                        class="pos-inv-icon"><i class="fas fa-copy"></i></button>
                     ${product.tipo !== 'pack' ? `<button type="button" data-action="cambiarTipoProducto" data-arg="${pid}" title="Convertir a Materia Prima" aria-label="Convertir tipo de producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;">→🧪</button>` : ''}
+                        class="pos-inv-icon">→🧪</button>` : ''}
                     ${product.movimientos && product.movimientos.length ? `<button type="button" data-action="verMovimientosProducto" data-arg="${pid}" title="Ver movimientos de stock (${product.movimientos.length})" aria-label="Ver movimientos de stock"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(16,185,129,0.25);background:rgba(16,185,129,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>` : ''}
+                        class="pos-inv-icon"><i class="fas fa-copy"></i></button>` : ''}
                     <button type="button" data-action="abrirMovimientoProducto" data-arg="${pid}" title="Gráfica de movimientos últimos 90 días" aria-label="Ver gráfica de movimientos"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(99,102,241,0.25);background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-chart-line"></i></button>
+                        class="pos-inv-icon"><i class="fas fa-chart-line"></i></button>
                     <button type="button" data-action="archivarProducto" data-arg="${pid}" title="${product.activo===false?'Desarchivar producto (activar)':'Archivar producto (ocultar)'}" aria-label="Archivar/Desarchivar"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(107,114,128,0.25);background:rgba(107,114,128,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;">${product.activo===false?'<i class="fas fa-lock-open"></i>':'<i class="fas fa-box-archive"></i>'}</button>
+                        class="pos-inv-icon">${product.activo===false?'<i class="fas fa-lock-open"></i>':'<i class="fas fa-box-archive"></i>'}</button>
                     <button type="button" data-action="deleteProduct" data-arg="${pid}" title="Eliminar" aria-label="Eliminar producto"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
+                        class="pos-inv-icon"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -769,13 +768,13 @@ function renderInventoryTable() {
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
-                <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                <div class="pos-inv-actions">
                     <button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" aria-label="Editar producto con precio por cantidad"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>
+                        class="pos-inv-icon"><i class="fas fa-pen"></i></button>
                     <button type="button" data-action="duplicarProducto" data-arg="${pid}" title="Duplicar" aria-label="Duplicar producto con precio por cantidad"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>
+                        class="pos-inv-icon"><i class="fas fa-copy"></i></button>
                     <button type="button" data-action="deleteProduct" data-arg="${pid}" title="Eliminar" aria-label="Eliminar producto con precio por cantidad"
-                        style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
+                        class="pos-inv-icon"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -843,16 +842,15 @@ function renderInventoryTable() {
         return `
         <div style="margin-bottom:32px;border-radius:16px;overflow:hidden;border:1.5px solid ${titleColor}33;box-shadow:0 2px 12px ${titleColor}11;">
             <!-- Header de sección (clicable para colapsar) -->
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:${titleBg};border-bottom:${_collapsed?'none':'1.5px solid '+titleColor+'33'};cursor:pointer;" data-action="_mkInvToggleCollapse" data-arg="${id}">
-                <div style="display:flex;align-items:center;gap:10px;">
+            <div class="pos-inv-section-head" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:${titleBg};border-bottom:${_collapsed?'none':'1.5px solid '+titleColor+'33'};cursor:pointer;" data-action="_mkInvToggleCollapse" data-arg="${id}">
+                <div class="pos-inv-section-title" style="display:flex;align-items:center;gap:10px;">
                     <span style="font-size:.85rem;color:${titleColor};transition:transform .2s;">${_collapsed?'▶':'▼'}</span>
                     <span style="font-size:1.1rem;font-weight:800;color:${titleColor};">${title}</span>
                     <span style="background:${titleColor};color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;">${total}</span>
                 </div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <div class="pos-inv-section-tools" style="display:flex;gap:6px;flex-wrap:wrap;">
                     ${extraBtnHTML || ''}
-                    <button type="button" data-action="_mkInvAddBtnAction" data-arg="${id}" onclick="_mkInvAddBtnAction('${id}')" class="mk-btn-primary"
-                        style="padding:7px 16px;border:none;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;">
+                    <button type="button" data-action="_mkInvAddBtnAction" data-arg="${id}" onclick="_mkInvAddBtnAction('${id}')" class="mk-btn-primary">
                         ${btnLabel}
                     </button>
                 </div>
@@ -921,7 +919,7 @@ function renderInventoryTable() {
         {
             id: 'pt',
             title: '📦 Productos Terminados',
-            titleColor: '#FFD166',
+            titleColor: '#9A6500',
             titleBg: 'linear-gradient(135deg,#fffbeb,#fef9f0)',
             btnLabel: '+ Producto',
             btnOnclick: 'openAddProductModal()',
@@ -970,7 +968,7 @@ function renderInventoryTable() {
         {
             id: 'mp',
             title: '🏭 Materias Primas',
-            titleColor: '#9669c4',
+            titleColor: '#76469c',
             titleBg: 'linear-gradient(135deg,#faf5ff,#f5f3ff)',
             btnLabel: '+ Materia Prima',
             btnOnclick: 'injectMpModal();openAddMateriaPrimaModal()',

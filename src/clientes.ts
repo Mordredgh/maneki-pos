@@ -589,13 +589,13 @@ ${!client.phone && !client.facebook ? '—' : ''}
                     </td>
                     <td class="px-6 py-4">
     <div class="flex items-center gap-3">
-        <button onclick="editClient('${_escAttrLocal(client.id)}')" class="text-yellow-500 hover:text-yellow-700" title="Editar">
+        <button onclick="editClient('${_escAttrLocal(client.id)}')" class="btn-icon-sm" title="Editar" aria-label="Editar cliente">
             <i class="fas fa-edit"></i>
         </button>
-        <button onclick="openClientHistory('${_escAttrLocal(client.id)}')" class="text-blue-500 hover:text-blue-700" title="Ver historial">
+        <button onclick="openClientHistory('${_escAttrLocal(client.id)}')" class="btn-icon-sm" title="Ver historial" aria-label="Ver historial del cliente">
             <i class="fas fa-history"></i>
         </button>
-        <button onclick="deleteClient('${_escAttrLocal(client.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+        <button onclick="deleteClient('${_escAttrLocal(client.id)}')" class="btn-icon-sm danger" title="Eliminar" aria-label="Eliminar cliente">
             <i class="fas fa-trash"></i>
         </button>
     </div>
@@ -836,13 +836,13 @@ ${!client.phone && !client.facebook ? '—' : ''}
                         </td>
                         <td class="px-6 py-4">
     <div class="flex items-center gap-3">
-        <button onclick="editClient('${_escAttrLocal(client.id)}')" class="text-yellow-500 hover:text-yellow-700" title="Editar">
+        <button onclick="editClient('${_escAttrLocal(client.id)}')" class="btn-icon-sm" title="Editar" aria-label="Editar cliente">
             <i class="fas fa-edit"></i>
         </button>
-        <button onclick="openClientHistory('${_escAttrLocal(client.id)}')" class="text-blue-500 hover:text-blue-700" title="Ver historial">
+        <button onclick="openClientHistory('${_escAttrLocal(client.id)}')" class="btn-icon-sm" title="Ver historial" aria-label="Ver historial del cliente">
             <i class="fas fa-history"></i>
         </button>
-        <button onclick="deleteClient('${_escAttrLocal(client.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+        <button onclick="deleteClient('${_escAttrLocal(client.id)}')" class="btn-icon-sm danger" title="Eliminar" aria-label="Eliminar cliente">
             <i class="fas fa-trash"></i>
         </button>
     </div>

@@ -5,7 +5,7 @@
             <i class="fas fa-tools text-5xl mb-4 block opacity-30"></i>
             <p class="text-lg font-medium">A\xFAn no tienes equipos registrados</p>
             <p class="text-sm mt-1">Agrega tu primer equipo para empezar a calcular el ROI</p>
-            <button onclick="openEquipoModal()" class="mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#FFD166;">+ Agregar equipo</button>
+            <button onclick="openEquipoModal()" class="btn-primary mt-4 px-6 py-2 rounded-xl text-white font-semibold" style="background:#FFD166;">+ Agregar equipo</button>
         </div>`;return}t.innerHTML=equipos.map(e=>{e.historialPagos||(e.historialPagos=[]);const o=e.costoOriginal>0?Math.min(100,e.recuperado/e.costoOriginal*100):0,n=e.metaReemplazo>0?Math.min(100,e.recuperado/e.metaReemplazo*100):0,i=Math.max(0,e.costoOriginal-e.recuperado),a=Math.max(0,e.metaReemplazo-e.recuperado),r=o>=100?"#10B981":"#FFD166",l=n>=100?"#10B981":"#9669c4",p=_fechaHoy().substring(0,7),g=(e.historialPagos||[]).filter(c=>c.fecha&&c.fecha.startsWith(p)).reduce((c,d)=>c+Number(d.monto||0),0),u=Number(e.metaMensual)||0;let f="";if(u>0){const c=!u||isNaN(u)?0:Math.min(100,g/u*100),d=isNaN(c)?0:parseFloat(c.toFixed(1)),m=d<50?"#ef4444":d<80?"#f59e0b":"#10b981";f=`
             <!-- MEJ-4: Meta mensual -->
             <div class="mb-3" style="padding-top:8px;border-top:1px solid #f3f4f6;">
@@ -17,7 +17,7 @@
                     <div class="h-full rounded-full transition-all duration-500" style="width:${d}%;background:${m};"></div>
                 </div>
                 <p class="text-xs mt-1" style="color:${m};">Meta: $${u.toLocaleString("es-MX")} | Recuperado: $${g.toLocaleString("es-MX")} (${d.toFixed(0)}%)</p>
-            </div>`}const x=[...e.historialPagos||[]].reverse().slice(0,5),y=x.length===0?'<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px 0;">Sin pagos registrados a\xFAn</p>':x.map(c=>`
+            </div>`}const y=[...e.historialPagos||[]].reverse().slice(0,5),x=y.length===0?'<p style="font-size:.72rem;color:#9ca3af;text-align:center;padding:8px 0;">Sin pagos registrados a\xFAn</p>':y.map(c=>`
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f9fafb;font-size:.72rem;">
                     <div>
                         <span style="color:#374151;font-weight:600;">$${Number(c.monto||0).toLocaleString("es-MX",{minimumFractionDigits:2})}</span>
@@ -74,7 +74,7 @@
                         style="font-size:.72rem;color:#6b7280;background:none;border:1px solid #e5e7eb;border-radius:8px;padding:3px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;">
                     <i class="fas fa-list"></i> Ver pagos <span id="pagosCount_${e.id}" style="background:#f3f4f6;border-radius:99px;padding:1px 6px;">${e.historialPagos.length}</span>
                 </button>
-                <div id="pagosHistorial_${e.id}" style="display:none;margin-top:8px;">${y}</div>
+                <div id="pagosHistorial_${e.id}" style="display:none;margin-top:8px;">${x}</div>
             </div>
         </div>`}).join("")}}function _togglePagosEquipo(t){const e=document.getElementById("pagosHistorial_"+t);e&&(e.style.display=e.style.display==="none"?"block":"none")}window._togglePagosEquipo=_togglePagosEquipo;function _registrarPagoEquipo(t,e,o,n=null,i=null){const a=equipos.findIndex(l=>l.id===t);if(a===-1)return;equipos[a].historialPagos||(equipos[a].historialPagos=[]);const s=_fechaHoy(),r={id:Date.now(),fecha:s,monto:Number(e)||0,concepto:o||"",tipo:"pago"};n&&(r.pedidoId=n),i&&(r.folio=i),equipos[a].historialPagos.push(r)}window._registrarPagoEquipo=_registrarPagoEquipo;function renderRoiHistorial(){const t=document.getElementById("roiHistorialBody");if(!t)return;if(roiHistorial.length===0){t.innerHTML='<tr><td colspan="5"><div class="mk-empty" style="padding:36px 24px;"><div class="mk-empty-icon">\u2696\uFE0F</div><p class="mk-empty-title">Sin movimientos a\xFAn</p><p class="mk-empty-sub">Registra ingresos o gastos para ver tu balance aqu\xED.</p></div></td></tr>';return}const e=[...roiHistorial].reverse();t.innerHTML=e.map(o=>{const n=o.equiposIds.map(s=>{const r=equipos.find(l=>l.id===s);return r?`${_esc(r.emoji||"\u{1F527}")} ${_esc(r.nombre)}`:"(equipo eliminado)"}).join(", "),i=o.fecha?`<div class="text-xs text-gray-400">${o.fecha}</div>`:"";return`<tr class="border-b border-gray-50 hover:bg-gray-50">
             <td class="px-4 py-3">${o.folio==="__manual__"?`<span class="text-xs text-gray-500 italic">${_esc(o.concepto||"Manual")}</span>`:`<span class="font-semibold text-amber-700">${_esc(o.folio||"\u2014")}</span>`}${i}</td>

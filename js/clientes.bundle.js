@@ -67,12 +67,12 @@
           class="mt-3 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors">
     + Agregar primer cliente
   </button>
-</td></tr>`,updateClientStats();return}if(s.length===0){i.innerHTML='<tr><td colspan="7"><p style="text-align:center;padding:32px;color:#9ca3af;font-size:.9rem">Sin clientes con ese filtro</p></td></tr>',updateClientStats();return}const l=i.closest("table")?.querySelector("thead tr");if(l){const a=[{key:"name",label:"Cliente"},{key:null,label:"Contacto"},{key:null,label:"Email"},{key:"totalPurchases",label:"Total Compras"},{key:"lastPurchase",label:"\xDAltima Compra"},{key:null,label:"Tipo"},{key:null,label:"Acciones"}];l.innerHTML=a.map(d=>{const u=d.key==="totalPurchases"?"text-right":"text-left";return d.key?`<th class="px-6 py-3 ${u} text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-amber-600 select-none" onclick="sortClientes('${_escAttrLocal(d.key)}')">${d.label} ${_sortArrow(d.key)}</th>`:`<th class="px-6 py-3 ${u} text-xs font-semibold text-gray-500 uppercase tracking-wider">${d.label}</th>`}).join("")}function e(a){const d=(a||"").trim().toLowerCase().charCodeAt(0);return d>=97&&d<=101?"mk-avatar-gold":d>=102&&d<=108?"mk-avatar-lila":d>=109&&d<=114?"mk-avatar-peach":"mk-avatar-green"}function c(a){const d=(a||"").trim().split(" ");return((d[0]||"")[0]||"")+(d[1]?d[1][0]:"")}const m=_clientesSortCol,r=_clientesSortDir==="asc"?1:-1,p=[...s].sort((a,d)=>{let u,g;return m==="totalPurchases"?(u=Number(a.totalPurchases||0),g=Number(d.totalPurchases||0),r*(u-g)):m==="lastPurchase"?(u=a.lastPurchase||"",g=d.lastPurchase||"",r*u.localeCompare(g)):(u=(a.name||"").toLowerCase(),g=(d.name||"").toLowerCase(),r*u.localeCompare(g))}),f={};(window.clientes||clients||[]).forEach(a=>{const d=a.id||a.nombre||a.name||"";f[d]=_calcClienteStats(a.id||a.nombre||a.name||"")}),i.innerHTML=p.map((a,d)=>{const u=a.isVIP||a.type==="vip",g=c(a.name||"?").toUpperCase()||(a.name||"?").trim().charAt(0).toUpperCase(),y=e(a.name),h=(window.notas||[]).filter(x=>x.cliente&&x.cliente.toLowerCase()===(a.name||"").toLowerCase()).sort((x,C)=>(C.fechaCreacion||C.fecha||"").localeCompare(x.fechaCreacion||x.fecha||"")),k=h.length>0?`<div class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]" title="${_escAttrLocal(h[0].texto)}">\u{1F4DD} ${_esc((h[0].texto||"").substring(0,40))}${(h[0].texto||"").length>40?"\u2026":""}</div>`:"",$=a.notas?`<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttrLocal(a.notas)}">\u{1F4DD} ${_esc(a.notas.substring(0,60))}${a.notas.length>60?"\u2026":""}</div>`:"",w=a.id||a.nombre||a.name||"",b=f[w]||_calcClienteStats(w),_=`<div style="font-size:.7rem;color:#6b7280;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+</td></tr>`,updateClientStats();return}if(s.length===0){i.innerHTML='<tr><td colspan="7"><p style="text-align:center;padding:32px;color:#9ca3af;font-size:.9rem">Sin clientes con ese filtro</p></td></tr>',updateClientStats();return}const l=i.closest("table")?.querySelector("thead tr");if(l){const a=[{key:"name",label:"Cliente"},{key:null,label:"Contacto"},{key:null,label:"Email"},{key:"totalPurchases",label:"Total Compras"},{key:"lastPurchase",label:"\xDAltima Compra"},{key:null,label:"Tipo"},{key:null,label:"Acciones"}];l.innerHTML=a.map(d=>{const u=d.key==="totalPurchases"?"text-right":"text-left";return d.key?`<th class="px-6 py-3 ${u} text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-amber-600 select-none" onclick="sortClientes('${_escAttrLocal(d.key)}')">${d.label} ${_sortArrow(d.key)}</th>`:`<th class="px-6 py-3 ${u} text-xs font-semibold text-gray-500 uppercase tracking-wider">${d.label}</th>`}).join("")}function e(a){const d=(a||"").trim().toLowerCase().charCodeAt(0);return d>=97&&d<=101?"mk-avatar-gold":d>=102&&d<=108?"mk-avatar-lila":d>=109&&d<=114?"mk-avatar-peach":"mk-avatar-green"}function c(a){const d=(a||"").trim().split(" ");return((d[0]||"")[0]||"")+(d[1]?d[1][0]:"")}const m=_clientesSortCol,r=_clientesSortDir==="asc"?1:-1,p=[...s].sort((a,d)=>{let u,g;return m==="totalPurchases"?(u=Number(a.totalPurchases||0),g=Number(d.totalPurchases||0),r*(u-g)):m==="lastPurchase"?(u=a.lastPurchase||"",g=d.lastPurchase||"",r*u.localeCompare(g)):(u=(a.name||"").toLowerCase(),g=(d.name||"").toLowerCase(),r*u.localeCompare(g))}),f={};(window.clientes||clients||[]).forEach(a=>{const d=a.id||a.nombre||a.name||"";f[d]=_calcClienteStats(a.id||a.nombre||a.name||"")}),i.innerHTML=p.map((a,d)=>{const u=a.isVIP||a.type==="vip",g=c(a.name||"?").toUpperCase()||(a.name||"?").trim().charAt(0).toUpperCase(),y=e(a.name),h=(window.notas||[]).filter(x=>x.cliente&&x.cliente.toLowerCase()===(a.name||"").toLowerCase()).sort((x,C)=>(C.fechaCreacion||C.fecha||"").localeCompare(x.fechaCreacion||x.fecha||"")),k=h.length>0?`<div class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]" title="${_escAttrLocal(h[0].texto)}">\u{1F4DD} ${_esc((h[0].texto||"").substring(0,40))}${(h[0].texto||"").length>40?"\u2026":""}</div>`:"",$=a.notas?`<div style="font-size:.72rem;color:#6b7280;margin-top:2px" title="${_escAttrLocal(a.notas)}">\u{1F4DD} ${_esc(a.notas.substring(0,60))}${a.notas.length>60?"\u2026":""}</div>`:"",w=a.id||a.nombre||a.name||"",b=f[w]||_calcClienteStats(w),E=`<div style="font-size:.7rem;color:#6b7280;margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
                     <span title="Total pedidos">\u{1F4E6} ${b.totalPedidos}</span>
                     <span title="Total gastado">\u{1F4B0} $${b.totalGastado.toFixed(0)}</span>
                     <span title="Ticket promedio">\u{1F3AF} $${b.ticketPromedio.toFixed(0)}</span>
                     ${b.ultimoPedido?`<span title="\xDAltimo pedido">\u{1F550} ${b.ultimoPedido}</span>`:""}
-                </div>`,v=_tagActividad(a),E=`<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:.68rem;font-weight:700;${v.color}">${v.label}</span>`,S=a.phone?`<button onclick="_abrirWhatsApp('${_escAttrLocal(a.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer" title="Abrir WhatsApp">\u{1F4F1} WhatsApp</button>`:"";return`
+                </div>`,v=_tagActividad(a),_=`<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:.68rem;font-weight:700;${v.color}">${v.label}</span>`,S=a.phone?`<button onclick="_abrirWhatsApp('${_escAttrLocal(a.phone)}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#22c55e;color:#fff;border-radius:12px;font-size:.72rem;font-weight:600;border:none;cursor:pointer" title="Abrir WhatsApp">\u{1F4F1} WhatsApp</button>`:"";return`
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
@@ -82,11 +82,11 @@
                             <div>
                                 <div style="display:flex;align-items:center;gap:6px">
                                     <span class="font-semibold text-gray-800">${_esc(a.name)}</span>
-                                    ${E}
+                                    ${_}
                                 </div>
                                 ${k}
                                 ${$}
-                                ${_}
+                                ${E}
                             </div>
                         </div>
                     </td>
@@ -106,13 +106,13 @@ ${!a.phone&&!a.facebook?"\u2014":""}
                     </td>
                     <td class="px-6 py-4">
     <div class="flex items-center gap-3">
-        <button onclick="editClient('${_escAttrLocal(a.id)}')" class="text-yellow-500 hover:text-yellow-700" title="Editar">
+        <button onclick="editClient('${_escAttrLocal(a.id)}')" class="btn-icon-sm" title="Editar" aria-label="Editar cliente">
             <i class="fas fa-edit"></i>
         </button>
-        <button onclick="openClientHistory('${_escAttrLocal(a.id)}')" class="text-blue-500 hover:text-blue-700" title="Ver historial">
+        <button onclick="openClientHistory('${_escAttrLocal(a.id)}')" class="btn-icon-sm" title="Ver historial" aria-label="Ver historial del cliente">
             <i class="fas fa-history"></i>
         </button>
-        <button onclick="deleteClient('${_escAttrLocal(a.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+        <button onclick="deleteClient('${_escAttrLocal(a.id)}')" class="btn-icon-sm danger" title="Eliminar" aria-label="Eliminar cliente">
             <i class="fas fa-trash"></i>
         </button>
     </div>
@@ -152,13 +152,13 @@ ${!e.phone&&!e.facebook?"\u2014":""}
                         </td>
                         <td class="px-6 py-4">
     <div class="flex items-center gap-3">
-        <button onclick="editClient('${_escAttrLocal(e.id)}')" class="text-yellow-500 hover:text-yellow-700" title="Editar">
+        <button onclick="editClient('${_escAttrLocal(e.id)}')" class="btn-icon-sm" title="Editar" aria-label="Editar cliente">
             <i class="fas fa-edit"></i>
         </button>
-        <button onclick="openClientHistory('${_escAttrLocal(e.id)}')" class="text-blue-500 hover:text-blue-700" title="Ver historial">
+        <button onclick="openClientHistory('${_escAttrLocal(e.id)}')" class="btn-icon-sm" title="Ver historial" aria-label="Ver historial del cliente">
             <i class="fas fa-history"></i>
         </button>
-        <button onclick="deleteClient('${_escAttrLocal(e.id)}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+        <button onclick="deleteClient('${_escAttrLocal(e.id)}')" class="btn-icon-sm danger" title="Eliminar" aria-label="Eliminar cliente">
             <i class="fas fa-trash"></i>
         </button>
     </div>

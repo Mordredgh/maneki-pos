@@ -58,3 +58,8 @@ Historico 2026-09-26: https://d56ec9a7.bicho-capricho-pos.pages.dev, SW `maneki-
 2026-09-26: https://1742889c.bicho-capricho-pos.pages.dev, SW maneki-1ed0b2f342. 140 pruebas, 36 TS y build:check correctos. Login Supabase administrador ademas de Basic Auth. RLS parcial aplicada; store pendiente por compatibilidad del bot. Detalles vigentes en VALIDACION-2026-09-26.md.
 
 2026-09-26, cierre posterior: propietario confirma bot eliminado. RLS de store aplicada y probada; ya no queda pendiente de compatibilidad. Lectura de claves privadas y escritura anonima bloqueadas, administrador operativo.
+
+
+## Botones y acciones uniformes — 2026-09-27
+
+Publicado https://b41f5101.bicho-capricho-pos.pages.dev; SW `maneki-9be41d3892`. Jerarquia de botones compartida, contraste oscuro sobre amarillo, iconos de accion accesibles, Inventario con acciones visibles al desplazar tabla y cabeceras moviles; Balance con botones etiquetados y tarjetas. Revisadas secciones principales en staging con datos ficticios y vista de 390 px; apertura/cierre de ingreso sin guardar datos. 170 pruebas, typecheck, lint de iconos y build correctos. Dominio y deployment: 401 anonimo, 200 autorizado, CSS y SW 200 con hash verificado. Respaldo R2 sigue pendiente del token y programacion; este cambio es visual.
