@@ -149,7 +149,9 @@
 
 - [x] Preparar subida cifrada a R2 con descarga y verificacion remota.
 - [x] Probar que un archivo remoto alterado no se acepta como respaldo valido.
-- [ ] Activar R2 y programar respaldo: el propietario debe completar la suscripcion de Cloudflare y falta configurar credenciales locales. <!-- BLOQUEADO: alta financiera y credenciales -->
+- [x] Activar R2 y crear bucket privado bicho-pos-backups, clase Standard.
+- [x] Crear clave local y comprobar snapshot cifrado real de 24 tablas desde Supabase.
+- [ ] Crear token R2 limitado al bucket, comprobar primera subida/descarga y registrar tarea diaria. <!-- BLOQUEADO: confirmacion de token de acceso -->
 - [x] Mostrar entregas vencidas y enlaces directos a pedidos, cobros e inventario.
 - [x] Actualizar alertas ante cambios de estado, saldo o stock sin variar conteos.
 - [x] Probar 170 casos, tipos, lint y flujo visual en staging; publicar y verificar HTTP/SW.
