@@ -112,3 +112,15 @@
 - [x] Operaciones de pedido/inventario/cobro atomicas y reintento idempotente.
 - [x] Entorno separado con datos sinteticos y pruebas extremo a extremo.
 - [x] Validar, publicar y documentar.
+
+## Segunda etapa integral solicitada 2026-09-27
+- [ ] Activar respaldos externos automaticos: destino y credencial local por confirmar. <!-- BLOQUEADO: entrada del propietario; no hay servicio activo -->
+- [x] Preparar respaldo cifrado completo y ensayar restauracion en base aislada.
+- [x] Pruebas completas con autenticacion y permisos reales.
+- [x] Persistir solo filas modificadas, conservando conflictos y reintentos.
+- [x] Centralizar calculos de dinero, saldos, fechas y redondeos.
+- [x] Corte y conciliacion por metodo: esperado, contado y diferencia.
+- [x] Historial protegido con autor, motivo y valores anteriores/nuevos.
+- [x] Pedidos por pasos y resumen fijo; inventario con filtros/edicion clara.
+- [x] Consistencia visual, estados de error/vacio y operacion movil.
+- [x] Validar, publicar y registrar resultados/limites en Obsidian.

@@ -6219,6 +6219,16 @@ body.dark .mk-highlight {
 #bienvenida-section button:focus-visible,.pos-sync-dialog button:focus-visible {outline:3px solid #7341a4;outline-offset:3px}
 .pos-sync-dialog {max-width:900px;width:92vw;max-height:85vh;overflow:auto;border:1px solid #c9d5cc;border-radius:18px;padding:24px;color:#24382b;background:#fff}
 .pos-sync-dialog::backdrop {background:#152a20b3}
+.pos-operation-dialog form {display:grid;gap:16px;margin-top:20px}
+.pos-operation-dialog label {display:grid;gap:7px;font-weight:700}
+.pos-operation-dialog input,.pos-operation-dialog textarea {width:100%;padding:12px;border:1px solid #94a99b;border-radius:10px;background:#fff;color:#24382b;font:inherit;min-height:44px}
+.pos-operation-dialog input:focus-visible,.pos-operation-dialog textarea:focus-visible {outline:3px solid #7341a4;outline-offset:2px}
+.pos-cash-summary {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.pos-cash-row {padding:14px;background:#f2f5f2;border-radius:12px}
+.pos-cash-delta {font-variant-numeric:tabular-nums}
+.pos-operation-dialog details {border-top:1px solid #c6cfc8;padding:14px 0}
+.pos-operation-dialog summary {cursor:pointer;min-height:44px;overflow-wrap:anywhere}
+.pos-operation-dialog button:disabled {opacity:.6;cursor:wait}
 .pos-sync-dialog pre {white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f5f2;padding:12px;max-height:35vh;overflow:auto}
 .pos-sync-dialog button {padding:10px 16px;margin:6px;border-radius:10px;border:1px solid #b6c7ba;min-height:44px;cursor:pointer}
 @media(min-width:1100px){#morningKpiGrid{grid-template-columns:repeat(4,1fr)!important}}
@@ -6227,3 +6237,22 @@ body.dark-mode #bienvenida-section {background:#18271f!important}
 body.dark-mode #bienvenida-section .mk-card,body.dark-mode .pos-actionbar button {background:#233a2c!important;color:#f1f7f1!important;border-color:#48634f!important}
 body.dark-mode #bienvenida-section .mk-kpi-label,body.dark-mode #bienvenida-section .mk-kpi-sub,body.dark-mode #bienvenida-section .mk-kpi-value {color:#e1ece3!important}
 @media(prefers-reduced-motion:reduce){#bienvenida-section *{animation:none!important;transition:none!important;opacity:1!important}}
+
+/* Pedidos: pasos y resumen fuera del area desplazable. */
+.pos-wizard-nav,.pos-wizard-actions{display:flex;gap:8px;flex-wrap:wrap}
+.pos-wizard-nav{padding-bottom:16px}
+.pos-wizard-nav button,.pos-wizard-actions button{min-height:44px;flex:1;padding:10px;border:1px solid #9dab9f;border-radius:10px;background:#fff;color:#254934;font-weight:800}
+.pos-wizard-nav button[aria-current=step]{background:#ffd166;color:#362703;border-color:#b28015}
+#pedidoModal [hidden]{display:none!important}
+#pos-pedido-summary{font-weight:800;margin-bottom:10px;font-variant-numeric:tabular-nums}
+#pos-pedido-review{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8}
+@media(max-width:560px){#pedidoModal .px-8{padding-left:16px;padding-right:16px}.pos-wizard-nav button{flex:1 1 40%}#pedidoForm .grid-cols-2{grid-template-columns:1fr}.pos-wizard-footer{padding:12px 16px!important}}
+
+.pos-inv-edit{min-height:44px;padding:8px 10px;border:1px solid #a0b2a5;border-radius:8px;background:#f2f5f2;color:#254934;font-weight:700;cursor:pointer}
+
+.pos-wizard-actions .mk-btn-primary{background:#ffd166!important;color:#362703!important;border-color:#b28015!important}
+
+#pedidoModal button:focus-visible,.pos-inv-edit:focus-visible{outline:3px solid #7341a4;outline-offset:3px}
+#pos-pedido-error{color:#9a2424;font-weight:700}
+
+body:has(.modal.active) #fabNuevoPedido,body:has(.modal.active) #mk-help-fab,body:has(.modal.active) #mk-sound-btn{visibility:hidden!important}

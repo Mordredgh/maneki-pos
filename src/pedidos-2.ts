@@ -468,7 +468,7 @@ function closePedidoStatusModal() {
 }
 
 async function setPedidoStatus(status) {
-    return posRunOperation(()=>setPedidoStatusCompleto(status)).catch(e=>manekiToastExport(e.message,'warn'));
+    return posRunOperation(()=>setPedidoStatusCompleto(status),'Cambio de estado: '+status).catch(e=>manekiToastExport(e.message,'warn'));
 }
 async function setPedidoStatusCompleto(status) {
     const id = document.getElementById('pedidoStatusId').value;
@@ -570,9 +570,8 @@ async function setPedidoStatusCompleto(status) {
             }
 
             const _idFinalizado = String(p.id);
-            const pagado=(p.pagos||[]).reduce((sum,ab)=>sum+Number(ab.monto||0),0);
-            p.anticipo=pagado>0?Math.round(pagado*100)/100:Number(p.anticipo||0);
-            p.resta=Math.max(0,Math.round((Number(p.total||0)-p.anticipo)*100)/100);
+            p.anticipo=posTotalPagado(p);
+            p.resta=calcSaldoPendiente(p);
             window.pedidosFinalizados.push(p);
             window.pedidos.splice(idx, 1);
             savePedidos();
@@ -852,7 +851,7 @@ function selectAbonoPedidoMethod(btn, method) {
 
 let _abonoEnProceso = false;
 async function confirmarAbonoPedido() {
-    return posRunOperation(()=>confirmarAbonoPedidoCompleto()).catch(e=>manekiToastExport(e.message,'warn'));
+    return posRunOperation(()=>confirmarAbonoPedidoCompleto(),'Abono a pedido').catch(e=>manekiToastExport(e.message,'warn'));
 }
 async function confirmarAbonoPedidoCompleto() {
     // BUG-PED-001 FIX: guard anti doble-click — evita que un doble-clic rápido
@@ -1246,7 +1245,7 @@ function toggleKanbanCompacto() {
 
 // ── Reactivar pedido finalizado/cancelado → volver a activo ─────────────────
 async function reactivarPedido(id) {
-    return posRunOperation(async()=>reactivarPedidoCompleto(id)).catch(e=>manekiToastExport(e.message,'warn'));
+    return posRunOperation(async()=>reactivarPedidoCompleto(id),'Reactivar pedido').catch(e=>manekiToastExport(e.message,'warn'));
 }
 function reactivarPedidoCompleto(id) {
     // Buscar primero en finalizados
@@ -1959,7 +1958,7 @@ window.editarPedidoFinalizado = editarPedidoFinalizado;
     document.getElementById('pedidoForm').addEventListener('submit', function(e) {
         if(!document.getElementById('editPedidoId').value.startsWith('__finalizado__'))return;
         e.preventDefault();e.stopImmediatePropagation();
-        return posRunOperation(()=>guardarFinalizadoCompleto(e)).catch(err=>manekiToastExport(err.message,'warn'));
+        return posRunOperation(()=>guardarFinalizadoCompleto(e),'Editar pedido finalizado').catch(err=>manekiToastExport(err.message,'warn'));
     },true);
     async function guardarFinalizadoCompleto(e) {
         const editId = document.getElementById('editPedidoId').value;

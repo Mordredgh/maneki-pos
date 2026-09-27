@@ -15,7 +15,8 @@ let folio=0;
 async function query(body){
  if(body.rpc){const a=body.args||{};if(body.rpc==='is_admin')return true;
  if(body.rpc==='maneki_next_folio')return ++folio;
- const functions={pos_apply_operation:['p_id','p_operations'],pos_apply_write:['p_table','p_rows','p_expected','p_field','p_value'],pos_apply_store:['p_key','p_value','p_expected']};
+ if(body.rpc==='pos_list_changes')return (await db.query('SELECT * FROM public.pos_list_changes($1)',[a.p_limit||100])).rows;
+ const functions={pos_cash_movements:['p_date','p_zone'],pos_apply_operation:['p_id','p_operations'],pos_apply_write:['p_table','p_rows','p_expected','p_field','p_value'],pos_apply_store:['p_key','p_value','p_expected']};
  const params=functions[body.rpc];if(!params)throw Error('RPC no permitida');
  return (await db.query(`SELECT public.${ident(body.rpc)}(${params.map((_,i)=>'$'+(i+1)).join(',')}) AS result`,params.map(k=>typeof a[k]==='object'&&a[k]!==null?JSON.stringify(a[k]):a[k]??null))).rows[0].result;
  }

@@ -151,10 +151,10 @@
             <td class="px-4 py-3 text-gray-500 text-sm inv-col-hidden-prov">${_esc(e.proveedor||"\u2014")}</td>
             <td class="px-4 py-3 font-semibold" id="stock-cell-${u}">
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
-                    <span data-dblclick="editarStockInline" data-arg="${u}" title="Doble clic para editar"
+                    <button type="button" data-action="editarStockInline" aria-label="Ajustar existencias" data-arg="${u}" title="Ajustar existencias"
                         style="cursor:pointer;padding:2px 10px;border-radius:8px;background:#f3f4f6;border:1px dashed #d1d5db;font-size:.95rem;">
                         ${$} <span style="font-size:10px;color:#9ca3af;font-weight:400;">${_esc(e.unidad||"pza")}</span>
-                    </span>
+                    </button>
                 </div>
             </td>
             <td class="px-4 py-3">${k}</td>
@@ -240,8 +240,8 @@
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(e.sku||"\u2014")}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(k)}</td>
             <td class="px-4 py-3">${W}</td>
-            <td class="px-4 py-3 text-right text-gray-800 font-semibold" data-dblclick="invInlineEditPrice" data-arg="${u}" data-pass-el="true" style="font-size:.95rem;cursor:pointer;" title="Doble-click para editar precio">$${Number(e.price||0).toFixed(2)}</td>
-            <td class="px-4 py-3" data-dblclick="invInlineEditStock" data-arg="${u}" data-pass-el="true" style="cursor:pointer;" title="Doble-click para editar stock">${b}</td>
+            <td class="px-4 py-3 text-right text-gray-800 font-semibold" style="font-size:.95rem;"><button type="button" class="pos-inv-edit" data-action="invInlineEditPrice" data-arg="${u}" aria-label="Editar precio">$${Number(e.price||0).toFixed(2)} \xB7 Editar</button></td>
+            <td class="px-4 py-3">${b}<button type="button" class="pos-inv-edit" data-action="invInlineEditStock" data-arg="${u}">Ajustar stock</button></td>
             <td class="px-4 py-3">${F}</td>
             <td class="px-4 py-3">${q}</td>
             <td class="px-2 py-3">

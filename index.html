@@ -550,6 +550,8 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="pos-actionbar" aria-label="Acciones principales">
           <button type="button" class="pos-primary" data-action="posNuevoPedido">Nuevo pedido</button>
           <button type="button" data-action="posNuevoIngreso">Registrar ingreso</button>
+          <button type="button" data-action="abrirCorteCaja">Corte de caja</button>
+          <button type="button" data-action="abrirHistorialCambios">Historial de cambios</button>
           <button type="button" data-action="bloquearPOS">Bloquear pantalla</button>
           <button type="button" data-action="cerrarSesionPOS">Cerrar sesión</button>
         </div>
@@ -849,13 +851,13 @@ input:focus, select:focus, textarea:focus, button:focus {
   <button type="button" data-action="_abrirQRScanner" title="Escanear código de barras / QR" class="mk-toolbar-btn shrink-0">
       <i class="fas fa-barcode mk-tb-ico"></i><span class="hidden sm:inline">Escanear</span>
   </button>
-  <select id="inventoryTipoFilter" data-change="renderInventoryTable"
+  <select aria-label="Filtrar por tipo" id="inventoryTipoFilter" data-change="renderInventoryTable"
   class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
   <option value="">Todos los tipos</option>
   <option value="producto">📦 Productos Terminados</option>
   <option value="materia">🏭 Materia Prima</option>
 </select>
-  <select id="inventoryTagFilter" data-change="renderInventoryTable"
+  <select aria-label="Filtrar por etiqueta" id="inventoryTagFilter" data-change="renderInventoryTable"
     class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
     <option value="">🏷️ Todos los tags</option>
     <option value="Oferta">Oferta</option>
@@ -864,10 +866,11 @@ input:focus, select:focus, textarea:focus, button:focus {
     <option value="Agotado">Agotado</option>
     <option value="Favorito">Favorito</option>
   </select>
-  <select id="inventoryProveedorFilter" data-change="renderInventoryTable"
+  <select aria-label="Filtrar por proveedor" id="inventoryProveedorFilter" data-change="renderInventoryTable"
     class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2">
     <option value="">🏪 Todos los proveedores</option>
   </select>
+  <button type="button" class="mk-toolbar-btn" data-action="posLimpiarFiltrosInventario">Limpiar filtros</button>
 </div>
                 <!-- C16: tabla wrapper conservada por paginación (.overflow-x-auto).
                      thead original removido — renderInventoryTable() en inventory-5.ts
@@ -1851,28 +1854,28 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Slogan / Descripción</label>
+                    <label for="configSlogan" class="block text-sm font-semibold text-gray-700 mb-2">Slogan / Descripción</label>
                     <input type="text" id="configSlogan" value="Regalos Personalizados"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
                            data-oninput="updateStorePreview">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono / WhatsApp</label>
+                    <label for="configPhone" class="block text-sm font-semibold text-gray-700 mb-2">Teléfono / WhatsApp</label>
                     <input type="tel" id="configPhone" placeholder="Ej: 81 1234 5678"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
                            autocomplete="tel" data-oninput="updateStorePreview">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Facebook / Messenger</label>
+                    <label for="configFacebook" class="block text-sm font-semibold text-gray-700 mb-2">Facebook / Messenger</label>
                     <input type="text" id="configFacebook" placeholder="Ej: facebook.com/BichoCapricho"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
                            data-oninput="updateStorePreview">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                    <label for="configEmail" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                     <input type="email" id="configEmail" placeholder="Ej: maneki@correo.com"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
                            autocomplete="email" data-oninput="updateStorePreview">
@@ -1888,7 +1891,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Mensaje de cierre en tickets</label>
+                    <label for="configFooter" class="block text-sm font-semibold text-gray-700 mb-2">Mensaje de cierre en tickets</label>
                     <input type="text" id="configFooter" value="¡Gracias por tu compra!"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2"
                            data-oninput="updateStorePreview">
@@ -2076,7 +2079,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 </div>
 <input type="hidden" id="productTipo" value="producto">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Imagen del Producto</label>
+                    <label for="productImage" class="block text-sm font-semibold text-gray-700 mb-2">Imagen del Producto</label>
                     <input type="file" id="productImage" accept="image/*"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none">
                     <div id="imagePreview" class="mt-3 hidden">
@@ -2085,7 +2088,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Producto</label>
+                    <label for="productName" class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Producto</label>
                     <input type="text" id="productName" required
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
                 </div>
@@ -2107,13 +2110,13 @@ input:focus, select:focus, textarea:focus, button:focus {
           <input type="hidden" id="productTags">
         </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Código SKU</label>
+                    <label for="productSKU" class="block text-sm font-semibold text-gray-700 mb-2">Código SKU</label>
                     <input type="text" id="productSKU" placeholder="Se generará automáticamente si está vacío"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Categoría</label>
+                    <label for="productCategory" class="block text-sm font-semibold text-gray-700 mb-2">Categoría</label>
                     <select id="productCategory" required
                             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
 
@@ -2137,7 +2140,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Costo</label>
+                        <label for="productCost" class="block text-sm font-semibold text-gray-700 mb-2">Costo</label>
                         <input type="number" id="productCost" required step="0.01" min="0.01"
                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
                     </div>
@@ -2157,14 +2160,14 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Precio Venta</label>
+                        <label for="productPrice" class="block text-sm font-semibold text-gray-700 mb-2">Precio Venta</label>
                         <input type="number" id="productPrice" required step="0.01" min="0.01"
                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Stock Inicial</label>
+                    <label for="productStock" class="block text-sm font-semibold text-gray-700 mb-2">Stock Inicial</label>
                     <input type="number" id="productStock" required min="0"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
                 </div>
@@ -2176,7 +2179,7 @@ input:focus, select:focus, textarea:focus, button:focus {
           <p class="text-xs text-gray-400 mt-1">Te avisaremos cuando el stock baje de este número</p>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">🏭 Proveedor</label>
+          <label for="productProveedor" class="block text-sm font-semibold text-gray-700 mb-2">🏭 Proveedor</label>
           <input type="text" id="productProveedor" placeholder="Ej: Proveedor ABC, Mercado, etc."
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
           <p class="text-xs text-gray-400 mt-1">Opcional — de dónde obtienes este producto</p>
@@ -2226,7 +2229,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <input type="hidden" id="editClientId">
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre Completo *</label>
+                <label for="clientName" class="block text-sm font-semibold text-gray-700 mb-2">Nombre Completo *</label>
                 <input type="text" id="clientName" autofocus required
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none" autocomplete="name">
             </div>
@@ -2256,7 +2259,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                <label for="clientEmail" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                 <input type="email" id="clientEmail"
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none" autocomplete="email">
             </div>
@@ -2302,7 +2305,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <input type="hidden" id="editCategoryId">
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la Categoría</label>
+                <label for="editCategoryName" class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la Categoría</label>
                 <input type="text" id="editCategoryName" required
                        class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
             </div>
@@ -2355,7 +2358,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
             <form id="addCategoryForm" class="space-y-4" data-prevent-submit>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la Categoría</label>
+                    <label for="categoryName" class="block text-sm font-semibold text-gray-700 mb-2">Nombre de la Categoría</label>
                     <input type="text" id="categoryName" required
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:border-transparent outline-none">
                 </div>
@@ -2548,25 +2551,31 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <input type="hidden" id="transactionType">
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Concepto</label>
+                    <label for="transactionConcept" class="block text-sm font-semibold text-gray-700 mb-2">Concepto</label>
                     <input type="text" id="transactionConcept" required
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Monto</label>
+                    <label for="transactionAmount" class="block text-sm font-semibold text-gray-700 mb-2">Monto</label>
                     <input type="number" id="transactionAmount" required step="0.01" min="0"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha</label>
+                    <label for="transactionDate" class="block text-sm font-semibold text-gray-700 mb-2">Fecha</label>
                     <input type="date" id="transactionDate" required
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none">
                 </div>
 
+                <div>
+                    <label for="transactionMethod" class="block text-sm font-semibold text-gray-700 mb-2">Método de pago</label>
+                    <select id="transactionMethod" class="w-full px-4 py-3 border border-gray-200 rounded-xl">
+                        <option value="">Sin clasificar</option><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option>
+                    </select>
+                </div>
                 <div id="clientFieldContainer" class="hidden">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Cliente/Proveedor</label>
+                    <label for="transactionClient" class="block text-sm font-semibold text-gray-700 mb-2">Cliente/Proveedor</label>
                     <input type="text" id="transactionClient"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 outline-none">
                 </div>
@@ -2606,7 +2615,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <input type="hidden" id="abonoPedidoId">
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Monto del Abono *</label>
+                <label for="abonoPedidoMonto" class="block text-sm font-semibold text-gray-700 mb-2">Monto del Abono *</label>
                 <input type="number" id="abonoPedidoMonto" step="0.01" min="0.01" placeholder="$0.00" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none text-xl font-bold">
             </div>
             <div>
@@ -2618,7 +2627,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </div>
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Nota (opcional)</label>
+                <label for="abonoPedidoNota" class="block text-sm font-semibold text-gray-700 mb-2">Nota (opcional)</label>
                 <input type="text" id="abonoPedidoNota" placeholder="Ej: segunda parcialidad" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none">
             </div>
             <button type="button" data-action="confirmarAbonoPedido" class="btn-primary w-full py-4 rounded-xl text-white font-bold text-lg"><i class="fas fa-check mr-2"></i>Confirmar Pago</button>
@@ -2633,40 +2642,24 @@ input:focus, select:focus, textarea:focus, button:focus {
             <button type="button" data-action="closePedidoModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div class="overflow-y-auto flex-1 px-8">
-        <!-- UX-3: Barra de pasos visual -->
-        <div id="pedido-steps" class="flex items-center gap-1 mb-5 pb-4 border-b border-gray-100">
-          <div class="flex-1 text-center">
-            <div class="w-7 h-7 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center mx-auto">1</div>
-            <p class="text-xs mt-1 text-amber-600 font-medium">Cliente</p>
-          </div>
-          <div class="flex-1 h-px bg-gray-200 mt-[-10px]"></div>
-          <div class="flex-1 text-center">
-            <div class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center mx-auto">2</div>
-            <p class="text-xs mt-1 text-gray-400">Productos</p>
-          </div>
-          <div class="flex-1 h-px bg-gray-200 mt-[-10px]"></div>
-          <div class="flex-1 text-center">
-            <div class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center mx-auto">3</div>
-            <p class="text-xs mt-1 text-gray-400">Detalles</p>
-          </div>
-          <div class="flex-1 h-px bg-gray-200 mt-[-10px]"></div>
-          <div class="flex-1 text-center">
-            <div class="w-7 h-7 rounded-full bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center mx-auto">4</div>
-            <p class="text-xs mt-1 text-gray-400">Confirmar</p>
-          </div>
-        </div>
+        <nav id="pedido-steps" class="pos-wizard-nav" aria-label="Pasos del pedido">
+          <button type="button" data-action="posPedidoIr" data-arg="1">1. Cliente</button>
+          <button type="button" data-action="posPedidoIr" data-arg="2">2. Productos</button>
+          <button type="button" data-action="posPedidoIr" data-arg="3">3. Detalles</button>
+          <button type="button" data-action="posPedidoIr" data-arg="4">4. Confirmar</button>
+        </nav>
         <form id="pedidoForm" class="space-y-4 pb-2">
             <input type="hidden" id="editPedidoId">
             <details open class="mk-pedido-section">
             <summary><i class="fas fa-user"></i> Cliente</summary>
             <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Cliente *</label><input type="text" id="pedidoCliente" autofocus required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
-                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono / WhatsApp</label><input type="text" id="pedidoTelefono" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
+                <div><label for="pedidoCliente" class="block text-sm font-semibold text-gray-700 mb-2">Cliente *</label><input type="text" id="pedidoCliente" autofocus required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
+                <div><label for="pedidoTelefono" class="block text-sm font-semibold text-gray-700 mb-2">Teléfono / WhatsApp</label><input type="text" id="pedidoTelefono" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
             </div>
-            <div><label class="block text-sm font-semibold text-gray-700 mb-2">Facebook / Instagram</label><input type="text" id="pedidoRedes" placeholder="@usuario o link" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
+            <div><label for="pedidoRedes" class="block text-sm font-semibold text-gray-700 mb-2">Facebook / Instagram</label><input type="text" id="pedidoRedes" placeholder="@usuario o link" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
             <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Fecha del Pedido *</label><input type="date" id="pedidoFecha" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
-                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Entrega *</label><input type="date" id="pedidoEntrega" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
+                <div><label for="pedidoFecha" class="block text-sm font-semibold text-gray-700 mb-2">Fecha del Pedido *</label><input type="date" id="pedidoFecha" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
+                <div><label for="pedidoEntrega" class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Entrega *</label><input type="date" id="pedidoEntrega" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
             </div>
             </details>
 
@@ -2694,7 +2687,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 
     <div id="pedidoVarianteRow" class="hidden mt-2">
-      <label class="text-xs text-gray-600 font-semibold">Variante:</label>
+      <label for="pedidoVarianteSelect" class="text-xs text-gray-600 font-semibold">Variante:</label>
       <select id="pedidoVarianteSelect" class="w-full px-3 py-2 mt-1 border border-gray-200 rounded-xl outline-none text-sm"></select>
     </div>
 
@@ -2745,28 +2738,28 @@ input:focus, select:focus, textarea:focus, button:focus {
 
             <details open class="mk-pedido-section">
             <summary><i class="fas fa-clipboard-list"></i> Detalles y pago</summary>
-            <div><label class="block text-sm font-semibold text-gray-700 mb-2" title="Descripción del producto o servicio personalizado">¿Qué pidieron?</label><input type="text" id="pedidoConcepto" list="conceptoSuggestions" placeholder="Ej: Taza personalizada con logo de empresa" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"><datalist id="conceptoSuggestions"></datalist></div>
+            <div><label for="pedidoConcepto" class="block text-sm font-semibold text-gray-700 mb-2" title="Descripción del producto o servicio personalizado">¿Qué pidieron?</label><input type="text" id="pedidoConcepto" list="conceptoSuggestions" placeholder="Ej: Taza personalizada con logo de empresa" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"><datalist id="conceptoSuggestions"></datalist></div>
             <input type="hidden" id="pedidoCantidad" value="1">
             <input type="hidden" id="pedidoCosto" value="0">
             <div class="bg-gray-50 rounded-xl p-4 space-y-3">
                 <div class="flex justify-between text-sm"><span class="text-gray-600">Total del pedido:</span><span class="font-bold text-lg" id="pedidoTotalDisplay">$0.00</span></div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Anticipo Recibido</label><input type="number" id="pedidoAnticipo" step="0.01" min="0" value="0" class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none" data-oninput="calcPedidoTotal"></div>
-                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Saldo Pendiente</label><input type="text" id="pedidoSaldo" readonly class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl font-bold text-red-600"></div>
+                    <div><label for="pedidoAnticipo" class="block text-xs font-semibold text-gray-700 mb-1">Anticipo Recibido</label><input type="number" id="pedidoAnticipo" step="0.01" min="0" value="0" class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none" data-oninput="calcPedidoTotal"></div>
+                    <div><label for="pedidoSaldo" class="block text-xs font-semibold text-gray-700 mb-1">Saldo Pendiente</label><input type="text" id="pedidoSaldo" readonly class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl font-bold text-red-600"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">💸 Costo de materiales</label>
+                        <label for="pedidoCostoMateriales" class="block text-xs font-semibold text-gray-700 mb-1">💸 Costo de materiales</label>
                         <input type="text" id="pedidoCostoMateriales" readonly value="0.00"
                                class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl font-bold text-gray-700">
                     </div>
                     <div class="flex flex-col justify-end">
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">💰 Ganancia estimada</label>
+                        <label for="pedidoGananciaEstimada" class="block text-xs font-semibold text-gray-700 mb-1">💰 Ganancia estimada</label>
                         <input type="text" id="pedidoGananciaEstimada" readonly class="w-full px-3 py-2 bg-green-50 border border-green-200 rounded-xl font-bold text-green-700">
                     </div>
                 </div>
             </div>
-            <div><label class="block text-sm font-semibold text-gray-700 mb-2">📍 Lugar de entrega</label><input type="text" id="pedidoLugarEntrega" placeholder="Ej: Estación Simón Bolívar, José Manuel Herrera 2103..." class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
+            <div><label for="pedidoLugarEntrega" class="block text-sm font-semibold text-gray-700 mb-2">📍 Lugar de entrega</label><input type="text" id="pedidoLugarEntrega" placeholder="Ej: Estación Simón Bolívar, José Manuel Herrera 2103..." class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none"></div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-1">Notas adicionales</label>
               <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
@@ -2789,13 +2782,17 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <input type="hidden" id="pedidoPrioridad" value="normal">
             </div>
             </details>
-        </form>
+        <div id="pos-pedido-confirm" hidden><h4>Revisa antes de guardar</h4><p id="pos-pedido-review"></p></div>
+</form>
         </div>
 
-        <div class="px-8 py-4 border-t border-gray-100 flex-shrink-0">
-            <button type="button" data-action="_mkSubmitPedidoForm" class="mk-btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:1rem;">
-                <i class="fas fa-save"></i> <span id="pedidoSubmitBtn">Guardar Pedido</span>
-            </button>
+        <div class="px-8 py-4 border-t border-gray-100 flex-shrink-0 pos-wizard-footer">
+            <p id="pos-pedido-summary" aria-live="polite"></p><p id="pos-pedido-error" role="alert"></p>
+            <div class="pos-wizard-actions">
+              <button type="button" id="pos-pedido-back" data-action="posPedidoAnterior">Anterior</button>
+              <button type="button" id="pos-pedido-next" data-action="posPedidoSiguiente">Siguiente</button>
+              <button type="button" id="pos-pedido-save" data-action="posPedidoGuardar" class="mk-btn-primary"><span id="pedidoSubmitBtn">Guardar Pedido</span></button>
+            </div>
         </div>
     </div>
 </div>
@@ -3132,12 +3129,12 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <div class="space-y-3">
           <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Cantidad (+ agregar / - restar)</label>
+            <label for="ajustarStockCantidad" class="block text-sm font-semibold text-gray-600 mb-1">Cantidad (+ agregar / - restar)</label>
             <input type="number" id="ajustarStockCantidad" placeholder="Ej: 10 o -5"
               class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl outline-none focus:border-amber-400 text-center text-lg font-bold">
           </div>
           <div>
-            <label class="block text-sm font-semibold text-gray-600 mb-1">Motivo (opcional)</label>
+            <label for="ajustarStockMotivo" class="block text-sm font-semibold text-gray-600 mb-1">Motivo (opcional)</label>
             <input type="text" id="ajustarStockMotivo" placeholder="Ej: Compra a proveedor, Merma..."
               class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl outline-none focus:border-amber-400 text-sm">
           </div>
@@ -3171,7 +3168,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <input type="hidden" id="equipoEditId">
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-semibold text-gray-600 mb-1">Nombre del equipo</label>
+                <label for="equipoNombre" class="block text-sm font-semibold text-gray-600 mb-1">Nombre del equipo</label>
                 <input type="text" id="equipoNombre" placeholder="Ej: Impresora DTF" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-400 focus:outline-none">
             </div>
             <div>
@@ -3191,11 +3188,11 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Costo original ($)</label>
+                    <label for="equipoCostoOriginal" class="block text-sm font-semibold text-gray-600 mb-1">Costo original ($)</label>
                     <input type="number" id="equipoCostoOriginal" placeholder="15000" min="0" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-400 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Meta de reemplazo ($)</label>
+                    <label for="equipoMetaReemplazo" class="block text-sm font-semibold text-gray-600 mb-1">Meta de reemplazo ($)</label>
                     <input type="number" id="equipoMetaReemplazo" placeholder="18000" min="0" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-400 focus:outline-none">
                     <p class="text-xs text-gray-400 mt-1">Cuánto cuesta uno nuevo hoy</p>
                 </div>
@@ -3253,11 +3250,11 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Concepto *</label>
+                <label for="roiManualConcepto" class="block text-sm font-semibold text-gray-700 mb-1">Concepto *</label>
                 <input type="text" id="roiManualConcepto" placeholder="Ej: Venta en feria, taller, etc." class="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm">
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Ganancia total ($) *</label>
+                <label for="roiManualGanancia" class="block text-sm font-semibold text-gray-700 mb-1">Ganancia total ($) *</label>
                 <input type="number" id="roiManualGanancia" min="0" step="1" placeholder="0.00" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm" data-oninput="calcRoiManual">
             </div>
             <div>

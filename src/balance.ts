@@ -7,14 +7,7 @@
 //  always return today's date instead of a historical one.)
 
 // FIX 5 — CxC unificada: calcula saldo pendiente de un pedido usando pagos[] como fuente de verdad
-const mkRound2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
-window.mkRound2 = mkRound2;
-const calcSaldoPendiente = (p) => {
-    const sumPagos = (p.pagos || []).reduce((s, ab) => mkRound2(s + Number(ab.monto || 0)), 0);
-    const totalPagado = sumPagos > 0 ? sumPagos : Number(p.anticipo || 0);
-    return mkRound2(Math.max(0, Number(p.total || 0) - totalPagado));
-};
-window.calcSaldoPendiente = calcSaldoPendiente;
+// mkRound2/calcSaldoPendiente viven en el core para funcionar antes del lazy load.
 
 // M1: Normalización de acentos para búsquedas en balance
 function _norm(s) {
@@ -912,6 +905,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             document.getElementById('transactionConcept').value = item.concept || '';
             document.getElementById('transactionAmount').value = item.amount || '';
             document.getElementById('transactionDate').value = item.date || '';
+            document.getElementById('transactionMethod').value = item.method || item.metodo || '';
             document.getElementById('clientFieldContainer').classList.add('hidden');
             document.getElementById('recurrenteContainer').classList.remove('hidden');
             document.getElementById('transactionRecurrente').checked = !!(item.recurrente);
@@ -1012,11 +1006,12 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         const _txForm = document.getElementById('transactionForm');
         if (_txForm && !_txForm._mkBound) {
             _txForm._mkBound = true;
-            _txForm.addEventListener('submit', function(e) {
+            _txForm.addEventListener('submit', async function(e) {
     e.preventDefault();
 
     // FIX-SPINNER: deshabilitar botón mientras se guarda
     const submitBtn = (e.target as HTMLFormElement).querySelector('[type="submit"]') as HTMLButtonElement | null;
+    if (submitBtn?.disabled) return;
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Guardando...'; }
     const _restoreBtn = () => { if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '💾 Guardar'; } };
 
@@ -1028,12 +1023,14 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     const concept = document.getElementById('transactionConcept').value.trim();
     const amount = parseFloat(document.getElementById('transactionAmount').value);
     const date = document.getElementById('transactionDate').value;
+    const method = document.getElementById('transactionMethod')?.value || '';
     const client = document.getElementById('transactionClient')?.value || '';
 
     if (!concept) { _restoreBtn(); manekiToastExport('⚠️ Escribe un concepto para la transacción.', 'warn'); return; }
     if (!Number.isFinite(amount) || amount <= 0) { _restoreBtn(); manekiToastExport('⚠️ Ingresa un monto válido mayor a $0.', 'warn'); return; }
     if (!date) { _restoreBtn(); manekiToastExport('⚠️ Selecciona una fecha.', 'warn'); return; }
 
+    try {
     // ── MODO EDICIÓN ──
     if (editId && editType) {
         const list = editType === 'income' ? incomes : expenses;
@@ -1045,14 +1042,15 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             item.monto = amount;
             item.date = date;
             item.fecha = date;
+            item.method = method;
             item.client = client;
             item.cliente = client;
             if (editType === 'expense') item.categoria = document.getElementById('transactionCategoria')?.value || item.categoria || '';
             // MEJORA-3: guardar etiqueta en edición
             item.etiqueta = document.getElementById('transactionEtiqueta')?.value || item.etiqueta || '';
         }
-        if (editType === 'income') saveIncomes();
-        else saveExpenses();
+        if (editType === 'income') await saveIncomes();
+        else await saveExpenses();
 
         _restoreBtn();
         closeTransactionModal();
@@ -1070,6 +1068,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         monto: amount,
         date: date,
         fecha: date,
+        method,
         client: client,
         cliente: client,
         categoria: document.getElementById('transactionCategoria')?.value || '',
@@ -1084,32 +1083,36 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             newItem.recurrente = true;
             if (!window.ingresosRecurrentes) window.ingresosRecurrentes = [];
             window.ingresosRecurrentes.push({ concept, amount, dia: (date && date.includes('-')) ? parseInt(date.split('-')[2], 10) || 1 : (new Date(date).getDate() || 1) });
-            saveIngresosRecurrentes();
+            await saveIngresosRecurrentes();
         }
         incomes.push(newItem);
-        saveIncomes();
+        await saveIncomes();
     } else if (type === 'expense') {
         const esRecurrente = document.getElementById('transactionRecurrente')?.checked;
         if (esRecurrente) {
             newItem.recurrente = true;
             if (!gastosRecurrentes) gastosRecurrentes = [];
             gastosRecurrentes.push({ concept, amount, dia: (date && date.includes('-')) ? parseInt(date.split('-')[2], 10) || 1 : (new Date(date).getDate() || 1) });
-            saveGastosRecurrentes();
+            await saveGastosRecurrentes();
         }
         expenses.push(newItem);
-        saveExpenses();
+        await saveExpenses();
     } else if (type === 'receivable') {
         receivables.push({ ...newItem, status: 'pending' });
-        saveReceivables();
+        await saveReceivables();
     } else if (type === 'payable') {
         payables.push({ ...newItem, status: 'pending' });
-        savePayables();
+        await savePayables();
     }
 
     _restoreBtn();
     closeTransactionModal();
     renderBalance();
     updateDashboard();
+    } catch(err:any) {
+        manekiToastExport(err.message||'No se pudo guardar. Revisa el estado de sincronizacion.','warn');
+        closeTransactionModal();renderBalance();updateDashboard();_restoreBtn();
+    }
 });
         } // end if (!_txForm._mkBound)
 

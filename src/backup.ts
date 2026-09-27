@@ -50,12 +50,14 @@ function _buildBackupObject() {
             storeConfig: window.storeConfig || {},
             gastosRecurrentes: window.gastosRecurrentes || [],
             stockMovimientos: window.stockMovimientos || window.stockMovements || [],
+            cashClosures: window.cashClosures || [],
             folioCounter: window._folioCounter || 0
         }
     };
 }
 
-function exportarBackupJSON() {
+async function exportarBackupJSON() {
+    window.cashClosures=await sbLoad('cashClosures',[]);
     const backup = _buildBackupObject();
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -68,6 +70,7 @@ function exportarBackupJSON() {
 }
 
 async function exportarBackupComprimido() {
+    window.cashClosures=await sbLoad('cashClosures',[]);
     const backup = _buildBackupObject();
     const json = JSON.stringify(backup);
     const datosStr = JSON.stringify(backup.datos);
@@ -120,7 +123,7 @@ function _activarBackupPendiente(data, fileName) {
     if (!data || !data.datos || typeof data.datos !== 'object' || Array.isArray(data.datos)) throw new Error('Formato inválido');
     const arrays = ['products', 'salesHistory', 'pedidos', 'pedidosFinalizados', 'abonos',
         'receivables', 'payables', 'incomes', 'expenses', 'categories', 'quotes', 'equipos',
-        'roiHistorial', 'envioAnillos', 'notas', 'clients', 'gastosRecurrentes', 'stockMovimientos'];
+        'roiHistorial', 'envioAnillos', 'notas', 'clients', 'gastosRecurrentes', 'stockMovimientos', 'cashClosures'];
     for (const key of arrays) {
         const value = data.datos[key];
         if (value !== undefined && (!Array.isArray(value) || value.some(item => !item || typeof item !== 'object' || Array.isArray(item)))) {
@@ -185,6 +188,7 @@ function procesarArchivoBackup(file) {
 }
 
 async function restaurarDatosBackup(d) {
+    if(d.cashClosures!==undefined){await sbSave('cashClosures',d.cashClosures);window.cashClosures=d.cashClosures;}
     if (d.products !== undefined)     { window.products = d.products; products = d.products; await saveProducts(); }
     if (d.salesHistory !== undefined) { window.salesHistory = d.salesHistory; salesHistory = d.salesHistory; await saveSalesHistory(); }
     if (d.pedidos !== undefined)      { window.pedidos = d.pedidos; pedidos = d.pedidos; await savePedidos(); }
@@ -269,40 +273,14 @@ document.getElementById('backupModal').addEventListener('click', function(e) {
     const INTERVAL_MS = 2 * 60 * 60 * 1000; // cada 2 horas
     const LS_KEY      = 'maneki_lastAutoBackup';
 
-    // FIX AB-01: guardar auto-backup en SQLite/localStorage en lugar de descargar archivo.
+    // FIX AB-01: guardar auto-backup en localStorage en lugar de descargar archivo.
     // exportarBackupJSON() descargaba un .json al disco, lo cual es intrusivo e inesperado
     // como acción automática. Ahora se guarda silenciosamente en almacenamiento local.
     async function _doAutoBackup() {
         try {
-            const backup = {
-                version: '2.1',
-                fecha: new Date().toISOString(),
-                tienda: (window.storeConfig && window.storeConfig.name) || 'Bicho Capricho',
-                datos: {
-                    products: window.products || [],
-                    salesHistory: window.salesHistory || [],
-                    pedidos: window.pedidos || [],
-                    pedidosFinalizados: window.pedidosFinalizados || [],
-                    abonos: window.abonos || [],
-                    receivables: window.receivables || [],
-                    payables: window.payables || [],
-                    incomes: window.incomes || [],
-                    expenses: window.expenses || [],
-                    categories: window.categories || [],
-                    quotes: window.quotes || [],
-                    equipos: (typeof equipos !== 'undefined' ? equipos : []),
-                    roiHistorial: (typeof roiHistorial !== 'undefined' ? roiHistorial : []),
-                    roiConfig: (typeof roiConfig !== 'undefined' ? roiConfig : { porcentaje: 10 }),
-                    envioAnillos: (typeof envioAnillos !== 'undefined' ? envioAnillos : []),
-                    notas: window.notas || [],
-                    clients: window.clients || [],
-                    storeConfig: window.storeConfig || {},
-                    gastosRecurrentes: window.gastosRecurrentes || [],
-                    stockMovimientos: window.stockMovimientos || window.stockMovements || [],
-                    folioCounter: window._folioCounter || 0
-                }
-            };
-            try { localStorage.setItem('maneki_autoBackup', JSON.stringify(backup)); } catch(e) { /* localStorage lleno — silenciar */ }
+            window.cashClosures=await sbLoad('cashClosures',[]);
+            const backup=_buildBackupObject();
+            localStorage.setItem('maneki_autoBackup',JSON.stringify(backup));
             localStorage.setItem(LS_KEY, new Date().toISOString());
         } catch(e) {
             console.warn('[AutoBackup]', e);

@@ -1,5 +1,12 @@
 # Contexto del POS
 
+## Decision 2026-09-27: caja, auditoria y respaldo
+El cliente envia solo filas modificadas, conservando snapshots optimistas y lotes atomicos. Dinero se calcula en centavos en el nucleo, antes de cargar Balance. Caja consulta el dia completo por RPC, no los arrays limitados de la pantalla; no incluye ventas de pedidos sin cobro. Ingresos/gastos conservan metodo; valores historicos desconocidos quedan sin clasificar.
+
+Los cortes se agregan a store.cashClosures con concurrencia optimista. La auditoria por triggers captura diez tablas y solo permite lectura al administrador. Operaciones agrupadas transmiten motivo y recibo estable. No se reconstruye retrospectivamente historial inexistente.
+
+El respaldo completo usa una instantanea SQL, comprimida y cifrada fuera del navegador. Destino y credencial pendientes; no hay programacion externa activa. Ver BACKUPS.md y VALIDACION-2026-09-27.md. No introducir infraestructura de pago por defecto.
+
 ## Decision 2026-09-26: operacion de negocio atomica
 
 Pedido, cobros, historial y movimientos de inventario se preparan como una unidad con `posRunOperation`. El journal local conserva el lote completo antes del envio. `pos_apply_operation` ejecuta las escrituras con comparacion optimista dentro de una transaccion PostgreSQL. Un recibo por identificador permite reenviar una respuesta perdida sin repetir cobros.

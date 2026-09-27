@@ -1171,7 +1171,7 @@ function initChart() {
     [...(window.pedidos||[]), ...(window.pedidosFinalizados||[])].forEach(p => {
         (p.pagos||[]).forEach(ab => {
             if (!ab.id || _idsContados.has(String(ab.id))) return;
-            const fecha = (ab.fecha||'').split('T')[0];
+            const fecha = posFechaLocal(ab.fecha||'');
             if (salesByDay.hasOwnProperty(fecha)) {
                 salesByDay[fecha] += Number(ab.monto || 0);
                 _idsContados.add(String(ab.id));

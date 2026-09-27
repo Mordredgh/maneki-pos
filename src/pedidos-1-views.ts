@@ -36,25 +36,9 @@ function filterPedidos(status, btn) {
 
 // ── Render principal ──
 function normalizarResta() {
-    // Guard: incluye suma de montos para detectar ediciones en pagos existentes
-    const _hash = (window.pedidos||[]).length + '_' +
-        (window.pedidos||[]).reduce((s,p)=>s+(p.pagos||[]).reduce((ps,ab)=>ps+Number(ab.monto||0),0),0).toFixed(0);
-    if (window._normalizarRestaHash === _hash) return;
-    window._normalizarRestaHash = _hash;
-    // FUENTE DE VERDAD: p.pagos[] contiene TODOS los pagos (anticipo inicial + abonos)
-    // p.anticipo y p.resta se CALCULAN siempre — nunca se leen de Supabase/SQLite
-    // Esto evita que versiones inconsistentes guardadas den valores distintos en cada carga.
     (window.pedidos || []).forEach(p => {
-        const totalPagado = (p.pagos || []).reduce((s, ab) => s + Number(ab.monto || 0), 0);
-        if (totalPagado > 0) {
-            // Si hay pagos registrados, usar su suma como fuente de verdad
-            p.anticipo = totalPagado;
-            p.resta    = Math.max(0, Number(p.total || 0) - totalPagado);
-        } else {
-            // No hay pagos — usar anticipo guardado (pedido legacy o sin abonos aún)
-            p.anticipo = Number(p.anticipo || 0);
-            p.resta    = Math.max(0, Number(p.total || 0) - p.anticipo);
-        }
+        p.anticipo=posTotalPagado(p);
+        p.resta=calcSaldoPendiente(p);
     });
 }
 window.normalizarResta = normalizarResta;
@@ -117,24 +101,41 @@ function _calcularCostoProduccionPedido() {
 }
 window._calcularCostoProduccionPedido = _calcularCostoProduccionPedido;
 
-// UX-3: Wizard steps del modal de pedido
-function _updatePedidoStep(step: number): void {
-    const steps = document.querySelectorAll('#pedido-steps .step-circle');
-    if (!steps.length) return;
-    steps.forEach((el: any, i: number) => {
-        const n = i + 1;
-        el.style.background = n < step ? '#10b981' : n === step ? 'var(--mk-g500, #FFD166)' : '#e5e7eb';
-        el.style.color = n <= step ? 'white' : '#6b7280';
-    });
-    // También colorear las labels
-    const labels = document.querySelectorAll('#pedido-steps span.text-xs');
-    labels.forEach((el: any, i: number) => {
-        const n = i + 1;
-        el.style.color = n === step ? '#FFD166' : n < step ? '#10b981' : '#9ca3af';
-        el.style.fontWeight = n === step ? '700' : '400';
-    });
+// Flujo de pedido con validacion por paso y resumen fijo.
+let posPedidoPaso=1;
+function posPedidoResumen(){
+    const val=(id:string)=>document.getElementById(id)?.value||'';
+    const total=mkRound2(val('pedidoCosto'));const anticipo=mkRound2(val('pedidoAnticipo'));
+    const summary=document.getElementById('pos-pedido-summary');
+    if(summary)summary.textContent=`Total ${fmtMoney(total)} · Anticipo ${fmtMoney(anticipo)} · Saldo ${fmtMoney(Math.max(0,total-anticipo))}`;
+    const review=document.getElementById('pos-pedido-review');
+    if(review)review.textContent=`${val('pedidoCliente')} · Entrega: ${val('pedidoEntrega')} · ${val('pedidoConcepto')||((window.pedidoProductosSeleccionados||[]).length?'Productos seleccionados':'Pedido personalizado')} · ${(window.pedidoProductosSeleccionados||[]).map(p=>`${p.quantity} × ${p.name}`).join(', ')}`;
 }
-(window as any)._updatePedidoStep = _updatePedidoStep;
+function _updatePedidoStep(step:number):void{
+    const form=document.getElementById('pedidoForm');if(!form)return;
+    posPedidoPaso=Math.max(1,Math.min(4,Number(step)));form.dataset.step=String(posPedidoPaso);
+    form.querySelectorAll('details.mk-pedido-section').forEach((el:any,i:number)=>{el.hidden=i+1!==posPedidoPaso;el.open=true;});
+    const confirm=document.getElementById('pos-pedido-confirm');if(confirm)confirm.hidden=posPedidoPaso!==4;
+    for(const [id,hide] of [['pos-pedido-back',posPedidoPaso===1],['pos-pedido-next',posPedidoPaso===4],['pos-pedido-save',posPedidoPaso!==4]] as [string,boolean][]){const el=document.getElementById(id);if(el)el.hidden=hide;}
+    document.querySelectorAll('#pedido-steps button').forEach((el:any,i:number)=>{if(i+1===posPedidoPaso)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
+    if(!form.dataset.wizardBound){form.dataset.wizardBound='1';form.addEventListener('input',posPedidoResumen);form.addEventListener('submit',(e)=>{if(posPedidoPaso!==4){e.preventDefault();e.stopImmediatePropagation();posPedidoSiguiente();}},true);}
+    const error=document.getElementById('pos-pedido-error');if(error)error.textContent='';
+    posPedidoResumen();
+}
+function posPedidoValidar(until:number):boolean{
+    const sections=document.querySelectorAll('#pedidoForm details.mk-pedido-section');
+    for(let i=0;i<Math.min(until,3);i++){
+      const invalid=sections[i]?.querySelector('input:invalid,select:invalid,textarea:invalid') as HTMLInputElement;
+      if(invalid){_updatePedidoStep(i+1);invalid.reportValidity();return false;}
+    }
+    if(until>=2 && !(Number(document.getElementById('pedidoCosto')?.value)>0)){_updatePedidoStep(2);const error=document.getElementById('pos-pedido-error');if(error)error.textContent='Agrega productos o un precio personalizado mayor a cero.';return false;}
+    return true;
+}
+function posPedidoIr(step:any){const n=Number(step);if(n>posPedidoPaso&&!posPedidoValidar(n-1))return;_updatePedidoStep(n);(document.querySelector('#pedido-steps [aria-current]') as HTMLElement)?.focus();}
+function posPedidoAnterior(){posPedidoIr(posPedidoPaso-1);}
+function posPedidoSiguiente(){posPedidoIr(posPedidoPaso+1);}
+function posPedidoGuardar(){if(!posPedidoValidar(3))return;document.getElementById('pedidoForm')?.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));}
+(window as any)._updatePedidoStep=_updatePedidoStep;
 
 // ── Template chips para el campo de notas ──────────────────────────────────
 function pedidoInsertarTemplate(texto) {

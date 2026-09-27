@@ -46,17 +46,17 @@ const _kvState = _loadLocalMirror('kvState') || {};
 const _pendingKV: Record<string, string> = _kvState.pending || _loadLocalMirror('pendingKV') || {};
 const _kvBases: Record<string, string | null> = _kvState.bases || {};
 const _kvExpected: Record<string, Array<string | null>> = _kvState.expected || {};
-type PendingRowWrite = { batch?: string; table: string; rows?: any[]; field?: string; value?: string; expected?: Record<string, any> };
+type PendingRowWrite = { batch?: string; reason?:string; table: string; rows?: any[]; field?: string; value?: string; expected?: Record<string, any> };
 const _pendingRows: PendingRowWrite[] = _loadLocalMirror('pendingRows') || [];
 const _rowBases: Record<string, Record<string, any>> = _loadLocalMirror('rowBases') || {};
 let _rowFlush: Promise<void> | null = null;
 const _kvWriteQueues: Record<string, Promise<void>> = {};
-let _posOperation: {id:string;writes:PendingRowWrite[];tasks:Promise<any>[]} | null = null;
-async function posRunOperation<T>(action:()=>Promise<T>):Promise<T> {
+let _posOperation: {id:string;reason:string;writes:PendingRowWrite[];tasks:Promise<any>[]} | null = null;
+async function posRunOperation<T>(action:()=>Promise<T>,reason='Operacion del POS'):Promise<T> {
     if(_posOperation)throw new Error('Termina la operacion en curso antes de iniciar otra.');
     if(_rowFlush) await _rowFlush;
     if(_posOperation)throw new Error('Hay otra operacion en curso.');
-    const operation={id:mkId(),writes:[] as PendingRowWrite[],tasks:[] as Promise<any>[]};
+    const operation={id:mkId(),reason,writes:[] as PendingRowWrite[],tasks:[] as Promise<any>[]};
     const keys=['products','pedidos','pedidosFinalizados','clients','salesHistory','incomes','expenses','stockMovements','stockMovimientos'];
     const before=Object.fromEntries(keys.map(k=>[k,JSON.stringify(window[k] || [])]));
     let prepared=false;
@@ -153,6 +153,19 @@ function posFechaLocal(value:string):string {
     const d=new Date(value);if(Number.isNaN(d.getTime()))return '';
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
+// Importes MXN en centavos enteros; compartidos por modulos iniciales y diferidos.
+function posCentavos(value:any):number {
+    const n=Number(value);if(!Number.isFinite(n))return 0;
+    const magnitude=Math.abs(n);
+    return Math.sign(n)*Math.round((magnitude+Number.EPSILON*magnitude)*100);
+}
+function mkRound2(value:any):number {return posCentavos(value)/100;}
+function posTotalPagado(p:any):number {
+    const cents=(p.pagos||[]).reduce((sum:number,ab:any)=>sum+posCentavos(ab.monto??ab.amount??0),0);
+    return cents>0?cents/100:mkRound2(p.anticipo||0);
+}
+function calcSaldoPendiente(p:any):number {return Math.max(0,posCentavos(p.total)-posCentavos(posTotalPagado(p)))/100;}
+window.mkRound2=mkRound2;window.calcSaldoPendiente=calcSaldoPendiente;
 (window as any).mkId = mkId;
 
 function _stampLocalSave(records: any[], ts: string) {
@@ -757,15 +770,28 @@ function _queueRowWrite(op: PendingRowWrite): Promise<{ error: null }> {
         else Object.keys(bases).forEach(id => { if (String(bases[id][pending.field!]) === pending.value) delete bases[id]; });
     }
     snapshot.expected = {};
-    if (op.rows) op.rows.forEach(row => snapshot.expected[row.id] = bases[row.id] || null);
+    if (op.rows) {
+        snapshot.rows=snapshot.rows.filter(row=>!bases[row.id] || Object.keys(row).some(k=>k!=='updated_at' && !_sameStoredValue(row[k],bases[row.id][k])));
+        if(!snapshot.rows.length)return (_posOperation?Promise.resolve():_flushPendingRows()).then(()=>({error:null as null})).catch(error=>{throw Object.assign(new Error(error.message),{code:error.code,pendingSync:_pendingRows.length>0});});
+        snapshot.rows.forEach(row => snapshot.expected[row.id] = bases[row.id] || null);
+    }
     else Object.values(bases).forEach((row:any) => { if (String(row[op.field!]) === op.value) snapshot.expected[row.id] = row; });
-    if(_posOperation){snapshot.batch=_posOperation.id;_posOperation.writes.push(snapshot);return Promise.resolve({error:null});}
+    if(_posOperation){snapshot.batch=_posOperation.id;snapshot.reason=_posOperation.reason;_posOperation.writes.push(snapshot);return Promise.resolve({error:null});}
     _pendingRows.push(snapshot);
     try { _persistPendingRows(); }
     catch (e) { _pendingRows.pop(); return Promise.reject(e); }
     return _flushPendingRows().then(() => ({ error: null })).catch(error => {
         throw Object.assign(new Error(error?.message || 'Sincronización pendiente'), { code:error?.code, pendingSync: _pendingRows.includes(snapshot) });
     });
+}
+function _sameStoredValue(a:any,b:any):boolean {
+    if(a===b)return true;
+    if(a==null || b==null)return a==null && b==null;
+    if(typeof a==='number' && typeof b==='string' && b.trim()!=='')return Number(b)===a;
+    if(typeof b==='number' && typeof a==='string' && a.trim()!=='')return Number(a)===b;
+    if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((v,i)=>_sameStoredValue(v,b[i]));
+    if(typeof a==='object' && typeof b==='object'){const keys=Object.keys(a);return keys.length===Object.keys(b).length&&keys.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&_sameStoredValue(a[k],b[k]));}
+    return false;
 }
 function _upsertRelational(table: string, rows: any[]): Promise<{ error: null }> {
     if (!rows.length) return Promise.resolve({ error: null });
@@ -802,11 +828,6 @@ function _flushPendingRows(): Promise<void> {
                 : op.rows
                 ? await db.from(op.table).upsert(op.rows, { onConflict: 'id' })
                 : await db.from(op.table).delete().eq(op.field, op.value);
-            if (typeof db.rpc !== 'function' && op.table === 'incomes' && op.rows && result.error &&
-                /method/i.test(String(result.error.message || '')) &&
-                ['PGRST204', '42703'].includes(result.error.code)) {
-                result = await db.from(op.table).upsert(op.rows.map(({ method, ...r }) => r), { onConflict: 'id' });
-            }
             if (result.error) throw result.error;
             if (op.rows) _rememberRowBases(op.table, result.data || op.rows);
             else {
@@ -1062,6 +1083,7 @@ const _RELATIONAL_TABLES = {
         etiqueta: row.etiqueta || null,
         notas: row.notas || null,
         fromPayable: row.from_payable === true,
+        method: row.method || null,
         _updatedAt: row.updated_at, _updatedBy: row._updated_by || row.updated_by || null
     })},
     stockMovimientos: { table: 'stock_movements', min: 1, orderBy: 'fecha', limit: 1000, map: (row: any) => ({
@@ -1561,7 +1583,7 @@ function saveExpenses() {
                     id: String(e.id), concept: e.concept||e.concepto||null,
                     amount: Number(e.amount||e.monto)||0, date: e.date||e.fecha||null,
                     category: e.category||e.categoria||null, etiqueta: e.etiqueta||null,
-                    notas: e.notas||null, from_payable: e.fromPayable===true
+                    notas: e.notas||null, from_payable: e.fromPayable===true, method: e.method||e.metodo||null
                 };
             });
             _mirrorLocal('expenses', window.expenses || []);

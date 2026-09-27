@@ -1,8 +1,5 @@
 ﻿// ============== DASHBOARD ==============
-// Shim: calcSaldoPendiente vive en balance.bundle (lazy). Usar _csp() en dashboard.
-const _csp = (p: any): number => typeof (window as any).calcSaldoPendiente === 'function'
-    ? (window as any).calcSaldoPendiente(p)
-    : Math.max(0, Number(p.total || 0) - Number(p.anticipo || 0));
+const _csp = calcSaldoPendiente;
 
         // ============== ALERTAS ENTREGAS PRÓXIMAS ==============
         function checkAlertasEntregas() {

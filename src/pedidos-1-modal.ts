@@ -181,20 +181,6 @@ function openPedidoModal(id = null) {
     // UX-3: activar step 1 al abrir el modal
     _updatePedidoStep(1);
 
-    // UX-3: step 3 cuando concepto recibe focus
-    (function _setupWizardFocusListeners() {
-        const _conceptoEl = document.getElementById('pedidoConcepto');
-        const _precioEl   = document.getElementById('pedidoCosto') || document.getElementById('pedidoPrecioLibre');
-        if (_conceptoEl && !((_conceptoEl as any)._wizardFocus)) {
-            (_conceptoEl as any)._wizardFocus = true;
-            _conceptoEl.addEventListener('focus', () => _updatePedidoStep(3));
-        }
-        if (_precioEl && !((_precioEl as any)._wizardFocus)) {
-            (_precioEl as any)._wizardFocus = true;
-            _precioEl.addEventListener('focus', () => _updatePedidoStep(4));
-        }
-    })();
-
     // M6: Populate concepto suggestions from existing pedidos
     const dlConcepto = document.getElementById('conceptoSuggestions');
     if (dlConcepto && window.pedidos) {
@@ -376,7 +362,7 @@ function calcPedidoTotal() {
     const items = window.pedidoProductosSeleccionados || [];
 
     // UX-3: activar step 2 cuando se agrega un producto al pedido
-    if (items.length > 0 && typeof _updatePedidoStep === 'function') _updatePedidoStep(2);
+
 
     // Mostrar/ocultar campo de precio libre según si hay productos
     const precioLibreRow = document.getElementById('pedidoPrecioLibreRow');
@@ -429,6 +415,7 @@ function calcPedidoTotal() {
     const costoEl = document.getElementById('pedidoCosto');
     if (cantEl) cantEl.value = items.reduce((s, it) => s + (it.quantity || 1), 0) || 1;
     if (costoEl) costoEl.value = total.toFixed(2);
+    if(typeof posPedidoResumen==='function')posPedidoResumen();
 
     const costoMatEl = document.getElementById('pedidoCostoMateriales');
     if (costoMatEl) costoMatEl.value = costoMat.toFixed(2);

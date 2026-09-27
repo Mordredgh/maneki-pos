@@ -500,10 +500,10 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-sm inv-col-hidden-prov">${_esc(product.proveedor||'—')}</td>
             <td class="px-4 py-3 font-semibold" id="stock-cell-${pid}">
                 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
-                    <span data-dblclick="editarStockInline" data-arg="${pid}" title="Doble clic para editar"
+                    <button type="button" data-action="editarStockInline" aria-label="Ajustar existencias" data-arg="${pid}" title="Ajustar existencias"
                         style="cursor:pointer;padding:2px 10px;border-radius:8px;background:#f3f4f6;border:1px dashed #d1d5db;font-size:.95rem;">
                         ${stockEf} <span style="font-size:10px;color:#9ca3af;font-weight:400;">${_esc(product.unidad||'pza')}</span>
-                    </span>
+                    </button>
                 </div>
             </td>
             <td class="px-4 py-3">${badge}</td>
@@ -655,8 +655,8 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-500 text-xs inv-col-hidden-sku">${_esc(product.sku||'—')}</td>
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
-            <td class="px-4 py-3 text-right text-gray-800 font-semibold" data-dblclick="invInlineEditPrice" data-arg="${pid}" data-pass-el="true" style="font-size:.95rem;cursor:pointer;" title="Doble-click para editar precio">$${Number(product.price||0).toFixed(2)}</td>
-            <td class="px-4 py-3" data-dblclick="invInlineEditStock" data-arg="${pid}" data-pass-el="true" style="cursor:pointer;" title="Doble-click para editar stock">${stockCell}</td>
+            <td class="px-4 py-3 text-right text-gray-800 font-semibold" style="font-size:.95rem;"><button type="button" class="pos-inv-edit" data-action="invInlineEditPrice" data-arg="${pid}" aria-label="Editar precio">$${Number(product.price||0).toFixed(2)} · Editar</button></td>
+            <td class="px-4 py-3">${stockCell}<button type="button" class="pos-inv-edit" data-action="invInlineEditStock" data-arg="${pid}">Ajustar stock</button></td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">

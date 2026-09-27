@@ -23,6 +23,9 @@ npm-debug.log*
 # Variables de entorno
 .env
 .env.local
+.env.backup.local
+*.bichobk
+*.bichobk.partial
 .dev.vars
 .dev.vars.*
 .wrangler/

@@ -674,48 +674,10 @@ function exportarInventarioCSV() {
 window.exportarInventarioCSV = exportarInventarioCSV;
 
 // ── Edición inline de stock ────────────────────────────────────────────────
-function editarStockInline(id) {
-    const p = (window.products||[]).find(x => String(x.id) === String(id));
-    if (!p) return;
-    const cell = document.getElementById(`stock-cell-${id}`);
-    if (!cell) return;
-    cell.innerHTML = `
-        <div style="display:flex;align-items:center;gap:4px;">
-            <input id="inline-stock-${id}" type="number" min="0" value="${typeof getStockEfectivo==='function'?getStockEfectivo(p):(p.stock||0)}"
-                style="width:60px;padding:2px 6px;border:1px solid #6366f1;border-radius:6px;font-size:13px;text-align:center;"
-                onkeydown="if(event.key==='Enter')confirmarStockInline('${id}');if(event.key==='Escape')renderInventoryTable();">
-            <button onclick="confirmarStockInline('${id}')"
-                style="width:24px;height:24px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">✓</button>
-            <button onclick="renderInventoryTable()"
-                style="width:24px;height:24px;background:#e5e7eb;color:#374151;border:none;border-radius:6px;cursor:pointer;font-size:12px;">✕</button>
-        </div>`;
-    const inp = document.getElementById(`inline-stock-${id}`);
-    if (inp) inp.focus();
-}
-window.editarStockInline = editarStockInline;
-
-function confirmarStockInline(id) {
-    const p = (window.products||[]).find(x => String(x.id) === String(id));
-    if (!p) return;
-    const inp = document.getElementById(`inline-stock-${id}`);
-    if (!inp) return;
-    const nuevo = parseInt(inp.value);
-    if (isNaN(nuevo)||nuevo<0) { manekiToastExport('Stock inválido','err'); return; }
-    const antes = typeof getStockEfectivo==='function'?getStockEfectivo(p):(p.stock||0);
-    p.stock = nuevo;
-    // Sincronizar variantes si existen (distribuir en la primera)
-    if (Array.isArray(p.variants) && p.variants.length > 0) {
-        const diff = nuevo - antes;
-        if (diff !== 0 && p.variants[0]) p.variants[0].qty = Math.max(0, (Number(p.variants[0].qty)||0) + diff);
-        if (typeof syncStockFromVariants==='function') syncStockFromVariants(p);
-    }
-    registrarMovimiento({ productoId:p.id, productoNombre:p.name, tipo:'ajuste',
-        cantidad:nuevo-antes, motivo:'Edición inline', stockAntes:antes, stockDespues:nuevo });
-    saveProducts(); renderInventoryTable();
-    if (typeof updateDashboard === 'function') updateDashboard();
-    manekiToastExport(`✅ Stock de "${p.name}" → ${nuevo}`, 'ok');
-}
-window.confirmarStockInline = confirmarStockInline;
+function editarStockInline(id){posEditarInventario(id,'stock');}
+window.editarStockInline=editarStockInline;
+function confirmarStockInline(id){posEditarInventario(id,'stock');}
+window.confirmarStockInline=confirmarStockInline;
 
 // ── Poblar filtro de proveedores ───────────────────────────────────────────
 function poblarFiltroProveedores() {
@@ -733,68 +695,10 @@ function poblarFiltroProveedores() {
 window.poblarFiltroProveedores = poblarFiltroProveedores;
 
 // ── Edición inline de stock para PT (doble-click en celda) ────────────────
-function invInlineEditStock(id, td) {
-    const product = (window.products||[]).find(p => String(p.id) === String(id));
-    if (!product) return;
-    const prev = Number(product.stock)||0;
-    const input = document.createElement('input');
-    input.type = 'number'; input.min = '0'; input.step = '0.01';
-    input.value = String(prev);
-    input.style.cssText = 'width:60px;padding:2px 6px;border:1.5px solid #9669c4;border-radius:6px;font-size:.85rem;text-align:center;';
-    const commit = async () => {
-        const nv = parseFloat(input.value);
-        if (!isNaN(nv) && nv !== prev) {
-            const antes = prev;
-            product.stock = nv;
-            registrarMovimiento({ productoId: product.id, productoNombre: product.name,
-                tipo: 'ajuste', cantidad: nv - antes, motivo: 'Edición inline',
-                stockAntes: antes, stockDespues: nv });
-            saveProducts();
-            manekiToastExport(`Stock actualizado: ${product.name} → ${nv}`, 'ok');
-        }
-        renderInventoryTable();
-    };
-    input.addEventListener('blur', commit);
-    input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') input.blur();
-        if (e.key === 'Escape') { input.value = String(prev); input.blur(); }
-    });
-    td.innerHTML = '';
-    td.appendChild(input);
-    input.focus(); input.select();
-}
-window.invInlineEditStock = invInlineEditStock;
-
-// UX12: Edición inline de precio para PT — doble-click en celda de precio
-function invInlineEditPrice(id, td) {
-    const product = (window.products||[]).find((p: any) => String(p.id) === String(id));
-    if (!product) return;
-    const prev = Number(product.price)||0;
-    const input = document.createElement('input');
-    input.type = 'number'; input.min = '0'; input.step = '0.01';
-    input.value = prev.toFixed(2);
-    input.style.cssText = 'width:80px;padding:2px 6px;border:1.5px solid #FFD166;border-radius:6px;font-size:.85rem;text-align:center;font-weight:700;';
-    const commit = () => {
-        const nv = parseFloat(input.value);
-        if (!isNaN(nv) && nv >= 0 && nv !== prev) {
-            if (!product.historialPrecios) product.historialPrecios = [];
-            product.historialPrecios.push({ precio: prev, fecha: _fechaHoy() });
-            product.price = nv;
-            if (typeof saveProducts === 'function') saveProducts();
-            if (typeof manekiToastExport === 'function') manekiToastExport(`Precio actualizado: ${product.name} → $${nv.toFixed(2)}`, 'ok');
-        }
-        if (typeof renderInventoryTable === 'function') renderInventoryTable();
-    };
-    input.addEventListener('blur', commit);
-    input.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (e.key === 'Enter') input.blur();
-        if (e.key === 'Escape') { input.value = prev.toFixed(2); input.blur(); }
-    });
-    td.innerHTML = '';
-    td.appendChild(input);
-    input.focus(); input.select();
-}
-window.invInlineEditPrice = invInlineEditPrice;
+function invInlineEditStock(id,td){posEditarInventario(id,'stock');}
+window.invInlineEditStock=invInlineEditStock;
+function invInlineEditPrice(id,td){posEditarInventario(id,'price');}
+window.invInlineEditPrice=invInlineEditPrice;
 
 // ── Registrar merma (pérdida/daño de material) ────────────────────────────
 async function registrarMerma(id) {

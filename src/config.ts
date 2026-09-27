@@ -911,7 +911,7 @@ window._fmtFechaCorta = _fmtFechaCorta;
 
 // ── Helper: formato de dinero "$1,234" unificado en toda la app ───────────────
 function fmtMoney(amount) {
-    const n = Number(amount) || 0;
+    const n = mkRound2(amount);
     if (n === Math.floor(n)) {
         return '$' + n.toLocaleString('es-MX');
     }

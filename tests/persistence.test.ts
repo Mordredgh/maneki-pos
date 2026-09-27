@@ -87,6 +87,36 @@ function businessApp() {
   return {...a, fields, submit: () => submits[0]({preventDefault() {}})};
 }
 
+it('editar un producto transmite solo esa fila y no toca otros productos',async()=>{
+ const a=app();a.ctx.products=[{id:'p1',name:'Taza',price:100,stock:10},{id:'p2',name:'Bolsa',price:20,stock:5}];
+ await a.ctx.saveProducts();
+ const sent:any[]=[];
+ a.ctx.testApi.rpc=async(_name:string,args:any)=>{sent.push(...args.p_rows);return {data:args.p_rows,error:null};};
+ a.ctx.products[1].stock=4;
+ await a.ctx.saveProducts();
+ expect(sent.map(r=>r.id)).toEqual(['p2']);
+ sent.splice(0);await a.ctx.saveProducts();expect(sent).toEqual([]);
+});
+it('calcula saldo y centavos igual antes de cargar Balance',()=>{
+ const a=app();
+ expect(a.ctx.mkRound2(1.005)).toBe(1.01);
+ expect(a.ctx.mkRound2(-1.005)).toBe(-1.01);
+ expect(a.ctx.calcSaldoPendiente({total:0.30,pagos:[{monto:0.10},{monto:0.20}]})).toBe(0);
+ expect(a.ctx.calcSaldoPendiente({total:100,anticipo:25})).toBe(75);
+ expect(a.ctx.calcSaldoPendiente({total:100,anticipo:80,pagos:[{monto:20}]})).toBe(80);
+});
+it('caja cuenta cobros una vez y separa saldos por cobrar del efectivo',()=>{
+ const a=app();a.load('src/operations.ts');
+ const result=a.ctx.posResumenCaja('2026-09-27',[
+  {id:'a',date:'2026-09-27',type:'anticipo',total:50,method:'Efectivo'},
+  {id:'unpaid',date:'2026-09-27',type:'pedido',total:90,method:'Efectivo'}
+ ],[{id:'a',date:'2026-09-27',amount:50,method:'Efectivo'},{id:'b',date:'2026-09-27',amount:20,method:'Transferencia'}],
+ [{id:'e',date:'2026-09-27',amount:10,method:'Efectivo'}],100);
+ expect(result.efectivo).toMatchObject({entradas:50,salidas:10,esperado:140});
+ expect(result.transferencia.esperado).toBe(20);
+ expect(result.totalCobrado).toBe(70);
+});
+
 it('resume diferencias de conflicto sin incluir registros ajenos',()=>{
  const a=app();
  const text=a.ctx.posDescribeConflicts([{table:'products',rows:[{id:'p',name:'Taza',stock:9}],expected:{p:{id:'p',name:'Taza',stock:10}}}],{products:{p:{id:'p',name:'Taza',stock:8},other:{name:'Privado'}}},{},{});
@@ -99,6 +129,16 @@ it('los cierres nocturnos usan el dia local y conservan fechas sin hora',()=>{
 });
 
 describe('Persistencia real del POS', () => {
+  it('ajuste rapido exige motivo y conserva juntos stock y movimiento al fallar la red',async()=>{
+    const a=app();a.load('src/operations.ts');a.load('src/inventory-1.ts');
+    a.ctx.products=[{id:'p1',name:'Taza',stock:5}];a.ctx.stockMovements=[];a.ctx._fechaHoy=()=> '2026-09-27';
+    await expect(a.ctx.posAjustarInventario('p1','stock',3,'')).rejects.toThrow('motivo');
+    expect(a.ctx.products[0].stock).toBe(5);
+    a.fail();await expect(a.ctx.posAjustarInventario('p1','stock',3,'Conteo fisico')).rejects.toMatchObject({pendingSync:true});
+    const pending=JSON.parse(a.stored.get('maneki_pendingRows')||'[]');
+    expect(pending.some(r=>r.table==='products')).toBe(true);expect(pending.some(r=>r.table==='stock_movements')).toBe(true);
+    expect(new Set(pending.map(r=>r.batch)).size).toBe(1);
+  });
   it('un fallo de red conserva el lote completo y reintenta con el mismo identificador', async()=>{
     const a=app();const ids:string[]=[];let offline=true;
     a.ctx.testApi.rpc=async (_name:string,args:any)=>{ids.push(args.p_id);return offline?{error:{message:'sin red'}}:{data:args.p_operations.map((o:any)=>o.rows)};};
@@ -317,10 +357,10 @@ describe('Persistencia real del POS', () => {
       expect.objectContaining({ id: 's1', type: 'anticipo', total: 200, method: 'Tarjeta' })
     ]);
   });
-  it('guarda ingresos y gastos aunque sus tablas no tengan updated_at ni method', async () => {
+  it('guarda ingresos y gastos con metodo sin exigir updated_at', async () => {
     const { ctx } = app({
-      incomes: ['id', 'concept', 'amount', 'date', 'client', 'from_pos', 'folio_origen', 'pedido_id'],
-      expenses: ['id', 'concept', 'amount', 'date', 'category', 'etiqueta', 'notas', 'from_payable']
+      incomes: ['id', 'concept', 'amount', 'date', 'client', 'from_pos', 'folio_origen', 'pedido_id', 'method'],
+      expenses: ['id', 'concept', 'amount', 'date', 'category', 'etiqueta', 'notas', 'from_payable', 'method']
     });
     ctx.incomes = [{ id: 'i1', amount: 50, method: 'Tarjeta' }];
     ctx.expenses = [{ id: 'e1', amount: 25 }];
