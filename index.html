@@ -2648,6 +2648,7 @@ input:focus, select:focus, textarea:focus, button:focus {
           <button type="button" data-action="posPedidoIr" data-arg="3">3. Detalles</button>
           <button type="button" data-action="posPedidoIr" data-arg="4">4. Confirmar</button>
         </nav>
+        <div class="pos-wizard-mobile-progress" aria-hidden="true"><span id="pos-pedido-step-label">Cliente · paso 1 de 4</span><span class="pos-wizard-progress-track"><span id="pos-pedido-progress-fill"></span></span></div>
         <form id="pedidoForm" class="space-y-4 pb-2">
             <input type="hidden" id="editPedidoId">
             <details open class="mk-pedido-section">
@@ -2687,17 +2688,20 @@ input:focus, select:focus, textarea:focus, button:focus {
     </div>
 
     <div id="pedidoVarianteRow" class="hidden mt-2">
-      <label for="pedidoVarianteSelect" class="text-xs text-gray-600 font-semibold">Variante:</label>
+      <label for="pedidoVarianteSelect" class="text-sm text-gray-700 font-semibold">Variante:</label>
       <select id="pedidoVarianteSelect" class="w-full px-3 py-2 mt-1 border border-gray-200 rounded-xl outline-none text-sm"></select>
+      <div id="pedidoVarianteChoices" class="pedido-variant-choices" role="group" aria-label="Elegir talla y color"></div>
     </div>
 
-    <div class="flex gap-2 mt-2">
-      <input type="number" id="pedidoProductoCantidad" placeholder="Cant." min="1" value="1"
+    <div class="pedido-product-entry mt-2">
+      <label for="pedidoProductoCantidad">Cantidad
+      <input type="number" id="pedidoProductoCantidad" min="1" value="1"
         data-oninput="_pvCantidadChange" data-pass-el="1"
-        class="w-20 px-3 py-2 border border-gray-200 rounded-xl outline-none text-sm">
-      <input type="number" id="pedidoProductoPrecio" placeholder="Precio $" step="0.01" min="0"
-        class="w-28 px-3 py-2 border border-amber-300 rounded-xl outline-none text-sm font-semibold text-amber-800" style="background:#fffbeb">
-      <button type="button" data-action="agregarProductoPedido" class="mk-btn-primary" style="flex:1;justify-content:center;">
+        class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none text-sm"></label>
+      <label for="pedidoProductoPrecio">Precio por pieza
+      <input type="number" id="pedidoProductoPrecio" step="0.01" min="0"
+        class="w-full px-3 py-2 border border-amber-300 rounded-xl outline-none text-sm font-semibold text-amber-800" style="background:#fffbeb"></label>
+      <button type="button" data-action="agregarProductoPedido" class="mk-btn-primary pedido-product-add">
         <i class="fas fa-plus"></i> Agregar al pedido
       </button>
     </div>
@@ -2787,7 +2791,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
 
         <div class="px-8 py-4 border-t border-gray-100 flex-shrink-0 pos-wizard-footer">
-            <p id="pos-pedido-summary" aria-live="polite"></p><p id="pos-pedido-error" role="alert"></p>
+            <p id="pos-pedido-summary" aria-live="polite"></p><p id="pedidoCostoProduccion" style="display:none"></p><p id="pos-pedido-error" role="alert"></p>
             <div class="pos-wizard-actions">
               <button type="button" id="pos-pedido-back" data-action="posPedidoAnterior">Anterior</button>
               <button type="button" id="pos-pedido-next" data-action="posPedidoSiguiente">Siguiente</button>

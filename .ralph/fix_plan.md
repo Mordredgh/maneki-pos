@@ -135,3 +135,12 @@
 - [x] Persistir rangos en JSONB y rescatar 6/6 productos variables del respaldo KV en Supabase.
 - [x] Evitar que Cancelar confirme por tratar el texto "false" como verdadero.
 - [x] Publicar correcciones de verificacion y comprobar dominio y Service Worker.
+
+## Claridad visual de pedidos y variantes 2026-09-27
+
+- [x] Mostrar avance del pedido, resumen final detallado y controles claros de cantidad/precio.
+- [x] Elegir talla/color mediante botones accesibles y mostrar precio, material y total por linea.
+- [x] Simplificar nombres en inventario y actualizar en vivo la vista previa de rangos.
+- [x] Corregir acceso a Nuevo pedido desde inicio y guardar rangos editados.
+- [x] Probar en staging el flujo completo y la vista movil con datos ficticios.
+- [x] Construir, publicar y verificar 401/200 y hash de Service Worker en ambos dominios.

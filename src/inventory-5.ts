@@ -770,11 +770,11 @@ function renderInventoryTable() {
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                    <button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" aria-label="Editar servicio"
+                    <button type="button" data-action="editProduct" data-arg="${pid}" title="Editar" aria-label="Editar producto con precio por cantidad"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-pen"></i></button>
-                    <button type="button" data-action="duplicarProducto" data-arg="${pid}" title="Duplicar" aria-label="Duplicar service"
+                    <button type="button" data-action="duplicarProducto" data-arg="${pid}" title="Duplicar" aria-label="Duplicar producto con precio por cantidad"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(150,105,196,0.2);background:rgba(150,105,196,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-copy"></i></button>
-                    <button type="button" data-action="deleteProduct" data-arg="${pid}" title="Eliminar" aria-label="Eliminar service"
+                    <button type="button" data-action="deleteProduct" data-arg="${pid}" title="Eliminar" aria-label="Eliminar producto con precio por cantidad"
                         style="width:28px;height:28px;border-radius:7px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
@@ -945,10 +945,10 @@ function renderInventoryTable() {
         },
         {
             id: 'pv',
-            title: '🎯 Productos Variables (Stickers, Tarjetas...)',
+            title: '🎯 Productos con precio por cantidad',
             titleColor: '#0369a1',
             titleBg: 'linear-gradient(135deg,#f0f9ff,#e0f2fe)',
-            btnLabel: '+ Producto Variable',
+            btnLabel: '+ Precio por cantidad',
             btnOnclick: 'injectVariableProductModal();openVariableProductModal()',
             products: pvs,
             renderFila: renderFilaVariable,
@@ -965,7 +965,7 @@ function renderInventoryTable() {
                 {label:'Margen', sortKey:'margen'},
                 {label:'Acciones'},
             ],
-            emptyMsg: 'Sin productos variables. Agrega stickers, tarjetas u otros con precio por cantidad.'
+            emptyMsg: 'Sin productos con precio por cantidad. Agrega playeras, stickers o tarjetas.'
         },
         {
             id: 'mp',

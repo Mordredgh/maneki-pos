@@ -29,7 +29,7 @@ function pvQuitarCombinacion(index:number){window._pvCombinaciones.splice(index,
 function pvRenderCombinaciones(){
     const list=document.getElementById('pvCombinacionesList');if(!list)return;
     list.replaceChildren();
-    if(!window._pvCombinaciones.length){list.textContent='Sin tallas y colores: el producto se venderá sin elección de variante.';return;}
+    if(!window._pvCombinaciones.length){list.textContent='Sin tallas y colores: el producto se venderá sin elección de variante.';pvRenderVentaPreview();return;}
     window._pvCombinaciones.forEach((row:any,i:number)=>{
         const line=document.createElement('div');line.className='pv-combination-row';
         for(const [field,label,kind] of [['size','Talla','text'],['color','Color','text'],['qty','Existencias listas','number'],['priceDelta','Recargo por pieza','number']]){
@@ -38,6 +38,7 @@ function pvRenderCombinaciones(){
         }
         const remove=document.createElement('button');remove.type='button';remove.textContent='Quitar';remove.onclick=()=>pvQuitarCombinacion(i);line.appendChild(remove);list.appendChild(line);
     });
+    pvRenderVentaPreview();
 }
 window.pvAgregarCombinacion=pvAgregarCombinacion;
 
@@ -47,18 +48,21 @@ function injectVariableProductModal() {
     const modal = document.createElement('div');
     modal.id = 'pvModal';
     modal.className = 'modal';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-labelledby','pvModalTitle');
     modal.innerHTML = `
     <div class="modal-content" style="max-width:580px;max-height:90vh;overflow-y:auto;border-radius:20px;padding:28px 24px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <h3 style="font-size:1.3rem;font-weight:800;color:#1a0533;">🎨 Producto Variable</h3>
-            <button onclick="closeModal('pvModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;">×</button>
+            <h3 id="pvModalTitle" style="font-size:1.3rem;font-weight:800;color:#1a0533;">Producto con precio por cantidad</h3>
+            <button type="button" onclick="closeModal('pvModal')" aria-label="Cerrar formulario de producto" class="pv-close">×</button>
         </div>
         <form id="pvForm" style="display:flex;flex-direction:column;gap:16px;">
             <input type="hidden" id="pvEditId" value="">
 
             <!-- IMAGEN -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">📷 Imagen del Producto</label>
+                <label for="pvProductImage" style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Imagen del producto</label>
                 <input type="file" id="pvProductImage" accept="image/*"
                     style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;box-sizing:border-box;">
                 <div id="pvImagePreview" class="hidden" style="margin-top:10px;text-align:center;">
@@ -68,14 +72,14 @@ function injectVariableProductModal() {
 
             <!-- Nombre -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">📝 Nombre del producto *</label>
+                <label for="pvNombre" class="block text-sm font-semibold text-gray-700 mb-2">Nombre del producto *</label>
                 <input type="text" id="pvNombre" required placeholder="Ej: Stickers 5x5 cm, Tarjetas de presentación"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none">
             </div>
 
             <!-- Rendimiento por hoja -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">🎯 Piezas por hoja / unidad de MP</label>
+                <label for="pvRendimiento" class="block text-sm font-semibold text-gray-700 mb-2">Piezas por hoja o unidad de material</label>
                 <input type="number" id="pvRendimiento" min="1" placeholder="Ej: 12 (cuántas piezas caben en 1 hoja)"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none">
                 <p class="text-xs text-gray-400 mt-1">El sistema dividirá la cantidad del pedido entre este número para calcular hojas a descontar.</p>
@@ -84,7 +88,7 @@ function injectVariableProductModal() {
             <!-- Materias primas -->
             <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <label class="text-sm font-semibold text-gray-700">🏭 Materias Primas y Servicios</label>
+                    <label for="pvBuscarMP" class="text-sm font-semibold text-gray-700">Materiales y servicios</label>
                     <button type="button" onclick="pvAgregarComponente()"
                         class="px-3 py-1.5 rounded-lg text-xs font-bold text-white"
                         style="background:linear-gradient(135deg,#9669c4,#ab84d1);">+ Agregar componente</button>
@@ -100,14 +104,14 @@ function injectVariableProductModal() {
 
             <!-- Tabla de precios -->
             <section class="pv-workflow-card" aria-labelledby="pvCombTitle">
-                <h4 id="pvCombTitle">Tallas y colores disponibles</h4>
+                <h4 id="pvCombTitle">Tallas y colores</h4>
                 <p>Opcional para playeras. Una fila es una combinación; las existencias son piezas ya listas. Deja cero si se fabrica al recibir el pedido.</p>
                 <div id="pvCombinacionesList"></div>
                 <button type="button" data-action="pvAgregarCombinacion">Agregar talla y color</button>
             </section>
             <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <label class="text-sm font-semibold text-gray-700">💰 Tabla de precios por cantidad</label>
+                    <span class="text-sm font-semibold text-gray-700">Precio por cantidad</span>
                     <button type="button" onclick="pvAgregarRangoPrecio()"
                         class="px-3 py-1.5 rounded-lg text-xs font-bold text-white"
                         style="background:#059669;">+ Agregar rango</button>
@@ -115,17 +119,22 @@ function injectVariableProductModal() {
                 <p class="text-xs text-gray-400 mb-2">Si el cliente pide una cantidad que no está exacta, se usa el precio del rango inferior más cercano.</p>
                 <div id="pvTablaPreciosList" style="display:flex;flex-direction:column;gap:6px;"></div>
             </div>
+            <section class="pv-sale-preview" aria-label="Vista previa de venta">
+                <span>Así aparecerá al venderlo</span>
+                <strong id="pvSalePreviewName">Nombre del producto</strong>
+                <p id="pvSalePreviewDetails">Agrega una talla, color y rango para ver el precio por pieza.</p>
+            </section>
 
             <!-- SKU -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Código SKU <span class="text-gray-400 font-normal">(opcional)</span></label>
+                <label for="pvSku" class="block text-sm font-semibold text-gray-700 mb-2">Código SKU <span class="text-gray-400 font-normal">(opcional)</span></label>
                 <input type="text" id="pvSku" placeholder="Se genera automáticamente si lo dejas vacío"
                     class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none text-sm">
             </div>
 
             <!-- CATEGORÍA -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Categoría</label>
+                <label for="pvCategory" style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Categoría</label>
                 <select id="pvCategory"
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.9rem;outline:none;background:#fff;box-sizing:border-box;">
                     <option value="">Sin categoría</option>
@@ -134,13 +143,13 @@ function injectVariableProductModal() {
 
             <!-- TAGS -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">🏷️ Tags / Etiquetas</label>
+                <span style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Etiquetas</span>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;" id="pvTagsGrid"></div>
             </div>
 
             <!-- NOTAS -->
             <div>
-                <label style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">📋 Notas internas <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+                <label for="pvNotas" style="display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px;">Notas internas <span style="font-weight:400;color:#5c5366;">(opcional)</span></label>
                 <textarea id="pvNotas" rows="2" placeholder="Especificaciones, materiales, observaciones..."
                     style="width:100%;padding:12px 16px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:.85rem;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
             </div>
@@ -148,14 +157,27 @@ function injectVariableProductModal() {
             <button type="submit" id="pvSubmitBtn"
                 class="w-full py-3 rounded-xl text-white font-bold text-base mt-2"
                 style="background:linear-gradient(135deg,#9669c4,#ab84d1);">
-                ✅ Guardar Producto Variable
+                Guardar producto
             </button>
         </form>
     </div>`;
     document.body.appendChild(modal);
     modal.querySelector('#pvForm')?.addEventListener('submit',guardarProductoVariable);
+    modal.querySelector('#pvForm')?.addEventListener('input',pvRenderVentaPreview);
 }
 window.injectVariableProductModal = injectVariableProductModal;
+
+function pvRenderVentaPreview(){
+    const name=document.getElementById('pvSalePreviewName');
+    const details=document.getElementById('pvSalePreviewDetails');
+    if(!name||!details)return;
+    name.textContent=document.getElementById('pvNombre')?.value.trim()||'Nombre del producto';
+    const first=window._pvCombinaciones?.[0];
+    const tier=(window._pvTablaPreciosVariable||[]).filter(r=>Number(r.cantidadMin)>0&&Number(r.precio)>0).sort((a,b)=>a.cantidadMin-b.cantidadMin)[0];
+    const variant=first?.size&&first?.color?`${first.size} / ${first.color} · `:'';
+    const price=tier?`desde $${(Number(tier.precio)/Number(tier.cantidadMin)+(Number(first?.priceDelta)||0)).toFixed(2)} por pieza`:'agrega un rango para mostrar el precio';
+    details.textContent=`${variant}${price}`;
+}
 
 function pvFiltrarMP(q) {
     const box = document.getElementById('pvMpSuggestions');
@@ -236,6 +258,20 @@ window.pvAgregarRangoPrecio = pvAgregarRangoPrecio;
 function pvRenderTablaPreciosList() {
     const list = document.getElementById('pvTablaPreciosList');
     if (!list) return;
+    if(!list._pvBound){
+        list.addEventListener('input',(event:any)=>{
+            const input=event.target;
+            const idx=Number(input?.dataset?.priceIndex);
+            const field=input?.dataset?.priceField;
+            if(!Number.isInteger(idx)||!['cantidadMin','precio'].includes(field))return;
+            pvEditarRango(idx,field,input.value);
+            const row=input.closest('.pv-price-row');
+            const value=row?.querySelector('.pv-price-unit');
+            const range=window._pvTablaPreciosVariable[idx];
+            if(value&&range)value.textContent=range.cantidadMin>0&&range.precio>0?`$${(range.precio/range.cantidadMin).toFixed(2)}`:'$—';
+        });
+        list._pvBound=true;
+    }
     const tabla = window._pvTablaPreciosVariable || [];
     if (!tabla.length) {
         list.innerHTML = '<p class="text-xs text-gray-400">Sin rangos. Agrega al menos uno.</p>';
@@ -253,19 +289,18 @@ function pvRenderTablaPreciosList() {
                 ? (r.precio / r.cantidadMin).toFixed(2)
                 : '—';
             return `
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:center;">
-            <input type="number" min="1" placeholder="Ej: 10" value="${r.cantidadMin}"
-                onchange="pvEditarRango(${i},'cantidadMin',this.value);pvRenderTablaPreciosList()"
+        <div class="pv-price-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:center;">
+            <input type="number" min="1" placeholder="Ej: 10" value="${r.cantidadMin}" data-price-index="${i}" data-price-field="cantidadMin" aria-label="Cantidad mínima del rango ${i+1}"
                 class="px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none text-center">
-            <input type="number" min="0" step="0.01" placeholder="Ej: 50.00" value="${r.precio}"
-                onchange="pvEditarRango(${i},'precio',this.value);pvRenderTablaPreciosList()"
+            <input type="number" min="0" step="0.01" placeholder="Ej: 50.00" value="${r.precio}" data-price-index="${i}" data-price-field="precio" aria-label="Precio total del rango ${i+1}"
                 class="px-3 py-2 border border-emerald-200 rounded-lg text-sm outline-none text-center"
                 style="color:#059669;font-weight:600;">
-            <span style="font-size:.85rem;font-weight:700;color:#0369a1;text-align:center;padding:8px 4px;background:#e0f2fe;border-radius:8px;">$${unitario}</span>
+            <span class="pv-price-unit" style="font-size:.85rem;font-weight:700;color:#0369a1;text-align:center;padding:8px 4px;background:#e0f2fe;border-radius:8px;">$${unitario}</span>
             <button onclick="pvQuitarRango(${i})"
                 style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;padding:0 4px;">✕</button>
         </div>`;
         }).join('');
+    pvRenderVentaPreview();
 }
 window.pvRenderTablaPreciosList = pvRenderTablaPreciosList;
 
@@ -344,9 +379,10 @@ function openVariableProductModal(editId) {
                 pvRenderCombinaciones();
                 renderTagsPv();
                 const title = document.querySelector('#pvModal h3');
-                if (title) title.textContent = '🎨 Editar Producto Variable';
+                if (title) title.textContent = 'Editar producto con precio por cantidad';
                 const btn = document.getElementById('pvSubmitBtn');
-                if (btn) btn.textContent = '💾 Guardar Cambios';
+                if (btn) btn.textContent = 'Guardar cambios';
+                pvRenderVentaPreview();
             }, 80);
         }
     } else {
@@ -381,7 +417,7 @@ async function guardarProductoVariable(e) {
     // Spinner
     const _btn = document.getElementById('pvSubmitBtn');
     if (_btn) { _btn.disabled = true; _btn.textContent = '⏳ Guardando...'; }
-    const _restore = () => { if (_btn) { _btn.disabled = false; _btn.textContent = editId ? '💾 Guardar Cambios' : '✅ Guardar Producto Variable'; } };
+    const _restore = () => { if (_btn) { _btn.disabled = false; _btn.textContent = editId ? 'Guardar cambios' : 'Guardar producto'; } };
 
     // Subir imagen si hay archivo nuevo
     let imageUrl = window._pvProductImage || '';

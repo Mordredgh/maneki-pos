@@ -6245,6 +6245,7 @@ body.dark-mode #bienvenida-section .mk-kpi-label,body.dark-mode #bienvenida-sect
 .pos-wizard-nav button[aria-current=step]{background:#ffd166;color:#362703;border-color:#b28015}
 #pedidoModal [hidden]{display:none!important}
 #pos-pedido-summary{font-weight:800;margin-bottom:10px;font-variant-numeric:tabular-nums}
+#pedidoCostoProduccion{font-size:.76rem;font-weight:700;padding:4px 8px;margin:0 0 8px;border-left:3px solid #3e8758;overflow-wrap:anywhere}
 #pos-pedido-review{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8}
 @media(max-width:560px){#pedidoModal .px-8{padding-left:16px;padding-right:16px}.pos-wizard-nav button{flex:1 1 40%}#pedidoForm .grid-cols-2{grid-template-columns:1fr}.pos-wizard-footer{padding:12px 16px!important}}
 
@@ -6267,3 +6268,59 @@ body:has(.modal.active) #fabNuevoPedido,body:has(.modal.active) #mk-help-fab,bod
 .pv-combination-row button{grid-column:1/-1;justify-self:end;border-color:#bd7f91;color:#92374f}
 .pv-stock-warning{background:#fff4e7!important;color:#8c3c11!important;border:1px solid #f5c595}
 @media(max-width:420px){.pv-combination-row{grid-template-columns:1fr}}
+
+/* Pedido e inventario: lectura rapida en mostrador y controles tactiles. */
+#pedidoModal>.bg-white{max-height:calc(100dvh - 24px);overflow:hidden}
+#pedidoModal .overflow-y-auto{min-height:0}
+.pos-wizard-mobile-progress{display:none}
+.pedido-product-entry{display:grid;grid-template-columns:100px minmax(0,1fr);gap:10px}
+.pedido-product-entry label,.pedido-line-controls label{display:grid;gap:4px;color:#304b3a;font-size:.76rem;font-weight:750}
+.pedido-product-entry input{min-height:44px}
+.pedido-product-add{grid-column:1/-1;min-height:44px;justify-content:center}
+.pedido-variant-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.pedido-variant-choices[hidden]{display:none}
+.pedido-variant-choices button{min-height:56px;padding:8px 10px;text-align:left;border:1.5px solid #a8b6aa;border-radius:10px;background:#fff;color:#224631;cursor:pointer}
+.pedido-variant-choices button[aria-pressed=true]{border-color:#5a287f;background:#f4ecfb;box-shadow:inset 0 0 0 1px #5a287f}
+.pedido-variant-name,.pedido-variant-stock{display:block}
+.pedido-variant-name{font-size:.91rem;font-weight:800}
+.pedido-color-swatch{display:inline-block;width:16px;height:16px;border:1px solid #8c958e;border-radius:50%;vertical-align:-3px;margin-right:7px}
+.pedido-variant-stock{margin-top:2px;font-size:.76rem;color:#4c6152}
+.pedido-variant-select--chips{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.pedido-price-preview{display:grid;grid-template-columns:1fr auto;gap:3px 12px;margin-top:10px;padding:10px 12px;background:#eef6ef;border-left:4px solid #1c4f32;border-radius:6px;color:#20422e;font-size:.82rem;line-height:1.4}
+.pedido-price-preview strong{font-size:.96rem;text-align:right;font-variant-numeric:tabular-nums}
+.pedido-price-preview>span:nth-child(3),.pedido-material-status{grid-column:1/-1}
+.pedido-material-status{font-weight:700}
+.pedido-line-item{display:flex;align-items:flex-start;gap:8px;padding:11px 12px;background:#f8f6fa;border-left:3px solid #7341a4;border-radius:8px;color:#223b2a}
+.pedido-line-title{font-size:.91rem;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.pedido-line-variant{font-size:.79rem;color:#573478;font-weight:700;margin-top:2px}
+.pedido-line-controls{display:grid;grid-template-columns:82px 108px minmax(70px,1fr);gap:8px;align-items:end;margin-top:9px}
+.pedido-line-input{width:100%;min-height:40px;padding:7px 8px;border:1px solid #9baa9e;border-radius:7px;background:#fff;color:#223b2a;font-size:.85rem;font-weight:700;font-variant-numeric:tabular-nums}
+.pedido-line-input[readonly]{background:#f4f0e5}
+.pedido-line-total{text-align:right;font-weight:900;font-size:1rem;font-variant-numeric:tabular-nums;padding-bottom:9px}
+.pedido-line-remove,.pv-close{flex:0 0 40px;width:40px;height:40px;border:1px solid #b98d98;border-radius:8px;background:#fff;color:#8b2745;font-size:1rem;cursor:pointer}
+#pedidoModal :is(button,input,select,textarea):focus-visible,#pvModal :is(button,input,select,textarea):focus-visible{outline:3px solid #7341a4!important;outline-offset:2px}
+#pvModal .pv-workflow-card>button,#pvModal .pv-combination-row button{min-height:44px}
+#pvModal .modal-content{background:#fffdf7!important}
+#pvModal .pv-workflow-card{background:#f7f1fa;border-color:#b79acb}
+.pv-sale-preview{padding:12px 14px;border-left:4px solid #1c4f32;border-radius:7px;background:#eef5ed;color:#21452f}
+.pv-sale-preview span,.pv-sale-preview strong{display:block}
+.pv-sale-preview span{font-size:.73rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.pv-sale-preview strong{font-size:.98rem;margin:4px 0 2px}
+.pv-sale-preview p{font-size:.83rem;line-height:1.4;margin:0}
+@media(max-width:560px){
+  #pedidoModal>.bg-white{max-height:100dvh;margin:0;width:100%;border-radius:0}
+  #pedidoModal .px-8{padding-left:16px;padding-right:16px}
+  .pos-wizard-nav{display:none}
+  .pos-wizard-mobile-progress{display:grid;gap:7px;padding:0 0 13px;color:#1c4f32;font-size:.91rem;font-weight:800}
+  .pos-wizard-progress-track{height:5px;border-radius:5px;background:#dce7dc;overflow:hidden}
+  #pos-pedido-progress-fill{display:block;height:100%;width:25%;background:#1c4f32;transition:width .18s ease}
+  .pos-wizard-footer{background:#fffdf7;border-top:1px solid #d7e1d7!important;padding:10px 16px max(12px,env(safe-area-inset-bottom))!important}
+  #pos-pedido-summary{font-size:.86rem;line-height:1.4;margin-bottom:7px}
+  #pedidoCostoProduccion{font-size:.72rem;line-height:1.3;margin-bottom:6px}
+  .pos-wizard-actions button{min-width:0}
+  .pedido-variant-choices{grid-template-columns:1fr 1fr}
+  .pedido-line-controls{grid-template-columns:76px 100px minmax(62px,1fr);gap:6px}
+}
+@media(max-width:360px){.pedido-variant-choices{grid-template-columns:1fr}.pedido-line-controls{grid-template-columns:1fr 1fr}.pedido-line-total{grid-column:1/-1;text-align:left;padding:0}}
+@media(max-width:420px){#pvTablaPreciosList>.pv-price-row{grid-template-columns:1fr 1fr auto!important}#pvTablaPreciosList>.pv-price-row .pv-price-unit{grid-column:1/-2;grid-row:2;text-align:left}#pvTablaPreciosList>.pv-price-row button{grid-column:3;grid-row:1/3}#pvTablaPreciosList>div:first-child:not(.pv-price-row){display:none!important}}
+@media(prefers-reduced-motion:reduce){#pos-pedido-progress-fill{transition:none}}

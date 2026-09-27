@@ -48,6 +48,8 @@ Proveedor DNS confirmado: Hostinger. Cambio realizado desde sesion autorizada de
 
 ## Actualizacion de produccion
 
+Vigente 2026-09-27, rediseño de pedidos y productos variables: https://1f79592f.bicho-capricho-pos.pages.dev, SW `maneki-3d9b3af01e`. Build Cloudflare: 168 pruebas, 37 TS, lint y empaquetado correctos; `build:check` y `git diff --check` correctos. En el dominio `pos.manekistore.com.mx` y en el deployment, HTTP 401 anonimo y 200 autorizado; `sw.js` responde 200 con el mismo hash. Staging local con datos ficticios: producto variable, selector talla/color, precio por cantidad, pedido completo y vista movil comprobados. No se escribieron ventas de prueba en produccion.
+
 Vigente 2026-09-27: https://5ebff075.bicho-capricho-pos.pages.dev, SW `maneki-d7ac161133`. 160 pruebas, 37 TS, lint y tipos correctos. Incluye caja, auditoria, wizard de pedidos y ajustes de inventario. Migraciones audit/cash/backup aplicadas. Dominio verificado: 401 anonimo, 200 autorizado, mismo hash SW. Respaldo externo aun sin activar; ver BACKUPS.md.
 
 Historico 2026-09-26: https://d56ec9a7.bicho-capricho-pos.pages.dev, SW `maneki-d3509c7401`. 152 pruebas; 36 TS, lint y tipos correctos. Nuevas migraciones `financial-ids` y `atomic-operations` aplicadas y verificadas en Supabase; cero QA persistente. Incluye inicio compacto, bloqueo/cierre, revision de conflictos y transacciones de negocio. Staging local excluido del despliegue. Los parrafos anteriores y entradas siguientes describen el historial; pendientes de RLS/bot ya cerrados.

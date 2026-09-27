@@ -924,6 +924,7 @@ async function posNuevoPedido() {
     showSection('pedidos');
     (window as any).openPedidoModal();
 }
+window.posNuevoPedido = posNuevoPedido;
 async function posNuevoIngreso() {
     await window._mkLazyLoad('balance');
     showSection('balance');

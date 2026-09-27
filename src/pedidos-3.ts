@@ -658,8 +658,18 @@ function seleccionarProductoPedido(id) {
     // Aplica para AMBOS: Producto Terminado (PT) y Materia Prima (MP) con variantes
     const varRow = document.getElementById('pedidoVarianteRow');
     const varSel = document.getElementById('pedidoVarianteSelect');
+    const choices = document.getElementById('pedidoVarianteChoices');
     if (varRow && varSel) {
-        if (!varSel._pvBound) { varSel.addEventListener('change',()=>_pvCantidadChange(document.getElementById('pedidoProductoCantidad')?.value)); varSel._pvBound=true; }
+        if (!varSel._pvBound) { varSel.addEventListener('change',()=>{_pvCantidadChange(document.getElementById('pedidoProductoCantidad')?.value);_pedidoSyncVariantChoices();}); varSel._pvBound=true; }
+        if (choices && !choices._pvBound) {
+            choices.addEventListener('click',(event:any)=>{
+                const button=event.target.closest('button[data-variant-value]');
+                if(!button)return;
+                varSel.value=button.dataset.variantValue;
+                varSel.dispatchEvent(new Event('change',{bubbles:true}));
+            });
+            choices._pvBound=true;
+        }
         const _effVariants = _variantesPedido(p);
         if (_effVariants.length > 0) {
             varSel.innerHTML = _effVariants.map(v => {
@@ -671,6 +681,24 @@ function seleccionarProductoPedido(id) {
                 return `<option value="${_esc(v.type)}:${_esc(v.value)}">${_esc(label)}</option>`;
             }).join('');
             varRow.classList.remove('hidden');
+            const hasSizes=p.tipo==='producto_variable'&&_effVariants.some(v=>v.type==='Talla/Color');
+            varSel.classList.toggle('pedido-variant-select--chips',hasSizes);
+            varSel.tabIndex=hasSizes?-1:0;
+            varSel.setAttribute('aria-hidden',String(hasSizes));
+            if(choices){
+                choices.hidden=!hasSizes;
+                choices.innerHTML=hasSizes?_effVariants.filter(v=>v.type==='Talla/Color').map(v=>{
+                    const value=`${v.type}:${v.value}`;
+                    const stock=Number(v.qty)||0;
+                    const recargo=Number(v.priceDelta)||0;
+                    const color=String(v.color||v.value.split('/')[1]?.trim()||'');
+                    const label=`${v.size||v.value.split('/')[0]?.trim()||''} · ${color}`;
+                    const palette={negro:'#191919',blanco:'#fff',rojo:'#cb3540',azul:'#3172bc',verde:'#32855d',amarillo:'#e8b52f',rosa:'#e17da1',morado:'#8654b6',gris:'#969a9e',crema:'#eee1c8'};
+                    const swatch=palette[color.toLowerCase()]||(/^#[0-9a-f]{6}$/i.test(color)?color:null);
+                    return `<button type="button" data-variant-value="${_esc(value)}" aria-label="${_esc(label)}; ${stock>0?`${stock} listas`:'se fabrica'}${recargo?`; recargo $${recargo.toFixed(2)} por pieza`:''}" aria-pressed="false"><span class="pedido-variant-name">${swatch?`<span class="pedido-color-swatch" style="background:${swatch}" aria-hidden="true"></span>`:''}${_esc(label)}</span><span class="pedido-variant-stock">${stock>0?`${stock} listas`:'Se fabrica'}${recargo?` · +$${recargo.toFixed(2)}/pza`:''}</span></button>`;
+                }).join(''):'';
+                _pedidoSyncVariantChoices();
+            }
 
             // Cambiar label según tipo de producto
             const varLabel = varRow.querySelector('label');
@@ -681,6 +709,10 @@ function seleccionarProductoPedido(id) {
             }
         } else {
             varRow.classList.add('hidden');
+            varSel.classList.remove('pedido-variant-select--chips');
+            varSel.tabIndex=0;
+            varSel.removeAttribute('aria-hidden');
+            if(choices){choices.hidden=true;choices.innerHTML='';}
         }
     }
 
@@ -714,6 +746,8 @@ function limpiarSeleccionProductoPedido() {
     if (selRow) selRow.classList.add('hidden');
     const varRow = document.getElementById('pedidoVarianteRow');
     if (varRow) varRow.classList.add('hidden');
+    const choices=document.getElementById('pedidoVarianteChoices');
+    if(choices){choices.hidden=true;choices.innerHTML='';}
     const precioInput = document.getElementById('pedidoProductoPrecio');
     if (precioInput) precioInput.value = '';
     const cantInput = document.getElementById('pedidoProductoCantidad');
@@ -724,6 +758,13 @@ function limpiarSeleccionProductoPedido() {
 }
 window.limpiarSeleccionProductoPedido = limpiarSeleccionProductoPedido;
 
+function _pedidoSyncVariantChoices(){
+    const selected=document.getElementById('pedidoVarianteSelect')?.value;
+    document.querySelectorAll('#pedidoVarianteChoices button[data-variant-value]').forEach((button:any)=>{
+        button.setAttribute('aria-pressed',String(button.dataset.variantValue===selected));
+    });
+}
+
 // ── Hint de rango activo para Producto Variable ───────────────────────────────
 function _pvMostrarHint(p, qty, qtyNueva=qty) {
     let hint = document.getElementById('pedidoPvHint');
@@ -732,7 +773,8 @@ function _pvMostrarHint(p, qty, qtyNueva=qty) {
         if (!selRow) return;
         hint = document.createElement('div');
         hint.id = 'pedidoPvHint';
-        hint.style.cssText = 'font-size:.75rem;color:#0369a1;background:#e0f2fe;border-radius:8px;padding:5px 10px;margin-top:6px;';
+        hint.className='pedido-price-preview';
+        hint.setAttribute('role','status');
         selRow.appendChild(hint);
     }
     const tabla = (p.tablaPreciosVariable||[]).slice().sort((a,b)=>a.cantidadMin-b.cantidadMin);
@@ -745,8 +787,8 @@ function _pvMostrarHint(p, qty, qtyNueva=qty) {
     hint.style.display = '';
     const plan=typeof pvPlanMateriales==='function'?pvPlanMateriales(p,qty,variante,window.products||[]):[];
     const faltantes=plan.filter(x=>x.faltante>0);
-    const material=faltantes.length?' · Faltan: '+faltantes.map(x=>`${x.faltante} ${x.nombre}`).join(', '):' · Existencias suficientes';
-    hint.textContent=`${variante?.startsWith('Talla/Color:')?variante.slice(12)+' · ':''}Rango ${rangoActivo.cantidadMin}+ pzas · $${unitPrice.toFixed(2)} por pieza · ${qtyNueva} ${qtyNueva===1?'pieza':'piezas'}: $${total.toFixed(2)}${material}`;
+    const material=faltantes.length?'Faltan materiales: '+faltantes.map(x=>`${x.faltante} ${x.nombre}`).join(', '):'Materiales disponibles';
+    hint.innerHTML=`<span class="pedido-price-range">Precio por ${rangoActivo.cantidadMin}+ piezas</span><strong>$${unitPrice.toFixed(2)} por pieza</strong><span>${qtyNueva} ${qtyNueva===1?'pieza':'piezas'} · Total $${total.toFixed(2)}</span><span class="pedido-material-status">${_esc(material)}</span>`;
     hint.classList.toggle('pv-stock-warning',faltantes.length>0);
 }
 window._pvMostrarHint = _pvMostrarHint;
@@ -838,21 +880,22 @@ function renderPedidoProductosList() {
         const precio = parseFloat(item.price) || 0;
         const lineaTotal = precio * (item.quantity || 1);
         return `
-        <div class="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-100 rounded-xl text-sm">
+        <div class="pedido-line-item">
             <div class="flex-1 min-w-0">
-                <div class="font-medium text-gray-800 truncate">${_esc(item.name || '')}${item.variante ? ` <span class="text-xs text-purple-600 font-semibold">(${(()=>{const p=item.variante.indexOf(':');if(p===-1)return _esc(item.variante);const t=item.variante.slice(0,p).trim(),val=item.variante.slice(p+1).trim();return _esc(t)+': '+(typeof _mkColorDot==='function'?_mkColorDot(t,val):_esc(val));})()})</span>` : ''}</div>
-                <div class="flex items-center gap-1 mt-1">
-                    <span class="text-xs text-gray-500">×</span>
+                <div class="pedido-line-title">${_esc(item.name || '')}</div>
+                ${item.variante?`<div class="pedido-line-variant">${_esc(item.variante.startsWith('Talla/Color:')?item.variante.slice(12).trim():item.variante)}</div>`:''}
+                <div class="pedido-line-controls">
+                    <label>Cantidad
                     <input type="number" min="1" value="${item.quantity || 1}" data-pedido-qty="${i}" aria-label="Cantidad de ${_esc(item.name||'producto')}"
-                        class="w-14 px-2 py-0.5 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 outline-none">
-                    <span class="text-xs text-gray-500">a $</span>
+                        class="pedido-line-input"></label>
+                    <label>Precio por pieza
                     <input type="number" step="0.01" min="0" value="${precio.toFixed(2)}" data-pedido-price="${i}" aria-label="Precio por pieza de ${_esc(item.name||'producto')}"
                         ${((window.products||[]).find(x=>String(x.id)===String(item.id))?.tipo==='producto_variable')?'readonly title="Precio automático según cantidad, talla y color"':''}
-                        class="w-20 px-2 py-0.5 border border-amber-300 rounded-lg text-xs font-semibold text-amber-800 outline-none" style="background:#fffbeb">
-                    <span class="text-xs text-gray-400">= <span class="font-semibold text-gray-700">$${lineaTotal.toFixed(2)}</span></span>
+                        class="pedido-line-input"></label>
+                    <span class="pedido-line-total">$${lineaTotal.toFixed(2)}</span>
                 </div>
             </div>
-            <button type="button" data-action="quitarProductoPedido" data-arg="${i}" aria-label="Quitar ${_esc(item.name||'producto')}" class="text-gray-400 hover:text-red-400 text-base flex-shrink-0">✕</button>
+            <button type="button" data-action="quitarProductoPedido" data-arg="${i}" aria-label="Quitar ${_esc(item.name||'producto')}" class="pedido-line-remove">✕</button>
         </div>`;
     }).join('') + `
         <div class="flex justify-end px-3 pt-1 pb-0.5 text-xs font-bold text-gray-700">

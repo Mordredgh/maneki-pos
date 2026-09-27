@@ -79,12 +79,11 @@ function _calcularCostoProduccionPedido() {
     // Crear o actualizar el elemento #pedidoCostoProduccion
     let el = document.getElementById('pedidoCostoProduccion');
     if (!el) {
-        const btnGuardar = document.getElementById('pedidoSubmitBtn');
-        if (btnGuardar && btnGuardar.parentElement) {
+        const footer = document.querySelector('#pedidoModal .pos-wizard-footer');
+        if (footer) {
             el = document.createElement('div');
             el.id = 'pedidoCostoProduccion';
-            el.style.cssText = 'font-size:.78rem;padding:6px 10px;border-radius:8px;margin-bottom:8px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-weight:600;';
-            btnGuardar.parentElement.insertBefore(el, btnGuardar);
+            footer.insertBefore(el,footer.querySelector('.pos-wizard-actions'));
         }
     }
     if (el) {
@@ -109,7 +108,7 @@ function posPedidoResumen(){
     const summary=document.getElementById('pos-pedido-summary');
     if(summary)summary.textContent=`Total ${fmtMoney(total)} · Anticipo ${fmtMoney(anticipo)} · Saldo ${fmtMoney(Math.max(0,total-anticipo))}`;
     const review=document.getElementById('pos-pedido-review');
-    if(review)review.textContent=`${val('pedidoCliente')} · Entrega: ${val('pedidoEntrega')} · ${val('pedidoConcepto')||((window.pedidoProductosSeleccionados||[]).length?'Productos seleccionados':'Pedido personalizado')} · ${(window.pedidoProductosSeleccionados||[]).map(p=>`${p.quantity} × ${p.name}`).join(', ')}`;
+    if(review)review.textContent=`${val('pedidoCliente')} · Entrega: ${val('pedidoEntrega')}\n${val('pedidoConcepto')||((window.pedidoProductosSeleccionados||[]).length?'Productos seleccionados':'Pedido personalizado')}\n${(window.pedidoProductosSeleccionados||[]).map(p=>`${p.quantity} × ${p.name}${p.variante?` (${p.variante.startsWith('Talla/Color:')?p.variante.slice(12).trim():p.variante})`:''} · ${fmtMoney(mkRound2(Number(p.price)*Number(p.quantity)))}`).join('\n')}`;
 }
 function _updatePedidoStep(step:number):void{
     const form=document.getElementById('pedidoForm');if(!form)return;
@@ -118,6 +117,12 @@ function _updatePedidoStep(step:number):void{
     const confirm=document.getElementById('pos-pedido-confirm');if(confirm)confirm.hidden=posPedidoPaso!==4;
     for(const [id,hide] of [['pos-pedido-back',posPedidoPaso===1],['pos-pedido-next',posPedidoPaso===4],['pos-pedido-save',posPedidoPaso!==4]] as [string,boolean][]){const el=document.getElementById(id);if(el)el.hidden=hide;}
     document.querySelectorAll('#pedido-steps button').forEach((el:any,i:number)=>{if(i+1===posPedidoPaso)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
+    const stepLabel=document.getElementById('pos-pedido-step-label');
+    if(stepLabel)stepLabel.textContent=`${['Cliente','Productos','Detalles','Confirmar'][posPedidoPaso-1]} · paso ${posPedidoPaso} de 4`;
+    const progress=document.getElementById('pos-pedido-progress-fill') as HTMLElement;
+    if(progress)progress.style.width=`${posPedidoPaso*25}%`;
+    const next=document.getElementById('pos-pedido-next');
+    if(next)next.textContent=posPedidoPaso===3?'Revisar pedido':'Continuar';
     if(!form.dataset.wizardBound){form.dataset.wizardBound='1';form.addEventListener('input',posPedidoResumen);form.addEventListener('submit',(e)=>{if(posPedidoPaso!==4){e.preventDefault();e.stopImmediatePropagation();posPedidoSiguiente();}},true);}
     const error=document.getElementById('pos-pedido-error');if(error)error.textContent='';
     posPedidoResumen();
