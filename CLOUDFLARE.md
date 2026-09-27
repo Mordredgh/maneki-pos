@@ -63,3 +63,8 @@ Historico 2026-09-26: https://d56ec9a7.bicho-capricho-pos.pages.dev, SW `maneki-
 ## Botones y acciones uniformes — 2026-09-27
 
 Publicado https://b41f5101.bicho-capricho-pos.pages.dev; SW `maneki-9be41d3892`. Jerarquia de botones compartida, contraste oscuro sobre amarillo, iconos de accion accesibles, Inventario con acciones visibles al desplazar tabla y cabeceras moviles; Balance con botones etiquetados y tarjetas. Revisadas secciones principales en staging con datos ficticios y vista de 390 px; apertura/cierre de ingreso sin guardar datos. 170 pruebas, typecheck, lint de iconos y build correctos. Dominio y deployment: 401 anonimo, 200 autorizado, CSS y SW 200 con hash verificado. Respaldo R2 sigue pendiente del token y programacion; este cambio es visual.
+
+
+## Respaldo R2 activo — 2026-09-27
+
+Propietario autorizo continuar. Token bicho-pos-backup limitado a Object Read & Write en bicho-pos-backups; secreto solo en .env.backup.local ignorado. Dos archivos cifrados reales, 24 tablas, comprobados por subida/descarga/descifrado. Tarea Windows Bicho POS R2 Backup activa a las 20:00 y al iniciar sesion; ejecucion de prueba exitosa (resultado 0). Bucket privado, sin acceso publico. Depende del equipo encendido y sesion iniciada. Ver BACKUPS.md; las notas anteriores de bloqueo quedaron resueltas. No hubo cambios al sitio ni nuevo despliegue.

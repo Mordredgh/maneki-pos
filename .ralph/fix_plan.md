@@ -114,7 +114,7 @@
 - [x] Validar, publicar y documentar.
 
 ## Segunda etapa integral solicitada 2026-09-27
-- [ ] Activar respaldos externos automaticos: destino y credencial local por confirmar. <!-- BLOQUEADO: entrada del propietario; no hay servicio activo -->
+- [x] Activar respaldos externos automaticos: bucket R2 privado, credencial local y tarea diaria verificados el 2026-09-27.
 - [x] Preparar respaldo cifrado completo y ensayar restauracion en base aislada.
 - [x] Pruebas completas con autenticacion y permisos reales.
 - [x] Persistir solo filas modificadas, conservando conflictos y reintentos.
@@ -151,7 +151,7 @@
 - [x] Probar que un archivo remoto alterado no se acepta como respaldo valido.
 - [x] Activar R2 y crear bucket privado bicho-pos-backups, clase Standard.
 - [x] Crear clave local y comprobar snapshot cifrado real de 24 tablas desde Supabase.
-- [ ] Crear token R2 limitado al bucket, comprobar primera subida/descarga y registrar tarea diaria. <!-- BLOQUEADO: confirmacion de token de acceso -->
+- [x] Crear token R2 limitado al bucket, comprobar subida/descarga de 24 tablas y tarea diaria con LastTaskResult=0.
 - [x] Mostrar entregas vencidas y enlaces directos a pedidos, cobros e inventario.
 - [x] Actualizar alertas ante cambios de estado, saldo o stock sin variar conteos.
 - [x] Probar 170 casos, tipos, lint y flujo visual en staging; publicar y verificar HTTP/SW.

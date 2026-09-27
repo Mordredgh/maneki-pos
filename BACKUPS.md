@@ -2,9 +2,13 @@
 
 ## Estado 2026-09-27
 
-R2 ya esta activado por el propietario. Bucket privado `bicho-pos-backups`, clase Standard, acceso publico deshabilitado. `.env.backup.local` existe solo en este equipo con una clave de cifrado aleatoria y una clave privada existente de Supabase; no esta en Git ni en Pages. Primera instantanea local cifrada y descifrada: 24 tablas. **El respaldo remoto automatico aun no esta activo**: falta crear el token R2 limitado al bucket, comprobar subida/descarga y registrar la tarea programada.
+**Respaldo remoto automatico activo y verificado.** Bucket privado `bicho-pos-backups`, Standard, acceso publico deshabilitado. Token de cuenta `bicho-pos-backup`, Object Read & Write solo para ese bucket, sin vencimiento. Credenciales y clave de cifrado solo en `.env.backup.local`, ignorado por Git y excluido del paquete Pages.
 
-`scripts/backup-external.mjs` conserva el archivo cifrado local y, al configurar R2, lo sube y vuelve a descargarlo para comprobar descifrado y contenido. El ciclo remoto paso una prueba automatizada con transporte simulado. Para terminar la configuracion, agregar a `.env.backup.local` `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`. Solo declarar operativo el respaldo cuando la ejecucion real confirme la descarga remota. Guardar la clave de cifrado en un gestor de contrasenas separado del bucket. Nunca incluir esta configuracion en Cloudflare Pages ni en Git.
+El 2026-09-27 se verificaron dos archivos cifrados de 24 tablas, 101.1 KB cada uno: ejecucion directa `bicho-pos-2026-09-27T18-12-30-895Z.bichobk` y ejecucion desde el Programador de tareas `bicho-pos-2026-09-27T18-12-42-664Z.bichobk`. Ambos se subieron, descargaron, descifraron y compararon con la instantanea original. Acceso publico Disabled comprobado en Cloudflare.
+
+Tarea Windows `Bicho POS R2 Backup`: todos los dias a las 20:00 (hora local) y al iniciar sesion; `StartWhenAvailable`, limite 15 minutos, usuario actual sin elevacion. Prueba desde el Programador: `LastTaskResult=0`, estado Ready, proxima ejecucion 2026-09-27 20:00. Requiere este equipo encendido y sesion iniciada; no es un servicio independiente en la nube. No elimina copias anteriores.
+
+Guardar una copia de `POS_BACKUP_KEY` en un gestor de contrasenas separado del equipo y del bucket; esto sigue a cargo del propietario. Sin esa clave no se pueden descifrar los archivos ante perdida del equipo. No imprimirla ni adjuntarla a notas o Git. Para comprobar ejecuciones: `Get-ScheduledTaskInfo -TaskName 'Bicho POS R2 Backup'`.
 
 El respaldo KV `store.products` permitio recuperar seis tablas de precios variables, pero vive en la misma base de Supabase y no reemplaza un respaldo externo.
 
