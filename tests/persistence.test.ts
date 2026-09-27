@@ -57,6 +57,12 @@ function app(schema: Record<string, string[]> = {}, initialStorage?: Map<string,
   } };
 }
 
+it('conserva aprobacion, checklist, referencias y costos tras recargar pedidos',async()=>{
+ const a=app();a.ctx.pedidos=[{id:'ficha-1',total:100,posDetalle:{aprobacion:{referencia:'Diseno v2',fecha:'2026-09-27'},costos:{estimado:40,reales:{materiales:30}}},checklist:{disenio:true},referenciasUrls:['https://example.test/diseno.webp'],referenciasPaths:['ficha-1/diseno.webp']}];
+ await a.ctx.savePedidos();a.ctx.pedidos=[];
+ const rows=await a.ctx.sbLoad('pedidos',[]);
+ expect(rows[0]).toMatchObject({posDetalle:{aprobacion:{referencia:'Diseno v2'},costos:{estimado:40}},checklist:{disenio:true},referenciasPaths:['ficha-1/diseno.webp']});
+});
 function businessApp() {
   const a = app();
   const fields: Record<string, any> = {};

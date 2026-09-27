@@ -8,7 +8,7 @@
 - Pedidos en cuatro pasos con validacion, resumen fijo y confirmacion.
 - Ajuste rapido de stock/precio con motivo, guardado confirmado y operacion atomica de stock/movimiento. Variantes y productos fabricables se editan desde su ficha.
 - Filtros de inventario etiquetados, limpieza de filtros, acciones explicitas de teclado/tacto y contraste del boton principal.
-- Respaldo completo cifrado preparado; activacion externa pendiente del destino y credencial. Ver BACKUPS.md.
+- Respaldo completo de datos cifrado y verificado en R2 posteriormente en esta fecha; tarea Windows activa. Ver BACKUPS.md para la evidencia vigente.
 
 ## Evidencia
 160 pruebas automatizadas, typecheck, lint y compilacion de 37 TS correctos.
@@ -19,7 +19,7 @@ Restauracion cifrada ensayada en otra base local: conteos, importe y cortes pres
 
 ## Limites
 El entorno sintetico no reproduce todas las restricciones de produccion; por eso tambien se verificaron RPC/RLS reales con rollback. No se probaron cobros reales nuevos ni dispositivos fisicos. Impresora y PWA fisicas siguen aplazadas por el propietario.
-No hay automatizacion externa de respaldo activa. No afirmar que esta etapa esta completa mientras siga pendiente.
+La automatizacion vigente corre en Windows y envia a R2. Falta independizarla del PC, incluir imagenes y conservar una copia separada de la clave de recuperacion. Las verificaciones de esta seccion corresponden a la etapa indicada; no acreditan esas ampliaciones.
 
 ## Publicacion
 Cloudflare Pages: https://5ebff075.bicho-capricho-pos.pages.dev.

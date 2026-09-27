@@ -180,7 +180,7 @@ input:focus, select:focus, textarea:focus, button:focus {
               </button>
             </div>
             <div class="mb-1">
-              <div id="supabaseStatus" class="flex items-center gap-2 text-xs px-2 py-1 rounded-lg cursor-default" style="background:rgba(255,209,102,0.08);border:1px solid rgba(255,209,102,0.12);" title="Estado de sincronización con la nube">
+              <div id="supabaseStatus" data-action="posAbrirSalud" role="button" tabindex="0" class="flex items-center gap-2 text-xs px-2 py-1 rounded-lg cursor-pointer" style="background:rgba(255,209,102,0.08);border:1px solid rgba(255,209,102,0.12);" title="Abrir salud y sincronización del POS" aria-label="Abrir salud y sincronización del POS">
                 <span id="supabaseStatusDot" class="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0 inline-block"></span>
                 <span id="supabaseStatusText" class="truncate" style="color:rgba(251,248,243,0.65);">Verificando...</span>
                 <span id="supabaseOfflineBadge" class="hidden ml-auto text-orange-600 font-bold text-xs" title="Modo offline — datos en cola">✦ Offline</span>
@@ -787,6 +787,9 @@ input:focus, select:focus, textarea:focus, button:focus {
                         <!-- ── Lista de compras (siempre visible) ── -->
                         <button type="button" data-action="mostrarListaCompras" class="mk-toolbar-btn">
                             <i class="fas fa-shopping-cart mk-tb-ico"></i> Lista de compras
+                        </button>
+                        <button type="button" data-action="posAbrirMatriz" class="mk-toolbar-btn" title="Ver existencias por talla y color">
+                            <i class="fas fa-table mk-tb-ico"></i> Matriz de variantes
                         </button>
 
                         <!-- ── Reportes ▾ ── -->
@@ -1557,6 +1560,9 @@ input:focus, select:focus, textarea:focus, button:focus {
             </div>
             <button type="button" data-action="toggleListaProduccion" id="btnListaProduccion" class="mk-toolbar-btn">
                 <i class="fas fa-hammer mk-tb-ico"></i> Lista de Producción
+            </button>
+            <button type="button" data-action="posAbrirFicha" class="mk-toolbar-btn" title="Abrir ficha detallada de un pedido">
+                <i class="fas fa-clipboard-check mk-tb-ico"></i> Ficha del pedido
             </button>
             <button type="button" onclick="typeof imprimirOrdenProduccion==='function'?imprimirOrdenProduccion():manekiToastExport('Cargando...','warn')"
                     class="mk-toolbar-btn" title="Imprimir orden de producción del día">

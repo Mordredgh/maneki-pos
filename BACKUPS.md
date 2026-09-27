@@ -4,6 +4,8 @@
 
 **Respaldo remoto automatico activo y verificado.** Bucket privado `bicho-pos-backups`, Standard, acceso publico deshabilitado. Token de cuenta `bicho-pos-backup`, Object Read & Write solo para ese bucket, sin vencimiento. Credenciales y clave de cifrado solo en `.env.backup.local`, ignorado por Git y excluido del paquete Pages.
 
+La ejecución del 2026-09-27 también verificó 113 objetos binarios de Storage: `product-images` y `pedidos-referencias`. Cada imagen se cifra con AES-256-GCM, se sube bajo `objects/<bucket>/` y se lee de R2 para comprobar autenticidad. Los blobs no se mezclan con la instantánea JSON de tablas.
+
 El 2026-09-27 se verificaron dos archivos cifrados de 24 tablas, 101.1 KB cada uno: ejecucion directa `bicho-pos-2026-09-27T18-12-30-895Z.bichobk` y ejecucion desde el Programador de tareas `bicho-pos-2026-09-27T18-12-42-664Z.bichobk`. Ambos se subieron, descargaron, descifraron y compararon con la instantanea original. Acceso publico Disabled comprobado en Cloudflare.
 
 Tarea Windows `Bicho POS R2 Backup`: todos los dias a las 20:00 (hora local) y al iniciar sesion; `StartWhenAvailable`, limite 15 minutos, usuario actual sin elevacion. Prueba desde el Programador: `LastTaskResult=0`, estado Ready, proxima ejecucion 2026-09-27 20:00. Requiere este equipo encendido y sesion iniciada; no es un servicio independiente en la nube. No elimina copias anteriores.
@@ -17,7 +19,7 @@ El respaldo KV `store.products` permitio recuperar seis tablas de precios variab
 Es un respaldo logico de datos del POS. No incluye usuarios/passwords de Supabase Auth, objetos binarios de Storage, esquema SQL completo ni configuracion Cloudflare. Las migraciones y el codigo se conservan en Git. Para recuperacion integral de infraestructura tambien hay que conservar esos componentes.
 
 ## Archivo externo
-`scripts/backup-external.mjs` obtiene la instantanea desde el proyecto Bicho Core, comprime y cifra con AES-256-GCM y clave derivada mediante scrypt. Escribe primero un archivo temporal, lo descifra y compara antes de renombrarlo. No borra respaldos anteriores ni imprime secretos.
+`scripts/backup-external.mjs` obtiene la instantanea desde el proyecto Bicho Core, comprime y cifra con AES-256-GCM y clave derivada mediante scrypt. Escribe primero un archivo temporal, lo descifra y compara antes de renombrarlo. Después copia y verifica los objetos de Storage. No borra respaldos anteriores ni imprime secretos.
 
 `.env.backup.local` (ignorado por Git) contiene `POS_BACKUP_DIR`, `POS_BACKUP_KEY` (aleatoria, minimo 24 caracteres) y `SUPABASE_SERVICE_ROLE_KEY`. Esta credencial es solo del proceso local, nunca del navegador ni del paquete de Pages. Guardar una copia de la clave de cifrado por separado del respaldo.
 

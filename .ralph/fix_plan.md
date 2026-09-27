@@ -164,3 +164,19 @@
 - [x] Comprobar visualmente escritorio/móvil, publicar y verificar dominio/SW.
 
 - [x] Extender controles compartidos a Pedidos, Clientes, Categorias, Cotizaciones, Reportes y Equipos; corregir contraste amarillo y etiquetas de iconos.
+
+## Mejora integral autorizada 2026-09-27
+
+- [x] Reindexar codigo y contrastar alcance con respaldo, variantes, descuento de inventario y checklist existentes.
+- [x] Corregir documentacion desactualizada: R2 y tarea Windows ya activos.
+- [ ] Confirmar los cinco flujos de prueba solicitados por la skill TDD (pregunta enviada).
+- [x] Panel de salud: conexion comprobada y cola/conflictos; no inventa una fecha de respaldo que el navegador no puede consultar.
+- [x] Incluir product-images y pedidos-referencias en el respaldo cifrado y verificado; conservar copias sin retencion destructiva.
+- [ ] Ejecucion del respaldo independiente del PC; requiere credenciales Workers write y decidir mecanismo/retencion sin activar pagos.
+- [ ] Copia separada de la clave de recuperacion en destino elegido por el propietario; nunca en Git/Obsidian.
+- [x] Cuadricula talla/color: terminadas, fabricables, comprometidas sin duplicar descuentos, ajustes masivos con motivo y faltantes.
+- [x] Ficha unica de pedido con referencias/aprobacion, variantes, materiales, pagos, entrega e historial; validacion antes de producir/entregar.
+- [x] Costos estimados frente a reales por pedido: materiales, empaque, comisiones, envio y merma; advertencia de margen bajo.
+- [ ] Consolidar controles visuales compartidos y revisar flujos/modales en escritorio y movil.
+- [x] Validar cada flujo, build/typecheck, actualizar SW, publicar y verificar produccion.
+- [ ] Actualizar evidencia, grafo y memoria de Obsidian con resultados y limites reales.

@@ -1,4 +1,104 @@
 // Herramientas operativas: calculos puros compartidos y dialogos nativos.
+function posMatrizVariantes(product:any,orders:any[]){
+    const variants=(product.variants||[]).map((v:any,index:number)=>({...v,index,size:v.size||String(v.value||'').split('/')[0]?.trim(),color:v.color||String(v.value||'').split('/')[1]?.trim()})).filter((v:any)=>v.size&&v.color);
+    const sizes=[...new Set<string>(variants.map((v:any)=>v.size))],colors=[...new Set<string>(variants.map((v:any)=>v.color))];
+    return {sizes,colors,cells:sizes.flatMap(size=>colors.map(color=>{
+        const v=variants.find((x:any)=>x.size===size&&x.color===color);const key=v?`${v.type}:${v.value}`:'';
+        const comprometidas=v?(orders||[]).filter(p=>!p.inventarioDescontado&&!['cancelado','finalizado','entregado','completado'].includes(p.status)).reduce((sum,p)=>sum+(p.productosInventario||[]).filter((i:any)=>String(i.id)===String(product.id)&&i.variante===key).reduce((n:number,i:any)=>n+Number(i.quantity||i.cantidad||0),0),0):0;
+        const terminadas=Number(v?.qty)||0;return {size,color,index:v?.index??-1,terminadas,comprometidas,libres:Math.max(0,terminadas-comprometidas),faltantes:Math.max(0,comprometidas-terminadas)};
+    }))};
+}
+window.posMatrizVariantes=posMatrizVariantes;
+function posRentabilidad(pedido:any,costos:any){
+    const cents=(v:any)=>{const n=Number(v);if(!Number.isFinite(n)||n<0)throw Error('Los costos deben ser importes positivos o cero.');return Math.round(n*100);};
+    const total=cents(pedido.total||0),estimado=costos.estimado==null?null:cents(costos.estimado);
+    const real=costos.reales==null?null:['materiales','empaque','comisiones','envio','merma'].reduce((s,k)=>s+cents(costos.reales[k]??0),0);
+    return {estimado:estimado==null?null:estimado/100,real:real==null?null:real/100,ganancia:real==null?null:(total-real)/100,margen:real==null||!total?null:Math.round((total-real)/total*10000)/100,diferencia:estimado==null||real==null?null:(real-estimado)/100};
+}
+window.posRentabilidad=posRentabilidad;
+function posFirmaDiseno(p:any){return JSON.stringify([p.concepto||'',(p.productosInventario||[]).map((i:any)=>[i.id,i.variante||'',i.quantity||i.cantidad||1]),p.referenciasUrls||[],p.referenciaUrl||'']);}
+function posPendientesPreparacion(p:any,status:string):string[]{
+    if(!['produccion','salida','finalizado','entregado','completado'].includes(status))return [];
+    const result:string[]=[];const approval=p.posDetalle?.aprobacion;
+    if(!approval?.referencia||!approval.fecha||approval.firma!==posFirmaDiseno(p))result.push('Diseño aprobado');
+    if(!p.checklist?.material)result.push('Material revisado');
+    if(status!=='produccion'){if(!p.checklist?.producido)result.push('Producción terminada');if(!p.checklist?.empacado)result.push('Pedido empacado');}
+    return result;
+}
+window.posFirmaDiseno=posFirmaDiseno;window.posPendientesPreparacion=posPendientesPreparacion;
+
+async function posAbrirMatriz(id?:string){
+    if(typeof window.ensureInventario==='function')await window.ensureInventario();
+    const available=(window.products||[]).filter(p=>(p.variants||[]).some(v=>v.type==='Talla/Color'||(v.size&&v.color)));
+    const product=available.find(p=>String(p.id)===String(id))||available[0];
+    const dialog=posDialog('Existencias por talla y color');dialog.classList.add('pos-wide-dialog');
+    if(!product){dialog.append('No hay productos con combinaciones de talla y color. Configúralas en la ficha del producto.');return;}
+    const select=document.createElement('select');select.setAttribute('aria-label','Producto');
+    available.forEach(p=>{const option=document.createElement('option');option.value=String(p.id);option.textContent=p.name;option.selected=p===product;select.appendChild(option);});
+    select.onchange=()=>{dialog.close();posAbrirMatriz(select.value);};dialog.appendChild(select);
+    const matrix=posMatrizVariantes(product,window.pedidos||[]),before=JSON.stringify(product);
+    const form=document.createElement('form');const scroll=document.createElement('div');scroll.className='pos-table-scroll';
+    const table=document.createElement('table');table.className='pos-data-table';
+    table.innerHTML=`<caption>Modifica piezas terminadas. Los pedidos en producción ya fueron descontados. La capacidad de fabricación comparte materiales entre combinaciones y no se suma.</caption><thead><tr><th>Talla</th>${matrix.colors.map(c=>`<th>${_esc(c)}</th>`).join('')}</tr></thead>`;
+    const body=document.createElement('tbody');
+    for(const size of matrix.sizes){const row=document.createElement('tr');const header=document.createElement('th');header.textContent=size;row.appendChild(header);
+      for(const color of matrix.colors){const cell=matrix.cells.find(c=>c.size===size&&c.color===color)!;const td=document.createElement('td');
+        if(cell.index<0){td.textContent='Sin combinación';td.className='pos-cell-missing';}
+        else{const v=product.variants[cell.index];const input=document.createElement('input');input.name='variant-'+cell.index;input.type='number';input.min='0';input.step='1';input.required=true;input.value=String(cell.terminadas);input.setAttribute('aria-label',`${size}, ${color}: piezas terminadas`);td.appendChild(input);
+          const hint=document.createElement('small');let fabricables=0;
+          if((product.mpComponentes||[]).length){const capacities=product.mpComponentes.filter(c=>(window.products||[]).find(p=>String(p.id)===String(c.id))?.tipo!=='servicio').map(c=>{const mp=(window.products||[]).find(p=>String(p.id)===String(c.id));const variant=mp?.variants?.length&&typeof window.pvVarianteMaterial==='function'?window.pvVarianteMaterial(mp,`${v.type}:${v.value}`):null;const stock=mp?.variants?.length?Number(variant?.qty)||0:Number(mp?.stock)||0;return Math.floor(stock/(Number(c.qty)||1))*(Number(product.rendimientoPorHoja)||1);});fabricables=capacities.length?Math.min(...capacities):0;}
+          hint.textContent=`${cell.comprometidas} comprometidas · ${cell.libres} libres · ${fabricables} fabricables${cell.faltantes?' · faltan '+cell.faltantes+' terminadas':''}`;td.appendChild(hint);}
+        row.appendChild(td);
+      }body.appendChild(row);
+    }table.appendChild(body);scroll.appendChild(table);form.appendChild(scroll);
+    const label=document.createElement('label');label.textContent='Motivo del ajuste';const reason=document.createElement('input');reason.required=true;reason.maxLength=500;reason.placeholder='Ej. conteo físico';label.appendChild(reason);form.appendChild(label);
+    const status=document.createElement('p');status.setAttribute('role','status');const submit=document.createElement('button');submit.type='submit';submit.className='btn-primary';submit.textContent='Guardar existencias';form.append(status,submit);dialog.appendChild(form);
+    form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;status.textContent='Guardando…';try{
+      if(JSON.stringify((window.products||[]).find(p=>String(p.id)===String(product.id)))!==before)throw Error('El producto cambió. Vuelve a abrir la matriz.');
+      const changes=Array.from(form.querySelectorAll('input[name^="variant-"]') as NodeListOf<HTMLInputElement>).map(input=>({index:Number(input.name.slice(8)),qty:Number(input.value)}));
+      if(!reason.value.trim()||changes.some(c=>!Number.isSafeInteger(c.qty)||c.qty<0))throw Error('Revisa las cantidades y el motivo.');
+      await posRunOperation(async()=>{for(const change of changes){const v=product.variants[change.index],previous=Number(v.qty)||0;if(previous===change.qty)continue;v.qty=change.qty;await registrarMovimiento({productoId:product.id,productoNombre:product.name,tipo:'ajuste',cantidad:change.qty-previous,motivo:`${reason.value.trim()} · ${v.value}`,stockAntes:previous,stockDespues:change.qty});}product.stock=product.variants.reduce((s,v)=>s+(Number(v.qty)||0),0);await saveProducts();},'Conteo de variantes');
+      status.textContent='Existencias guardadas y movimientos registrados.';submit.textContent='Guardado';form.querySelectorAll('input').forEach(i=>i.disabled=true);renderInventoryTable();
+    }catch(err:any){status.textContent=err.message||'No se pudo guardar.';submit.disabled=!!err.pendingSync;}};
+}
+window.posAbrirMatriz=posAbrirMatriz;
+
+function posAbrirFicha(id?:string){
+    const orders=[...(window.pedidos||[]),...(window.pedidosFinalizados||[])];
+    const p=orders.find(p=>String(p.id)===String(id))||orders[0];const dialog=posDialog('Ficha del pedido');dialog.classList.add('pos-wide-dialog');
+    if(!p){dialog.append('Todavía no hay pedidos.');return;}
+    const selector=document.createElement('select');selector.setAttribute('aria-label','Pedido');orders.forEach(ped=>{const option=document.createElement('option');option.value=String(ped.id);option.textContent=`${ped.folio||ped.id} · ${ped.cliente||'Sin cliente'}`;option.selected=ped===p;selector.appendChild(option);});selector.onchange=()=>{dialog.close();posAbrirFicha(selector.value);};dialog.appendChild(selector);
+    const before=JSON.stringify(p),detail=p.posDetalle||{};const form=document.createElement('form');
+    const heading=document.createElement('p');heading.textContent=`${p.status} · Entrega: ${p.entrega||'sin fecha'} · ${p.lugarEntrega||'sin dirección'} · Total ${fmtMoney(p.total||0)} · Pagado ${fmtMoney(posTotalPagado(p))} · Saldo ${fmtMoney(calcSaldoPendiente(p))}`;form.appendChild(heading);
+    const lines=document.createElement('ul');for(const line of p.productosInventario||[]){const li=document.createElement('li');li.textContent=`${line.quantity||line.cantidad||1} × ${line.name||line.nombre||line.id} · ${line.variante||'Sin variante'}`;lines.appendChild(li);}form.appendChild(lines);
+    const refs=document.createElement('details');refs.innerHTML='<summary>Referencias y materiales</summary>';
+    for(const url of [...(p.referenciasUrls||[]),p.referenciaUrl].filter(Boolean)){try{const parsed=new URL(url);if(parsed.protocol!=='https:')continue;const a=document.createElement('a');a.href=parsed.href;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Ver referencia';refs.appendChild(a);}catch{}}
+    for(const line of p.productosInventario||[]){const prod=(window.products||[]).find(x=>String(x.id)===String(line.id));for(const c of prod?.mpComponentes||[]){const row=document.createElement('p');row.textContent=`${prod.name}: ${c.qty||1} × ${(window.products||[]).find(x=>String(x.id)===String(c.id))?.name||c.name||'Material eliminado'} por lote de ${prod.rendimientoPorHoja||1} pieza(s)`;refs.appendChild(row);}}form.appendChild(refs);
+    const approval=document.createElement('label');approval.textContent='Referencia del diseño aprobado';const reference=document.createElement('input');reference.maxLength=300;reference.placeholder='Ej. arte v2 aprobado por el cliente';reference.value=detail.aprobacion?.referencia||'';approval.appendChild(reference);form.appendChild(approval);
+    const sign=document.createElement('label');const approved=document.createElement('input');approved.type='checkbox';approved.checked=!!detail.aprobacion?.fecha&&detail.aprobacion?.firma===posFirmaDiseno(p);sign.append(approved,document.createTextNode(' Confirmo la aprobación de esta versión y sus variantes'));form.appendChild(sign);
+    const checklist:any={};for(const [key,text] of Object.entries({material:'Material revisado',producido:'Producción terminada',empacado:'Pedido empacado'})){const label=document.createElement('label');const input=document.createElement('input');input.type='checkbox';input.checked=!!p.checklist?.[key];checklist[key]=input;label.append(input,document.createTextNode(' '+text));form.appendChild(label);}
+    const costs=document.createElement('fieldset');costs.innerHTML='<legend>Rentabilidad del pedido</legend><p>Captura costos, sin duplicar empaque ni envío en materiales. Esto no registra egresos en Balance.</p>';
+    const fields:any={};for(const [key,text] of Object.entries({estimado:'Costo estimado total',materiales:'Materiales reales',empaque:'Empaque real',comisiones:'Comisiones reales',envio:'Envío real',merma:'Merma real'})){const label=document.createElement('label');label.textContent=text;const input=document.createElement('input');input.type='number';input.min='0';input.step='0.01';input.placeholder='Sin capturar';input.value=String((key==='estimado'?detail.costos?.estimado:detail.costos?.reales?.[key])??'');fields[key]=input;label.appendChild(input);costs.appendChild(label);}form.appendChild(costs);
+    const profit=document.createElement('p');profit.setAttribute('role','status');costs.appendChild(profit);
+    const collect=()=>({estimado:fields.estimado.value===''?null:Number(fields.estimado.value),reales:['materiales','empaque','comisiones','envio','merma'].every(k=>fields[k].value==='')?null:Object.fromEntries(['materiales','empaque','comisiones','envio','merma'].map(k=>[k,fields[k].value===''?null:Number(fields[k].value)]))});
+    const preview=()=>{try{const values=collect();if(values.reales&&Object.values(values.reales).some(v=>v===null)){profit.textContent='Completa todos los costos reales; usa 0 donde no hubo costo.';return;}const result=posRentabilidad(p,values);profit.textContent=result.real==null?'Costos reales sin capturar':`Costo real ${fmtMoney(result.real)} · Ganancia ${fmtMoney(result.ganancia)} · Margen ${result.margen??0}%${result.margen!=null&&result.margen<20?' · Revisar: margen menor al 20%':''}${result.diferencia!=null?' · Diferencia vs estimado '+fmtMoney(result.diferencia):''}`;}catch(e:any){profit.textContent=e.message;}};costs.oninput=preview;preview();
+    const history=document.createElement('details');history.innerHTML='<summary>Historial y pagos</summary>';for(const event of [...(p.historialEstados||[]),...(p.pagos||[]),...(detail.historial||[])]){const item=document.createElement('p');item.textContent=`${event.fecha||''} ${event.hora||''} · ${event.estado||event.accion||event.tipo||'Pago'}${event.monto!=null?' · '+fmtMoney(event.monto):''}${event.metodo?' · '+event.metodo:''}`;history.appendChild(item);}form.appendChild(history);
+    const status=document.createElement('p');status.setAttribute('role','status');const button=document.createElement('button');button.type='submit';button.className='btn-primary';button.textContent='Guardar ficha';form.append(status,button);dialog.appendChild(form);
+    form.onsubmit=async e=>{e.preventDefault();button.disabled=true;try{if(JSON.stringify(orders.find(x=>x===p))!==before)throw Error('El pedido cambió. Vuelve a abrir su ficha.');if(approved.checked&&!reference.value.trim())throw Error('Identifica la versión del diseño aprobado.');const costValues=collect();if(costValues.reales&&Object.values(costValues.reales).some(v=>v===null))throw Error('Completa cada costo real; escribe 0 cuando no aplique.');posRentabilidad(p,costValues);
+      await posRunOperation(async()=>{p.checklist={...p.checklist,disenio:approved.checked,...Object.fromEntries(Object.entries(checklist).map(([k,input]:any)=>[k,input.checked]))};p.posDetalle={...detail,costos:costValues,aprobacion:approved.checked?{referencia:reference.value.trim(),fecha:new Date().toISOString(),firma:posFirmaDiseno(p)}:null,historial:[...(detail.historial||[]),{fecha:new Date().toISOString(),accion:'Ficha actualizada'}]};if((window.pedidos||[]).includes(p))await savePedidos();else await savePedidosFinalizados();},'Actualizar ficha y costos del pedido');
+      status.textContent='Ficha guardada.';form.querySelectorAll('input,button').forEach(el=>el.disabled=true);if(typeof renderPedidosTable==='function')renderPedidosTable();
+    }catch(err:any){status.textContent=err.message||'No se pudo guardar.';button.disabled=!!err.pendingSync;}};
+}
+window.posAbrirFicha=posAbrirFicha;
+async function posAbrirSalud(){
+ const dialog=posDialog('Salud del POS');const status=document.createElement('p');status.textContent='Comprobando conexión…';dialog.appendChild(status);
+ const list=document.createElement('dl');list.className='pos-health-list';dialog.appendChild(list);
+ const row=(label:string,value:string,kind='ok')=>{const dt=document.createElement('dt');dt.textContent=label;const dd=document.createElement('dd');dd.textContent=value;dd.dataset.state=kind;list.append(dt,dd);};
+ row('Navegador',navigator.onLine?'En línea':'Sin conexión',navigator.onLine?'ok':'warn');const sync=typeof posSyncStatus==='function'?posSyncStatus():null;row('Sincronización',sync?.text||'No disponible',sync?.state==='saved'?'ok':sync?.state==='conflict'?'error':'warn');
+ try{const {data,error}=await db.rpc('pos_backup_snapshot');if(error)throw error;row('Base de datos',Array.isArray(data?.tables?.products)?'Disponible · snapshot consultado':'Disponible','ok');status.textContent='Comprobación terminada';}catch(e:any){row('Base de datos','No se pudo comprobar · '+(e.message||'error'),'error');status.textContent='Comprobación con advertencias';}
+ row('Respaldo remoto','La última copia R2 se verifica desde el proceso de respaldo; el navegador no inventa una fecha.','warn');const close=document.createElement('button');close.type='button';close.textContent='Cerrar';close.onclick=()=>dialog.close();dialog.appendChild(close);
+}
+window.posAbrirSalud=posAbrirSalud;
 async function posAjustarInventario(id:string,field:string,value:number,reason:string){
     if(!reason.trim())throw Error('Escribe el motivo del cambio.');
     if(!['stock','price'].includes(field)||!Number.isFinite(value)||value<0)throw Error('Importe o cantidad invalida.');

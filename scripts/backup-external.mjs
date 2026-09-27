@@ -3,6 +3,7 @@ import {mkdir,writeFile,readFile,rename} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {encryptSnapshot,decryptSnapshot} from './backup-lib.mjs';
 import {createR2Client,uploadVerifiedBackup} from './backup-r2.mjs';
+import {backupStorage} from './backup-storage.mjs';
 const {POS_BACKUP_DIR,POS_BACKUP_KEY,SUPABASE_SERVICE_ROLE_KEY}=process.env;
 if(!POS_BACKUP_DIR||!POS_BACKUP_KEY||!SUPABASE_SERVICE_ROLE_KEY)throw Error('Configura destino, clave de cifrado y credencial de respaldo en .env.backup.local');
 const headers={apikey:SUPABASE_SERVICE_ROLE_KEY,'Content-Type':'application/json'};
@@ -19,6 +20,7 @@ const {R2_ACCOUNT_ID,R2_BUCKET,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY}=process.en
 if([R2_ACCOUNT_ID,R2_BUCKET,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY].some(Boolean)){
  if(![R2_ACCOUNT_ID,R2_BUCKET,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY].every(Boolean))throw Error('Configuracion R2 incompleta; respaldo local conservado');
  await uploadVerifiedBackup(createR2Client(R2_ACCOUNT_ID,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY),R2_BUCKET,file.split(/[\\/]/).pop(),encrypted,POS_BACKUP_KEY,snapshot);
+ await backupStorage({supabaseUrl:'https://hoqcrljgmamaumtdrtzi.supabase.co',serviceKey:SUPABASE_SERVICE_ROLE_KEY,r2Client:createR2Client(R2_ACCOUNT_ID,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY),r2Bucket:R2_BUCKET,password:POS_BACKUP_KEY});
  console.log('Respaldo cifrado verificado en R2. Tablas: '+Object.keys(snapshot.tables).length);
 }else{
  console.log('Respaldo cifrado local verificado; destino externo no configurado. Tablas: '+Object.keys(snapshot.tables).length);

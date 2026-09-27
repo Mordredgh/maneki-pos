@@ -2,7 +2,7 @@
 
 ## Decision 2026-09-27: respaldo remoto y alertas
 
-El respaldo externo opcional usa R2 privado mediante S3 API. Se cifra antes de salir del equipo y se lee de vuelta para validar descifrado y contenido. Sin las cuatro variables R2, el script conserva solo la copia local y no declara exito remoto. R2 aun requiere alta de suscripcion y credenciales limitadas al bucket; no hay programacion activa. El dashboard muestra entregas vencidas y acciones hacia pedidos, cobros e inventario. El hash de actualizacion incluye estado, saldo y stock, no solo cantidad de filas.
+El respaldo externo usa R2 privado mediante S3 API. Se cifra antes de salir del equipo y se lee de vuelta para validar descifrado y contenido. Sin las cuatro variables R2, el script conserva solo la copia local y no declara exito remoto. R2 esta activo: dos copias de 24 tablas verificadas el 2026-09-27 y tarea Windows diaria a las 20:00 y al iniciar sesion, con resultado 0. Depende del equipo encendido y la sesion iniciada; aun no incluye los binarios de Storage. El dashboard muestra entregas vencidas y acciones hacia pedidos, cobros e inventario. El hash de actualizacion incluye estado, saldo y stock, no solo cantidad de filas.
 
 ## Decision 2026-09-27: productos variables
 
@@ -15,7 +15,7 @@ El cliente envia solo filas modificadas, conservando snapshots optimistas y lote
 
 Los cortes se agregan a store.cashClosures con concurrencia optimista. La auditoria por triggers captura diez tablas y solo permite lectura al administrador. Operaciones agrupadas transmiten motivo y recibo estable. No se reconstruye retrospectivamente historial inexistente.
 
-El respaldo completo usa una instantanea SQL, comprimida y cifrada fuera del navegador. Destino y credencial pendientes; no hay programacion externa activa. Ver BACKUPS.md y VALIDACION-2026-09-27.md. No introducir infraestructura de pago por defecto.
+El respaldo completo de datos usa una instantanea SQL, comprimida y cifrada fuera del navegador. Destino R2 y credenciales configurados; programacion local activa. La ejecucion independiente del PC, las imagenes y la copia separada de la clave de recuperacion siguen pendientes. Ver BACKUPS.md. No introducir infraestructura de pago por defecto.
 
 ## Decision 2026-09-26: operacion de negocio atomica
 
