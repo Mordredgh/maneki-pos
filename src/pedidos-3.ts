@@ -644,7 +644,7 @@ function seleccionarProductoPedido(id) {
         if (p.tipo === 'producto_variable') {
             const tabla = (p.tablaPreciosVariable||[]).slice().sort((a,b)=>a.cantidadMin-b.cantidadMin);
             preEl.textContent = tabla.length
-                ? tabla.map(r=>`${r.cantidadMin} pzas=$${Number(r.precio).toFixed(0)}`).join(' · ')
+                ? tabla.map(r=>`${r.cantidadMin}+ pzas: $${(Number(r.precio)/(Number(r.cantidadMin)||1)).toFixed(2)}/pza`).join(' · ')
                 : 'Precio variable';
         } else {
             const esMp = p.tipo === 'materia_prima';
@@ -745,8 +745,8 @@ function _pvMostrarHint(p, qty, qtyNueva=qty) {
     hint.style.display = '';
     const plan=typeof pvPlanMateriales==='function'?pvPlanMateriales(p,qty,variante,window.products||[]):[];
     const faltantes=plan.filter(x=>x.faltante>0);
-    const material=plan.length?(faltantes.length?' · Faltan: '+faltantes.map(x=>`${x.faltante} de ${x.nombre}`).join(', '):' · Material disponible'):' · Sin materiales configurados';
-    hint.textContent=`${variante?.startsWith('Talla/Color:')?variante.slice(12)+' · ':''}Rango ${rangoActivo.cantidadMin}+ pzas · $${unitPrice.toFixed(2)} por pieza · Estas ${qtyNueva} pzas: $${total.toFixed(2)}${material}`;
+    const material=faltantes.length?' · Faltan: '+faltantes.map(x=>`${x.faltante} ${x.nombre}`).join(', '):' · Existencias suficientes';
+    hint.textContent=`${variante?.startsWith('Talla/Color:')?variante.slice(12)+' · ':''}Rango ${rangoActivo.cantidadMin}+ pzas · $${unitPrice.toFixed(2)} por pieza · ${qtyNueva} ${qtyNueva===1?'pieza':'piezas'}: $${total.toFixed(2)}${material}`;
     hint.classList.toggle('pv-stock-warning',faltantes.length>0);
 }
 window._pvMostrarHint = _pvMostrarHint;

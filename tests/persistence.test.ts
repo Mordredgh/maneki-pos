@@ -97,6 +97,14 @@ it('editar un producto transmite solo esa fila y no toca otros productos',async(
  expect(sent.map(r=>r.id)).toEqual(['p2']);
  sent.splice(0);await a.ctx.saveProducts();expect(sent).toEqual([]);
 });
+it('conserva la tabla de precios variables despues de guardar y recargar',async()=>{
+ const a=app();a.ctx.products=[{id:'pv-1',name:'Playera',tipo:'producto_variable',stock:0,
+  tablaPreciosVariable:[{cantidadMin:1,precio:100},{cantidadMin:10,precio:800}],variants:[{type:'Talla/Color',value:'M / Negro',qty:2,priceDelta:10}]}];
+ await a.ctx.saveProducts();
+ expect(a.rows.products[0].tabla_precios_variable).toEqual([{cantidadMin:1,precio:100},{cantidadMin:10,precio:800}]);
+ const loaded=await a.ctx.sbLoad('products',[]);
+ expect(loaded[0].tablaPreciosVariable).toEqual([{cantidadMin:1,precio:100},{cantidadMin:10,precio:800}]);
+});
 it('calcula saldo y centavos igual antes de cargar Balance',()=>{
  const a=app();
  expect(a.ctx.mkRound2(1.005)).toBe(1.01);

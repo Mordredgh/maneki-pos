@@ -3,6 +3,8 @@
 ## Estado 2026-09-27
 Preparados y probados el formato cifrado, la consulta completa y la restauracion de datos operativos en una segunda base local. **Todavia no hay un respaldo externo programado activo**: falta elegir destino y configurar la credencial del proceso. No se activo ningun servicio de pago.
 
+Verificado de nuevo el 2026-09-27: `.env.backup.local` no existe y el Programador de tareas de Windows no contiene una tarea que ejecute `backup-external.mjs`. El respaldo KV `store.products` permitio recuperar seis tablas de precios variables, pero vive en la misma base de Supabase y no reemplaza un respaldo externo.
+
 `pos_backup_snapshot()` toma las tablas operativas, configuracion KV (incluye cortes), recibos de operaciones y auditoria en una consulta PostgreSQL. No depende de los limites de carga de la pantalla. Solo administradores existentes y service_role pueden ejecutarla.
 
 Es un respaldo logico de datos del POS. No incluye usuarios/passwords de Supabase Auth, objetos binarios de Storage, esquema SQL completo ni configuracion Cloudflare. Las migraciones y el codigo se conservan en Git. Para recuperacion integral de infraestructura tambien hay que conservar esos componentes.

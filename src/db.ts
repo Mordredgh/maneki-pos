@@ -1006,6 +1006,7 @@ const _RELATIONAL_TABLES = {
     products: { table: 'products', min: 1, orderBy: 'updated_at', limit: 2000, map: row => ({
         ...row, stockMin: row.stock_min, imageUrl: row.image_url,
         mpComponentes: row.mp_componentes, historialPrecios: row.historial_precios,
+        tablaPreciosVariable: row.tabla_precios_variable || [],
         publicarTienda: row.publicar_tienda, proveedorUrl: row.proveedor_url,
         descripcionWeb: row.description,
         esEmpaque: row.es_empaque, usaVariantes: row.usa_variantes,
@@ -1446,6 +1447,7 @@ function saveProducts() {
                 image_url:        (p.imageUrl && p.imageUrl.startsWith('http')) ? p.imageUrl : null,
                 tags:             p.tags             || [],
                 variants:         p.variants         || [],
+                tabla_precios_variable: p.tablaPreciosVariable || [],
                 mp_componentes:   p.mpComponentes    || [],
                 proveedor:        p.proveedor        || null,
                 proveedor_url:    p.proveedorUrl     || null,

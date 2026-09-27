@@ -422,7 +422,14 @@ async function guardarProductoVariable(e) {
         window.products.unshift(np as ManekiProduct);
     }
 
-    try{await saveProducts();renderInventoryTable();closeModal('pvModal');manekiToastExport(editId?'✅ Producto variable actualizado':'✅ Producto variable creado','ok');}
+    try{
+        await saveProducts();
+        renderInventoryTable();
+        const modal=document.getElementById('pvModal');
+        if(modal)modal._mkDirty=false;
+        await closeModal('pvModal');
+        manekiToastExport(editId?'✅ Producto variable actualizado':'✅ Producto variable creado','ok');
+    }
     catch(err:any){_restore();manekiToastExport('No se confirmó el guardado: '+(err.message||'revisa la sincronización'),'warn');}
 }
 window.guardarProductoVariable = guardarProductoVariable;
@@ -471,9 +478,13 @@ window.pvVarianteMaterial=pvVarianteMaterial;
 
 function pvPlanMateriales(product:any,cantidad:number,variante:string|undefined,products:any[]){
     const selected=(product.variants||[]).find((v:any)=>`${v.type}:${v.value}`===variante);
-    const fabricar=Math.max(0,cantidad-(Number(selected?.qty??product.stock)||0));
+    const terminadas=Number(selected?.qty??product.stock)||0;
+    const fabricar=Math.max(0,cantidad-terminadas);
     const rendimiento=Number(product.rendimientoPorHoja)||1;
-    return (product.mpComponentes||[]).map((comp:any)=>{
+    if(!(product.mpComponentes||[]).length){
+        return [{nombre:'piezas terminadas',necesario:cantidad,disponible:terminadas,faltante:fabricar}];
+    }
+    return product.mpComponentes.map((comp:any)=>{
         const mp=products.find(x=>String(x.id)===String(comp.id));
         const requerido=Math.ceil(fabricar/rendimiento)*(Number(comp.qty)||1);
         const materialVar=mp?.variants?.length?pvVarianteMaterial(mp,variante):null;

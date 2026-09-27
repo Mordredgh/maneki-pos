@@ -131,4 +131,7 @@
 - [x] Mostrar combinación, precio unitario, total y faltantes de materiales antes de agregar.
 - [x] Empatar talla o color con la variante de materia prima al descontar.
 - [x] Publicar en Cloudflare; verificar dominio, autenticacion y hash de SW.
-- [ ] Validar manualmente el flujo visual en staging/produccion; la navegacion de la pestaña automatizada no respondio durante esta sesion.
+- [x] Validar visualmente en staging: edicion, guardado, recarga, selector, faltante, cancelar y aceptar; revisar movil.
+- [x] Persistir rangos en JSONB y rescatar 6/6 productos variables del respaldo KV en Supabase.
+- [x] Evitar que Cancelar confirme por tratar el texto "false" como verdadero.
+- [x] Publicar correcciones de verificacion y comprobar dominio y Service Worker.

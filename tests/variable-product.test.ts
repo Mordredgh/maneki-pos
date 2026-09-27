@@ -31,3 +31,19 @@ it('muestra materiales faltantes para la talla elegida sin mezclar colores',()=>
  const tela={id:'tela',name:'Playera base',variants:[{type:'Talla',value:'M',qty:1},{type:'Talla',value:'L',qty:20}]};
  expect(ctx.pvPlanMateriales(product,3,'Talla/Color:M / Negro',[product,tela])[0]).toMatchObject({necesario:2,disponible:1,faltante:1});
 });
+it('avisa si faltan piezas terminadas y no hay materiales configurados',()=>{
+ const ctx=variable();const product={id:'p',variants:[{type:'Talla/Color',value:'M / Negro',qty:2}],mpComponentes:[]};
+ expect(ctx.pvPlanMateriales(product,3,'Talla/Color:M / Negro',[product])[0]).toMatchObject({necesario:3,disponible:2,faltante:1});
+});
+it('cierra sin pedir descartar cambios despues de confirmar el guardado',async()=>{
+ const ctx=variable();let saved=false,closedDirty:any;
+ const fields:any={pvNombre:{value:'Playera'},pvSku:{value:'P-1'},pvRendimiento:{value:''},pvEditId:{value:'p'},pvCategory:{value:''},pvNotas:{value:''},pvSubmitBtn:{disabled:false,textContent:''},pvModal:{_mkDirty:true}};
+ ctx.document={getElementById:(id:string)=>fields[id]||{value:''}};
+ ctx.window.products=[{id:'p',name:'Playera',variants:[]}];
+ ctx.window._pvTablaPreciosVariable=[{cantidadMin:1,precio:100}];
+ ctx.window._pvCombinaciones=[];ctx.window._pvMpComponentes=[];
+ ctx.manekiToastExport=()=>{};ctx.saveProducts=async()=>{saved=true;};ctx.renderInventoryTable=()=>{};
+ ctx.closeModal=()=>{closedDirty=fields.pvModal._mkDirty;expect(saved).toBe(true);};
+ await ctx.guardarProductoVariable({preventDefault(){}});
+ expect(closedDirty).toBe(false);
+});

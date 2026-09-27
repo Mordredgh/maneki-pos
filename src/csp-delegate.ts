@@ -25,7 +25,8 @@
         var arg = el.dataset.arg;
         var arg2 = el.dataset.arg2;
         var passEl = el.dataset.passEl;
-        if (passEl === 'before') fn(el, arg);
+        if (action === 'confirmModalResolve') fn(arg === 'true');
+        else if (passEl === 'before') fn(el, arg);
         else if (passEl) fn(arg, el);
         else if (arg2 !== undefined) fn(arg, arg2);
         else if (arg !== undefined) fn(arg);
