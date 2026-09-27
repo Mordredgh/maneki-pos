@@ -2,6 +2,7 @@
 import {mkdir,writeFile,readFile,rename} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {encryptSnapshot,decryptSnapshot} from './backup-lib.mjs';
+import {createR2Client,uploadVerifiedBackup} from './backup-r2.mjs';
 const {POS_BACKUP_DIR,POS_BACKUP_KEY,SUPABASE_SERVICE_ROLE_KEY}=process.env;
 if(!POS_BACKUP_DIR||!POS_BACKUP_KEY||!SUPABASE_SERVICE_ROLE_KEY)throw Error('Configura destino, clave de cifrado y credencial de respaldo en .env.backup.local');
 const response=await fetch('https://hoqcrljgmamaumtdrtzi.supabase.co/rest/v1/rpc/pos_backup_snapshot',{method:'POST',headers:{apikey:SUPABASE_SERVICE_ROLE_KEY,Authorization:`Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(120000)});
@@ -12,4 +13,11 @@ const file=join(folder,`bicho-pos-${new Date().toISOString().replace(/[:.]/g,'-'
 await writeFile(temp,encrypted,{flag:'wx'});const verified=decryptSnapshot(await readFile(temp),POS_BACKUP_KEY);
 if(JSON.stringify(verified)!==JSON.stringify(snapshot))throw Error('Verificacion del respaldo fallida');
 await rename(temp,file);
-console.log('Respaldo cifrado escrito y verificado. Tablas: '+Object.keys(snapshot.tables).length);
+const {R2_ACCOUNT_ID,R2_BUCKET,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY}=process.env;
+if([R2_ACCOUNT_ID,R2_BUCKET,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY].some(Boolean)){
+ if(![R2_ACCOUNT_ID,R2_BUCKET,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY].every(Boolean))throw Error('Configuracion R2 incompleta; respaldo local conservado');
+ await uploadVerifiedBackup(createR2Client(R2_ACCOUNT_ID,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY),R2_BUCKET,file.split(/[\\/]/).pop(),encrypted,POS_BACKUP_KEY,snapshot);
+ console.log('Respaldo cifrado verificado en R2. Tablas: '+Object.keys(snapshot.tables).length);
+}else{
+ console.log('Respaldo cifrado local verificado; destino externo no configurado. Tablas: '+Object.keys(snapshot.tables).length);
+}

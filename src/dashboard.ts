@@ -13,7 +13,7 @@ const _csp = calcSaldoPendiente;
             const pedidosAlerta = pedidos.filter(p => {
                 if (!estadosActivos.includes(p.status)) return false;
                 const diff = _dias(p);
-                return diff !== null && diff >= 0 && diff <= 2;
+                return diff !== null && diff <= 2;
             }).map(p => ({ ...p, diffDias: _dias(p) }))
               .sort((a,b) => a.diffDias - b.diffDias);
 
@@ -36,7 +36,9 @@ const _csp = calcSaldoPendiente;
 
             lista.innerHTML = pedidosAlerta.map(p => {
                 let clase, etiqueta, icono;
-                if (p.diffDias === 0) {
+                if (p.diffDias < 0) {
+                    clase = 'hoy'; etiqueta = `Vencido hace ${Math.abs(p.diffDias)} día${p.diffDias === -1 ? '' : 's'}`; icono = '🔴';
+                } else if (p.diffDias === 0) {
                     clase = 'hoy'; etiqueta = '¡Hoy!'; icono = '🔴';
                 } else if (p.diffDias === 1) {
                     clase = 'manana'; etiqueta = 'Mañana'; icono = '🟠';
@@ -62,7 +64,8 @@ const _csp = calcSaldoPendiente;
                         <div class="text-right shrink-0">
                             <p class="text-sm font-bold text-gray-800">${fmtMoney(Number(p.total||0))}</p>
                             ${Number(saldo)>0 ? `<p class="text-xs font-semibold" style="color:#ea580c;">💸 Pendiente: $${saldo}</p>` : '<p class="text-xs text-green-600 font-semibold">✅ Pagado</p>'}
-                            <p class="text-xs text-gray-400">${_esc(p.entrega)}</p>
+                            <p class="text-xs text-gray-400">${_esc(p.entrega || p.fechaEntrega)}</p>
+                            <button type="button" data-action="showSection" data-arg="pedidos" class="text-xs font-bold underline" style="color:#991b1b;">Ver pedidos</button>
                         </div>
                     </div>`;
             }).join('');
@@ -133,13 +136,15 @@ function updateDashboard() {
     _updateDashboardTimer = setTimeout(() => {
         _updateDashboardTimer = null;
         // P-4: hash guard — saltar render completo si los datos no cambiaron
-        const _newHash = [
+        const _newHash = JSON.stringify([
             (window.salesHistory || []).length,
-            (window.pedidos || []).length,
+            (window.pedidos || []).map(p => [p.id,p.status,p.entrega || p.fechaEntrega,p.total,p.anticipo,p.pagos?.length]),
+            (window.products || []).map(p => [p.id,typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : p.stock,p.stockMin,p.activo]),
+            (window.receivables || []).map(r => [r.id,r.status,r.amount]),
             (window.pedidosFinalizados || []).length,
             (window.expenses || []).length,
             (window.incomes || []).length
-        ].join('_');
+        ]);
         // Visibilidad: si el dashboard no está activo, solo actualizar badges (ligero)
         // y forzar re-render completo la próxima vez que el usuario navegue a dashboard.
         const _activeSection = localStorage.getItem('maneki_activeSection') || '';
@@ -805,7 +810,7 @@ function _renderAtencionHoy() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     })();
-    const items = [];
+    const items: {label:string,section:string}[] = [];
 
     // Pedidos con saldo pendiente
     const porCobrar = (window.pedidos || []).filter(p =>
@@ -813,7 +818,7 @@ function _renderAtencionHoy() {
         _csp(p) > 0
     );
     if (porCobrar.length > 0) {
-        items.push(`💳 ${porCobrar.length} pedido${porCobrar.length > 1 ? 's' : ''} con saldo pendiente`);
+        items.push({label:`💳 ${porCobrar.length} pedido${porCobrar.length > 1 ? 's' : ''} con saldo pendiente`,section:'balance'});
     }
 
     // Pedidos sin anticipo
@@ -821,7 +826,7 @@ function _renderAtencionHoy() {
         p.status !== 'cancelado' && !p.anticipo && !(p.pagos && p.pagos.length > 0)
     );
     if (sinAnticipo.length > 0) {
-        items.push(`⚠️ ${sinAnticipo.length} pedido${sinAnticipo.length > 1 ? 's' : ''} sin anticipo registrado`);
+        items.push({label:`⚠️ ${sinAnticipo.length} pedido${sinAnticipo.length > 1 ? 's' : ''} sin anticipo registrado`,section:'pedidos'});
     }
 
     // Entregas vencidas
@@ -830,13 +835,17 @@ function _renderAtencionHoy() {
         return new Date(p.entrega + 'T00:00:00') < new Date(hoy + 'T00:00:00');
     });
     if (vencidos.length > 0) {
-        items.push(`🚨 ${vencidos.length} entrega${vencidos.length > 1 ? 's' : ''} vencida${vencidos.length > 1 ? 's' : ''}`);
+        items.push({label:`🚨 ${vencidos.length} entrega${vencidos.length > 1 ? 's' : ''} vencida${vencidos.length > 1 ? 's' : ''}`,section:'pedidos'});
     }
+
+    const stockBajo = (window.products || []).filter(p => p.activo !== false && p.tipo !== 'servicio' &&
+        (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : Number(p.stock) || 0) <= (p.stockMin ?? storeConfig.stockMinimo ?? 5));
+    if (stockBajo.length) items.push({label:`📦 ${stockBajo.length} producto${stockBajo.length > 1 ? 's' : ''} con stock bajo`,section:'inventory'});
 
     if (items.length === 0) {
         el.innerHTML = '<span class="text-green-600 text-sm">✅ Todo en orden por hoy</span>';
     } else {
-        el.innerHTML = items.map(i => `<div class="text-sm py-1 border-b border-gray-100">${_esc(i)}</div>`).join('');
+        el.innerHTML = items.map(i => `<button type="button" data-action="showSection" data-arg="${i.section}" class="w-full text-left text-sm py-2 border-b border-gray-100 flex items-center justify-between gap-2"><span>${_esc(i.label)}</span><span class="font-bold shrink-0">Ver →</span></button>`).join('');
     }
 }
 window._renderAtencionHoy = _renderAtencionHoy;

@@ -1,6 +1,10 @@
 # Respaldos del POS
 
 ## Estado 2026-09-27
+
+R2 preparado en el codigo: `scripts/backup-external.mjs` conserva el archivo cifrado local y, al configurar R2, lo sube y vuelve a descargarlo para comprobar descifrado y contenido. Prueba automatizada del ciclo remoto con transporte simulado. **No esta activo**: Cloudflare muestra R2 sin suscripcion, la sesion Wrangler actual carece de permiso R2 y `.env.backup.local` no existe. La pantalla de alta de R2 implica suscripcion renovable y cobro si se excede la cuota; debe completarla el propietario. No se ha generado token ni creado bucket.
+
+Tras activar R2, crear un bucket privado y un token R2 limitado a ese bucket con permiso Object Read & Write. Agregar a `.env.backup.local` los valores `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`, ademas de los tres valores indicados abajo. Ejecutar el comando de prueba; solo declarar el respaldo externo operativo cuando confirme la descarga y restauracion remota. Programar despues la ejecucion en una maquina que permanezca encendida y comprobar una restauracion periodica. Nunca incluir esta configuracion en Cloudflare Pages ni en Git.
 Preparados y probados el formato cifrado, la consulta completa y la restauracion de datos operativos en una segunda base local. **Todavia no hay un respaldo externo programado activo**: falta elegir destino y configurar la credencial del proceso. No se activo ningun servicio de pago.
 
 Verificado de nuevo el 2026-09-27: `.env.backup.local` no existe y el Programador de tareas de Windows no contiene una tarea que ejecute `backup-external.mjs`. El respaldo KV `store.products` permitio recuperar seis tablas de precios variables, pero vive en la misma base de Supabase y no reemplaza un respaldo externo.

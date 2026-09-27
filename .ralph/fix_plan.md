@@ -144,3 +144,12 @@
 - [x] Corregir acceso a Nuevo pedido desde inicio y guardar rangos editados.
 - [x] Probar en staging el flujo completo y la vista movil con datos ficticios.
 - [x] Construir, publicar y verificar 401/200 y hash de Service Worker en ambos dominios.
+
+## Respaldo externo y alertas operativas 2026-09-27
+
+- [x] Preparar subida cifrada a R2 con descarga y verificacion remota.
+- [x] Probar que un archivo remoto alterado no se acepta como respaldo valido.
+- [ ] Activar R2 y programar respaldo: el propietario debe completar la suscripcion de Cloudflare y falta configurar credenciales locales. <!-- BLOQUEADO: alta financiera y credenciales -->
+- [x] Mostrar entregas vencidas y enlaces directos a pedidos, cobros e inventario.
+- [x] Actualizar alertas ante cambios de estado, saldo o stock sin variar conteos.
+- [x] Probar 170 casos, tipos, lint y flujo visual en staging; publicar y verificar HTTP/SW.

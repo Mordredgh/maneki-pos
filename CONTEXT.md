@@ -1,5 +1,9 @@
 # Contexto del POS
 
+## Decision 2026-09-27: respaldo remoto y alertas
+
+El respaldo externo opcional usa R2 privado mediante S3 API. Se cifra antes de salir del equipo y se lee de vuelta para validar descifrado y contenido. Sin las cuatro variables R2, el script conserva solo la copia local y no declara exito remoto. R2 aun requiere alta de suscripcion y credenciales limitadas al bucket; no hay programacion activa. El dashboard muestra entregas vencidas y acciones hacia pedidos, cobros e inventario. El hash de actualizacion incluye estado, saldo y stock, no solo cantidad de filas.
+
 ## Decision 2026-09-27: productos variables
 
 `producto_variable` significa precio por rango de cantidad. Una combinacion de talla y color es una variante propia en `products.variants` con `type: Talla/Color`, `size`, `color`, `qty` (piezas terminadas) y `priceDelta` (recargo por pieza). El pedido agrupa todas las combinaciones del mismo producto para elegir el rango de precio; cada linea conserva su propio recargo. Si faltan piezas terminadas, calcula materias primas para fabricar la diferencia. Una materia prima con variantes por talla o color se descuenta de la variante correspondiente.
