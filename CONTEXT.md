@@ -1,5 +1,9 @@
 # Contexto del POS
 
+## Decision 2026-09-27: productos variables
+
+`producto_variable` significa precio por rango de cantidad. Una combinacion de talla y color es una variante propia en `products.variants` con `type: Talla/Color`, `size`, `color`, `qty` (piezas terminadas) y `priceDelta` (recargo por pieza). El pedido agrupa todas las combinaciones del mismo producto para elegir el rango de precio; cada linea conserva su propio recargo. Si faltan piezas terminadas, calcula materias primas para fabricar la diferencia. Una materia prima con variantes por talla o color se descuenta de la variante correspondiente. No se necesita migracion SQL: variants ya es JSONB.
+
 ## Decision 2026-09-27: caja, auditoria y respaldo
 El cliente envia solo filas modificadas, conservando snapshots optimistas y lotes atomicos. Dinero se calcula en centavos en el nucleo, antes de cargar Balance. Caja consulta el dia completo por RPC, no los arrays limitados de la pantalla; no incluye ventas de pedidos sin cobro. Ingresos/gastos conservan metodo; valores historicos desconocidos quedan sin clasificar.
 

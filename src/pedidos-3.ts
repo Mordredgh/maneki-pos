@@ -608,6 +608,7 @@ window.filtrarProductosPedido = filtrarProductosPedido;
 // Así el select en pedidos hereda automáticamente cualquier cambio hecho en la MP.
 function _variantesPedido(p) {
     if (!p) return [];
+    if (Array.isArray(p.variants) && p.variants.length > 0) return p.variants;
     // PT con mpComponentes: buscar el primer MP que tenga variantes
     if (Array.isArray(p.mpComponentes) && p.mpComponentes.length > 0) {
         for (const comp of p.mpComponentes) {
@@ -615,8 +616,7 @@ function _variantesPedido(p) {
             if (mp && Array.isArray(mp.variants) && mp.variants.length > 0) return mp.variants;
         }
     }
-    // Fallback: variantes propias del producto (MP directo o PT sin componentes)
-    return Array.isArray(p.variants) ? p.variants : [];
+    return [];
 }
 window._variantesPedido = _variantesPedido;
 
@@ -659,13 +659,16 @@ function seleccionarProductoPedido(id) {
     const varRow = document.getElementById('pedidoVarianteRow');
     const varSel = document.getElementById('pedidoVarianteSelect');
     if (varRow && varSel) {
+        if (!varSel._pvBound) { varSel.addEventListener('change',()=>_pvCantidadChange(document.getElementById('pedidoProductoCantidad')?.value)); varSel._pvBound=true; }
         const _effVariants = _variantesPedido(p);
         if (_effVariants.length > 0) {
             varSel.innerHTML = _effVariants.map(v => {
                 const stockLabel = (v.qty !== undefined && v.qty !== null)
                     ? ` (${v.qty} pzs)` : '';
                 const emojiPfx = typeof _mkColorEmoji === 'function' ? _mkColorEmoji(v.type, v.value) : v.value;
-                return `<option value="${v.type}:${v.value}">${v.type}: ${emojiPfx}${stockLabel}</option>`;
+                const recargo=Number(v.priceDelta)||0;
+                const label=v.type==='Talla/Color'?`${v.value} · ${v.qty||0} listas${recargo?` · +$${recargo.toFixed(2)}/pza`:''}`:`${v.type}: ${emojiPfx}${stockLabel}`;
+                return `<option value="${_esc(v.type)}:${_esc(v.value)}">${_esc(label)}</option>`;
             }).join('');
             varRow.classList.remove('hidden');
 
@@ -674,7 +677,7 @@ function seleccionarProductoPedido(id) {
             if (varLabel) {
                 varLabel.textContent = p.tipo === 'materia_prima'
                     ? '🎨 Selecciona variante (Talla / Color):'
-                    : '🎨 Variante:';
+                    : p.tipo === 'producto_variable' ? 'Talla y color:' : '🎨 Variante:';
             }
         } else {
             varRow.classList.add('hidden');
@@ -691,9 +694,10 @@ function seleccionarProductoPedido(id) {
     if (precioInputEl) {
         if (p.tipo === 'producto_variable' && typeof pvGetPrecio === 'function') {
             const qty = parseInt(document.getElementById('pedidoProductoCantidad')?.value) || 1;
-            precioInputEl.value = pvGetPrecio(p, qty).toFixed(2);
-            _pvMostrarHint(p, qty);
+            precioInputEl.readOnly=true;
+            _pvCantidadChange(qty);
         } else {
+            precioInputEl.readOnly=false;
             precioInputEl.value = p.price ? Number(p.price).toFixed(2) : '';
             _pvOcultarHint();
         }
@@ -721,7 +725,7 @@ function limpiarSeleccionProductoPedido() {
 window.limpiarSeleccionProductoPedido = limpiarSeleccionProductoPedido;
 
 // ── Hint de rango activo para Producto Variable ───────────────────────────────
-function _pvMostrarHint(p, qty) {
+function _pvMostrarHint(p, qty, qtyNueva=qty) {
     let hint = document.getElementById('pedidoPvHint');
     if (!hint) {
         const selRow = document.getElementById('pedidoProductoSelRow');
@@ -735,10 +739,15 @@ function _pvMostrarHint(p, qty) {
     if (!tabla.length) { hint.style.display='none'; return; }
     let rangoActivo = tabla[0];
     for (const r of tabla) { if (qty >= r.cantidadMin) rangoActivo = r; else break; }
-    const unitPrice = rangoActivo.precio / (rangoActivo.cantidadMin || 1);
-    const total = unitPrice * qty;
+    const variante=document.getElementById('pedidoVarianteSelect')?.value;
+    const unitPrice=pvGetPrecio(p,qty,variante);
+    const total=unitPrice*qtyNueva;
     hint.style.display = '';
-    hint.innerHTML = `🎯 Rango: <b>${rangoActivo.cantidadMin}+ pzas</b> → <b>$${unitPrice.toFixed(2)}/pza</b> &nbsp;|&nbsp; Total: <b style="color:#059669">$${total.toFixed(2)}</b>`;
+    const plan=typeof pvPlanMateriales==='function'?pvPlanMateriales(p,qty,variante,window.products||[]):[];
+    const faltantes=plan.filter(x=>x.faltante>0);
+    const material=plan.length?(faltantes.length?' · Faltan: '+faltantes.map(x=>`${x.faltante} de ${x.nombre}`).join(', '):' · Material disponible'):' · Sin materiales configurados';
+    hint.textContent=`${variante?.startsWith('Talla/Color:')?variante.slice(12)+' · ':''}Rango ${rangoActivo.cantidadMin}+ pzas · $${unitPrice.toFixed(2)} por pieza · Estas ${qtyNueva} pzas: $${total.toFixed(2)}${material}`;
+    hint.classList.toggle('pv-stock-warning',faltantes.length>0);
 }
 window._pvMostrarHint = _pvMostrarHint;
 
@@ -753,15 +762,17 @@ function _pvCantidadChange(val) {
     if (!id) return;
     const p = (window.products||[]).find(x => String(x.id) === String(id));
     if (!p || p.tipo !== 'producto_variable') return;
-    const qty = parseInt(val) || 1;
-    const unitPrice = typeof pvGetPrecio === 'function' ? pvGetPrecio(p, qty) : 0;
+    const qty = parseInt(typeof val==='object'?val?.value:val) || 1;
+    const variante=document.getElementById('pedidoVarianteSelect')?.value;
+    const existing=(window.pedidoProductosSeleccionados||[]).filter(x=>String(x.id)===String(id)).reduce((n,x)=>n+(Number(x.quantity)||0),0);
+    const unitPrice = typeof pvGetPrecio === 'function' ? pvGetPrecio(p, qty+existing,variante) : 0;
     const precioEl = document.getElementById('pedidoProductoPrecio');
     if (precioEl) precioEl.value = unitPrice.toFixed(2);
-    _pvMostrarHint(p, qty);
+    _pvMostrarHint(p, qty+existing, qty);
 }
 window._pvCantidadChange = _pvCantidadChange;
 
-function agregarProductoPedido() {
+async function agregarProductoPedido() {
     const id = document.getElementById('pedidoProductoSelect')?.value;
     if (!id) { manekiToastExport('⚠️ Selecciona un producto primero', 'warn'); return; }
     const p = (window.products || []).find(x => String(x.id) === String(id));
@@ -769,16 +780,12 @@ function agregarProductoPedido() {
     const qty = parseInt(document.getElementById('pedidoProductoCantidad')?.value) || 1;
     const precioInput = document.getElementById('pedidoProductoPrecio');
     const precioCustom = precioInput && precioInput.value !== '' ? parseFloat(precioInput.value) : null;
-    let precioFinal;
-    if (p.tipo === 'producto_variable' && typeof pvGetPrecio === 'function') {
-        precioFinal = pvGetPrecio(p, qty);
-    } else {
-        precioFinal = precioCustom !== null ? precioCustom : (Number(p.price) || 0);
-    }
     const varSel = document.getElementById('pedidoVarianteSelect');
     const tieneVariantes = _variantesPedido(p).length > 0;
     const variante = (varSel && tieneVariantes && !document.getElementById('pedidoVarianteRow')?.classList.contains('hidden'))
         ? varSel.value : null;
+    const precioFinal=p.tipo==='producto_variable'&&typeof pvGetPrecio==='function'
+        ?pvGetPrecio(p,qty,variante):precioCustom!==null?precioCustom:(Number(p.price)||0);
 
     // Validar que se haya seleccionado variante si el producto las tiene
     if (tieneVariantes && !variante) {
@@ -787,23 +794,14 @@ function agregarProductoPedido() {
     }
 
     window.pedidoProductosSeleccionados = window.pedidoProductosSeleccionados || [];
-    const existe = window.pedidoProductosSeleccionados.find(x => x.id === id && x.variante === variante);
-    if (existe) { existe.quantity = (existe.quantity || 1) + qty; }
-    else { window.pedidoProductosSeleccionados.push({ id, name: p.name, price: precioFinal, quantity: qty, variante }); }
-
-    // Advertir si el stock es insuficiente (considerando rendimientoPorHoja para productos variables)
+    // Considerar las piezas de la misma combinación ya incluidas en el pedido.
     if (p.tipo === 'producto_variable') {
-        const rph = p.rendimientoPorHoja || 0;
-        if (rph > 0 && Array.isArray(p.mpComponentes) && p.mpComponentes.length) {
-            const hojasNecesarias = Math.ceil(qty / rph);
-            // Revisar stock del primer MP componente (la hoja base)
-            const mpBase = (window.products || []).find(x => String(x.id) === String(p.mpComponentes[0].id));
-            if (mpBase) {
-                const hojasDisp = typeof getStockEfectivo === 'function' ? getStockEfectivo(mpBase) : (mpBase.stock || 0);
-                if (hojasNecesarias > hojasDisp) {
-                    manekiToastExport(`⚠️ Necesitas ${hojasNecesarias} hojas pero solo hay ${hojasDisp} de "${mpBase.name}"`, 'warn');
-                }
-            }
+        const misma=window.pedidoProductosSeleccionados.filter(x=>String(x.id)===String(id)&&x.variante===variante).reduce((n,x)=>n+(Number(x.quantity)||0),0);
+        const plan=typeof pvPlanMateriales==='function'?pvPlanMateriales(p,qty+misma,variante,window.products||[]):[];
+        const faltantes=plan.filter(x=>x.faltante>0);
+        if(faltantes.length){
+            const detalle=faltantes.map(x=>`${x.nombre}: faltan ${x.faltante} (hay ${x.disponible}, se necesitan ${x.necesario})`).join('\n');
+            if(!await showConfirm(`Falta material para ${p.name}${variante?' '+variante:''}:\n${detalle}\n\n¿Agregar al pedido y reponer después?`,'Material insuficiente'))return;
         }
     } else {
         const stockDisp = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (p.stock||0);
@@ -811,6 +809,11 @@ function agregarProductoPedido() {
             manekiToastExport(`⚠️ "${p.name||p.nombre}" tiene solo ${stockDisp} en stock`, 'warn');
         }
     }
+
+    const existe = window.pedidoProductosSeleccionados.find(x => String(x.id) === String(id) && x.variante === variante);
+    if (existe) existe.quantity = (existe.quantity || 1) + qty;
+    else window.pedidoProductosSeleccionados.push({ id, name: p.name, price: precioFinal, quantity: qty, variante });
+    if(typeof pvRecalcularLineas==='function')pvRecalcularLineas(window.pedidoProductosSeleccionados,window.products||[]);
 
     renderPedidoProductosList();
     limpiarSeleccionProductoPedido();
@@ -820,6 +823,14 @@ window.agregarProductoPedido = agregarProductoPedido;
 function renderPedidoProductosList() {
     const list = document.getElementById('pedidoProductosList');
     if (!list) return;
+    if(!list._pvBound){
+        list.addEventListener('change',(event:any)=>{
+            const el=event.target;
+            if(el?.dataset?.pedidoQty!==undefined)editarCantidadPedidoProducto(Number(el.dataset.pedidoQty),el.value);
+            if(el?.dataset?.pedidoPrice!==undefined)editarPrecioPedidoProducto(Number(el.dataset.pedidoPrice),el.value);
+        });
+        list._pvBound=true;
+    }
     const items = window.pedidoProductosSeleccionados || [];
     if (!items.length) { list.innerHTML = ''; return; }
     const subtotal = items.reduce((s, it) => s + (parseFloat(it.price) || 0) * (it.quantity || 1), 0);
@@ -832,19 +843,16 @@ function renderPedidoProductosList() {
                 <div class="font-medium text-gray-800 truncate">${_esc(item.name || '')}${item.variante ? ` <span class="text-xs text-purple-600 font-semibold">(${(()=>{const p=item.variante.indexOf(':');if(p===-1)return _esc(item.variante);const t=item.variante.slice(0,p).trim(),val=item.variante.slice(p+1).trim();return _esc(t)+': '+(typeof _mkColorDot==='function'?_mkColorDot(t,val):_esc(val));})()})</span>` : ''}</div>
                 <div class="flex items-center gap-1 mt-1">
                     <span class="text-xs text-gray-500">×</span>
-                    <input type="number" min="1" value="${item.quantity || 1}"
-                        oninput="(function(el,idx){var v=parseInt(el.value)||1;var it=window.pedidoProductosSeleccionados&&window.pedidoProductosSeleccionados[idx];if(it){it.quantity=v;var pr=(window.products||[]).find(function(x){return String(x.id)===String(it.id);});if(pr&&pr.tipo==='producto_variable'&&typeof pvGetPrecio==='function'){it.price=pvGetPrecio(pr,v);renderPedidoProductosList();return;}}if(typeof calcPedidoTotal==='function')calcPedidoTotal();})(this,${i})"
-                        onchange="editarCantidadPedidoProducto(${i}, this.value)"
+                    <input type="number" min="1" value="${item.quantity || 1}" data-pedido-qty="${i}" aria-label="Cantidad de ${_esc(item.name||'producto')}"
                         class="w-14 px-2 py-0.5 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 outline-none">
                     <span class="text-xs text-gray-500">a $</span>
-                    <input type="number" step="0.01" min="0" value="${precio.toFixed(2)}"
-                        oninput="(function(el,idx){var v=parseFloat(el.value);if(!isNaN(v)&&window.pedidoProductosSeleccionados&&window.pedidoProductosSeleccionados[idx]!=null){window.pedidoProductosSeleccionados[idx].price=v;}if(typeof calcPedidoTotal==='function')calcPedidoTotal();})(this,${i})"
-                        onchange="editarPrecioPedidoProducto(${i}, this.value)"
+                    <input type="number" step="0.01" min="0" value="${precio.toFixed(2)}" data-pedido-price="${i}" aria-label="Precio por pieza de ${_esc(item.name||'producto')}"
+                        ${((window.products||[]).find(x=>String(x.id)===String(item.id))?.tipo==='producto_variable')?'readonly title="Precio automático según cantidad, talla y color"':''}
                         class="w-20 px-2 py-0.5 border border-amber-300 rounded-lg text-xs font-semibold text-amber-800 outline-none" style="background:#fffbeb">
                     <span class="text-xs text-gray-400">= <span class="font-semibold text-gray-700">$${lineaTotal.toFixed(2)}</span></span>
                 </div>
             </div>
-            <button onclick="quitarProductoPedido(${i})" class="text-gray-400 hover:text-red-400 text-base flex-shrink-0">✕</button>
+            <button type="button" data-action="quitarProductoPedido" data-arg="${i}" aria-label="Quitar ${_esc(item.name||'producto')}" class="text-gray-400 hover:text-red-400 text-base flex-shrink-0">✕</button>
         </div>`;
     }).join('') + `
         <div class="flex justify-end px-3 pt-1 pb-0.5 text-xs font-bold text-gray-700">
@@ -930,6 +938,7 @@ window.editarCantidadEmpaquePedido = editarCantidadEmpaquePedido;
 
 function quitarProductoPedido(idx) {
     (window.pedidoProductosSeleccionados || []).splice(idx, 1);
+    if(typeof pvRecalcularLineas==='function')pvRecalcularLineas(window.pedidoProductosSeleccionados||[],window.products||[]);
     renderPedidoProductosList();
 }
 window.quitarProductoPedido = quitarProductoPedido;
@@ -949,10 +958,7 @@ function editarCantidadPedidoProducto(idx, valor) {
         const qty = parseInt(valor) || 1;
         items[idx].quantity = qty;
         // Auto-actualizar precio si es producto variable
-        const prod = (window.products || []).find(x => String(x.id) === String(items[idx].id));
-        if (prod && prod.tipo === 'producto_variable' && typeof pvGetPrecio === 'function') {
-            items[idx].price = pvGetPrecio(prod, qty);
-        }
+        if(typeof pvRecalcularLineas==='function')pvRecalcularLineas(items,window.products||[]);
         renderPedidoProductosList();
     }
 }

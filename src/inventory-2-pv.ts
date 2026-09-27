@@ -5,6 +5,41 @@
 
 window._pvMpComponentes = [];
 window._pvTablaPreciosVariable = [];
+window._pvCombinaciones = [];
+
+function pvNormalizarCombinaciones(rows:any[]):any[]{
+    const seen=new Set<string>();
+    return rows.map(row=>{
+        const size=String(row.size||'').trim(),color=String(row.color||'').trim();
+        const qty=Number(row.qty),priceDelta=Number(row.priceDelta||0);
+        if(!size||!color)throw Error('Cada combinación necesita talla y color.');
+        if(!Number.isInteger(qty)||qty<0)throw Error('Existencias inválidas: usa piezas enteras desde cero.');
+        if(!Number.isFinite(priceDelta)||priceDelta<0)throw Error('Recargo inválido: usa cero o un importe positivo.');
+        const key=`${size.toLocaleLowerCase('es-MX')}|${color.toLocaleLowerCase('es-MX')}`;
+        if(seen.has(key))throw Error('Hay una combinación de talla y color repetida.');seen.add(key);
+        return {type:'Talla/Color',value:`${size} / ${color}`,size,color,qty,priceDelta:mkRound2(priceDelta)};
+    });
+}
+function pvAgregarCombinacion(){window._pvCombinaciones.push({size:'',color:'',qty:0,priceDelta:0});pvRenderCombinaciones();}
+function pvEditarCombinacion(index:number,field:string,value:string){
+    const row=window._pvCombinaciones[index];if(!row)return;
+    row[field]=['qty','priceDelta'].includes(field)?Number(value):value;
+}
+function pvQuitarCombinacion(index:number){window._pvCombinaciones.splice(index,1);pvRenderCombinaciones();}
+function pvRenderCombinaciones(){
+    const list=document.getElementById('pvCombinacionesList');if(!list)return;
+    list.replaceChildren();
+    if(!window._pvCombinaciones.length){list.textContent='Sin tallas y colores: el producto se venderá sin elección de variante.';return;}
+    window._pvCombinaciones.forEach((row:any,i:number)=>{
+        const line=document.createElement('div');line.className='pv-combination-row';
+        for(const [field,label,kind] of [['size','Talla','text'],['color','Color','text'],['qty','Existencias listas','number'],['priceDelta','Recargo por pieza','number']]){
+            const wrap=document.createElement('label');wrap.textContent=label;const input=document.createElement('input');input.type=kind;input.value=String(row[field]??'');
+            if(kind==='number'){input.min='0';input.step=field==='qty'?'1':'0.01';}input.required=true;input.oninput=()=>pvEditarCombinacion(i,field,input.value);wrap.appendChild(input);line.appendChild(wrap);
+        }
+        const remove=document.createElement('button');remove.type='button';remove.textContent='Quitar';remove.onclick=()=>pvQuitarCombinacion(i);line.appendChild(remove);list.appendChild(line);
+    });
+}
+window.pvAgregarCombinacion=pvAgregarCombinacion;
 
 function injectVariableProductModal() {
     const existing = document.getElementById('pvModal');
@@ -18,7 +53,7 @@ function injectVariableProductModal() {
             <h3 style="font-size:1.3rem;font-weight:800;color:#1a0533;">🎨 Producto Variable</h3>
             <button onclick="closeModal('pvModal')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af;">×</button>
         </div>
-        <form id="pvForm" onsubmit="guardarProductoVariable(event)" style="display:flex;flex-direction:column;gap:16px;">
+        <form id="pvForm" style="display:flex;flex-direction:column;gap:16px;">
             <input type="hidden" id="pvEditId" value="">
 
             <!-- IMAGEN -->
@@ -64,6 +99,12 @@ function injectVariableProductModal() {
             </div>
 
             <!-- Tabla de precios -->
+            <section class="pv-workflow-card" aria-labelledby="pvCombTitle">
+                <h4 id="pvCombTitle">Tallas y colores disponibles</h4>
+                <p>Opcional para playeras. Una fila es una combinación; las existencias son piezas ya listas. Deja cero si se fabrica al recibir el pedido.</p>
+                <div id="pvCombinacionesList"></div>
+                <button type="button" data-action="pvAgregarCombinacion">Agregar talla y color</button>
+            </section>
             <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <label class="text-sm font-semibold text-gray-700">💰 Tabla de precios por cantidad</label>
@@ -112,6 +153,7 @@ function injectVariableProductModal() {
         </form>
     </div>`;
     document.body.appendChild(modal);
+    modal.querySelector('#pvForm')?.addEventListener('submit',guardarProductoVariable);
 }
 window.injectVariableProductModal = injectVariableProductModal;
 
@@ -244,6 +286,7 @@ function openVariableProductModal(editId) {
     injectVariableProductModal();
     window._pvMpComponentes = [];
     window._pvTablaPreciosVariable = [];
+    window._pvCombinaciones = [];
     window._pvTagsActuales = [];
     window._pvProductImage = null;
     window._pvProductImageFile = null;
@@ -276,6 +319,7 @@ function openVariableProductModal(editId) {
         if (p) {
             window._pvMpComponentes = (p.mpComponentes || []).map(c => ({...c}));
             window._pvTablaPreciosVariable = (p.tablaPreciosVariable || []).map(r => ({...r}));
+            window._pvCombinaciones = (p.variants||[]).filter(v=>v.type==='Talla/Color').map(v=>({size:v.size||'',color:v.color||'',qty:v.qty||0,priceDelta:v.priceDelta||0}));
             window._pvTagsActuales = [...(p.tags || [])];
             window._pvProductImage = p.imageUrl || null;
             setTimeout(() => {
@@ -297,6 +341,7 @@ function openVariableProductModal(editId) {
                 }
                 pvRenderMpList();
                 pvRenderTablaPreciosList();
+                pvRenderCombinaciones();
                 renderTagsPv();
                 const title = document.querySelector('#pvModal h3');
                 if (title) title.textContent = '🎨 Editar Producto Variable';
@@ -308,6 +353,7 @@ function openVariableProductModal(editId) {
         setTimeout(() => {
             pvRenderMpList();
             pvRenderTablaPreciosList();
+            pvRenderCombinaciones();
         }, 80);
     }
     openModal('pvModal');
@@ -328,6 +374,9 @@ async function guardarProductoVariable(e) {
     if (!nombre) { manekiToastExport('⚠️ El nombre es requerido', 'warn'); return; }
     const tabla = (window._pvTablaPreciosVariable || []).filter(r => r.cantidadMin > 0 && r.precio > 0);
     if (!tabla.length) { manekiToastExport('⚠️ Agrega al menos un rango de precio', 'warn'); return; }
+    let combinations:any[];
+    try{combinations=pvNormalizarCombinaciones(window._pvCombinaciones||[]);}catch(err:any){manekiToastExport(err.message,'warn');return;}
+    if(new Set(tabla.map(r=>Number(r.cantidadMin))).size!==tabla.length){manekiToastExport('Los rangos de precio no pueden repetir la cantidad mínima.','warn');return;}
 
     // Spinner
     const _btn = document.getElementById('pvSubmitBtn');
@@ -357,32 +406,29 @@ async function guardarProductoVariable(e) {
             name: nombre, tipo: 'producto_variable',
             sku: finalSku, rendimientoPorHoja: rendimiento,
             mpComponentes: mpComps, tablaPreciosVariable: tabla,
+            variants:[...(window.products[idx].variants||[]).filter(v=>v.type!=='Talla/Color'),...combinations],
             cost: costoHoja, price: tabla[tabla.length - 1].precio,
             category, tags, notas,
             imageUrl: imageUrl || window.products[idx].imageUrl || '',
         });
-        manekiToastExport('✅ Producto variable actualizado', 'ok');
     } else {
         const np = {
             id: _genId(), name: nombre, tipo: 'producto_variable',
             sku: finalSku, rendimientoPorHoja: rendimiento,
             mpComponentes: mpComps, tablaPreciosVariable: tabla,
             cost: costoHoja, price: tabla[tabla.length - 1].precio,
-            stock: 0, image: '🎨', category, tags, notas, imageUrl,
+            stock: 0, variants:combinations,image: '🎨', category, tags, notas, imageUrl,
         };
         window.products.unshift(np as ManekiProduct);
-        manekiToastExport('✅ Producto variable creado', 'ok');
     }
 
-    _restore();
-    saveProducts();
-    renderInventoryTable();
-    closeModal('pvModal');
+    try{await saveProducts();renderInventoryTable();closeModal('pvModal');manekiToastExport(editId?'✅ Producto variable actualizado':'✅ Producto variable creado','ok');}
+    catch(err:any){_restore();manekiToastExport('No se confirmó el guardado: '+(err.message||'revisa la sincronización'),'warn');}
 }
 window.guardarProductoVariable = guardarProductoVariable;
 
 // Función para obtener precio de un producto variable según cantidad
-function pvGetPrecio(product, cantidad) {
+function pvGetPrecio(product, cantidad, variante?:string) {
     // precio guardado es el TOTAL del rango (ej: 50 pzas = $150 total)
     // devolvemos precio UNITARIO para que el pedido multiplique por cantidad correctamente
     const tabla = (product.tablaPreciosVariable || []).slice().sort((a, b) => a.cantidadMin - b.cantidadMin);
@@ -393,9 +439,49 @@ function pvGetPrecio(product, cantidad) {
         else break;
     }
     const min = rangoElegido.cantidadMin || 1;
-    return rangoElegido.precio / min; // precio unitario
+    const selected=(product.variants||[]).find(v=>`${v.type}:${v.value}`===variante);
+    return mkRound2(rangoElegido.precio / min + Number(selected?.priceDelta||0));
 }
 window.pvGetPrecio = pvGetPrecio;
+
+function pvRecalcularLineas(items:any[],products:any[]){
+    const totals=new Map<string,number>();
+    for(const item of items)totals.set(String(item.id),(totals.get(String(item.id))||0)+(Number(item.quantity)||0));
+    for(const item of items){
+        const p=products.find(x=>String(x.id)===String(item.id));
+        if(p?.tipo==='producto_variable')item.price=pvGetPrecio(p,totals.get(String(item.id))||1,item.variante);
+    }
+}
+window.pvRecalcularLineas=pvRecalcularLineas;
+
+function pvVarianteMaterial(mp:any,variante?:string){
+    const selected=String(variante||'');
+    const own=(mp.variants||[]).find((v:any)=>`${v.type||v.tipo}:${v.value||v.valor}`===selected);
+    if(own)return own;
+    if(!selected.startsWith('Talla/Color:'))return null;
+    const [size,color]=selected.slice('Talla/Color:'.length).split('/').map(x=>x.trim());
+    return (mp.variants||[]).find((v:any)=>{
+        const type=String(v.type||v.tipo||'').toLocaleLowerCase('es-MX');
+        const value=String(v.value||v.valor||'').toLocaleLowerCase('es-MX');
+        return (type==='talla'&&value===size.toLocaleLowerCase('es-MX'))||
+            (type==='color'&&value===color.toLocaleLowerCase('es-MX'));
+    })||null;
+}
+window.pvVarianteMaterial=pvVarianteMaterial;
+
+function pvPlanMateriales(product:any,cantidad:number,variante:string|undefined,products:any[]){
+    const selected=(product.variants||[]).find((v:any)=>`${v.type}:${v.value}`===variante);
+    const fabricar=Math.max(0,cantidad-(Number(selected?.qty??product.stock)||0));
+    const rendimiento=Number(product.rendimientoPorHoja)||1;
+    return (product.mpComponentes||[]).map((comp:any)=>{
+        const mp=products.find(x=>String(x.id)===String(comp.id));
+        const requerido=Math.ceil(fabricar/rendimiento)*(Number(comp.qty)||1);
+        const materialVar=mp?.variants?.length?pvVarianteMaterial(mp,variante):null;
+        const disponible=mp?Number(mp.variants?.length?materialVar?.qty:mp.stock)||0:0;
+        return {nombre:mp?.name||comp.name||'Material no encontrado',necesario:requerido,disponible,faltante:Math.max(0,requerido-disponible)};
+    });
+}
+window.pvPlanMateriales=pvPlanMateriales;
 
 // ── Mejora 2: Modal de movimientos de stock por producto ──────────────────
 function verMovimientosProducto(pid) {

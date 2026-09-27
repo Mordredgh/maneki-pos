@@ -6256,3 +6256,14 @@ body.dark-mode #bienvenida-section .mk-kpi-label,body.dark-mode #bienvenida-sect
 #pos-pedido-error{color:#9a2424;font-weight:700}
 
 body:has(.modal.active) #fabNuevoPedido,body:has(.modal.active) #mk-help-fab,body:has(.modal.active) #mk-sound-btn{visibility:hidden!important}
+.pv-workflow-card{padding:16px;border:1px solid #d9c9eb;border-radius:14px;background:#faf7ff}
+.pv-workflow-card h4{font-size:1rem;font-weight:750;color:#3d2459;margin:0 0 4px}
+.pv-workflow-card p{font-size:.82rem;line-height:1.45;color:#5c5366;margin:0 0 12px}
+#pvCombinacionesList{display:grid;gap:10px;margin-bottom:12px}
+.pv-combination-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;background:#fff;border:1px solid #e8dff1;border-radius:10px}
+.pv-combination-row label{display:grid;gap:4px;font-size:.75rem;font-weight:700;color:#50445b}
+.pv-combination-row input{width:100%;min-width:0;padding:8px 10px;border:1px solid #ccc2d9;border-radius:8px;color:#261833;background:#fff}
+.pv-combination-row button,.pv-workflow-card>button{border:1px solid #7d4da2;border-radius:8px;padding:8px 12px;background:#fff;color:#603380;font-size:.8rem;font-weight:700;cursor:pointer}
+.pv-combination-row button{grid-column:1/-1;justify-self:end;border-color:#bd7f91;color:#92374f}
+.pv-stock-warning{background:#fff4e7!important;color:#8c3c11!important;border:1px solid #f5c595}
+@media(max-width:420px){.pv-combination-row{grid-template-columns:1fr}}

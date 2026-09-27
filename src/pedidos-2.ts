@@ -141,9 +141,10 @@ async function _descontarInventarioPedido(pedido) {
                     const colonIdx = item.variante.indexOf(':');
                     const varType  = colonIdx !== -1 ? item.variante.slice(0, colonIdx).trim() : item.variante;
                     const varValue = colonIdx !== -1 ? item.variante.slice(colonIdx + 1).trim() : '';
-                    const mpVar = mp.variants.find(v =>
-                        (v.type || v.tipo || '') === varType && (v.value || v.valor || '') === varValue
-                    );
+                    const mpVar = typeof pvVarianteMaterial === 'function'
+                        ? pvVarianteMaterial(mp,item.variante)
+                        : mp.variants.find(v => (v.type || v.tipo || '') === varType && (v.value || v.valor || '') === varValue);
+                    if (!mpVar) throw new Error(`La variante de ${mp.name} no corresponde a ${item.variante}`);
                     if (mpVar) {
                         mpVar.qty = Math.max(0, (mpVar.qty || 0) - cantMP);
                     }

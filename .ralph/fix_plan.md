@@ -124,3 +124,11 @@
 - [x] Pedidos por pasos y resumen fijo; inventario con filtros/edicion clara.
 - [x] Consistencia visual, estados de error/vacio y operacion movil.
 - [x] Validar, publicar y registrar resultados/limites en Obsidian.
+
+## Productos variables: talla y color 2026-09-27
+- [x] Validar combinaciones y guardar existencias/recargo en variants JSONB.
+- [x] Recalcular rangos por cantidad total entre tallas del mismo producto.
+- [x] Mostrar combinación, precio unitario, total y faltantes de materiales antes de agregar.
+- [x] Empatar talla o color con la variante de materia prima al descontar.
+- [x] Publicar en Cloudflare; verificar dominio, autenticacion y hash de SW.
+- [ ] Validar manualmente el flujo visual en staging/produccion; la navegacion de la pestaña automatizada no respondio durante esta sesion.

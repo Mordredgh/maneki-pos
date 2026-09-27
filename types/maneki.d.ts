@@ -124,6 +124,9 @@ interface ManekiVariant {
     value?: string;
     valor?: string;
     qty?: number;
+    size?: string;
+    color?: string;
+    priceDelta?: number;
 }
 
 interface ManekiComponent {
