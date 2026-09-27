@@ -83,7 +83,10 @@ function closeCancelPedidoModal() {
     closeModal('cancelPedidoModal');
 }
 
-function confirmarCancelPedido() {
+async function confirmarCancelPedido() {
+    return posRunOperation(async()=>confirmarCancelPedidoCompleto()).catch(e=>manekiToastExport(e.message,'warn'));
+}
+function confirmarCancelPedidoCompleto() {
     const pedido = pedidos.find(p => p.id === pedidoACancelar);
     if (!pedido) return;
 
@@ -160,7 +163,7 @@ function confirmarCancelPedido() {
     }
     if (tieneProductos) {
         const lista = pedido.productosInventario.map(function(i) { return i.name + ' x' + (i.quantity || i.cantidad || 1); }).join(', ');
-        showConfirm('¿Regresar productos al inventario?\n(' + lista + ')\n\nAceptar = NO está hecho, regresa al stock.\nCancelar = ya terminado.', '¿Regresar stock?')
+        return showConfirm('¿Regresar productos al inventario?\n(' + lista + ')\n\nAceptar = NO está hecho, regresa al stock.\nCancelar = ya terminado.', '¿Regresar stock?')
             .then(function(regresar) { _ejecutarCancelacion(regresar); });
     } else {
         _ejecutarCancelacion(false);

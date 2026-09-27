@@ -44,6 +44,7 @@ for (const file of tsFiles) {
   }
 }
 console.log(`Compiled: ${tsFiles.length - errors}/${tsFiles.length} files${errors ? ` (${errors} errors)` : ''}`);
+if(errors){console.error('Compilacion incompleta: se cancela el empaquetado.');process.exit(1);}
 
 // ── Step 2: Bundle groups (concat in order) ─────────────────────────────────
 const BUNDLES = {
@@ -76,7 +77,7 @@ for (const [bundleName, files] of Object.entries(BUNDLES)) {
     if (fs.existsSync(p)) {
       parts.push(fs.readFileSync(p, 'utf8'));
     } else {
-      console.warn(`  WARN: ${f} not found, skipping in ${bundleName}`);
+      throw new Error(`Falta ${f}: no se puede generar ${bundleName}`);
     }
   }
   fs.writeFileSync(path.join(OUT, bundleName), parts.join('\n;\n'), 'utf8');

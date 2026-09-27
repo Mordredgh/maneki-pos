@@ -311,7 +311,7 @@ function renderBienvenida() {
     try {
         const hoy        = _fechaHoy();
         const pedidosArr = window.pedidos || JSON.parse(localStorage.getItem('maneki_pedidos') || '[]');
-        const urgentes   = pedidosArr.filter(p => p.entrega === hoy && !['finalizado', 'cancelado'].includes(p.status || ''));
+        const urgentes   = pedidosArr.filter(p => p.entrega && p.entrega <= hoy && !['finalizado', 'completado', 'entregado', 'cancelado'].includes(p.status || ''));
         elSet('mornUrgentCount', urgentes.length);
         const urgCard = document.getElementById('mornUrgentCard');
         if (urgCard) urgCard.style.background = urgentes.length > 0
@@ -328,13 +328,13 @@ function renderBienvenida() {
                             <p style="font-size:.78rem;font-weight:700;color:#1f2937;margin:0;">${_esc(p.cliente || p.customer || 'Sin nombre')}</p>
                             <p style="font-size:.68rem;color:#6b7280;margin:1px 0 0;">${(p.productosInventario||p.productos||[]).length} producto${(p.productosInventario||p.productos||[]).length !== 1 ? 's' : ''} · ${_esc(p.status || 'pendiente')}</p>
                         </div>
-                        <span style="font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:99px;background:#fee2e2;color:#dc2626;">HOY</span>
+                        <span style="font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:99px;background:#fee2e2;color:#dc2626;">${p.entrega < hoy ? 'VENCIDO' : 'HOY'}</span>
                     </div>
                 `).join('') + (urgentes.length > 4 ? `<p style="font-size:.7rem;color:#9ca3af;text-align:center;margin-top:4px;">+${urgentes.length - 4} más...</p>` : '');
         }
 
         const productos = window.products || JSON.parse(localStorage.getItem('maneki_productos') || '[]');
-        const criticos  = productos.filter(p => (parseInt(p.stock) || 0) <= (storeConfig.stockMinimo || 5) && p.activo !== false);
+        const criticos  = productos.filter(p => p.activo !== false && p.tipo!=='servicio' && (typeof getStockEfectivo==='function'?getStockEfectivo(p):Number(p.stock)||0) <= (p.stockMin ?? storeConfig.stockMinimo ?? 5));
         elSet('mornLowStock', criticos.length);
 
         // Solicitar actualización del dashboard para sincronizar mornDailySales / mornReceivable
@@ -918,3 +918,14 @@ function fmtMoney(amount) {
     return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 window.fmtMoney = fmtMoney;
+
+async function posNuevoPedido() {
+    await window._mkLazyLoad('pedidos');
+    showSection('pedidos');
+    (window as any).openPedidoModal();
+}
+async function posNuevoIngreso() {
+    await window._mkLazyLoad('balance');
+    showSection('balance');
+    (window as any).openIncomeModal();
+}

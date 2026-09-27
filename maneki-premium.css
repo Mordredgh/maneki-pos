@@ -6195,3 +6195,35 @@ body.dark .mk-highlight {
   #sidebar, #mobileTopbar, #mobileBottomNav, #sidebarOverlay { display: none !important; }
   .main-content, #mainContent, main, .ml-64 { margin-left: 0 !important; }
 }
+
+/* Inicio operativo: contraste AA, acciones con nombre y foco visible. */
+#bienvenida-section .pos-welcome-header {padding:20px 24px!important;border-radius:0 0 24px 24px}
+#bienvenida-section #welcomeTime {font-size:1.05rem!important}
+#bienvenida-section #welcomeDate,#bienvenida-section #welcomeStoreName,#bienvenida-section #welcomeTimeLabel {color:#edf7ef!important}
+#bienvenida-section .pos-home-content {max-width:1280px;margin-left:auto;margin-right:auto;padding-bottom:84px!important}
+.pos-actionbar {display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 12px}
+.pos-actionbar button {min-height:44px;padding:10px 16px;border:1px solid #c6cfc8;border-radius:12px;background:#fff;color:#254934;font:800 14px Nunito,system-ui;cursor:pointer}
+.pos-actionbar .pos-primary {background:#ffd166;color:#362703;border-color:#d7a53a}
+.pos-save-status {display:block;padding:10px 14px;margin-bottom:18px;border-radius:10px;border:1px solid #bdd6c7;background:#eef8f1;color:#205434;font:700 14px Nunito,system-ui;text-align:left;cursor:pointer}
+.pos-save-status[data-state=pending] {background:#fff5d6;border-color:#dfbf64;color:#654600}
+.pos-save-status[data-state=conflict] {background:#fff0ef;border-color:#d7a09a;color:#872d28}
+#bienvenida-section .mk-card {border:1px solid #dce3dd!important;border-radius:16px!important;background:#fff!important;box-shadow:0 3px 12px #193a2410!important}
+#bienvenida-section .mk-kpi-label {color:#405548!important;font-size:.8rem!important;font-weight:800!important}
+#bienvenida-section .mk-kpi-sub {color:#526257!important;font-size:.8rem!important}
+#bienvenida-section .mk-kpi-value {font-size:1.9rem!important}
+#bienvenida-section .kpi-amber {border-top:4px solid #cf961f!important}
+#bienvenida-section .kpi-rose {border-top:4px solid #b74366!important}
+#bienvenida-section .kpi-green {border-top:4px solid #3d7755!important}
+#bienvenida-section #mornUrgentList p {color:#4b5e50!important;font-size:.85rem!important}
+#bienvenida-section .mk-quick-access-btn {min-height:70px;border-radius:12px!important}
+#bienvenida-section button:focus-visible,.pos-sync-dialog button:focus-visible {outline:3px solid #7341a4;outline-offset:3px}
+.pos-sync-dialog {max-width:900px;width:92vw;max-height:85vh;overflow:auto;border:1px solid #c9d5cc;border-radius:18px;padding:24px;color:#24382b;background:#fff}
+.pos-sync-dialog::backdrop {background:#152a20b3}
+.pos-sync-dialog pre {white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f5f2;padding:12px;max-height:35vh;overflow:auto}
+.pos-sync-dialog button {padding:10px 16px;margin:6px;border-radius:10px;border:1px solid #b6c7ba;min-height:44px;cursor:pointer}
+@media(min-width:1100px){#morningKpiGrid{grid-template-columns:repeat(4,1fr)!important}}
+@media(max-width:520px){#bienvenida-section .pos-welcome-header{padding:16px!important}#welcomeTime,#welcomeTimeLabel{display:none}.pos-actionbar button{flex:1 1 44%}#bienvenida-section .pos-home-content{padding:0 14px 84px!important}}
+body.dark-mode #bienvenida-section {background:#18271f!important}
+body.dark-mode #bienvenida-section .mk-card,body.dark-mode .pos-actionbar button {background:#233a2c!important;color:#f1f7f1!important;border-color:#48634f!important}
+body.dark-mode #bienvenida-section .mk-kpi-label,body.dark-mode #bienvenida-section .mk-kpi-sub,body.dark-mode #bienvenida-section .mk-kpi-value {color:#e1ece3!important}
+@media(prefers-reduced-motion:reduce){#bienvenida-section *{animation:none!important;transition:none!important;opacity:1!important}}

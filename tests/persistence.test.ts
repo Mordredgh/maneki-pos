@@ -87,7 +87,46 @@ function businessApp() {
   return {...a, fields, submit: () => submits[0]({preventDefault() {}})};
 }
 
+it('resume diferencias de conflicto sin incluir registros ajenos',()=>{
+ const a=app();
+ const text=a.ctx.posDescribeConflicts([{table:'products',rows:[{id:'p',name:'Taza',stock:9}],expected:{p:{id:'p',name:'Taza',stock:10}}}],{products:{p:{id:'p',name:'Taza',stock:8},other:{name:'Privado'}}},{},{});
+ expect(text).toContain('Taza');expect(text).toContain('Existencias: dispositivo 9 · nube 8');expect(text).not.toContain('Privado');
+});
+it('los cierres nocturnos usan el dia local y conservan fechas sin hora',()=>{
+ const a=app();const date=new Date(2026,8,26,23,30);
+ expect(a.ctx.posFechaLocal(date.toISOString())).toBe('2026-09-26');
+ expect(a.ctx.posFechaLocal('2026-09-26')).toBe('2026-09-26');
+});
+
 describe('Persistencia real del POS', () => {
+  it('un fallo de red conserva el lote completo y reintenta con el mismo identificador', async()=>{
+    const a=app();const ids:string[]=[];let offline=true;
+    a.ctx.testApi.rpc=async (_name:string,args:any)=>{ids.push(args.p_id);return offline?{error:{message:'sin red'}}:{data:args.p_operations.map((o:any)=>o.rows)};};
+    await expect(a.ctx.posRunOperation(async()=>{await a.ctx._upsertRelational('orders',[{id:'o1'}]);await a.ctx._upsertRelational('incomes',[{id:1,amount:20}]);})).rejects.toThrow('pendiente');
+    expect(JSON.parse(a.stored.get('maneki_pendingRows')!)).toHaveLength(2);
+    offline=false;await a.ctx._flushPendingRows();
+    expect(ids[0]).toBe(ids[1]);expect(JSON.parse(a.stored.get('maneki_pendingRows')!)).toHaveLength(0);
+  });
+  it('resolver conserva como base exactamente la version de nube revisada',async()=>{
+    const a=app();a.ctx.testApi.rpc=async()=>({error:{code:'40001',message:'Conflicto'}});
+    await expect(a.ctx._upsertRelational('products',[{id:'p1',stock:9}])).rejects.toThrow();
+    a.ctx.posRebasePending({products:{p1:{id:'p1',stock:8}}},{});
+    const op=JSON.parse(a.stored.get('maneki_pendingRows')!)[0];
+    expect(op.expected.p1.stock).toBe(8);expect(op.rows[0].stock).toBe(9);
+  });
+
+  it('un pedido y su ingreso se envian juntos en una sola operacion atomica', async () => {
+    const a=app();const calls:any[]=[];
+    a.ctx.testApi.rpc=async(name:string,args:any)=>{calls.push({name,args});return {data:args.p_operations.map((o:any)=>o.rows),error:null};};
+    await a.ctx.posRunOperation(async()=>{
+      await a.ctx._upsertRelational('orders',[{id:'o1',total:100}]);
+      expect(calls).toHaveLength(0);
+      await a.ctx._upsertRelational('incomes',[{id:1,amount:50}]);
+    });
+    expect(calls).toHaveLength(1);expect(calls[0].name).toBe('pos_apply_operation');
+    expect(calls[0].args.p_operations.map((o:any)=>o.table)).toEqual(['orders','incomes']);
+  });
+
   it('una respuesta tardia no anuncia conexion cuando el navegador esta offline', () => {
     const a=app();
     const fields:any={supabaseStatusDot:{},supabaseStatusText:{},supabaseStatus:{style:{}},'mk-offline-banner':{style:{},remove(){}}};
@@ -134,6 +173,7 @@ describe('Persistencia real del POS', () => {
     await a.ctx.sincronizarPendientes();
     expect(await a.ctx.sbLoad('pedidos', [])).toEqual([]);
     expect((await a.ctx.sbLoad('pedidosFinalizados', []))[0]).toMatchObject({id:'o1',status:'finalizado'});
+    expect(a.rows.orders_finalizados[0]).toMatchObject({resta:0,anticipo:100});
     expect((await a.ctx.sbLoad('salesHistory', [])).reduce((n: number, s: any)=>n+s.total,0)).toBe(100);
     expect((await a.ctx.sbLoad('incomes', []))[0]).toMatchObject({amount:75});
   });

@@ -241,7 +241,7 @@ function _updateDashboardImpl() {
     // Pedidos finalizados — usar p.total como fuente de verdad (igual que balance.js)
     for (const p of (window.pedidosFinalizados || [])) {
         if (!p.total) continue;
-        const fecha = ((p.fechaFinalizado || p.fecha || '')).split('T')[0];
+        const fecha = posFechaLocal(p.fechaFinalizado || p.fecha || '');
         if (!fecha) continue;
         const monto = Number(p.total);
         const costo = Number(p.costoMateriales || p.costo || 0);
@@ -271,9 +271,10 @@ function _updateDashboardImpl() {
     const _gse = typeof getStockEfectivo === 'function' ? getStockEfectivo : (p: any) => p.stock || 0;
     const lowStockItems: any[] = [], outOfStock: any[] = [];
     for (const p of (products || [])) {
+        if(p.activo===false || p.tipo==='servicio')continue;
         const s = _gse(p);
         if (s === 0) outOfStock.push(p);
-        else if (s <= (p.stockMin || 5)) lowStockItems.push(p);
+        else if (s <= (p.stockMin ?? storeConfig.stockMinimo ?? 5)) lowStockItems.push(p);
     }
     const lowStockBadge = document.getElementById('lowStockBadge');
     if (lowStockBadge) lowStockBadge.textContent = (lowStockItems.length + outOfStock.length) + ' items';
@@ -447,7 +448,8 @@ function _updateDashboardImpl() {
             _mss.textContent = (_pct >= 0 ? '▲ +' : '▼ ') + Math.abs(_pct) + '% vs ayer';
             (_mss as HTMLElement).style.color = _pct >= 0 ? '#16a34a' : '#dc2626';
         } else {
-            const _cntHoy = (salesHistory || []).filter((s:any) => s.date === today && s.method !== 'Cancelado' && !['pedido','abono','anticipo'].includes(s.type||'')).length;
+            const _cntHoy = (salesHistory || []).filter((s:any) => s.date === today && s.method !== 'Cancelado' && !['pedido','abono','anticipo'].includes(s.type||'')).length
+                + (window.pedidosFinalizados||[]).filter(p=>Number(p.total)>0 && posFechaLocal(p.fechaFinalizado||p.fecha||'')===today).length;
             _mss.textContent = `${_cntHoy} venta${_cntHoy !== 1 ? 's' : ''} hoy`;
             (_mss as HTMLElement).style.color = '';
         }

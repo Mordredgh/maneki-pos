@@ -1,4 +1,4 @@
-async function requirePOSAdmin(client: any): Promise<boolean> {
+async function requirePOSAdmin(client: any, forceLogin = false): Promise<boolean> {
     async function authorized(session: any) {
         if (!session?.user?.id) return false;
         // Offline conserva acceso al dispositivo ya autorizado; RLS decide cada peticion remota.
@@ -14,7 +14,7 @@ async function requirePOSAdmin(client: any): Promise<boolean> {
     }
     try {
         const {data} = await client.auth.getSession();
-        if (await authorized(data?.session)) return true;
+        if (!forceLogin && !localStorage.getItem?.('pos_screen_locked') && await authorized(data?.session)) return true;
     } catch (_) { /* Mostrar acceso; nunca cargar datos por fallo de autenticacion. */ }
     if (document.readyState === 'loading') await new Promise<void>(r => document.addEventListener('DOMContentLoaded',()=>r(),{once:true}));
     const hidden = Array.from(document.body.children).map(el => [el, (el as HTMLElement).inert] as const);
@@ -45,10 +45,29 @@ async function requirePOSAdmin(client: any): Promise<boolean> {
                 password.value='';
                 if(error)throw new Error('No se pudo iniciar sesion. Comprueba correo y contraseña.');
                 if(!await authorized(data?.session))throw new Error('Esta cuenta no tiene permiso de administrador.');
+                localStorage.removeItem('pos_screen_locked');
                 overlay.remove(); hidden.forEach(([el,inert])=>(el as HTMLElement).inert=inert);
                 resolve(true);
             } catch(e:any) { status.textContent=e.message || 'No se pudo iniciar sesion.'; }
             finally { button.disabled=false; }
         });
     });
+}
+
+async function posSignOut(client: any) {
+    if (typeof _posOperation !== 'undefined' && _posOperation) throw new Error('Hay una operacion en curso. Espera a que termine antes de cerrar sesion.');
+    if (window._pendingSync) throw new Error('Hay cambios pendientes. Sincroniza o revisa los conflictos antes de cerrar sesion. Puedes bloquear la pantalla.');
+    localStorage.setItem('pos_screen_locked','1');
+    const {error}=await client.auth.signOut({scope:'local'});
+    if(error)throw new Error('No se pudo cerrar sesion. La pantalla queda bloqueada.');
+    localStorage.removeItem('pos_verified_admin');
+    location.reload();
+}
+async function bloquearPOS() {
+    localStorage.setItem('pos_screen_locked','1');
+    await requirePOSAdmin(db, true);
+}
+async function cerrarSesionPOS() {
+    try { await posSignOut(db); }
+    catch(e:any) { manekiToastExport(e.message,'warn'); if(localStorage.getItem('pos_screen_locked')) await requirePOSAdmin(db,true); }
 }

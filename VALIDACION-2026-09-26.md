@@ -1,3 +1,18 @@
+# Estado vigente: mejoras integrales publicadas
+
+2026-09-26: deployment https://d56ec9a7.bicho-capricho-pos.pages.dev, dominio habitual https://pos.manekistore.com.mx, SW `maneki-d3509c7401`. HTTP: 401 sin credenciales; 200 con acceso, bundles y SW correctos. Adaptador de pruebas excluido del paquete publicado.
+
+- Inicio compacto, acciones con nombre, entregas vencidas/hoy y estado de guardado. Stock critico usa minimo por producto; servicios/inactivos excluidos. Fecha local y conteo de pedidos finalizados coherentes en ventas del dia.
+- Bloqueo y cierre de sesion: no permite salir mientras prepara una operacion o tiene pendientes. Probados bloqueo, reingreso y cierre en la interfaz aislada.
+- Revision de conflictos compara campos y exige confirmar la opcion; exporta respaldo, conserva snapshots optimistas y no sobrescribe cambios posteriores silenciosamente. Regresiones de comparacion/rebase y apertura del dialogo verificadas.
+- Guardado atomico entre tablas con identificador estable y recibo SQL. SQL aplicado y probado bajo ROLE authenticated administrador: fallo intermedio revierte todo, reenvio no duplica. ROLLBACK ejecutado; consulta posterior confirma cero registros QA.
+- Corregida incompatibilidad UUID/bigint de ingresos/gastos, preservando IDs anteriores. Corregido saldo persistido al finalizar y publicacion que continuaba tras errores de compilacion.
+- Entorno local PGlite: pedido $100 + anticipo $50 + cobro final $50; dos ingresos, stock 10 a 9, pedido movido a historial, reintento de cola tras recarga. Cierre SQL/UUID cubiertos por pruebas. Pantalla estrecha revisada; limitacion del IAB impide afirmar emulacion exacta de 390 px.
+
+Gates finales: **152 pruebas**, 36/36 TypeScript, typecheck, lint y build completos. Trivy: cero secretos detectados (entorno privado excluido). Grafo MCP y graphify de codigo actualizados. Pruebas fisicas de impresora/PWA aplazadas por el propietario. El navegador integrado bloquea Basic Auth de produccion; prueba UI con mismo paquete local y verificacion HTTP remota, sin afirmar E2E del dominio publicado. Ver `CONTEXT.md` para limites de atomicidad, staging y preparacion local.
+
+## Registro historico de validaciones anteriores
+
 # Cierre de puntos 3, 4 y 5
 
 ## Pruebas de negocio

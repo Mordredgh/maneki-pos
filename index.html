@@ -528,7 +528,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <section id="bienvenida-section" class="hidden" style="min-height:100vh; background:#faf9f7; position:relative; overflow-y:auto;">
 
-    <div style="background:linear-gradient(135deg,#1c4f32 0%,#2c6a45 52%,#163e28 100%);padding:28px 32px 56px;position:relative;overflow:hidden;">
+    <div class="pos-welcome-header" style="background:linear-gradient(135deg,#1c4f32 0%,#2c6a45 52%,#163e28 100%);padding:28px 32px 56px;position:relative;overflow:hidden;">
 
         <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.1) 0%,transparent 70%);pointer-events:none;"></div>
         <div style="position:absolute;bottom:-30px;left:20%;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.07) 0%,transparent 70%);pointer-events:none;"></div>
@@ -546,7 +546,14 @@ input:focus, select:focus, textarea:focus, button:focus {
         </div>
     </div>
 
-    <div style="padding:0 24px;margin-top:16px;position:relative;z-index:2;">
+    <div class="pos-home-content" style="padding:0 24px;margin-top:16px;position:relative;z-index:2;">
+        <div class="pos-actionbar" aria-label="Acciones principales">
+          <button type="button" class="pos-primary" data-action="posNuevoPedido">Nuevo pedido</button>
+          <button type="button" data-action="posNuevoIngreso">Registrar ingreso</button>
+          <button type="button" data-action="bloquearPOS">Bloquear pantalla</button>
+          <button type="button" data-action="cerrarSesionPOS">Cerrar sesión</button>
+        </div>
+        <button type="button" id="pos-save-status" class="pos-save-status" data-action="abrirRevisionSync" aria-live="polite">Comprobando guardados…</button>
 
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;" id="morningKpiGrid">
 
@@ -563,7 +570,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
             <div class="mk-card mk-kpi mk-kpi-v2 kpi-red clickable" data-action="showSection" data-arg="pedidos" style="padding:16px;animation:fadeUp 0.4s 0.18s ease both;opacity:0;" id="mornUrgentCard">
                 <div class="flex items-center justify-between mb-2">
-                    <p class="mk-kpi-label" style="margin:0;">Entregas hoy</p>
+                    <p class="mk-kpi-label" style="margin:0;">Entregas urgentes</p>
                     <div class="mk-kpi-icon-sm" style="background:rgba(239,68,68,0.12);">
                         <i class="fas fa-fire" style="color:#ef4444;font-size:.82rem;"></i>
                     </div>
@@ -598,7 +605,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <div class="mk-card" style="padding:18px 20px;margin-bottom:14px;animation:fadeUp 0.4s 0.42s ease both;opacity:0;">
             <div style="display:flex;align-items:center;justify-content:between;margin-bottom:12px;">
                 <div style="flex:1;">
-                    <p style="font-size:.72rem;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.08em;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;color:#dc2626;"></i>Entregas pendientes hoy</p>
+                    <p style="font-size:.72rem;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.08em;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;color:#dc2626;"></i>Entregas de hoy y vencidas</p>
                 </div>
                 <button type="button" data-action="showSection" data-arg="pedidos" style="font-size:.68rem;font-weight:700;color:#9669c4;background:none;border:none;cursor:pointer;margin-left:auto;">Ver todos →</button>
             </div>
@@ -609,7 +616,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <div style="margin-bottom:14px;animation:fadeUp 0.4s 0.5s ease both;opacity:0;">
             <p style="font-size:.68rem;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Acceso rápido</p>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
                 <button type="button" data-action="showSection" data-arg="pedidos" class="mk-quick-access-btn mk-qa-pedidos" style="background:white;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px 8px;cursor:pointer;transition:all .2s ease;font-family:inherit;">
                     <div style="font-size:1.4rem;margin-bottom:6px;color:#8a6510;"><i class="fas fa-clipboard-list"></i></div>
                     <p style="font-size:.72rem;font-weight:700;color:#374151;">Pedidos</p>

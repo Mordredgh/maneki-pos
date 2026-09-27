@@ -23,13 +23,14 @@ npm run build:check
 
 Ejecuta `npx tsc --noEmit`. **Hoy NO forma parte de `node scripts/build.js`** — puede pasar el build normal aunque este comando falle (bug H1/H6 de `.ralph/specs/fase-5.md`). Hasta que ese fix se aplique, correr este comando manualmente antes de dar por buena cualquier fase que toque tipos, y especialmente antes/después de la Fase 5. Una vez H1 esté resuelto, este comando queda integrado dentro de `node scripts/build.js` y esta sección se vuelve redundante (no borrar hasta confirmar que el gate real está activo).
 
-## Deploy (solo si el usuario lo pide explícitamente, no automático dentro del loop)
+## Deploy Cloudflare (solicitado por el propietario)
 
 ```powershell
-.\deploy.ps1
+npm run build:cloudflare
+npx wrangler pages deploy dist/cloudflare --project-name bicho-capricho-pos --branch main --commit-dirty=true
 ```
 
-Hace: `git add -A` → `git commit` → `git push github fresh-start:master` → trigger deploy en Coolify vía API (`COOLIFY_BICHOPOS_TOKEN`) → espera 60s y verifica.
+No ejecutar deploy.ps1: apunta al VPS/Coolify retirado. Verificar 401 anonimo, 200 autorizado, bundles y hash SW en el dominio publicado. Los secretos viven fuera del repositorio. El build ya incluye typecheck y aborta ante cualquier fallo de compilacion.
 
 ## Tests nuevos
 

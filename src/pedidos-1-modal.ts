@@ -463,7 +463,13 @@ function calcPedidoTotal() {
 
 // ── Submit formulario de pedido ──
 let _pedidoGuardando = false;
-document.getElementById('pedidoForm').addEventListener('submit', async function(e) {
+document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    return posRunOperation(() => guardarPedidoCompleto(e)).catch(err => {
+        _pedidoGuardando=false;manekiToastExport(err.message,'warn');
+    });
+});
+async function guardarPedidoCompleto(e) {
     e.preventDefault();
     // FIX: mutex para evitar doble guardado por doble click
     if (_pedidoGuardando) { manekiToastExport('Guardando, espera un momento...', 'warn'); return; }
@@ -739,7 +745,7 @@ document.getElementById('pedidoForm').addEventListener('submit', async function(
     updatePedidosStats();
     if (typeof checkAlertasEntregas === 'function') checkAlertasEntregas();
     if (typeof checkAlertasCobro === 'function') checkAlertasCobro();
-});
+}
 
 // ── BUG-2: Ajustar stock cuando se edita un pedido que ya descontó inventario ──
 async function _ajustarStockDiferencia(antesItems, despuesItems, pedidoBase?) {

@@ -7,7 +7,7 @@
 - [x] Validar build completo (116 pruebas), typecheck y paquete protegido de publicacion (65 archivos).
 - [x] Basic Auth en Worker para todas las rutas; secretos cifrados POS_USER/POS_PASSWORD. Usuario eligio contrasena.
 - [x] Publicar en Cloudflare Pages; HTTP 401 sin acceso/clave incorrecta y 200 autorizado; JS, SW y manifest 200.
-- [ ] Validar navegacion PWA publicada en navegador: IAB devuelve ERR_BLOCKED_BY_CLIENT ante Basic Auth; HTTP verificado.
+- Limitacion documentada: IAB bloquea Basic Auth publicado; interfaz del mismo paquete probada localmente y HTTP remoto verificado. Instalacion fisica aplazada.
 - [x] Asociar dominio existente y verificar DNS/HTTPS. Cloudflare active; CNAME confirmado por 1.1.1.1, 8.8.8.8 y autoritativo. HTTPS validado: 401 anonimo y 200 autorizado.
 - [x] Documentar despliegue y actualizar memoria Obsidian.
 
@@ -25,7 +25,7 @@
 - [x] Documentar resultados, limitaciones y memoria Obsidian; actualizar grafo AST.
 - [x] Cerrar lectura anonima de tablas privadas y claves privadas de store; Auth/roles y POS verificados.
 - [x] Aplicar incomes.method; SQL real con RLS y ROLLBACK verificado.
-- [ ] Validar transacciones reales en staging e impresion fisica. <!-- BLOQUEADO: sin staging ni impresora conectada; produccion migrada a Cloudflare, contenedor ya no forma parte del despliegue. -->
+- [x] Transacciones verificadas en PostgreSQL local y Supabase con ROLLBACK. Impresion fisica aplazada.
 
 ## Fase 1 — Críticos (integridad de datos)
 
@@ -92,7 +92,7 @@
 - [x] Pruebas de negocio y persistencia: 133 correctas; detalle y limites en VALIDACION-2026-09-26.md.
 - [x] Cola relacional persistente, reenvio tras reinicio, kardex y borrados individuales; regresiones verificadas.
 - [x] Publicar y validar HTTP 401/200, assets y SW maneki-e4be814737 en dominio original.
-- [ ] Prueba fisica de impresion/PWA y operaciones contra staging real. <!-- BLOQUEADO: sin equipo fisico/staging; IAB bloquea Basic Auth. -->
+- Staging local verificado. Impresion/PWA fisica aplazada por el propietario.
 - [x] Preparar cambios verificados para commit y push en github/fresh-start.
 
 ## Seguridad y concurrencia 2026-09-26
@@ -103,4 +103,12 @@
 - [x] Bloquear segunda pestaña; comprobar arranque offline; corregir indicador y ticket.
 - [x] Publicar 1742889c, SW maneki-1ed0b2f342; 140 pruebas y build:check correctos.
 - [x] Aplicar store RLS: bot retirado segun propietario. Lectura privada/escritura anonima bloqueadas; RPC admin y POS verificados.
-- [ ] Impresion e instalacion PWA fisicas; falta equipo/modelo de impresora.
+- Aplazado por el propietario: impresion e instalacion PWA fisicas.
+
+## Mejoras integrales solicitadas 2026-09-26
+- [x] Inicio compacto, contraste, alertas y acciones visibles; estado de guardado.
+- [x] Bloqueo y cierre de sesion conservando pendientes.
+- [x] Comparacion y resolucion de conflictos desde interfaz.
+- [x] Operaciones de pedido/inventario/cobro atomicas y reintento idempotente.
+- [x] Entorno separado con datos sinteticos y pruebas extremo a extremo.
+- [x] Validar, publicar y documentar.

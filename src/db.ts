@@ -46,11 +46,49 @@ const _kvState = _loadLocalMirror('kvState') || {};
 const _pendingKV: Record<string, string> = _kvState.pending || _loadLocalMirror('pendingKV') || {};
 const _kvBases: Record<string, string | null> = _kvState.bases || {};
 const _kvExpected: Record<string, Array<string | null>> = _kvState.expected || {};
-type PendingRowWrite = { table: string; rows?: any[]; field?: string; value?: string; expected?: Record<string, any> };
+type PendingRowWrite = { batch?: string; table: string; rows?: any[]; field?: string; value?: string; expected?: Record<string, any> };
 const _pendingRows: PendingRowWrite[] = _loadLocalMirror('pendingRows') || [];
 const _rowBases: Record<string, Record<string, any>> = _loadLocalMirror('rowBases') || {};
 let _rowFlush: Promise<void> | null = null;
 const _kvWriteQueues: Record<string, Promise<void>> = {};
+let _posOperation: {id:string;writes:PendingRowWrite[];tasks:Promise<any>[]} | null = null;
+async function posRunOperation<T>(action:()=>Promise<T>):Promise<T> {
+    if(_posOperation)throw new Error('Termina la operacion en curso antes de iniciar otra.');
+    if(_rowFlush) await _rowFlush;
+    if(_posOperation)throw new Error('Hay otra operacion en curso.');
+    const operation={id:mkId(),writes:[] as PendingRowWrite[],tasks:[] as Promise<any>[]};
+    const keys=['products','pedidos','pedidosFinalizados','clients','salesHistory','incomes','expenses','stockMovements','stockMovimientos'];
+    const before=Object.fromEntries(keys.map(k=>[k,JSON.stringify(window[k] || [])]));
+    let prepared=false;
+    _posOperation=operation;
+    try {
+        const value=await action();
+        // Incluye guardados antiguos sin await y los que estos encolan.
+        let completed=0;
+        while(completed<operation.tasks.length){const tasks=operation.tasks.slice(completed);completed=operation.tasks.length;await Promise.all(tasks);}
+        if(operation.writes.length){
+            _pendingRows.push(...operation.writes);
+            try{_persistPendingRows();}catch(e){_pendingRows.splice(-operation.writes.length);throw e;}
+        }
+        prepared=true;
+        _posOperation=null;
+        try {await _flushPendingRows();} catch(e:any){
+            throw Object.assign(new Error('Operacion completa pendiente de sincronizar. No repitas el cobro. '+(e.message||'')),{pendingSync:true,code:e.code});
+        }
+        _mkSI('saved');
+        return value;
+    } catch(e) {
+        if(!prepared){
+            for(const key of keys){window[key]=JSON.parse(before[key]);_mirrorLocal(key,window[key]);}
+            products=window.products;clients=window.clients;salesHistory=window.salesHistory;
+            incomes=window.incomes;expenses=window.expenses;pedidos=window.pedidos;pedidosFinalizados=window.pedidosFinalizados;
+        }
+        throw e;
+    } finally {_posOperation=null;actualizarEstadoGuardado();}
+}
+window.addEventListener('beforeunload',(event)=>{
+    if(_posOperation){event.preventDefault();event.returnValue='';}
+});
 
 let db = null;
 (window as any)._posDBReady = (async () => {
@@ -109,6 +147,11 @@ function mkId(): string {
     return (typeof crypto !== 'undefined' && crypto.randomUUID)
         ? crypto.randomUUID()
         : (Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
+}
+function posFechaLocal(value:string):string {
+    if(!value || !value.includes('T'))return value||'';
+    const d=new Date(value);if(Number.isNaN(d.getTime()))return '';
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 (window as any).mkId = mkId;
 
@@ -622,6 +665,7 @@ function openModal(idOrEl) {
 window.openModal = openModal;
 
 function actualizarIndicadorConexion(online) {
+    actualizarEstadoGuardado();
     online = Boolean(online) && (typeof navigator === 'undefined' || navigator.onLine !== false);
     const dot  = document.getElementById('supabaseStatusDot');
     const txt  = document.getElementById('supabaseStatusText');
@@ -702,18 +746,20 @@ function _persistPendingKV() {
 function _persistPendingRows() {
     // No truncar ni ocultar cuota: sin journal durable no se confirma el guardado.
     localStorage.setItem('maneki_pendingRows', JSON.stringify(_pendingRows));
+    actualizarEstadoGuardado();
     window._pendingSync = _pendingRows.length > 0 || Object.keys(_pendingKV).length > 0;
 }
 function _queueRowWrite(op: PendingRowWrite): Promise<{ error: null }> {
     const snapshot = JSON.parse(JSON.stringify(op));
     const bases = JSON.parse(JSON.stringify(_rowBases[op.table] || {}));
-    for (const pending of _pendingRows.filter(p => p.table === op.table)) {
+    for (const pending of [..._pendingRows,...(_posOperation?.writes||[])].filter(p => p.table === op.table)) {
         if (pending.rows) pending.rows.forEach(row => bases[row.id] = {...bases[row.id], ...row});
         else Object.keys(bases).forEach(id => { if (String(bases[id][pending.field!]) === pending.value) delete bases[id]; });
     }
     snapshot.expected = {};
     if (op.rows) op.rows.forEach(row => snapshot.expected[row.id] = bases[row.id] || null);
     else Object.values(bases).forEach((row:any) => { if (String(row[op.field!]) === op.value) snapshot.expected[row.id] = row; });
+    if(_posOperation){snapshot.batch=_posOperation.id;_posOperation.writes.push(snapshot);return Promise.resolve({error:null});}
     _pendingRows.push(snapshot);
     try { _persistPendingRows(); }
     catch (e) { _pendingRows.pop(); return Promise.reject(e); }
@@ -737,6 +783,18 @@ function _flushPendingRows(): Promise<void> {
         while (_pendingRows.length) {
             if (!db) throw new Error('Sin conexión a Supabase');
             const op = _pendingRows[0];
+            if(op.batch && typeof db.rpc==='function') {
+                const group=_pendingRows.filter(p=>p.batch===op.batch);
+                const result=await _withTimeout(db.rpc('pos_apply_operation',{p_id:op.batch,p_operations:group}),15000);
+                if(result.error)throw result.error;
+                group.forEach((item,i)=>{
+                    if(item.rows)_rememberRowBases(item.table,result.data?.[i] || item.rows);
+                    else {const bases=_rowBases[item.table]||{};Object.keys(bases).forEach(id=>{if(String(bases[id][item.field!])===item.value)delete bases[id];});}
+                });
+                _pendingRows.splice(0,group.length);
+                try{_persistPendingRows();}catch(e){_pendingRows.unshift(...group);throw e;}
+                continue;
+            }
             if (typeof db.rpc === 'function' && !op.expected) throw Object.assign(new Error('Pendiente de una version anterior: exporta el respaldo y revisa antes de sincronizar.'),{code:'40001'});
             let result = typeof db.rpc === 'function'
                 ? await _withTimeout(db.rpc('pos_apply_write', {p_table:op.table, p_rows:op.rows || null,
@@ -780,7 +838,7 @@ function _showSyncConflict(message: string) {
         const link=document.createElement('a'); link.href=url; link.download='bicho-pendientes.json'; link.click();
         setTimeout(()=>URL.revokeObjectURL(url),1000);
     };
-    banner.appendChild(button); document.body.appendChild(banner);
+    banner.appendChild(button); const review=document.createElement('button');review.textContent='Revisar cambios';review.onclick=abrirRevisionSync;banner.appendChild(review);document.body.appendChild(banner);actualizarEstadoGuardado();
 }
 function _rememberRowBases(table: string, rows: any[]) {
     const bases = _rowBases[table] || (_rowBases[table] = {});
@@ -827,6 +885,8 @@ function _writePendingKV(key: string, snapshot: string): Promise<void> {
         _persistPendingKV();
     });
     _kvWriteQueues[key] = task;
+    const clear=()=>{if(_kvWriteQueues[key]===task)delete _kvWriteQueues[key];};
+    task.then(clear,clear);
     return task;
 }
 
@@ -1325,6 +1385,7 @@ function _calcPiezasFabricablesFallback(p) {
 }
 
 function _trackSave<T>(task: Promise<T>): Promise<T> {
+    if(_posOperation)_posOperation.tasks.push(task);
     // El caller con await recibe el fallo; los callers antiguos sin await también lo ven en pantalla.
     task.catch(() => {
         _mkSI('error');
@@ -1523,7 +1584,7 @@ function savePayables()      { return _trackSave(sbSave('payables', payables)); 
 // Si save-A está en vuelo y save-B llega, B espera a que A termine y luego
 // ejecuta con el estado ACTUAL de pedidos — sin race de versiones desactualizadas.
 let _savePedidosQueue: Promise<void> = Promise.resolve();
-const _mkSI = (s: string) => { try { if (typeof (window as any).mkSaveIndicator === 'function') (window as any).mkSaveIndicator(s); } catch(_){} };
+const _mkSI = (s: string) => { try { if(s==='saved' && (_posOperation || window._pendingSync))s='saving'; if (typeof (window as any).mkSaveIndicator === 'function') (window as any).mkSaveIndicator(s); } catch(_){} };
 function savePedidos() {
     _mirrorLocal('pedidos', pedidos);
     _mkSI('saving');
@@ -1692,3 +1753,100 @@ function deleteExpenseFromDB(id: string): Promise<void> {
     return _deleteRelational('expenses', 'id', id);
 }
 (window as any).deleteExpenseFromDB = deleteExpenseFromDB;
+
+function posSyncStatus() {
+    const pending = _pendingRows.length + Object.keys(_pendingKV).length;
+    const conflict = !!document.getElementById('pos-sync-conflict');
+    return {pending, state:conflict?'conflict':pending?'pending':'saved',
+        text:conflict?'Requiere revisión · hay cambios de otro dispositivo':pending?`${pending} guardados pendientes · pulsa para revisar`:
+        (typeof navigator!=='undefined' && !navigator.onLine)?'Sin conexión · sin guardados pendientes':'Guardado · al día'};
+}
+function actualizarEstadoGuardado() {
+    const el=document.getElementById('pos-save-status'); if(!el)return;
+    const status=posSyncStatus(); el.textContent=status.text; el.dataset.state=status.state;
+}
+function posExportPending() {
+    const url=URL.createObjectURL(new Blob([JSON.stringify({version:2,fecha:new Date().toISOString(),pendingRows:_pendingRows,pendingKV:_pendingKV,expectedKV:_kvExpected},null,2)],{type:'application/json'}));
+    const link=document.createElement('a');link.href=url;link.download='bicho-pendientes.json';link.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function abrirRevisionSync() {
+    if(_posOperation){manekiToastExport('Espera a que termine el guardado en curso.','warn');return;}
+    await Promise.allSettled([_rowFlush,...Object.values(_kvWriteQueues)]);
+    const dialog=document.createElement('dialog');dialog.className='pos-sync-dialog';
+    const title=document.createElement('h2');title.textContent='Revisar guardados';dialog.appendChild(title);
+    const description=document.createElement('p'); description.textContent='Compara tus cambios con la nube. No cierres esta sesión si hay pendientes.';dialog.appendChild(description);
+    const view=document.createElement('pre');dialog.appendChild(view);
+    const addButton=(label:string,fn:()=>any)=>{const b=document.createElement('button');b.textContent=label;b.onclick=async()=>{b.disabled=true;try{await fn();}catch(e:any){description.textContent=e.message;}finally{b.disabled=false;}};dialog.appendChild(b);return b;};
+    addButton('Descargar respaldo',posExportPending);
+    addButton('Cerrar',()=>{dialog.close();dialog.remove();});
+    document.body.appendChild(dialog);dialog.showModal();
+    dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+    const queued=JSON.stringify({rows:_pendingRows,kv:_pendingKV});
+    const verify=()=>{if(_posOperation || _rowFlush || Object.keys(_kvWriteQueues).length || queued!==JSON.stringify({rows:_pendingRows,kv:_pendingKV}))throw new Error('Los guardados cambiaron o siguen en curso. Cierra y vuelve a revisar.');};
+    if(!_pendingRows.length && !Object.keys(_pendingKV).length){view.textContent='Todos los cambios están guardados.';return;}
+    const observed:Record<string,any>={};const observedKV:Record<string,string|null>={};
+    try {
+        for(const table of [...new Set(_pendingRows.map(op=>op.table))]) {
+            observed[table]={};
+            for(let offset=0;;offset+=1000){
+                const {data,error}=await db.from(table).select('*').order('id').range(offset,offset+999);if(error)throw error;
+                Object.assign(observed[table],Object.fromEntries((data||[]).map(r=>[String(r.id),r])));
+                if(!data || data.length<1000)break;
+            }
+        }
+        for(const key of Object.keys(_pendingKV)) {
+            const {data,error}=await db.from('store').select('value').eq('key',key).maybeSingle();if(error)throw error;
+            observedKV[key]=data?.value ?? null;
+        }
+        view.textContent=posDescribeConflicts(_pendingRows,observed,_pendingKV,observedKV);
+        const label=document.createElement('label');const confirm=document.createElement('input');confirm.type='checkbox';label.append(confirm,document.createTextNode(' He comparado los cambios. Autorizo la opción que elija para TODOS los pendientes.'));dialog.appendChild(label);
+        addButton('Conservar mis cambios y reintentar',async()=>{
+            verify();if(!confirm.checked)throw new Error('Marca la confirmación después de comparar los cambios.');
+            posExportPending();
+            posRebasePending(observed,observedKV);
+            document.getElementById('pos-sync-conflict')?.remove();
+            await sincronizarPendientes();actualizarEstadoGuardado();
+            if(window._pendingSync)throw new Error('Aún quedan pendientes. Cierra y vuelve a revisar; no repitas el cobro.');
+            dialog.close();
+        });
+        addButton('Usar nube y descartar pendientes locales',async()=>{
+            verify();if(!confirm.checked)throw new Error('Marca la confirmación. Esta opción descarta TODOS los pendientes locales y descarga un respaldo.');
+            posExportPending();
+            _pendingRows.splice(0);Object.keys(_pendingKV).forEach(k=>{delete _pendingKV[k];delete _kvExpected[k];});
+            _persistPendingRows();_persistPendingKV();location.reload();
+        });
+    } catch(e:any){description.textContent='No se pudo consultar la nube: '+e.message;view.textContent='Tus cambios siguen en este dispositivo. Puedes descargar el respaldo y volver a revisar cuando haya conexión.';}
+}
+function posDescribeConflicts(operations:PendingRowWrite[],observed:Record<string,any>,localKV:Record<string,string>,remoteKV:Record<string,string|null>):string {
+    const names={products:'Inventario',orders:'Pedidos',orders_finalizados:'Historial de pedidos',incomes:'Ingresos',expenses:'Gastos',sales_history:'Cobros',clients:'Clientes',categories:'Categorías',stock_movements:'Movimientos'};
+    const fields={stock:'Existencias',price:'Precio',cost:'Costo',amount:'Importe',total:'Total',resta:'Saldo',anticipo:'Anticipo',status:'Estado',name:'Nombre',cliente:'Cliente',concept:'Concepto',entrega:'Entrega'};
+    const value=(v:any)=>v==null?'sin valor':typeof v==='object'?JSON.stringify(v):String(v);
+    const lines:string[]=[];
+    for(const op of operations){
+        lines.push(names[op.table]||op.table);
+        if(!op.rows){lines.push('Eliminar: '+Object.values(op.expected||{}).map((r:any)=>r?.folio||r?.name||r?.concept||r?.id).join(', '));continue;}
+        for(const row of op.rows){
+            const remote=observed[op.table]?.[row.id];
+            const changes=Object.keys(row).filter(k=>!['id','updated_at','created_at'].includes(k) && value(row[k])!==value(remote?.[k]));
+            if(!changes.length)continue;
+            lines.push('\n'+(row.folio||row.name||row.concept||row.cliente||row.id));
+            for(const k of changes)lines.push(`${fields[k]||k.replace(/_/g,' ')}: dispositivo ${value(row[k])} · nube ${value(remote?.[k])}`);
+        }
+    }
+    for(const key of Object.keys(localKV))lines.push(`\nConfiguración ${key}: dispositivo ${localKV[key]} · nube ${remoteKV[key]??'sin valor'}`);
+    return lines.join('\n');
+}
+function posRebasePending(observed:Record<string,any>,observedKV:Record<string,string|null>) {
+    const bases=JSON.parse(JSON.stringify(observed));
+    const batches:Record<string,string>={};
+    for(const op of _pendingRows) {
+        if(op.batch)op.batch=batches[op.batch] || (batches[op.batch]=mkId());
+        const table=bases[op.table] || {};op.expected={};
+        if(op.rows)for(const row of op.rows){op.expected[row.id]=table[row.id] || null;table[row.id]={...table[row.id],...row};}
+        else for(const id of Object.keys(table))if(String(table[id][op.field!])===op.value){op.expected[id]=table[id];delete table[id];}
+    }
+    Object.keys(_pendingKV).forEach(k=>_kvExpected[k]=[observedKV[k]??null]);
+    _persistPendingRows();_persistPendingKV();
+}
+document.addEventListener('DOMContentLoaded',actualizarEstadoGuardado);
