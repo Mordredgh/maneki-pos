@@ -475,6 +475,10 @@ async function setPedidoStatusCompleto(status) {
     const id = document.getElementById('pedidoStatusId').value;
     const idx = (window.pedidos || []).findIndex(p => String(p.id) === String(id));
     if (idx === -1) return;
+    const pendientes = posPendientesPreparacion(window.pedidos[idx], status);
+    if (pendientes.length) {
+        throw Error('Completa la ficha antes de avanzar: ' + pendientes.join(', ') + '.');
+    }
 
     if (status === 'finalizado') {
         // GUARD: advertir si total = $0 antes de finalizar

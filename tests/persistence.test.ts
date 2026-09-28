@@ -84,6 +84,7 @@ function businessApp() {
   a.load('src/pedidos-1-modal.ts');
   a.load('src/pedidos-1-views.ts');
   a.load('src/pedidos-2.ts');
+  a.load('src/operations.ts');
   a.load('src/balance.ts');
   a.load('src/reportes.ts');
   // Solo presentacion/confirmaciones del navegador; reglas y persistencia son reales.
@@ -219,7 +220,9 @@ describe('Persistencia real del POS', () => {
   });
   it('al finalizar y cobrar saldo conserva el cobro en ventas y Balance', async () => {
     const a = businessApp();
-    a.ctx.pedidos = [{id:'o1', folio:'PE-TEST', total:100, anticipo:25, resta:75, pagos:[{id:'a1',monto:25}]}];
+    const pedido:any = {id:'o1', folio:'PE-TEST', total:100, anticipo:25, resta:75, pagos:[{id:'a1',monto:25}],checklist:{material:true,producido:true,empacado:true},posDetalle:{}};
+    pedido.posDetalle.aprobacion={referencia:'Arte aprobado',fecha:'2026-09-27',firma:a.ctx.posFirmaDiseno(pedido)};
+    a.ctx.pedidos = [pedido];
     a.ctx.salesHistory = [{id:'a1',folio:'PE-TEST',type:'anticipo',total:25}];
     a.fields.pedidoStatusId.value = 'o1';
     await a.ctx.setPedidoStatus('finalizado');
@@ -240,6 +243,16 @@ describe('Persistencia real del POS', () => {
     await a.ctx.sincronizarPendientes();
     expect((await a.ctx.sbLoad('pedidos', []))[0]).toMatchObject({status:'cancelado'});
     expect(await a.ctx.sbLoad('salesHistory', [])).toEqual([]);
+  });
+  it('no produce ni finaliza un pedido sin aprobacion y checklist completos', async () => {
+    const a = businessApp();
+    a.ctx.pedidos = [{id:'o1',folio:'PE-PEND',total:100,status:'confirmado',checklist:{material:true}}];
+    a.fields.pedidoStatusId.value = 'o1';
+    await a.ctx.setPedidoStatus('produccion');
+    expect(a.ctx.pedidos[0].status).toBe('confirmado');
+    await a.ctx.setPedidoStatus('finalizado');
+    expect(a.ctx.pedidosFinalizados || []).toEqual([]);
+    expect(a.ctx.salesHistory).toEqual([]);
   });
   it('crea pedido con anticipo offline y lo recupera en Balance y Reportes', async () => {
     const first = businessApp();

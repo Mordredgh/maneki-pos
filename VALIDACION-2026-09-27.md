@@ -26,3 +26,11 @@ Cloudflare Pages: https://5ebff075.bicho-capricho-pos.pages.dev.
 Dominio: https://pos.manekistore.com.mx. HTTP 401 sin credenciales y 200 autorizado; bundles servidos y SW maneki-d7ac161133 verificados. El adapter QA no esta publicado (ruta inexistente devuelve el fallback SPA, sin contenido QA).
 Trivy local de secretos: sin hallazgos en archivos revisados; excluye secretos locales, dependencias y dist. No equivale a auditoria integral de dependencias.
 Grafo MCP reindexado y graphify update ejecutado sin LLM.
+
+## Verificacion posterior de ficha, matriz y respaldo
+
+- 177 pruebas, typecheck, lint y paquete Cloudflare correctos. Prueba de persistencia nueva: sin aprobacion y checklist, el pedido no pasa a produccion ni finalizacion y no crea cobros.
+- En staging aislado con pedido y playera ficticios: matriz muestra 2 comprometidas y 2 libres en M/Negro; ficha y matriz revisadas en escritorio y 390 px. El intento real de avanzar muestra «Completa la ficha» y conserva el estado.
+- R2: dos ejecuciones de 24 tablas y 113 imagenes cifradas con rutas unicas. Restauracion aislada real: 24 tablas y 113 imagenes comprobadas con tamaño y SHA-256; estado verificado guardado en `store.pos_backup_status`.
+- Publicado https://5dcdffb8.bicho-capricho-pos.pages.dev; dominio y deployment 401 anonimo / 200 autorizado para HTML, JS y SW; hash `maneki-237079d1bc`.
+- Propietario pospone ejecucion independiente del PC y guardara la clave de recuperacion por separado despues. La tarea Windows sigue vigente.

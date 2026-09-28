@@ -6221,6 +6221,8 @@ body.dark .mk-highlight {
 .pos-sync-dialog::backdrop {background:#152a20b3}
 .pos-operation-dialog form {display:grid;gap:16px;margin-top:20px}
 .pos-operation-dialog label {display:grid;gap:7px;font-weight:700}
+.pos-operation-dialog .pos-check-label{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 12px;border:1px solid #e1ebe3;border-radius:10px;background:#f8faf8;line-height:1.35}
+.pos-operation-dialog .pos-check-label input[type=checkbox]{width:20px;min-width:20px;height:20px;min-height:20px;margin:0;accent-color:#176b43}
 .pos-operation-dialog input,.pos-operation-dialog textarea {width:100%;padding:12px;border:1px solid #94a99b;border-radius:10px;background:#fff;color:#24382b;font:inherit;min-height:44px}
 .pos-operation-dialog input:focus-visible,.pos-operation-dialog textarea:focus-visible {outline:3px solid #7341a4;outline-offset:2px}
 .pos-cash-summary {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
@@ -6231,6 +6233,20 @@ body.dark .mk-highlight {
 .pos-operation-dialog button:disabled {opacity:.6;cursor:wait}
 .pos-sync-dialog pre {white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f5f2;padding:12px;max-height:35vh;overflow:auto}
 .pos-sync-dialog button {padding:10px 16px;margin:6px;border-radius:10px;border:1px solid #b6c7ba;min-height:44px;cursor:pointer}
+.pos-operation-dialog{box-shadow:0 24px 70px #102b1b44}
+.pos-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #e3ebe4}
+.pos-dialog-header h2{margin:0;color:#194d32;font-size:1.35rem;line-height:1.25}
+.pos-sync-dialog .pos-dialog-close{margin:0;background:#f2f6f2;color:#275239;font-weight:700;flex:none}
+.pos-operation-dialog select{width:100%;min-height:44px;padding:10px 12px;border:1px solid #94a99b;border-radius:10px;background:#fff;color:#24382b;font:inherit}
+.pos-operation-dialog .pos-table-scroll{overflow-x:auto}
+.pos-operation-dialog .pos-data-table{width:100%;border-collapse:collapse;text-align:left}
+.pos-operation-dialog .pos-data-table caption{text-align:left;padding:0 0 12px;color:#5d7567;font-size:.9rem;width:calc(92vw - 48px);max-width:800px;box-sizing:border-box;white-space:normal;overflow-wrap:break-word}
+.pos-operation-dialog .pos-data-table th,.pos-operation-dialog .pos-data-table td{padding:12px;border-bottom:1px solid #e3ebe4;min-width:110px}
+.pos-operation-dialog .pos-data-table td input{max-width:110px}
+.pos-operation-dialog .pos-data-table td small{display:block;margin-top:6px;color:#5d7567;line-height:1.4}
+.pos-operation-dialog .pos-cell-missing{color:#75857b;background:#f5f7f5}
+.pos-operation-dialog .btn-primary{background:#176b43;color:#fff;border-color:#176b43;font-weight:800}
+@media(max-width:600px){.pos-sync-dialog{width:calc(100vw - 20px);padding:16px}.pos-dialog-header h2{font-size:1.15rem}}
 @media(min-width:1100px){#morningKpiGrid{grid-template-columns:repeat(4,1fr)!important}}
 @media(max-width:520px){#bienvenida-section .pos-welcome-header{padding:16px!important}#welcomeTime,#welcomeTimeLabel{display:none}.pos-actionbar button{flex:1 1 44%}#bienvenida-section .pos-home-content{padding:0 14px 84px!important}}
 body.dark-mode #bienvenida-section {background:#18271f!important}

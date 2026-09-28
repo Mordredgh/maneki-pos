@@ -1,6 +1,6 @@
 // Solo lo sirve staging/server.mjs; no se empaqueta en Cloudflare.
 (()=>{
- if(location.origin!=='http://127.0.0.1:8978')throw Error('Solo entorno de pruebas local');
+ if(location.protocol!=='http:'||location.hostname!=='127.0.0.1'||Number(location.port)<8978||Number(location.port)>8999)throw Error('Solo entorno de pruebas local');
  const request=body=>fetch('/__qa/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
  const session={user:{id:'00000000-0000-4000-8000-000000000001'}};
  let signedIn=sessionStorage.getItem('qa_signed_out')!=='1';

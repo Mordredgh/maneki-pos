@@ -5,10 +5,15 @@ import {createTestDatabase} from './database.mjs';
 const db=await createTestDatabase();
 await db.exec(`INSERT INTO categories VALUES ('qa','Pruebas','🎁','#FFD166');
 INSERT INTO products(id,name,sku,category,tipo,cost,price,stock,stock_min,activo,publicar_tienda,variants,mp_componentes,tags) VALUES ('qa-product','Taza de prueba','QA-001','qa','producto',40,100,10,3,true,false,'[]','[]','[]');
+INSERT INTO products(id,name,sku,category,tipo,cost,price,stock,stock_min,activo,publicar_tienda,variants,mp_componentes,tags) VALUES ('qa-playera','Playera de prueba','QA-002','qa','producto_variable',65,180,12,3,true,false,'[{"type":"Talla/Color","value":"M / Negro","size":"M","color":"Negro","qty":4,"priceDelta":0},{"type":"Talla/Color","value":"M / Blanco","size":"M","color":"Blanco","qty":3,"priceDelta":0},{"type":"Talla/Color","value":"L / Negro","size":"L","color":"Negro","qty":2,"priceDelta":10},{"type":"Talla/Color","value":"L / Blanco","size":"L","color":"Blanco","qty":3,"priceDelta":10}]','[]','[]');
 INSERT INTO clients(id,name,phone,type,total_purchases) VALUES ('qa-client','Cliente de prueba','0000000000','regular',0);
+INSERT INTO orders(id,folio,cliente,fecha,entrega,concepto,total,status,productos_inventario,pagos) VALUES ('qa-order','PE-QA-001','Cliente de prueba','2026-09-27','2026-09-30','Playeras con diseño aprobado',360,'confirmado','[{"id":"qa-playera","name":"Playera de prueba","quantity":2,"variante":"Talla/Color:M / Negro"}]','[]');
 INSERT INTO store VALUES ('storeConfig','{"name":"Bicho · PRUEBAS","slogan":"Datos ficticios","emoji":"🐛"}');
 `);
 const root=resolve('dist/cloudflare');
+const port=Number(process.env.POS_STAGING_PORT||8978);
+if(!Number.isSafeInteger(port)||port<1024||port>65535)throw Error('Puerto de pruebas inválido');
+const origin=`http://127.0.0.1:${port}`;
 const tables=new Set(['products','clients','orders','orders_finalizados','sales_history','incomes','expenses','categories','stock_movements','store']);
 const ident=s=>{if(!/^[a-z_]+$/.test(s))throw Error('Identificador invalido');return '"'+s+'"';};
 let folio=0;
@@ -31,11 +36,11 @@ async function query(body){
 const server=http.createServer(async(req,res)=>{
  res.setHeader('Cache-Control','no-store');
  // Nunca abrir acceso al servidor desde otros origenes o interfaces.
- if(req.headers.host!=='127.0.0.1:8978'){res.writeHead(403).end();return;}
- const url=new URL(req.url,'http://127.0.0.1:8978');
+ if(req.headers.host!==`127.0.0.1:${port}`){res.writeHead(403).end();return;}
+ const url=new URL(req.url,origin);
  try{
  if(url.pathname==='/__qa/query'&&req.method==='POST'){
-  if(req.headers.origin && req.headers.origin!=='http://127.0.0.1:8978')throw Error('Origen rechazado');
+  if(req.headers.origin && req.headers.origin!==origin)throw Error('Origen rechazado');
   if(!String(req.headers['content-type']).startsWith('application/json'))throw Error('Tipo rechazado');
   let body='';for await(const part of req){body+=part;if(body.length>4000000)throw Error('Solicitud grande');}
   try{res.setHeader('Content-Type','application/json');res.end(JSON.stringify({data:await query(JSON.parse(body)),error:null}));}catch(e){res.end(JSON.stringify({data:null,error:{message:e.message,code:e.code}}));}return;
@@ -50,4 +55,4 @@ const server=http.createServer(async(req,res)=>{
  res.end(content);
  }catch(e){res.writeHead(400).end(e.message);}
 });
-server.listen(8978,'127.0.0.1',()=>console.log('Pruebas aisladas: http://127.0.0.1:8978 · solo datos ficticios · reiniciar restablece datos'));
+server.listen(port,'127.0.0.1',()=>console.log(`Pruebas aisladas: ${origin} · solo datos ficticios · reiniciar restablece datos`));
