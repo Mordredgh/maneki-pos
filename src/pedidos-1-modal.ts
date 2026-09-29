@@ -450,6 +450,31 @@ function calcPedidoTotal() {
 
 // ── Submit formulario de pedido ──
 let _pedidoGuardando = false;
+function pedidoResumenAntesDeGuardar() {
+    const value = (id: string) => String((document.getElementById(id) as HTMLInputElement | null)?.value || '').trim();
+    const items = (window.pedidoProductosSeleccionados || []).map((item: any) => ({ ...item }));
+    const list = document.getElementById('pedidoProductosList');
+    list?.querySelectorAll('input[type="number"][onchange*="editarPrecioPedidoProducto"]').forEach(input => {
+        const index = Number((input.getAttribute('onchange') || '').match(/editarPrecioPedidoProducto\((\d+)/)?.[1]);
+        if (items[index] && input.value.trim() && Number.isFinite(Number(input.value))) items[index].price = Number(input.value);
+    });
+    list?.querySelectorAll('input[type="number"][onchange*="editarCantidadPedidoProducto"]').forEach(input => {
+        const index = Number((input.getAttribute('onchange') || '').match(/editarCantidadPedidoProducto\((\d+)/)?.[1]);
+        if (items[index] && Number(input.value) > 0) items[index].quantity = Number(input.value);
+    });
+    if (!items.length && Number(value('pedidoPrecioLibre')) > 0) items.push({ name: value('pedidoConcepto') || 'Pedido', price: Number(value('pedidoPrecioLibre')), quantity: 1 });
+    const total = Math.round(items.reduce((sum: number, item: any) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0) * 100) / 100;
+    const anticipo = Number(value('pedidoAnticipo')) || 0;
+    const missing = [];
+    if (!value('pedidoCliente')) missing.push('Nombre del cliente');
+    if (!value('pedidoEntrega')) missing.push('Fecha de entrega');
+    if (!items.length) missing.push('Producto o precio libre');
+    if (anticipo > total) missing.push('El anticipo supera el total');
+    if (value('pedidoFecha') && value('pedidoEntrega') && value('pedidoEntrega') < value('pedidoFecha')) missing.push('La entrega precede al pedido');
+    return { cliente: value('pedidoCliente'), entrega: value('pedidoEntrega'), items, total, anticipo, saldo: Math.max(0, total - anticipo), missing };
+}
+window.pedidoResumenAntesDeGuardar = pedidoResumenAntesDeGuardar;
+
 document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     e.preventDefault();
     return posRunOperation(() => guardarPedidoCompleto(e)).catch(err => {

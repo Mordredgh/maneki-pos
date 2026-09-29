@@ -1793,9 +1793,20 @@ function posSyncStatus() {
         text:conflict?'Requiere revisión · hay cambios de otro dispositivo':pending?`${pending} guardados pendientes · pulsa para revisar`:
         (typeof navigator!=='undefined' && !navigator.onLine)?'Sin conexión · sin guardados pendientes':'Guardado · al día'};
 }
+function posRecordSyncStatus(table: string, id: string) {
+    const relevant = [..._pendingRows, ...(_posOperation?.writes || [])].some(op => op.table === table &&
+        (op.rows?.some(row => String(row.id) === String(id)) || (op.field === 'id' && op.value === String(id))));
+    const conflict = relevant && !!document.getElementById('pos-sync-conflict');
+    return { state: conflict ? 'conflict' : relevant ? 'pending' : 'saved', text: conflict ? 'Conflicto: revisar este registro' : relevant ? 'Pendiente de sincronizar' : 'Guardado' };
+}
+window.posRecordSyncStatus = posRecordSyncStatus;
 function actualizarEstadoGuardado() {
-    const el=document.getElementById('pos-save-status'); if(!el)return;
-    const status=posSyncStatus(); el.textContent=status.text; el.dataset.state=status.state;
+    const el=document.getElementById('pos-save-status');
+    if(el){const status=posSyncStatus(); el.textContent=status.text; el.dataset.state=status.state;}
+    document.querySelectorAll('[data-sync-table][data-sync-id]').forEach(record => {
+        const status = posRecordSyncStatus(record.dataset.syncTable || '', record.dataset.syncId || '');
+        record.textContent = status.text; record.dataset.state = status.state;
+    });
 }
 function posExportPending() {
     const url=URL.createObjectURL(new Blob([JSON.stringify({version:2,fecha:new Date().toISOString(),pendingRows:_pendingRows,pendingKV:_pendingKV,expectedKV:_kvExpected},null,2)],{type:'application/json'}));

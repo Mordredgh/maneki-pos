@@ -66,10 +66,15 @@ async function posAbrirMatriz(id?:string){
 window.posAbrirMatriz=posAbrirMatriz;
 
 function posAbrirFicha(id?:string){
-    const orders=[...(window.pedidos||[]),...(window.pedidosFinalizados||[])];
-    const p=orders.find(p=>String(p.id)===String(id))||orders[0];const dialog=posDialog('Ficha del pedido');dialog.classList.add('pos-wide-dialog');
+    document.querySelector('dialog.pos-order-drawer')?.close();
+    const allOrders=[...(window.pedidos||[]),...(window.pedidosFinalizados||[])];
+    const visibleIds=Array.from(document.querySelectorAll('#vistaKanban [data-kanban-open]')).map(el=>el.dataset.kanbanOpen);
+    const orders=id&&visibleIds.includes(String(id))?visibleIds.map(key=>allOrders.find(p=>String(p.id)===key)).filter(Boolean):allOrders;
+    const p=orders.find(p=>String(p.id)===String(id))||orders[0];const dialog=posDialog('Ficha del pedido',false);dialog.classList.add('pos-wide-dialog','pos-order-drawer');
     if(!p){dialog.append('Todavía no hay pedidos.');return;}
-    const selector=document.createElement('select');selector.setAttribute('aria-label','Pedido');orders.forEach(ped=>{const option=document.createElement('option');option.value=String(ped.id);option.textContent=`${ped.folio||ped.id} · ${ped.cliente||'Sin cliente'}`;option.selected=ped===p;selector.appendChild(option);});selector.onchange=()=>{dialog.close();posAbrirFicha(selector.value);};dialog.appendChild(selector);
+    const nav=document.createElement('div');nav.className='pos-order-drawer-nav';const previous=document.createElement('button');previous.type='button';previous.textContent='← Anterior';const next=document.createElement('button');next.type='button';next.textContent='Siguiente →';const index=orders.indexOf(p);previous.disabled=index<=0;next.disabled=index>=orders.length-1;previous.onclick=()=>posAbrirFicha(String(orders[index-1].id));next.onclick=()=>posAbrirFicha(String(orders[index+1].id));nav.append(previous,next);dialog.appendChild(nav);
+    const selector=document.createElement('select');selector.setAttribute('aria-label','Pedido');orders.forEach(ped=>{const option=document.createElement('option');option.value=String(ped.id);option.textContent=`${ped.folio||ped.id} · ${ped.cliente||'Sin cliente'}`;option.selected=ped===p;selector.appendChild(option);});selector.onchange=()=>posAbrirFicha(selector.value);dialog.appendChild(selector);
+    const sync=document.createElement('small');sync.className='pos-record-sync';sync.dataset.syncTable=(window.pedidosFinalizados||[]).includes(p)?'orders_finalizados':'orders';sync.dataset.syncId=String(p.id);const current=window.posRecordSyncStatus?.(sync.dataset.syncTable,sync.dataset.syncId);sync.textContent=current?.text||'Estado no disponible';sync.dataset.state=current?.state||'unknown';dialog.appendChild(sync);
     const before=JSON.stringify(p),detail=p.posDetalle||{};const form=document.createElement('form');
     const heading=document.createElement('p');heading.textContent=`${p.status} · Entrega: ${p.entrega||'sin fecha'} · ${p.lugarEntrega||'sin dirección'} · Total ${fmtMoney(p.total||0)} · Pagado ${fmtMoney(posTotalPagado(p))} · Saldo ${fmtMoney(calcSaldoPendiente(p))}`;form.appendChild(heading);
     const lines=document.createElement('ul');for(const line of p.productosInventario||[]){const li=document.createElement('li');li.textContent=`${line.quantity||line.cantidad||1} × ${line.name||line.nombre||line.id} · ${line.variante||'Sin variante'}`;lines.appendChild(li);}form.appendChild(lines);
@@ -168,13 +173,13 @@ function posResumenCaja(date:string,sales:any[],income:any[],expense:any[],openi
     for(const method of ['efectivo','transferencia','tarjeta','sin_clasificar']){const r=result[method];result.totalCobrado+=r.entradas;r.esperado=(r.entradas-r.salidas+(method==='efectivo'?posCentavos(opening):0))/100;r.entradas/=100;r.salidas/=100;}
     result.totalCobrado/=100;return result;
 }
-function posDialog(title:string):HTMLDialogElement {
+function posDialog(title:string,modal=true):HTMLDialogElement {
     const trigger=document.activeElement as HTMLElement;
     const dialog=document.createElement('dialog');dialog.className='pos-sync-dialog pos-operation-dialog';dialog.setAttribute('aria-label',title);
     const header=document.createElement('div');header.className='pos-dialog-header';
     const h=document.createElement('h2');h.textContent=title;header.appendChild(h);
     const close=document.createElement('button');close.textContent='Cerrar';close.type='button';close.className='pos-dialog-close';close.onclick=()=>dialog.close();header.appendChild(close);dialog.appendChild(header);
-    dialog.addEventListener('close',()=>{dialog.remove();if(trigger?.isConnected)trigger.focus();},{once:true});document.body.appendChild(dialog);dialog.showModal();return dialog;
+    dialog.addEventListener('close',()=>{dialog.remove();if(trigger?.isConnected)trigger.focus();},{once:true});document.body.appendChild(dialog);if(modal)dialog.showModal();else dialog.show();return dialog;
 }
 async function posCargarCaja(date:string,opening:number){
     const {data,error}=await db.rpc('pos_cash_movements',{p_date:date,p_zone:Intl.DateTimeFormat().resolvedOptions().timeZone});

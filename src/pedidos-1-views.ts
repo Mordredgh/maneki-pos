@@ -108,7 +108,13 @@ function posPedidoResumen(){
     const summary=document.getElementById('pos-pedido-summary');
     if(summary)summary.textContent=`Total ${fmtMoney(total)} · Anticipo ${fmtMoney(anticipo)} · Saldo ${fmtMoney(Math.max(0,total-anticipo))}`;
     const review=document.getElementById('pos-pedido-review');
-    if(review)review.textContent=`${val('pedidoCliente')} · Entrega: ${val('pedidoEntrega')}\n${val('pedidoConcepto')||((window.pedidoProductosSeleccionados||[]).length?'Productos seleccionados':'Pedido personalizado')}\n${(window.pedidoProductosSeleccionados||[]).map(p=>`${p.quantity} × ${p.name}${p.variante?` (${p.variante.startsWith('Talla/Color:')?p.variante.slice(12).trim():p.variante})`:''} · ${fmtMoney(mkRound2(Number(p.price)*Number(p.quantity)))}`).join('\n')}`;
+    if(review && typeof window.pedidoResumenAntesDeGuardar === 'function'){
+        const data=window.pedidoResumenAntesDeGuardar();review.replaceChildren();
+        const intro=document.createElement('p');intro.textContent=`${data.cliente||'Cliente sin nombre'} · Pedido ${val('pedidoFecha')||'sin fecha'} · Entrega ${data.entrega||'sin fecha'}`;review.appendChild(intro);
+        const list=document.createElement('ul');for(const item of data.items){const line=document.createElement('li');line.textContent=`${item.quantity||1} × ${item.name||item.nombre||'Producto'}${item.variante?` · ${item.variante}`:''} — ${fmtMoney((Number(item.price)||0)*(Number(item.quantity)||1))}`;list.appendChild(line);}review.appendChild(list);
+        const amounts=document.createElement('dl');for(const [label,amount] of [['Total',data.total],['Anticipo cobrado',data.anticipo],['Saldo pendiente',data.saldo]]){const row=document.createElement('div');const term=document.createElement('dt');term.textContent=String(label);const value=document.createElement('dd');value.textContent=fmtMoney(amount);row.append(term,value);amounts.appendChild(row);}review.appendChild(amounts);
+        const issues=document.createElement('p');issues.className='pos-pedido-review-issues';issues.textContent=data.missing.length?`Corrige antes de guardar: ${data.missing.join(', ')}.`:'Datos principales completos.';issues.dataset.state=data.missing.length?'warning':'ready';review.appendChild(issues);
+    }
 }
 function _updatePedidoStep(step:number):void{
     const form=document.getElementById('pedidoForm');if(!form)return;
@@ -139,7 +145,7 @@ function posPedidoValidar(until:number):boolean{
 function posPedidoIr(step:any){const n=Number(step);if(n>posPedidoPaso&&!posPedidoValidar(n-1))return;_updatePedidoStep(n);(document.querySelector('#pedido-steps [aria-current]') as HTMLElement)?.focus();}
 function posPedidoAnterior(){posPedidoIr(posPedidoPaso-1);}
 function posPedidoSiguiente(){posPedidoIr(posPedidoPaso+1);}
-function posPedidoGuardar(){if(!posPedidoValidar(3))return;document.getElementById('pedidoForm')?.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));}
+function posPedidoGuardar(){if(!posPedidoValidar(3))return;const missing=window.pedidoResumenAntesDeGuardar?.().missing||[];if(missing.length){posPedidoResumen();const error=document.getElementById('pos-pedido-error');if(error)error.textContent=`Corrige antes de guardar: ${missing.join(', ')}.`;return;}document.getElementById('pedidoForm')?.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));}
 (window as any)._updatePedidoStep=_updatePedidoStep;
 
 // ── Template chips para el campo de notas ──────────────────────────────────
@@ -483,7 +489,7 @@ function kanbanCardHTML(p) {
 
     if (_kanbanCompacto === 'compact') {
         return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex flex-wrap items-center gap-2"
-            data-id="${p.id}" data-status="${p.status || 'confirmado'}"
+            data-id="${p.id}" data-kanban-open="${_e(p.id)}" tabindex="0" aria-label="Abrir ficha del pedido ${_e(p.folio || p.id)}" data-status="${p.status || 'confirmado'}"
             style="position:relative;${_bordeVencido}" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
             draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
             ${_checkboxHtml}
@@ -500,7 +506,7 @@ function kanbanCardHTML(p) {
     if (_kanbanCompacto === 'medium') {
         // P5: vista intermedia — folio, cliente, saldo, entrega y estado sin imagen ni notas
         return `<div class="kanban-card bg-white rounded-xl px-3 py-2.5 shadow-sm border select-none"
-            data-id="${p.id}" data-status="${p.status || 'confirmado'}"
+            data-id="${p.id}" data-kanban-open="${_e(p.id)}" tabindex="0" aria-label="Abrir ficha del pedido ${_e(p.folio || p.id)}" data-status="${p.status || 'confirmado'}"
             style="position:relative;border-color:${_esVencido?'#fca5a5':'#f3f4f6'};${_bordeVencido}"
             onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
             draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
@@ -557,7 +563,7 @@ function kanbanCardHTML(p) {
     const _tot = Number(p.total||0);
     const _pct = _tot > 0 ? Math.min(100, Math.round(((_tot - _saldo) / _tot) * 100)) : (_saldo === 0 ? 100 : 0);
     return `<div class="kanban-card mk-kanban-card-${p.status || 'confirmado'} bg-white rounded-xl p-2 shadow-sm border border-gray-100 select-none"
-        data-id="${p.id}" data-status="${p.status || 'confirmado'}"
+        data-id="${p.id}" data-kanban-open="${_e(p.id)}" tabindex="0" aria-label="Abrir ficha del pedido ${_e(p.folio || p.id)}" data-status="${p.status || 'confirmado'}"
         style="position:relative;${_bordeVencido}" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
         draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
         ${_checkboxHtml}
@@ -599,6 +605,21 @@ function kanbanCardHTML(p) {
         </div>
     </div>`;
 }
+
+// La tarjeta abre la ficha sin interceptar sus acciones, selección ni arrastre.
+document.addEventListener('click', event => {
+    const target = event.target as HTMLElement;
+    const card = target.closest<HTMLElement>('[data-kanban-open]');
+    if (!card || target.closest('button,a,input,select,textarea,[contenteditable]')) return;
+    if (typeof posAbrirFicha === 'function') posAbrirFicha(card.dataset.kanbanOpen);
+});
+document.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const card = event.target as HTMLElement;
+    if (!card.matches?.('[data-kanban-open]')) return;
+    event.preventDefault();
+    if (typeof posAbrirFicha === 'function') posAbrirFicha(card.dataset.kanbanOpen);
+});
 
 // ── Render Tabla ──
 // Paginación para tabla de pedidos activos

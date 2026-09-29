@@ -63,6 +63,14 @@ it('conserva aprobacion, checklist, referencias y costos tras recargar pedidos',
  const rows=await a.ctx.sbLoad('pedidos',[]);
  expect(rows[0]).toMatchObject({posDetalle:{aprobacion:{referencia:'Diseno v2'},costos:{estimado:40}},checklist:{disenio:true},referenciasPaths:['ficha-1/diseno.webp']});
 });
+it('el estado de guardado identifica solo el registro pendiente',async()=>{
+ const a=app();
+ a.ctx.products=[{id:'p1',name:'Prueba',price:10,stock:1}];
+ a.fail();
+ await expect(a.ctx.saveProducts()).rejects.toThrow();
+ expect(a.ctx.posRecordSyncStatus('products','p1').state).toBe('pending');
+ expect(a.ctx.posRecordSyncStatus('products','p2').state).toBe('saved');
+});
 function businessApp() {
   const a = app();
   const fields: Record<string, any> = {};
@@ -94,6 +102,16 @@ function businessApp() {
   return {...a, fields, submit: () => submits[0]({preventDefault() {}})};
 }
 
+it('el resumen previo muestra variante, anticipo y campos por corregir',()=>{
+ const a=businessApp();
+ a.fields.pedidoCliente.value='Prueba';a.fields.pedidoFecha.value='2026-09-29';a.fields.pedidoEntrega.value='2026-09-30';a.fields.pedidoAnticipo.value='50';
+ a.ctx.pedidoProductosSeleccionados=[{name:'Playera',variante:'Talla/Color:M / Negro',quantity:2,price:100}];
+ const summary=a.ctx.pedidoResumenAntesDeGuardar();
+ expect(summary.items[0].variante).toBe('Talla/Color:M / Negro');
+ expect(summary.total).toBe(200);expect(summary.anticipo).toBe(50);expect(summary.saldo).toBe(150);expect(summary.missing).toEqual([]);
+ a.fields.pedidoEntrega.value='';expect(a.ctx.pedidoResumenAntesDeGuardar().missing).toContain('Fecha de entrega');
+});
+
 it('Kanban muestra pendientes reales y abre la ficha en cada densidad', () => {
   const a = businessApp();
   const p:any = {id:'pedido-1',folio:'PE-1',cliente:'Ana',status:'confirmado',total:100,checklist:{material:false},posDetalle:{}};
@@ -103,6 +121,8 @@ it('Kanban muestra pendientes reales y abre la ficha en cada densidad', () => {
     expect(html).toContain('Diseño aprobado');
     expect(html).toContain('Material revisado');
     expect(html).toContain('data-action="posAbrirFicha" data-arg="pedido-1"');
+    expect(html).toContain('data-kanban-open="pedido-1"');
+    expect(html).toContain('tabindex="0"');
   }
   p.checklist.material = true;
   p.posDetalle.aprobacion = {referencia:'Arte aprobado',fecha:'2026-09-28',firma:a.ctx.posFirmaDiseno(p)};

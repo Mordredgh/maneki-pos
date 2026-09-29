@@ -202,3 +202,18 @@
 - [x] Inicio: elegir paneles visibles, con preferencias locales persistentes y restablecimiento.
 - [x] Probar comportamientos, UI escritorio/movil, build/typecheck, publicar/verificar Cloudflare.
 - [x] Actualizar evidencia, grafo y memoria operativa.
+
+## Experiencia visual y operativa 2026-09-29
+
+- [x] Pedidos: abrir ficha lateral desde tarjetas Kanban y recorrer pedidos sin perder el tablero.
+- [x] Inventario: cuadricula compacta de talla/color y capacidad compartida de fabricacion.
+- [x] Balance: movimientos de caja agrupados por dia sin duplicar cobros.
+- [x] Pedido: vista previa con datos y faltantes antes de confirmar guardado.
+- [x] Movil: acciones tactiles sin solapar contenido ni foco.
+- [x] Inventario: visor ampliado de imagen y galeria del producto.
+- [x] Impresion: vista previa de ticket, cotizacion y orden de produccion.
+- [x] Dinero: formato con miles y etiquetas semanticas de cobro, pendiente y costo.
+- [x] Guardado: estado por ficha de pedido y producto.
+- [x] Vacio: acciones contextuales en secciones sin datos.
+- [x] Pruebas, verificacion visual movil/escritorio, build, deploy y verificacion Cloudflare.
+- [x] Evidencia y memoria; commit. <!-- BLOQUEADO: reindexacion de grafo MCP; servicio cerro conexion dos veces. -->

@@ -307,11 +307,29 @@ async function bulkPrecioAplicar() {
 }
 window.bulkPrecioAplicar = bulkPrecioAplicar;
 
+function inventoryVariantGridHTML(product: any): string {
+    const variants = (product.variants || []).filter((v: any) => v.size && v.color);
+    if (!variants.length) return '';
+    const sizes = [...new Set<string>(variants.map((v: any) => String(v.size)))].slice(0, 5);
+    const colors = [...new Set<string>(variants.map((v: any) => String(v.color)))].slice(0, 4);
+    const fabricables = (product.mpComponentes || []).length && typeof calcularPiezasFabricables === 'function'
+        ? Math.max(0, Number(calcularPiezasFabricables(product)) || 0) : 0;
+    const rows = sizes.map(size => `<tr><th scope="row">${_esc(size)}</th>${colors.map(color => {
+        const v = variants.find((item: any) => item.size === size && item.color === color);
+        if (!v) return '<td class="pos-variant-missing" aria-label="Combinación no configurada">—</td>';
+        const qty = Math.max(0, Number(v.qty) || 0);
+        const state = qty ? 'available' : fabricables ? 'makeable' : 'unavailable';
+        const label = qty ? `${qty} terminadas` : fabricables ? 'Fabricable con material compartido' : 'Sin material disponible';
+        return `<td class="pos-variant-${state}" title="${_esc(size)}, ${_esc(color)}: ${label}" aria-label="${_esc(size)}, ${_esc(color)}: ${label}">${qty || (fabricables ? '◐' : '0')}</td>`;
+    }).join('')}</tr>`).join('');
+    return `<div class="pos-variant-preview"><div class="pos-variant-preview-title">Tallas y colores <span><i class="pos-variant-key pos-variant-available"></i> Terminadas · <i class="pos-variant-key pos-variant-makeable"></i> Fabricables · <i class="pos-variant-key pos-variant-unavailable"></i> Sin material</span></div><div class="pos-variant-preview-scroll"><table><thead><tr><th></th>${colors.map(c => `<th scope="col">${_esc(c)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><small>${fabricables} fabricables con material compartido; no se suman por variante.</small><button type="button" data-action="posAbrirMatriz" data-arg="${_esc(String(product.id))}" class="mk-toolbar-btn">Ver matriz completa</button></div>`;
+}
+
 function inventoryCardHTML(product: any, stock: number, kind: string): string {
     const id = _esc(String(product.id));
     const name = _esc(product.name || 'Sin nombre');
     const image = product.imageUrl
-        ? `<img src="${_esc(product.imageUrl)}" alt="${name}" loading="lazy" style="width:100%;height:132px;object-fit:cover;border-radius:12px;background:#f8f4ec;">`
+        ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${id}" aria-label="Ampliar fotos de ${name}"><img src="${_esc(product.imageUrl)}" alt="${name}" loading="lazy" style="width:100%;height:132px;object-fit:cover;border-radius:12px;background:#f8f4ec;"></button>`
         : `<div aria-hidden="true" style="height:132px;display:grid;place-items:center;border-radius:12px;background:#f8f4ec;font-size:2.6rem;">${_esc(product.image || (kind === 'mp' ? '🏭' : '📦'))}</div>`;
     const ranges = (product.tablaPreciosVariable || []).slice().sort((a:any,b:any) => Number(a.cantidadMin) - Number(b.cantidadMin));
     const price = kind === 'pv' && ranges.length ? Number(ranges[0].precio) / Math.max(1, Number(ranges[0].cantidadMin)) : Number(kind === 'mp' || kind === 'svc' ? product.cost : product.price);
@@ -323,9 +341,11 @@ function inventoryCardHTML(product: any, stock: number, kind: string): string {
         <div style="font-size:.69rem;color:#678d47;font-weight:800;text-transform:uppercase;letter-spacing:.06em;">${type}</div>
         <strong style="font-size:.96rem;color:#243529;line-height:1.3;min-height:2.5em;">${name}</strong>
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">
-            <span style="font-size:1.08rem;font-weight:800;color:#1c4f32;">$${Number.isFinite(price) ? price.toFixed(2) : '0.00'}</span>
+            <span style="font-size:1.08rem;font-weight:800;color:#1c4f32;">${fmtMoney(Number.isFinite(price) ? price : 0)}</span>
             <span style="font-size:.73rem;font-weight:700;color:${low?'#a63126':'#236449'};background:${low?'#fff0ed':'#eaf7ee'};border-radius:99px;padding:4px 8px;">${stockText}</span>
         </div>
+        ${kind === 'pt' || kind === 'pv' ? inventoryVariantGridHTML(product) : ''}
+        ${typeof window.posRecordSyncStatus === 'function' ? `<small class="pos-record-sync" data-sync-table="products" data-sync-id="${id}" data-state="${window.posRecordSyncStatus('products', String(product.id)).state}">${window.posRecordSyncStatus('products', String(product.id)).text}</small>` : ''}
         <div style="display:flex;gap:7px;margin-top:auto;">
             <button type="button" data-action="editProduct" data-arg="${id}" class="mk-toolbar-btn" style="flex:1;justify-content:center;">Editar</button>
             ${kind === 'svc' ? '' : `<button type="button" data-action="ajustarStock" data-arg="${id}" class="mk-toolbar-btn" style="flex:1;justify-content:center;">Ajustar</button>`}
@@ -333,6 +353,30 @@ function inventoryCardHTML(product: any, stock: number, kind: string): string {
     </article>`;
 }
 window.inventoryCardHTML = inventoryCardHTML;
+
+function inventoryOpenGallery(id: string) {
+    const product = (window.products || []).find((p: any) => String(p.id) === String(id));
+    if (!product) return;
+    const urls = [...new Set([product.imageUrl, ...(product.imageUrls || [])].filter((url: any) => {
+        try { const parsed = new URL(url, location.origin); return ['https:', 'http:', 'blob:'].includes(parsed.protocol) || /^data:image\/(?:webp|png|jpeg|gif);base64,/i.test(String(url)); } catch { return false; }
+    }))];
+    if (!urls.length) return;
+    const dialog = document.createElement('dialog');
+    dialog.className = 'pos-gallery-dialog';
+    const title = document.createElement('h2'); title.textContent = product.name || 'Fotos del producto';
+    const close = document.createElement('button'); close.type = 'button'; close.textContent = 'Cerrar'; close.className = 'mk-toolbar-btn'; close.onclick = () => dialog.close();
+    const image = document.createElement('img'); image.alt = title.textContent || 'Producto';
+    const count = document.createElement('span');
+    const prev = document.createElement('button'); prev.type = 'button'; prev.textContent = '← Anterior'; prev.className = 'mk-toolbar-btn';
+    const next = document.createElement('button'); next.type = 'button'; next.textContent = 'Siguiente →'; next.className = 'mk-toolbar-btn';
+    let index = 0;
+    const update = () => { image.src = String(urls[index]); count.textContent = `${index + 1} de ${urls.length}`; prev.disabled = index === 0; next.disabled = index === urls.length - 1; };
+    prev.onclick = () => { index--; update(); }; next.onclick = () => { index++; update(); };
+    dialog.append(title, close, image, prev, count, next);
+    dialog.addEventListener('close', () => dialog.remove());
+    document.body.appendChild(dialog); update(); dialog.showModal();
+}
+window.inventoryOpenGallery = inventoryOpenGallery;
 
 function renderInventoryTable() {
     const tbody = document.getElementById('inventoryTable');
@@ -515,7 +559,7 @@ function renderInventoryTable() {
         const pid     = String(product.id);
         const stockEf = _stockCache.get(pid) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : parseInt(product.stock) || 0);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy">`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img src="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'🏭'}</span>`;
         let badge;
         if      (stockEf === 0)                    badge = '<span class="badge-danger"><i class="fas fa-circle-xmark"></i> Agotado</span>';
@@ -601,7 +645,7 @@ function renderInventoryTable() {
     function renderFilaPT(product, ri) {
         const pid     = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy">`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img src="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'📦'}</span>`;
         const cat = (window.categories||[]).find(c => c.id === product.category);
         const catName = cat ? cat.name : (product.category||'');
@@ -733,7 +777,7 @@ function renderInventoryTable() {
     function renderFilaVariable(product, ri) {
         const pid = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<img src="${product.imageUrl}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy">`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img src="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'🎯'}</span>`;
 
         // Tabla de precios como pills

@@ -162,17 +162,20 @@ function imprimirListaProduccion() {
     const content = document.getElementById('listaProduccionContent')?.innerHTML || '';
     const storeName = document.querySelector('.sidebar-store-name')?.textContent || 'Bicho Capricho';
     const win = window.open('', '_blank');
+    if (!win) { manekiToastExport('Permite ventanas emergentes para ver la lista.', 'warn'); return; }
+    const safeStoreName = String(storeName).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     win.document.write(`<!DOCTYPE html><html><head>
         <meta charset="UTF-8"><title>Lista de Producción</title>
-        <style>body{font-family:sans-serif;padding:2rem;} h1{color:#9669c4;} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#FFD166;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#4B5563;} .meta{font-size:12px;color:#6B7280;margin-top:4px;} @media print{body{padding:0.5rem;}}</style>
+        <style>body{font-family:sans-serif;padding:2rem;} h1{color:#9669c4;} .item{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;} .folio{color:#FFD166;font-weight:bold;font-size:12px;} .cliente{font-size:14px;font-weight:700;} .concepto{font-size:13px;color:#4B5563;} .meta{font-size:12px;color:#6B7280;margin-top:4px;} @media print{body{padding:0.5rem;}.no-print{display:none}}</style>
     </head><body>
+        <button class="no-print" onclick="window.print()" style="padding:10px 18px;background:#1c4f32;color:#fff;border:0;border-radius:10px;cursor:pointer;">Imprimir lista</button>
         <h1>🔨 Lista de Producción</h1>
-        <p style="color:#6B7280;font-size:13px;">${storeName} · ${new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+        <p style="color:#6B7280;font-size:13px;">${safeStoreName} · ${new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
         <hr style="margin:1rem 0;">
         ${content}
     </body></html>`);
     win.document.close();
-    win.print();
+    win.focus();
 }
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -448,7 +451,7 @@ function renderQuotesTable() {
     const q: any[] = (window as any).quotes || [];
     const _e = (window as any)._esc || ((s: any) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
     if (q.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400">Sin cotizaciones</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-400"><strong>Aún no hay cotizaciones</strong><br><span>Crea un presupuesto para compartirlo con tu cliente.</span><br><button type="button" data-action="openQuoteModal" class="mk-btn-primary" style="margin-top:12px">Nueva cotización</button></td></tr>';
         return;
     }
     tbody.innerHTML = q.slice().reverse().map((c: any) => `
@@ -510,6 +513,7 @@ function _inyectarQuoteModal() {
       <button type="button" onclick="closeQuoteModal()" class="flex-1 py-2 rounded-xl text-sm" style="background:#f3f4f6;color:#374151;">Cancelar</button>
       <button type="button" id="quoteSaveBtn" onclick="_guardarCotizacion()" class="flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#9669c4;color:white;">Guardar cotización</button>
       <button type="button" id="quoteExportBtn" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#FFD166;color:white;" onclick="exportarCotizacionPNG(_quoteViewId)">Guardar PNG</button>
+      <button type="button" id="quotePrintBtn" class="hidden flex-1 py-2 rounded-xl text-sm font-semibold" style="background:#1c4f32;color:white;" data-action="imprimirCotizacionVista" data-arg="">Vista previa / imprimir</button>
     </div>
   </div>
 </div>`;
@@ -566,16 +570,18 @@ function openQuoteModal() {
     const titleEl = document.getElementById('quoteModalTitle');
     if (titleEl) titleEl.textContent = 'Nueva Cotización';
     const clienteEl = document.getElementById('quoteCliente') as HTMLInputElement|null;
-    if (clienteEl) clienteEl.value = '';
+    if (clienteEl) { clienteEl.value = ''; clienteEl.readOnly = false; }
     const notasEl = document.getElementById('quoteNotas') as HTMLTextAreaElement|null;
-    if (notasEl) notasEl.value = '';
+    if (notasEl) { notasEl.value = ''; notasEl.readOnly = false; }
     const saveBtn = document.getElementById('quoteSaveBtn');
     if (saveBtn) saveBtn.classList.remove('hidden');
     const addBtn = document.getElementById('quoteAddProdBtn');
     if (addBtn) addBtn.classList.remove('hidden');
     const exportBtn = document.getElementById('quoteExportBtn');
     if (exportBtn) exportBtn.classList.add('hidden');
+    document.getElementById('quotePrintBtn')?.classList.add('hidden');
     _renderQuoteProductosBody(false);
+    document.getElementById('quoteModal')?.classList.replace('hidden', 'flex');
     openModal('quoteModal');
 }
 
@@ -603,7 +609,10 @@ function viewQuote(id: string) {
     if (addBtn) addBtn.classList.add('hidden');
     const exportBtn = document.getElementById('quoteExportBtn');
     if (exportBtn) exportBtn.classList.remove('hidden');
+    const printBtn = document.getElementById('quotePrintBtn');
+    if (printBtn) { printBtn.classList.remove('hidden'); (printBtn as HTMLElement).dataset.arg = id; }
     _renderQuoteProductosBody(true);
+    document.getElementById('quoteModal')?.classList.replace('hidden', 'flex');
     openModal('quoteModal');
 }
 
@@ -633,6 +642,18 @@ function _guardarCotizacion() {
     closeQuoteModal();
     if (typeof manekiToastExport === 'function') manekiToastExport(`✅ Cotización ${cot.folio} guardada.`, 'ok');
 }
+
+function imprimirCotizacionVista(id: string) {
+    const quote = ((window as any).quotes || []).find((item: any) => String(item.id) === String(id));
+    if (!quote) return;
+    const safe = (value: any) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const rows = (quote.products || []).map((item: any) => `<tr><td>${safe(item.name)}</td><td>${Number(item.quantity) || 1}</td><td>${fmtMoney(Number(item.price) || 0)}</td><td>${fmtMoney((Number(item.quantity) || 1) * (Number(item.price) || 0))}</td></tr>`).join('');
+    const win = window.open('', '_blank', 'width=700,height=800');
+    if (!win) { manekiToastExport('Permite ventanas emergentes para ver la cotización.', 'warn'); return; }
+    win.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Cotización ${safe(quote.folio)}</title><style>body{font:16px system-ui;max-width:720px;margin:auto;padding:32px;color:#23382b}header{display:flex;justify-content:space-between;align-items:center}h1{color:#1c4f32}table{width:100%;border-collapse:collapse}th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:right}th:first-child,td:first-child{text-align:left}.total{text-align:right;font-size:1.3rem;font-weight:800;margin-top:20px}.actions{position:sticky;bottom:0;background:white;padding:16px;text-align:right}button{padding:10px 18px;background:#1c4f32;color:white;border:0;border-radius:10px;cursor:pointer}@media print{.actions{display:none}body{padding:0}}</style></head><body><header><h1>Bicho Capricho</h1><span>Cotización ${safe(quote.folio)}</span></header><p><b>Cliente:</b> ${safe(quote.customer || quote.cliente || '—')}</p><p><b>Fecha:</b> ${safe(quote.date || quote.fecha || '—')}</p><p>${safe(quote.notes || quote.concepto || '')}</p><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>${rows}</tbody></table><p class="total">Total ${fmtMoney(quote.total || 0)}</p><div class="actions"><button onclick="window.print()">Imprimir / guardar PDF</button></div></body></html>`);
+    win.document.close(); win.focus();
+}
+window.imprimirCotizacionVista = imprimirCotizacionVista;
 
 function deleteQuote(id: string) {
     if (typeof showConfirm === 'function') {

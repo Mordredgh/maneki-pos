@@ -1473,9 +1473,10 @@ function imprimirOrdenProduccion() {
 <style>
   body{font-family:system-ui,sans-serif;color:#1f2937;padding:24px;max-width:860px;margin:0 auto;}
   h1{color:#FFD166;margin-bottom:4px;}
-  @media print{body{padding:0;}}
+  @media print{body{padding:0;}.no-print{display:none}}
 </style>
 </head><body>
+<button class="no-print" onclick="window.print()" style="padding:10px 18px;background:#1c4f32;color:#fff;border:0;border-radius:10px;cursor:pointer;">Imprimir orden</button>
 <h1>🔧 Orden de Producción</h1>
 <p style="color:#6b7280;margin-bottom:20px;">Fecha: <b>${hoy}</b> · ${pedidos.length} pedido${pedidos.length!==1?'s':''} en producción</p>
 ${filas}
@@ -1486,7 +1487,6 @@ ${filas}
     w.document.write(html);
     w.document.close();
     w.focus();
-    setTimeout(() => w.print(), 600);
 }
 window.imprimirOrdenProduccion = imprimirOrdenProduccion;
 

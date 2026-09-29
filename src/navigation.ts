@@ -77,6 +77,10 @@ function showSection(sectionName) {
     if (sectionName === 'categorias') if (typeof renderCategoriesGrid === 'function') renderCategoriesGrid();
     if (typeof window._mkUpdateBreadcrumb === 'function') window._mkUpdateBreadcrumb(sectionName);
     if (typeof window._lazyLoad === 'function') window._lazyLoad(sectionName);
+    // La navegación puede ocurrir durante la carga inicial del bundle diferido.
+    if (sectionName === 'balance' && typeof window._mkLazyLoad === 'function') {
+        window._mkLazyLoad('balance').then(() => window.renderBalance?.());
+    }
 }
 window.showSection = showSection;
 window.showSection._mk4 = true;

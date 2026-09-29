@@ -929,12 +929,9 @@ function _fmtFechaCorta(dateStr) {
 }
 window._fmtFechaCorta = _fmtFechaCorta;
 
-// ── Helper: formato de dinero "$1,234" unificado en toda la app ───────────────
+// ── Helper: formato de dinero "$1,234.00" unificado en toda la app ────────────
 function fmtMoney(amount) {
     const n = mkRound2(amount);
-    if (n === Math.floor(n)) {
-        return '$' + n.toLocaleString('es-MX');
-    }
     return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 window.fmtMoney = fmtMoney;

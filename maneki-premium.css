@@ -6584,3 +6584,44 @@ body.dark #balance-section .mk-card h3 { color: #eef7ec; }
 .pos-inv-card:hover{border-color:#bdd6c4!important;box-shadow:0 8px 22px #1c4f321c!important}
 .pos-inv-card button{min-height:34px}
 @media(max-width:550px){.pos-inv-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:10px!important}}
+
+/* Ficha lateral: el Kanban sigue visible e interactivo. */
+.kanban-card[data-kanban-open]{cursor:pointer}
+.kanban-card[data-kanban-open]:focus-visible{outline:3px solid #8a6510!important;outline-offset:2px!important}
+dialog.pos-order-drawer{position:fixed;inset:0 0 0 auto;margin:0;width:min(530px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;border:0;border-left:1px solid #dbe7dd;border-radius:0;background:#fff;box-shadow:-8px 0 22px #173c291c;overflow:auto;padding:20px 24px;z-index:1100}
+.pos-order-drawer-nav{display:flex;justify-content:space-between;gap:8px;margin:10px 0}
+.pos-order-drawer-nav button{border:1px solid #c8d8cb;border-radius:10px;padding:8px 12px;background:#f7faf7;color:#245539;font-size:.78rem;font-weight:700}
+.pos-order-drawer-nav button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:650px){dialog.pos-order-drawer{width:100vw;padding:16px;box-shadow:none}}
+
+/* Resúmenes operativos: colores con texto, cifras tabulares y blancos táctiles. */
+.pos-inv-image-button{display:block;width:100%;padding:0;border:0;background:none;border-radius:12px;overflow:hidden;cursor:zoom-in}
+.pos-inv-image-button:focus-visible,.pos-variant-preview button:focus-visible{outline:3px solid #7341a4;outline-offset:2px}
+.pos-variant-preview{display:grid;gap:7px;padding:10px;border:1px solid #dfe9df;border-radius:11px;background:#fafcf9}
+.pos-variant-preview-title{font-size:.76rem;font-weight:750;color:#244d32}
+.pos-variant-preview-title span{display:block;font-size:.65rem;font-weight:500;color:#627568}
+.pos-variant-key{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle}
+.pos-variant-preview-scroll{overflow-x:auto}
+.pos-variant-preview table{border-collapse:separate;border-spacing:3px;width:100%;font-size:.7rem;text-align:center}
+.pos-variant-preview th{font-weight:650;color:#56665b;padding:3px}
+.pos-variant-preview td{min-width:28px;border-radius:6px;padding:5px 3px;font-weight:800}
+.pos-variant-available{background:#d7f5e4;color:#066a43}.pos-variant-makeable{background:#fff1c9;color:#8a5a00}.pos-variant-unavailable{background:#ffe0de;color:#a32624}.pos-variant-missing{background:#eff1ef;color:#8b948e}
+.pos-variant-preview small{font-size:.67rem;line-height:1.35;color:#607569}
+.pos-variant-preview button{justify-self:start;min-height:36px}
+dialog.pos-gallery-dialog{width:min(900px,calc(100vw - 24px));max-height:95dvh;border:0;border-radius:16px;padding:16px;background:#fff;text-align:center}
+.pos-gallery-dialog::backdrop{background:#0b1e12a8}
+.pos-gallery-dialog h2{font-size:1.1rem;color:#214a31;margin:0 0 10px}.pos-gallery-dialog img{display:block;max-width:100%;max-height:70dvh;object-fit:contain;margin:10px auto;background:#f8faf8}.pos-gallery-dialog>button{margin:4px}.pos-gallery-dialog>span{display:inline-block;min-width:64px;font-size:.8rem;color:#54675a}
+.pos-record-sync{display:inline-flex;align-items:center;gap:5px;align-self:start;border-radius:99px;padding:4px 9px;background:#ebf7ed;color:#185b39;font-size:.71rem;font-weight:700}.pos-record-sync[data-state=pending]{background:#fff1ca;color:#765100}.pos-record-sync[data-state=conflict]{background:#ffe3e0;color:#9b2424}
+.pos-balance-timeline-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin:8px 0 14px}.pos-balance-timeline-head h3{font-size:1rem;font-weight:800;color:#203f2b}.pos-balance-timeline-head p{font-size:.74rem;color:#657769}.pos-balance-timeline-head strong,.pos-balance-entry strong,.pos-balance-running{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+#posBalanceTimeline{padding:18px;border:1px solid #e1e9df;border-radius:16px;background:#fff;margin:16px 0}.pos-balance-day{border-top:1px solid #e8eee8;padding:10px 0}.pos-balance-day h4{font-size:.77rem;color:#587060;font-weight:800;margin:0 0 7px}.pos-balance-entry{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:8px 0}.pos-balance-entry b{display:block;color:#233e2b;font-size:.82rem}.pos-balance-entry small{display:block;color:#647768;font-size:.7rem}.pos-balance-entry strong{font-size:.85rem}.pos-balance-entry .is-income{color:#087448}.pos-balance-entry .is-expense{color:#ad3029}.pos-balance-running{font-size:.72rem;color:#607165;min-width:112px}
+#pos-pedido-review{display:grid;gap:10px;margin-top:12px;color:#2b4834;font-size:.85rem}
+#pos-pedido-review>p:first-child{font-weight:700}
+#pos-pedido-review ul{padding:10px 16px;margin:0;border:1px solid #e1eade;border-radius:10px;background:#f8faf7;list-style:none}
+#pos-pedido-review li{padding:4px 0}
+#pos-pedido-review dl>div{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid #e5ece5;font-variant-numeric:tabular-nums}
+#pos-pedido-review dd{font-weight:800;color:#1c4f32;text-align:right}
+.pos-pedido-review-issues{font-weight:700;color:#1b7146}.pos-pedido-review-issues[data-state=warning]{color:#9b6111}
+@media(max-width:650px){.pos-inv-card-grid{grid-template-columns:1fr!important}.pos-balance-entry{grid-template-columns:minmax(0,1fr) auto}.pos-balance-running{grid-column:2}.pos-balance-timeline-head{align-items:start}.pos-order-drawer-nav button{min-height:44px}body:has(dialog[open]) #fabNuevoPedido,body:has(dialog[open]) #mk-help-fab,body:has(dialog[open]) #mk-sound-btn{display:none!important}input:focus,select:focus,textarea:focus,button:focus{scroll-margin-bottom:calc(90px + env(safe-area-inset-bottom,0px))}#balance-section,#inventory-section,#pedidos-section{padding-bottom:calc(105px + env(safe-area-inset-bottom,0px))}}
+body:has(dialog[open]) #fabNuevoPedido,body:has(dialog[open]) #mk-help-fab,body:has(dialog[open]) #mk-sound-btn{display:none!important}
+body:has(#balance-section:not(.hidden)) #fabNuevoPedido,body:has(#balance-section:not(.hidden)) #mk-help-fab,body:has(#inventory-section:not(.hidden)) #fabNuevoPedido,body:has(#inventory-section:not(.hidden)) #mk-help-fab{display:none!important}
+@media(max-width:650px){.pos-inv-card button,#balance-section .pos-balance-action,#posBalanceTimeline button{min-height:44px!important}.pos-balance-entry{gap:7px}.pos-balance-timeline-head strong{font-size:.92rem}}

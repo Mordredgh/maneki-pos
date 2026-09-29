@@ -30,9 +30,45 @@ const _ETIQUETAS = [
 window._ETIQUETAS = _ETIQUETAS;
 
 let _balanceMesOffset = 0;
+function posBalanceMesOffset(current: number, direction: string | number) {
+    const step = Number(direction);
+    return Number.isInteger(step) && Math.abs(step) === 1 ? current + step : current;
+}
+
+// Saldo acumulado del periodo: solo movimientos de efectivo, sin duplicar
+// un cobro que aparece con el mismo id en salesHistory e incomes.
+function posBalanceMovimientos(sales: any[], income: any[], expense: any[], month: string) {
+    const receipts = new Map<string, any>();
+    for (const row of sales || []) {
+        if (!String(row.date || '').startsWith(month) || row.method === 'Cancelado' || row.type === 'pedido') continue;
+        receipts.set(String(row.id), { id: row.id, date: String(row.date).slice(0, 10), label: row.concept || row.concepto || 'Cobro de venta', type: 'Cobrado', amount: Number(row.total) || 0 });
+    }
+    for (const row of income || []) {
+        if (!String(row.date || '').startsWith(month) || receipts.has(String(row.id))) continue;
+        receipts.set(String(row.id), { id: row.id, date: String(row.date).slice(0, 10), label: row.concept || 'Ingreso', type: 'Cobrado', amount: Number(row.amount) || 0 });
+    }
+    const entries = [...receipts.values(), ...(expense || []).filter(row => String(row.date || '').startsWith(month)).map(row => ({ id: row.id, date: String(row.date).slice(0, 10), label: row.concept || 'Egreso', type: 'Egreso', amount: -(Number(row.amount || row.monto) || 0) }))];
+    entries.sort((a, b) => a.date.localeCompare(b.date) || Number(b.amount > 0) - Number(a.amount > 0) || String(a.id).localeCompare(String(b.id)));
+    let balance = 0;
+    return entries.map(row => ({ ...row, balance: balance = Math.round((balance + row.amount) * 100) / 100 }));
+}
+window.posBalanceMovimientos = posBalanceMovimientos;
+
+function renderBalanceTimeline(month: string) {
+    const anchor = document.getElementById('balMesNetoBg');
+    if (!anchor) return;
+    let section = document.getElementById('posBalanceTimeline');
+    if (!section) { section = document.createElement('div'); section.id = 'posBalanceTimeline'; }
+    anchor.parentElement.insertBefore(section, anchor.nextSibling);
+    const rows = posBalanceMovimientos(window.salesHistory || [], window.incomes || [], window.expenses || [], month);
+    const days = [...new Set(rows.map(row => row.date))].reverse();
+    section.innerHTML = `<div class="pos-balance-timeline-head"><div><h3>Movimientos del mes</h3><p>Saldo acumulado de estos movimientos, desde $0.00 al inicio del mes.</p></div><strong>${fmtMoney(rows[rows.length-1]?.balance || 0)}</strong></div>` +
+        (days.length ? days.map(day => `<div class="pos-balance-day"><h4>${_escBal(day)}</h4>${rows.filter(row => row.date === day).reverse().map(row => `<div class="pos-balance-entry"><span><b>${_escBal(row.label)}</b><small>${_escBal(row.type)}</small></span><strong class="${row.amount < 0 ? 'is-expense' : 'is-income'}">${row.amount < 0 ? '−' : '+'}${fmtMoney(Math.abs(row.amount))}</strong><span class="pos-balance-running">Saldo ${fmtMoney(row.balance)}</span></div>`).join('')}</div>`).join('')
+            : '<div class="mk-empty-state"><p class="mk-empty-title">Aún no hay movimientos de caja este mes</p><p class="mk-empty-sub">Registra un ingreso o un egreso para comenzar.</p><button type="button" data-action="openIncomeModal" class="mk-btn-primary">Registrar ingreso</button></div>');
+}
 
 function cambiarMesBalance(dir) {
-    _balanceMesOffset += dir;
+    _balanceMesOffset = posBalanceMesOffset(_balanceMesOffset, dir);
     renderBalanceMensual();
 }
 
@@ -74,13 +110,13 @@ function renderBalanceMensual() {
     const neto = mkRound2(totalVentas + totalPedidos - totalGastos);
 
     const el = id => document.getElementById(id);
-    if (el('balMesVentas')) el('balMesVentas').textContent = '$' + totalVentas.toFixed(2);
+    if (el('balMesVentas')) el('balMesVentas').textContent = fmtMoney(totalVentas);
     if (el('balMesVentasN')) el('balMesVentasN').textContent = ventasMes.length + ' ventas';
-    if (el('balMesPedidos')) el('balMesPedidos').textContent = '$' + totalPedidos.toFixed(2);
+    if (el('balMesPedidos')) el('balMesPedidos').textContent = fmtMoney(totalPedidos);
     if (el('balMesPedidosN')) el('balMesPedidosN').textContent = numPedidos + ' pedidos';
-    if (el('balMesGastos')) el('balMesGastos').textContent = '$' + totalGastos.toFixed(2);
+    if (el('balMesGastos')) el('balMesGastos').textContent = fmtMoney(totalGastos);
     if (el('balMesGastosN')) el('balMesGastosN').textContent = gastosMes.length + ' gastos';
-    if (el('balMesNeto')) el('balMesNeto').textContent = '$' + neto.toFixed(2);
+    if (el('balMesNeto')) el('balMesNeto').textContent = fmtMoney(neto);
     // R3-S33: hero sólido — verde bosque si el mes es positivo, rojo sólido si es negativo.
     // Texto siempre blanco/translúcido sobre fondo sólido (antes: fondo pastel + texto de color).
     const _bgHero = el('balMesNetoBg');
@@ -107,29 +143,9 @@ function renderBalanceMensual() {
     // MEJORA-1: Proyección de cashflow
     renderProyeccionCashflow();
 
-    // N-UI-1: Empty state cuando no hay ingresos NI gastos en el mes
-    const _noDataThisMonth = ventasMes.length === 0 && numPedidos === 0 && gastosMes.length === 0;
-    let _balEmptyCard = document.getElementById('balEmptyMesCard');
-    if (_noDataThisMonth) {
-        if (!_balEmptyCard) {
-            _balEmptyCard = document.createElement('div');
-            _balEmptyCard.id = 'balEmptyMesCard';
-            const _anchor = document.getElementById('balMesNetoBg');
-            if (_anchor) _anchor.parentElement.insertBefore(_balEmptyCard, _anchor.nextSibling);
-        }
-        _balEmptyCard.innerHTML = `
-            <div class="text-center py-12 text-gray-400" style="background:#fff;border-radius:16px;border:1.5px dashed #e5e7eb;margin-bottom:16px;">
-                <div style="font-size:2.5rem;margin-bottom:10px;">📊</div>
-                <p style="font-size:.95rem;font-weight:600;color:#6b7280;margin-bottom:4px;">Sin registros este mes</p>
-                <p style="font-size:.8rem;color:#9ca3af;">Registra tu primer ingreso o gasto</p>
-            </div>`;
-        _balEmptyCard.style.display = '';
-    } else if (_balEmptyCard) {
-        _balEmptyCard.style.display = 'none';
-    }
-
     // N-VIZ-002: Donut chart de gastos por categoría
     renderBalancePieChart();
+    renderBalanceTimeline(mesStr);
 }
 
 // FEATURE-2: Anticipos cobrados en el mes de pedidos activos ──────────────
@@ -589,10 +605,10 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                     .reduce((sum, p) => mkRound2(sum + calcSaldoPendiente(p)), 0);
             const totalPayables = payables.filter(p => p.status === 'pending').reduce((sum, p) => mkRound2(sum + (Number(p.amount) || 0)), 0);
             
-            document.getElementById('totalIncome').textContent = `$${totalIncome.toFixed(2)}`;
-            document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
-            document.getElementById('totalReceivables').textContent = `$${totalReceivables.toFixed(2)}`;
-            document.getElementById('totalPayables').textContent = `$${totalPayables.toFixed(2)}`;
+            document.getElementById('totalIncome').textContent = fmtMoney(totalIncome);
+            document.getElementById('totalExpenses').textContent = fmtMoney(totalExpenses);
+            document.getElementById('totalReceivables').textContent = fmtMoney(totalReceivables);
+            document.getElementById('totalPayables').textContent = fmtMoney(totalPayables);
             
             renderBalanceMensual();
             renderIncomeList();
@@ -617,7 +633,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     // Badge informativo debajo del selector de mes
     _renderMesBadge(_mesActivoInc, listaInc.length, null);
     container.innerHTML = listaInc.length === 0
-        ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p></div>'
+        ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p><button type="button" data-action="openIncomeModal" class="mk-btn-primary">Registrar ingreso</button></div>'
         : listaInc.slice().reverse().map(income => `
             <div class="mk-tx-income flex justify-between items-center p-3 bg-green-50 rounded-xl mb-2">
                 <div>
@@ -625,7 +641,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                     <p class="text-xs text-gray-500">${_esc(income.date)}${income.etiqueta ? ' ' + _etiquetaBadge(income.etiqueta) : ''}${income.recurrente ? ' <span class="text-xs text-blue-500 font-semibold">↺</span>' : ''}</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="font-bold text-green-600">+$${Number(income.amount||0).toFixed(2)}</span>
+                    <span class="font-bold text-green-600">+${fmtMoney(income.amount||0)}</span>
                     <button onclick="editBalanceItem('income', '${_esc(String(income.id))}')" class="text-blue-400 hover:text-blue-600" title="Editar">
                         <i class="fas fa-edit text-xs"></i>
                     </button>
@@ -653,7 +669,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     // Actualizar badge con conteo de egresos
     _renderMesBadge(_mesActivoExp, null, listaExp.length);
     container.innerHTML = listaExp.length === 0
-        ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p></div>'
+        ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p><button type="button" data-action="openExpenseModal" class="mk-btn-primary">Registrar egreso</button></div>'
         : listaExp.slice().reverse().map(expense => `
             <div class="mk-tx-expense flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
                 <div>
@@ -661,7 +677,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                     <p class="text-xs text-gray-500">${_esc(expense.date)}${expense.categoria ? ` · <span style="color:#FFD166;font-weight:600">${_esc(expense.categoria)}</span>` : ''}${expense.etiqueta ? ' ' + _etiquetaBadge(expense.etiqueta) : ''}${expense.recurrente ? ' <span class="text-xs text-orange-500 font-semibold">↺</span>' : ''}</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="font-bold text-red-600">-$${Number(expense.amount||0).toFixed(2)}</span>
+                    <span class="font-bold text-red-600">−${fmtMoney(expense.amount||0)}</span>
                     <button onclick="editBalanceItem('expense', '${_esc(String(expense.id))}')" class="text-blue-400 hover:text-blue-600" title="Editar">
                         <i class="fas fa-edit text-xs"></i>
                     </button>
@@ -696,7 +712,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             const resumen = document.getElementById('cxcResumen');
             if (resumen) {
                 resumen.innerHTML = `
-                    <div class="px-3 py-1.5 rounded-xl bg-blue-50 text-xs font-semibold text-blue-700">Total: $${totalCxC.toFixed(2)}</div>
+                    <div class="px-3 py-1.5 rounded-xl bg-blue-50 text-xs font-semibold text-blue-700">Pendiente: ${fmtMoney(totalCxC)}</div>
                     <div class="px-3 py-1.5 rounded-xl bg-red-50 text-xs font-semibold text-red-700">${lista.length} deudores</div>
                     ${vencidas > 0 ? `<div class="px-3 py-1.5 rounded-xl bg-orange-50 text-xs font-semibold text-orange-700">⚠️ ${vencidas} +30 días</div>` : ''}`;
             }
@@ -715,7 +731,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                     </div>
                     <div class="text-right flex items-center gap-2">
                         <div>
-                            <p class="font-bold text-blue-600">$${Number(rec.amount||0).toFixed(2)}</p>
+                            <p class="font-bold text-blue-600">${fmtMoney(rec.amount||0)}</p>
                             <p class="text-xs font-semibold ${diasColor}">⏱ ${diasLabel}</p>
                         </div>
                         <div class="flex flex-col gap-1">
@@ -759,7 +775,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                         <p class="text-xs font-bold text-amber-600">${p.folio}</p>
                         <p class="text-xs text-gray-700 truncate">${p.cliente}</p>
                     </div>
-                    <span class="text-xs font-bold text-red-600 whitespace-nowrap">$${Number(p._saldo).toFixed(2)}</span>
+                    <span class="text-xs font-bold text-red-600 whitespace-nowrap">${fmtMoney(p._saldo)} pendiente</span>
                     <span class="text-xs font-semibold ${diasColor} whitespace-nowrap">${diasLabel}</span>
                     ${waBtn}
                     <button onclick="typeof openAbonoPedido==='function'?openAbonoPedido('${_safeId}'):manekiToastExport('Carga la sección de Pedidos primero','warn')" class="p-1.5 rounded-lg hover:bg-green-100 text-xs text-green-600"><i class="fas fa-dollar-sign"></i></button>
@@ -776,7 +792,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                         <p class="text-xs text-gray-500">Vence: ${_escBal(pay.dueDate)}</p>
                     </div>
                     <div class="text-right">
-                        <p class="font-bold text-orange-600">$${Number(pay.amount||0).toFixed(2)}</p>
+                        <p class="font-bold text-orange-600">${fmtMoney(pay.amount||0)}</p>
                         <button onclick="markAsPaid('payable', '${_escBal(String(pay.id))}')" class="text-xs text-green-600 hover:text-green-700">
                             Marcar pagado
                         </button>
