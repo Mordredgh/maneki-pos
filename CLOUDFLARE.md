@@ -48,6 +48,8 @@ Proveedor DNS confirmado: Hostinger. Cambio realizado desde sesion autorizada de
 
 ## Actualizacion de produccion
 
+Vigente 2026-09-28, aviso Kanban: https://4dfd6b62.bicho-capricho-pos.pages.dev, SW `maneki-0e1e32f7ea`. Cada tarjeta muestra los requisitos que faltan para producir o entregar, en las tres densidades, y abre directamente la ficha del pedido. El antiguo indicador de puntos, que no verificaba la aprobación firmada, fue retirado. 179 pruebas, tipos, lint y paquete correctos; staging con pedido ficticio y ficha comprobados. Deployment y dominio: HTML, bundle de pedidos y SW 401 anónimo / 200 autorizado, mismo hash.
+
 Vigente 2026-09-28: https://e37b7b53.bicho-capricho-pos.pages.dev, SW `maneki-a322411350`. El arrastre de pedidos en Kanban respeta la misma aprobacion y checklist de la ficha antes de pasar a produccion o finalizar. 178 pruebas, tipos, lint y paquete Cloudflare correctos. Deployment y `pos.manekistore.com.mx`: HTML, bundle de pedidos y SW 401 anonimo / 200 autorizado, con el mismo hash de SW.
 
 Vigente 2026-09-27, ficha y respaldo verificable: https://5dcdffb8.bicho-capricho-pos.pages.dev, SW `maneki-237079d1bc`. 177 pruebas, tipos, lint y paquete correctos. Dominio y deployment: HTML, JS y SW 401 anónimo / 200 autorizado; ambos sirven el mismo hash. La ficha impide producir o finalizar sin aprobación vigente y checklist; la matriz y la ficha se revisaron con datos ficticios en escritorio y 390 px. R2 conserva 24 tablas y 113 imágenes por ejecución, con manifiesto y restauración aislada probada. El propietario eligió mantener el respaldo diario en su PC; copiará la clave de recuperación por separado después.

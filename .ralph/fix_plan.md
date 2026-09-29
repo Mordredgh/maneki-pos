@@ -186,3 +186,9 @@
 - [x] Reproducir con prueba el avance por arrastre sin aprobacion/checklist.
 - [x] Aplicar el bloqueo en Kanban, pasar 178 pruebas y publicar con SW actualizado.
 - [x] Verificar 401/200 en deployment y dominio; registrar evidencia y memoria.
+
+## Aviso de faltantes en Kanban 2026-09-28
+
+- [x] Mostrar en cada densidad los requisitos reales para producir o entregar y acceso directo a la ficha.
+- [x] Retirar el indicador anterior que podia mostrar diseño listo sin aprobacion vigente.
+- [x] Probar flujo en staging, 179 pruebas, tipos y lint; publicar y verificar dominio/SW.

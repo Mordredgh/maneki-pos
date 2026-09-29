@@ -94,6 +94,23 @@ function businessApp() {
   return {...a, fields, submit: () => submits[0]({preventDefault() {}})};
 }
 
+it('Kanban muestra pendientes reales y abre la ficha en cada densidad', () => {
+  const a = businessApp();
+  const p:any = {id:'pedido-1',folio:'PE-1',cliente:'Ana',status:'confirmado',total:100,checklist:{material:false},posDetalle:{}};
+  for (const density of ['full','medium','compact']) {
+    runInContext(`_kanbanCompacto = '${density}'`, a.ctx);
+    const html = a.ctx.kanbanCardHTML(p);
+    expect(html).toContain('Diseño aprobado');
+    expect(html).toContain('Material revisado');
+    expect(html).toContain('data-action="posAbrirFicha" data-arg="pedido-1"');
+  }
+  p.checklist.material = true;
+  p.posDetalle.aprobacion = {referencia:'Arte aprobado',fecha:'2026-09-28',firma:a.ctx.posFirmaDiseno(p)};
+  expect(a.ctx.kanbanCardHTML(p)).not.toContain('mk-kanban-pending');
+  p.status = 'produccion';
+  expect(a.ctx.kanbanCardHTML(p)).toContain('Pedido empacado');
+});
+
 it('editar un producto transmite solo esa fila y no toca otros productos',async()=>{
  const a=app();a.ctx.products=[{id:'p1',name:'Taza',price:100,stock:10},{id:'p2',name:'Bolsa',price:20,stock:5}];
  await a.ctx.saveProducts();

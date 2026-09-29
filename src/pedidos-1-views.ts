@@ -448,6 +448,15 @@ const _statusLabel = s => ({confirmado:'✅ Confirmado',pago:'💰 Pagado',produ
 
 function kanbanCardHTML(p) {
     const _saldo = (window as any)._kSaldoPreMap?.get(String(p.id)) ?? calcSaldoPendiente(p);
+    const _siguiente = ['confirmado','pago'].includes(p.status || 'confirmado') ? 'produccion' : 'finalizado';
+    const _pendientes = posPendientesPreparacion(p, _siguiente);
+    const _pendientesHtml = _pendientes.length ? `<button type="button" class="mk-kanban-pending"
+        data-action="posAbrirFicha" data-arg="${_esc(p.id)}"
+        aria-label="Abrir ficha: faltan ${_esc(_pendientes.join(', '))}"
+        style="width:100%;text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin:5px 0;padding:5px 7px;border:1px solid #fcd9a7;border-radius:8px;background:#fff8eb;color:#7c420b;cursor:pointer;font-size:.68rem;line-height:1.3;">
+        <strong>Falta para ${_siguiente === 'produccion' ? 'producir' : 'entregar'}:</strong> ${_pendientes.map(x => `<span style="padding:1px 5px;border-radius:5px;background:#fff;border:1px solid #f6dfbc;">${_esc(x)}</span>`).join('')}
+        <span style="margin-left:auto;font-weight:700;white-space:nowrap;">Abrir ficha →</span>
+    </button>` : '';
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     const entrega = p.entrega ? new Date(p.entrega + 'T00:00:00') : null;
     const diff = entrega ? Math.round((entrega.getTime() - hoy.getTime()) / 86400000) : null;
@@ -473,7 +482,7 @@ function kanbanCardHTML(p) {
         title="Seleccionar para acción en lote">`;
 
     if (_kanbanCompacto === 'compact') {
-        return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex items-center gap-2"
+        return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex flex-wrap items-center gap-2"
             data-id="${p.id}" data-status="${p.status || 'confirmado'}"
             style="position:relative;${_bordeVencido}" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
             draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
@@ -482,6 +491,7 @@ function kanbanCardHTML(p) {
                 ${_esVencido ? '<span class="text-xs font-bold text-red-700" title="Entrega vencida">⛔</span> ' : ''}<span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
                 <span class="text-xs text-gray-700 ml-1 truncate">${_e(p.cliente)}</span>
             </div>
+            ${_pendientesHtml}
             <span class="text-xs ${_saldo>0?'text-red-500':'text-green-600'} font-bold whitespace-nowrap">$${_saldo.toFixed(0)}</span>
             <button onclick="openPedidoStatusModal('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-gray-100 hover:bg-amber-100 text-gray-500">⚡</button>
             <button onclick="eliminarPedido('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-500">🗑</button>
@@ -500,6 +510,7 @@ function kanbanCardHTML(p) {
                 <span style="font-size:.7rem;font-weight:700;color:${_saldo>0?'#dc2626':'#16a34a'};">${_saldo>0?'$'+_saldo.toFixed(0):'✓'}</span>
             </div>
             <p style="font-size:.76rem;font-weight:600;color:#1f2937;margin:0 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_e(p.cliente)}</p>
+            ${_pendientesHtml}
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 ${alertaHtml || (p.entrega ? `<span style="font-size:.65rem;color:#9ca3af;">📅 ${p.entrega}</span>` : '<span></span>')}
                 <div style="display:flex;gap:3px;">
@@ -557,6 +568,7 @@ function kanbanCardHTML(p) {
             ${alertaHtml || ''}
         </div>
         <p class="font-semibold text-gray-800 text-sm leading-tight mb-0.5 truncate">${_e(p.cliente)}</p>
+        ${_pendientesHtml}
         <p class="text-xs text-gray-400 mb-0.5 truncate">${_e(p.concepto)}</p>
         <div class="flex justify-between items-center text-xs mb-0.5">
             <span class="text-gray-400 truncate" ondblclick="window._kanbanQuickEditFecha(event,'${_e(p.id)}')" style="cursor:pointer;" title="Doble-clic para editar fecha">📅 ${p.entrega || '—'}${p.lugarEntrega ? ` · 📍 ${_e(p.lugarEntrega)}` : ''}</span>
