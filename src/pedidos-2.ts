@@ -990,6 +990,14 @@ async function kanbanDrop(event, newStatus) {
     if (_dropCard) { _dropCard.style.opacity = '0.45'; _dropCard.style.pointerEvents = 'none'; }
     const idx = (window.pedidos || []).findIndex(p => String(p.id) === String(_kanbanDragId));
     if (idx !== -1) {
+        const pendientes = posPendientesPreparacion(window.pedidos[idx], newStatus);
+        if (pendientes.length) {
+            manekiToastExport('Completa la ficha antes de avanzar: ' + pendientes.join(', ') + '.', 'warn');
+            if (_dropCard) { _dropCard.style.opacity = ''; _dropCard.style.pointerEvents = ''; }
+            if (typeof renderKanbanBoard === 'function') renderKanbanBoard();
+            _kanbanDragId = null;
+            return;
+        }
         if (newStatus === 'finalizado' || newStatus === 'completado') {
             const pedido = window.pedidos[idx];
             const ok = await showConfirm(

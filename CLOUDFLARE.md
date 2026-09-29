@@ -48,6 +48,8 @@ Proveedor DNS confirmado: Hostinger. Cambio realizado desde sesion autorizada de
 
 ## Actualizacion de produccion
 
+Vigente 2026-09-28: https://e37b7b53.bicho-capricho-pos.pages.dev, SW `maneki-a322411350`. El arrastre de pedidos en Kanban respeta la misma aprobacion y checklist de la ficha antes de pasar a produccion o finalizar. 178 pruebas, tipos, lint y paquete Cloudflare correctos. Deployment y `pos.manekistore.com.mx`: HTML, bundle de pedidos y SW 401 anonimo / 200 autorizado, con el mismo hash de SW.
+
 Vigente 2026-09-27, ficha y respaldo verificable: https://5dcdffb8.bicho-capricho-pos.pages.dev, SW `maneki-237079d1bc`. 177 pruebas, tipos, lint y paquete correctos. Dominio y deployment: HTML, JS y SW 401 anónimo / 200 autorizado; ambos sirven el mismo hash. La ficha impide producir o finalizar sin aprobación vigente y checklist; la matriz y la ficha se revisaron con datos ficticios en escritorio y 390 px. R2 conserva 24 tablas y 113 imágenes por ejecución, con manifiesto y restauración aislada probada. El propietario eligió mantener el respaldo diario en su PC; copiará la clave de recuperación por separado después.
 
 Vigente 2026-09-27, alertas operativas: https://9876233e.bicho-capricho-pos.pages.dev, SW `maneki-20343b8796`. 170 pruebas, 37 TS, lint y paquete Cloudflare correctos. Dominio y deployment: 401 anonimo, 200 autorizado; JS y SW 200 con el mismo hash. Incluye entregas vencidas, acceso a cobros/pedidos/inventario y actualizacion por cambios de saldo/stock/estado. R2 es un script local preparado, no un servicio activo: la cuenta aun requiere suscripcion, bucket y credenciales. Ver BACKUPS.md.

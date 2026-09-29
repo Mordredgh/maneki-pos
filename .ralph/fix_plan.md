@@ -179,4 +179,10 @@
 - [x] Costos estimados frente a reales por pedido: materiales, empaque, comisiones, envio y merma; advertencia de margen bajo.
 - [x] Consolidar dialogos de matriz, ficha y salud; revisar matriz/ficha en escritorio y 390 px, y bloqueo de estado con pedido ficticio.
 - [x] Validar cada flujo, build/typecheck, actualizar SW, publicar y verificar produccion.
-- [ ] Actualizar evidencia, grafo y memoria de Obsidian con resultados y limites reales.
+- [x] Actualizar evidencia, grafo y memoria de Obsidian con resultados y limites reales.
+
+## Correccion Kanban 2026-09-28
+
+- [x] Reproducir con prueba el avance por arrastre sin aprobacion/checklist.
+- [x] Aplicar el bloqueo en Kanban, pasar 178 pruebas y publicar con SW actualizado.
+- [x] Verificar 401/200 en deployment y dominio; registrar evidencia y memoria.

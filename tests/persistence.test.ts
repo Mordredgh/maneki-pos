@@ -254,6 +254,15 @@ describe('Persistencia real del POS', () => {
     expect(a.ctx.pedidosFinalizados || []).toEqual([]);
     expect(a.ctx.salesHistory).toEqual([]);
   });
+  it('arrastrar en Kanban tampoco omite la aprobacion y el checklist', async () => {
+    const a = businessApp();
+    a.ctx.pedidos = [{id:'o1',folio:'PE-DRAG',total:100,status:'confirmado',productosInventario:[],checklist:{material:false}}];
+    a.ctx.kanbanDragStart({dataTransfer:{},currentTarget:{style:{}}},'o1');
+    await a.ctx.kanbanDrop({preventDefault(){}},'produccion');
+    expect(a.ctx.pedidos[0].status).toBe('confirmado');
+    expect(a.ctx.pedidos[0].inventarioDescontado).toBeFalsy();
+    expect(a.rows.orders || []).toEqual([]);
+  });
   it('crea pedido con anticipo offline y lo recupera en Balance y Reportes', async () => {
     const first = businessApp();
     first.fields.pedidoCliente.value = 'Cliente Prueba';
