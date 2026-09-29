@@ -261,7 +261,27 @@ function updateSidebarLogo() {
     }
 }
 
+const posHomeWidgetIds = ['ventas','urgentes','stock','cobros','entregas','accesos'];
+function posHomePreferences():Record<string,boolean> {
+    try { const saved=JSON.parse(localStorage.getItem('mk-home-widgets')||'{}');return Object.fromEntries(posHomeWidgetIds.map(id=>[id,saved[id]!==false])); }
+    catch { return Object.fromEntries(posHomeWidgetIds.map(id=>[id,true])); }
+}
+function posApplyHomeWidgets(){
+    const choices=posHomePreferences();
+    for(const id of posHomeWidgetIds){
+        const widget=document.querySelector(`[data-home-widget="${id}"]`) as HTMLElement|null;
+        if(widget)widget.hidden=!choices[id];
+        const input=document.querySelector(`[data-home-choice="${id}"]`) as HTMLInputElement|null;
+        if(input)input.checked=choices[id];
+    }
+    const grid=document.getElementById('morningKpiGrid');if(grid)grid.hidden=!posHomeWidgetIds.slice(0,4).some(id=>choices[id]);
+}
+function posSetHomeWidget(id:string,visible:boolean){if(!posHomeWidgetIds.includes(id))return;const choices=posHomePreferences();choices[id]=visible;localStorage.setItem('mk-home-widgets',JSON.stringify(choices));posApplyHomeWidgets();}
+function posResetHomeWidgets(){localStorage.removeItem('mk-home-widgets');posApplyHomeWidgets();}
+function posToggleHomeSettings(){const panel=document.getElementById('posHomeSettings');const trigger=document.querySelector('.pos-home-settings-trigger');if(!panel)return;panel.hidden=!panel.hidden;trigger?.setAttribute('aria-expanded',String(!panel.hidden));}
+Object.assign(window,{posSetHomeWidget,posResetHomeWidgets,posToggleHomeSettings});
 function renderBienvenida() {
+    posApplyHomeWidgets();
     const now = new Date();
     const h   = now.getHours();
     const saludo = h < 12 ? '¡Buenos días!' : h < 19 ? '¡Buenas tardes!' : '¡Buenas noches!';

@@ -10,15 +10,15 @@ npm run build:cloudflare
 Compress-Archive -Path 'dist\cloudflare\*' -DestinationPath 'dist\bicho-capricho-pos-cloudflare.zip' -Force
 ```
 
-El build ejecuta typecheck, 133 pruebas, lint, compilacion, bundles y hash del Service Worker. El empaquetador produce `dist/cloudflare` con una lista explicita de archivos publicos, sin mapas, TypeScript, documentos, SQL, respaldos ni archivos .env. Supabase conserva los datos; esta migracion no copia ni modifica tablas.
+El build ejecuta typecheck, pruebas Vitest, lint, compilacion, bundles y hash del Service Worker. El empaquetador produce `dist/cloudflare` con una lista explicita de archivos publicos, sin mapas, TypeScript, documentos, SQL, respaldos ni archivos .env. Supabase conserva los datos; esta migracion no copia ni modifica tablas.
 
 Para la carga desde el panel, elegir el ZIP generado; para Wrangler, usar la carpeta `dist/cloudflare`. No publicar la raiz del repositorio. El proyecto usa Direct Upload: una futura integracion Git nativa necesita otro proyecto o un flujo de CI que cargue el paquete mediante Wrangler.
 
 ## Estado publicado
 
 - Produccion: https://bicho-capricho-pos.pages.dev
-- Deployment: https://f5aa43a9.bicho-capricho-pos.pages.dev (rama de produccion main confirmada por API).
-- Build completo: 133 pruebas, lint y 34 TS correctos; build:check tambien correcto. npm audit: cero vulnerabilidades.
+- Deployment: https://91c4534d.bicho-capricho-pos.pages.dev (rama de produccion main).
+- Build completo: 182 pruebas, lint y 37 TS correctos; build:check tambien correcto.
 - Paquete: 65 archivos; Worker y _routes.json incluyen autenticacion para todas las rutas. Secretos POS_USER/POS_PASSWORD cifrados en Cloudflare; copia local solo .env.local ignorado por Git.
 - Acceso comprobado en ambos hosts: sin credenciales/incorrectas 401; credenciales correctas 200. JS, Service Worker y manifest responden 200 autenticados. Respuestas privadas no-store.
 - Navegador integrado no abre Basic Auth (ERR_BLOCKED_BY_CLIENT); falta comprobar navegacion publicada en navegador normal. Las 11 secciones se probaron previamente en local.
@@ -47,6 +47,8 @@ La lectura anonima de datos de Supabase detectada en AUDITORIA-2026-09-26.md sig
 Proveedor DNS confirmado: Hostinger. Cambio realizado desde sesion autorizada del propietario. El editor no permite convertir A en CNAME (422 conflicto RRset); se sustituyo solo pos. Reversion: retirar CNAME pos y restaurar A 195.26.247.101 TTL 14400.
 
 ## Actualizacion de produccion
+
+Vigente 2026-09-29, experiencia diaria: https://91c4534d.bicho-capricho-pos.pages.dev, SW `maneki-075c3a3a33`. Inventario alterna tabla y tarjetas sin perder filtros; alta PT muestra primero datos esenciales; ficha conserva versiones aprobadas y reposiciones con costo sin otra venta; inicio permite elegir paneles por dispositivo. 182 pruebas, typecheck, lint y paquete correctos. Staging ficticio verifico alta/edicion, tarjetas/filtros, ficha y persistencia al recargar. Deployment y `pos.manekistore.com.mx`: HTML, bundles principales y SW 401 anonimo / 200 autorizado; mismo hash SW. No se escribieron pedidos reales durante la verificacion.
 
 Vigente 2026-09-28, aviso Kanban: https://4dfd6b62.bicho-capricho-pos.pages.dev, SW `maneki-0e1e32f7ea`. Cada tarjeta muestra los requisitos que faltan para producir o entregar, en las tres densidades, y abre directamente la ficha del pedido. El antiguo indicador de puntos, que no verificaba la aprobación firmada, fue retirado. 179 pruebas, tipos, lint y paquete correctos; staging con pedido ficticio y ficha comprobados. Deployment y dominio: HTML, bundle de pedidos y SW 401 anónimo / 200 autorizado, mismo hash.
 

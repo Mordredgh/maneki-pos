@@ -307,9 +307,38 @@ async function bulkPrecioAplicar() {
 }
 window.bulkPrecioAplicar = bulkPrecioAplicar;
 
+function inventoryCardHTML(product: any, stock: number, kind: string): string {
+    const id = _esc(String(product.id));
+    const name = _esc(product.name || 'Sin nombre');
+    const image = product.imageUrl
+        ? `<img src="${_esc(product.imageUrl)}" alt="${name}" loading="lazy" style="width:100%;height:132px;object-fit:cover;border-radius:12px;background:#f8f4ec;">`
+        : `<div aria-hidden="true" style="height:132px;display:grid;place-items:center;border-radius:12px;background:#f8f4ec;font-size:2.6rem;">${_esc(product.image || (kind === 'mp' ? '🏭' : '📦'))}</div>`;
+    const ranges = (product.tablaPreciosVariable || []).slice().sort((a:any,b:any) => Number(a.cantidadMin) - Number(b.cantidadMin));
+    const price = kind === 'pv' && ranges.length ? Number(ranges[0].precio) / Math.max(1, Number(ranges[0].cantidadMin)) : Number(kind === 'mp' || kind === 'svc' ? product.cost : product.price);
+    const stockText = kind === 'svc' ? 'Servicio' : `${Math.max(0, Number(stock) || 0)} disponibles`;
+    const low = kind !== 'svc' && stock <= Number(product.stockMin ?? 5);
+    const type = {pt:'Producto',pv:'Precio por cantidad',mp:'Materia prima',svc:'Servicio'}[kind] || 'Producto';
+    return `<article class="pos-inv-card" data-id="${id}" style="background:#fff;border:1px solid #e6e2d8;border-radius:16px;padding:12px;box-shadow:0 3px 14px #1c4f320d;display:flex;flex-direction:column;gap:8px;min-width:0;">
+        ${image}
+        <div style="font-size:.69rem;color:#678d47;font-weight:800;text-transform:uppercase;letter-spacing:.06em;">${type}</div>
+        <strong style="font-size:.96rem;color:#243529;line-height:1.3;min-height:2.5em;">${name}</strong>
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:1.08rem;font-weight:800;color:#1c4f32;">$${Number.isFinite(price) ? price.toFixed(2) : '0.00'}</span>
+            <span style="font-size:.73rem;font-weight:700;color:${low?'#a63126':'#236449'};background:${low?'#fff0ed':'#eaf7ee'};border-radius:99px;padding:4px 8px;">${stockText}</span>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:auto;">
+            <button type="button" data-action="editProduct" data-arg="${id}" class="mk-toolbar-btn" style="flex:1;justify-content:center;">Editar</button>
+            ${kind === 'svc' ? '' : `<button type="button" data-action="ajustarStock" data-arg="${id}" class="mk-toolbar-btn" style="flex:1;justify-content:center;">Ajustar</button>`}
+        </div>
+    </article>`;
+}
+window.inventoryCardHTML = inventoryCardHTML;
+
 function renderInventoryTable() {
     const tbody = document.getElementById('inventoryTable');
     if (!tbody) return;
+
+    const viewMode = window._invViewMode || (window._invViewMode = localStorage.getItem('mk-inventory-view') === 'cards' ? 'cards' : 'table');
 
     document.getElementById('inventoryPaginationBar')?.remove();
     // P1: hash guard — saltar re-render completo si los datos no cambiaron
@@ -333,6 +362,22 @@ function renderInventoryTable() {
         tableWrapper.parentNode.insertBefore(dualContainer, tableWrapper);
         tableWrapper.style.display = 'none'; // ocultar tabla original
     }
+
+    let viewToggle = document.getElementById('invViewToggle');
+    if (!viewToggle) {
+        viewToggle = document.createElement('button');
+        viewToggle.id = 'invViewToggle';
+        viewToggle.className = 'mk-toolbar-btn';
+        viewToggle.style.cssText = 'margin:0 0 10px 8px;';
+        viewToggle.addEventListener('click', () => {
+            window._invViewMode = window._invViewMode === 'cards' ? 'table' : 'cards';
+            localStorage.setItem('mk-inventory-view', window._invViewMode);
+            renderInventoryTable();
+        });
+        dualContainer.parentNode.insertBefore(viewToggle, dualContainer);
+    }
+    viewToggle.textContent = viewMode === 'cards' ? '☷ Ver tabla' : '▦ Ver tarjetas';
+    viewToggle.setAttribute('aria-label', viewMode === 'cards' ? 'Cambiar inventario a tabla' : 'Cambiar inventario a tarjetas');
 
     const allProducts = window.products || [];
 
@@ -373,6 +418,7 @@ function renderInventoryTable() {
         });
         dualContainer.parentNode.insertBefore(invToggleBtn, dualContainer);
     }
+    invToggleBtn.style.display = viewMode === 'cards' ? 'none' : '';
 
     if (allProducts.length === 0) {
         dualContainer.innerHTML = `
@@ -806,6 +852,9 @@ function renderInventoryTable() {
         const rowsHTML = paginated.length === 0
             ? `<tr><td colspan="${headers.length}" style="padding:32px;text-align:center;color:#9ca3af;font-size:.85rem;">${emptyMsg}</td></tr>`
             : paginated.map((p, i) => renderFila(p, i)).join('');
+        const cardsHTML = paginated.length
+            ? paginated.map(p => inventoryCardHTML(p, _dispCache.get(String(p.id))?.piezas ?? _stockCache.get(String(p.id)) ?? 0, id)).join('')
+            : `<p style="padding:24px;color:#6b7280;">${emptyMsg}</p>`;
 
         const headersHTML = headers.map(h => {
             const cls = h.colId === 'sku' ? ' inv-col-hidden-sku' : h.colId === 'proveedor' ? ' inv-col-hidden-prov' : '';
@@ -856,15 +905,15 @@ function renderInventoryTable() {
                 </div>
             </div>
             ${_collapsed ? '' : `
-            <!-- Tabla -->
-            <div style="overflow-x:auto;background:#fff;">
+            <!-- Vista de inventario -->
+            ${viewMode === 'cards' ? `<div class="pos-inv-card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:16px;background:#fdfbf7;">${cardsHTML}</div>` : `<div style="overflow-x:auto;background:#fff;">
                 <table style="width:100%;border-collapse:collapse;">
                     <thead style="background:#fafafa;">
                         <tr>${headersHTML}</tr>
                     </thead>
                     <tbody>${rowsHTML}</tbody>
                 </table>
-            </div>
+            </div>`}
             ${pagHTML}`}
         </div>`;
     }
@@ -1035,7 +1084,7 @@ function renderInventoryTable() {
                 p.activo === false ? '0' : '1',
             ].join(':'))
             .join('|');
-        const secHash = secDef.products.length + '_' + secDataHash + '_' + (window[`_invPage_${secDef.id}`] || 1) + '_' + (window._invPageSize || 10) + '_' + (window._invSortCol || '') + (window._invSortDir || '') + '_' + _tipoQ;
+        const secHash = secDef.products.length + '_' + secDataHash + '_' + (window[`_invPage_${secDef.id}`] || 1) + '_' + (window._invPageSize || 10) + '_' + (window._invSortCol || '') + (window._invSortDir || '') + '_' + _tipoQ + '_' + viewMode;
         if ((secEl as any)._hash !== secHash) {
             secEl.innerHTML = html;
             (secEl as any)._hash = secHash;
@@ -1797,7 +1846,7 @@ function _mkInvCounterChips() {
   const info = document.getElementById('mkInvFilterInfo');
   if (!info) return;
   const dual = document.getElementById('invDualContainer');
-  const shown = dual ? dual.querySelectorAll('.inv-bulk-cb').length : 0;
+  const shown = dual ? dual.querySelectorAll(window._invViewMode === 'cards' ? '.pos-inv-card' : '.inv-bulk-cb').length : 0;
   const total = (window.products || []).length;
 
   const search = document.getElementById('inventorySearch') as HTMLInputElement | null;
@@ -1825,7 +1874,7 @@ function _mkInvCounterChips() {
 function _mkInvSummaryRow() {
   const dual = document.getElementById('invDualContainer');
   if (!dual || !dual.parentElement) return;
-  const ids = new Set([...dual.querySelectorAll('.inv-bulk-cb')].map((cb: any) => String(cb.dataset.id)));
+  const ids = new Set([...dual.querySelectorAll(window._invViewMode === 'cards' ? '.pos-inv-card' : '.inv-bulk-cb')].map((cb: any) => String(cb.dataset.id)));
   const stockCache: Map<string, number> | undefined = (window as any)._invStockCache;
   let valor = 0, low = 0, n = 0;
   (window.products || []).forEach((p: any) => {

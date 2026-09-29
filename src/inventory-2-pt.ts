@@ -225,6 +225,25 @@ function injectPtModal() {
             </button>
         </form>
     </div>`;
+    const form = modal.querySelector('#ptForm') as HTMLFormElement;
+    const essential = ['ptProductImage', 'ptNombre', 'ptPrecio', 'ptCategory'].map(id => {
+        let node = (form.querySelector('#' + id) as HTMLElement).parentElement!;
+        while (node.parentElement && node.parentElement !== form) node = node.parentElement;
+        return node;
+    });
+    const basic = document.createElement('div');
+    basic.className = 'pt-basic-fields';
+    basic.innerHTML = '<p class="pt-step-label">1 · Datos esenciales</p>';
+    for (const node of essential) if (node) basic.appendChild(node);
+    const advanced = document.createElement('details');
+    advanced.id = 'ptAdvanced';
+    advanced.className = 'pt-advanced-fields';
+    advanced.innerHTML = '<summary>2 · Más opciones <span>Materiales, variantes, costos y tienda</span></summary><div class="pt-advanced-content" id="ptAdvancedContent"></div>';
+    const content = advanced.querySelector('#ptAdvancedContent')!;
+    const submit = form.querySelector('#ptSubmitBtn')!;
+    for (const node of Array.from(form.children)) if (node !== submit) content.appendChild(node);
+    form.prepend(basic);
+    form.insertBefore(advanced, submit);
     document.body.appendChild(modal);
 
     // Setup imagen
@@ -268,9 +287,9 @@ function injectPtModal() {
 
         // ── Inyectar campos de proveedor si no existen aún ──────────────────
         if (!document.getElementById('ptProveedorNombre')) {
-            const ptSubmitBtn = document.getElementById('ptSubmitBtn');
-            if (ptSubmitBtn) {
-                ptSubmitBtn.insertAdjacentHTML('beforebegin', `
+            const advancedContent = document.getElementById('ptAdvancedContent');
+            if (advancedContent) {
+                advancedContent.insertAdjacentHTML('beforeend', `
                 <div id="ptProveedorSection" style="background:#f0fdf4;border:1.5px solid #6ee7b7;border-radius:14px;padding:16px;">
                     <div style="font-size:.85rem;font-weight:700;color:#065f46;margin-bottom:12px;">🏭 Información del Proveedor <span style="font-weight:400;color:#9ca3af;">(opcional)</span></div>
                     <div style="display:flex;flex-direction:column;gap:10px;">

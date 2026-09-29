@@ -24,3 +24,17 @@ it('requiere aprobacion vigente al producir y empaque al entregar',()=>{
  expect(c.posPendientesPreparacion(p,'produccion')).toContain('Diseño aprobado');
  expect(c.posPendientesPreparacion(p,'finalizado')).toContain('Pedido empacado');
 });
+it('incluye reposiciones en costo real sin sumar otra venta',()=>{
+ const c=app();const p={total:500,posDetalle:{reposiciones:[{motivo:'Estampado incorrecto',costo:30},{motivo:'Nueva talla',costo:20}]}};
+ expect(c.posRentabilidad(p,{reales:{materiales:100,empaque:10,comisiones:0,envio:0,merma:0}})).toMatchObject({real:160,ganancia:340,margen:68});
+ expect(()=>c.posRentabilidad({total:500,posDetalle:{reposiciones:[{costo:-2}]}},{reales:{materiales:100}})).toThrow();
+});
+it('una orden con propuestas requiere una version aprobada existente',()=>{
+ const c=app();const p:any={concepto:'Playera',checklist:{material:true},posDetalle:{versionesDiseno:[{id:'v1',nombre:'Arte inicial'}],aprobacion:{referencia:'Arte',fecha:'2026-09-29'}}};
+ p.posDetalle.aprobacion.firma=c.posFirmaDiseno(p);
+ expect(c.posPendientesPreparacion(p,'produccion')).toContain('Diseño aprobado');
+ p.posDetalle.aprobacion.versionId='v1';
+ expect(c.posPendientesPreparacion(p,'produccion')).toEqual([]);
+ p.posDetalle.aprobacion.versionId='v2';
+ expect(c.posPendientesPreparacion(p,'produccion')).toContain('Diseño aprobado');
+});

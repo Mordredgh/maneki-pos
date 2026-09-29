@@ -6551,3 +6551,36 @@ body.dark #balance-section .mk-card h3 { color: #eef7ec; }
   #inventory-section .pos-inv-edit,
   #balance-section .pos-balance-action { transition: none !important; transform: none !important; }
 }
+
+/* Product creation and order details */
+.pt-basic-fields,.pt-advanced-content{display:grid;gap:16px}
+.pt-step-label{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#58745f}
+.pt-advanced-fields{border:1px solid #dfebe2;border-radius:16px;background:#f7faf7;padding:14px}
+.pt-advanced-fields summary{cursor:pointer;color:#1c4f32;font-weight:750;list-style:none}
+.pt-advanced-fields summary span{display:block;color:#748379;font-size:.76rem;font-weight:450;margin-top:3px}
+.pt-advanced-fields[open] .pt-advanced-content{padding-top:18px}
+.pos-order-subsection{border:1px solid #dce8df;border-radius:14px;padding:16px;background:#f9fbf9}
+.pos-order-subsection legend{font-weight:750;color:#1c4f32;padding:0 6px}
+.pos-order-subsection p{font-size:.82rem;color:#667a6b;margin:3px 0 10px}
+.pos-order-subsection>input{width:100%;margin:5px 0}
+.pos-order-subsection>button{border:1px solid #bcd6c3;background:#eaf6ee;color:#1c4f32;border-radius:10px;padding:9px 14px;font-weight:700;margin-top:6px}
+.pos-version-row{display:flex!important;align-items:center;gap:9px;padding:9px 12px;border:1px solid #dce8df;border-radius:10px;background:#fff;margin:6px 0}
+.pos-version-row input{min-height:auto!important;width:18px;height:18px}
+.pos-version-row span{flex:1}
+.pos-version-row a{color:#175a38;text-decoration:underline}
+.pos-rework-list p{border-left:3px solid #caa652;padding:6px 10px;background:#fff;border-radius:4px}
+
+/* Personal start page */
+.pos-home-content [hidden]{display:none!important}
+.pos-home-settings{margin:8px 0 14px}
+.pos-home-settings-trigger{border:1px solid #c9ddce;background:#fff;border-radius:10px;padding:8px 12px;color:#23543a;font-size:.78rem;font-weight:700}
+#posHomeSettings{margin-top:8px;padding:16px;border:1px solid #deeadf;border-radius:14px;background:#fff;box-shadow:0 4px 16px #163e2810}
+#posHomeSettings p{color:#647568;font-size:.78rem;margin:0 0 10px}
+.pos-home-settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:9px;margin-bottom:12px}
+.pos-home-settings-grid label{display:flex;gap:8px;align-items:center;color:#264f36;font-size:.79rem;font-weight:650}
+#posHomeSettings>button{color:#1c4f32;background:#f0f7f1;border:1px solid #c9ddce;border-radius:9px;padding:7px 10px;font-weight:700;font-size:.76rem}
+
+/* Inventory cards */
+.pos-inv-card:hover{border-color:#bdd6c4!important;box-shadow:0 8px 22px #1c4f321c!important}
+.pos-inv-card button{min-height:34px}
+@media(max-width:550px){.pos-inv-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:10px!important}}

@@ -192,3 +192,13 @@
 - [x] Mostrar en cada densidad los requisitos reales para producir o entregar y acceso directo a la ficha.
 - [x] Retirar el indicador anterior que podia mostrar diseño listo sin aprobacion vigente.
 - [x] Probar flujo en staging, 179 pruebas, tipos y lint; publicar y verificar dominio/SW.
+
+## Experiencia diaria 2026-09-29
+
+- [x] Inventario: alternar tabla/tarjetas con foto, precio y existencias sin perder filtros ni paginacion.
+- [x] Alta PT: datos esenciales visibles y opciones avanzadas agrupadas; edicion completa intacta.
+- [x] Pedido: reposiciones con motivo y costo, ligadas al original y excluidas de ventas nuevas.
+- [x] Pedido: versiones de diseno identificables y aprobacion de una version concreta.
+- [x] Inicio: elegir paneles visibles, con preferencias locales persistentes y restablecimiento.
+- [x] Probar comportamientos, UI escritorio/movil, build/typecheck, publicar/verificar Cloudflare.
+- [x] Actualizar evidencia, grafo y memoria operativa.

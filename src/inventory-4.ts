@@ -257,6 +257,7 @@ function editProduct(id) {
     } else {
         // ── Editar Producto Terminado → nuevo ptModal ──────────────────────
         injectPtModal();
+        (document.getElementById('ptAdvanced') as HTMLDetailsElement).open = true;
         window.modoEdicion = true; window.edicionProductoId = id;
         window._ptVariants      = Array.isArray(p.variants) ? [...p.variants] : [];
         window._ptMpComponentes = Array.isArray(p.mpComponentes) ? [...p.mpComponentes] : [];
