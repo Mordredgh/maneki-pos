@@ -216,4 +216,4 @@
 - [x] Guardado: estado por ficha de pedido y producto.
 - [x] Vacio: acciones contextuales en secciones sin datos.
 - [x] Pruebas, verificacion visual movil/escritorio, build, deploy y verificacion Cloudflare.
-- [x] Evidencia y memoria; commit. <!-- BLOQUEADO: reindexacion de grafo MCP; servicio cerro conexion dos veces. -->
+- [x] Evidencia, grafo, memoria y commit.

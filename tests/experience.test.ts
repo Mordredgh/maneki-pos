@@ -67,3 +67,17 @@ it('la línea de Balance no usa section, que la navegación oculta',()=>{
   c.renderBalanceTimeline('2026-09');
   expect(createdTag).toBe('div');
 });
+
+it('la cotización abre un documento revisable y espera la orden de imprimir',()=>{
+  const c=load('src/pedidos-1-extra.ts');
+  let html='';
+  let printed=false;
+  c.window.quotes=[{id:'q1',folio:'COT-001',customer:'Ana <script>',date:'2026-09-29',total:280,products:[{name:'Playera',quantity:1,price:280}]}];
+  c.window.open=()=>({document:{write:(value:string)=>{html=value;},close(){}},focus(){},print(){printed=true;}});
+  c.fmtMoney=(value:number)=>'$'+Number(value).toFixed(2);
+  c.imprimirCotizacionVista('q1');
+  expect(html).toContain('Imprimir / guardar PDF');
+  expect(html).toContain('Ana &lt;script&gt;');
+  expect(html).toContain('$280.00');
+  expect(printed).toBe(false);
+});
