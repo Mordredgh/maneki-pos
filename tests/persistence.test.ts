@@ -97,6 +97,7 @@ function businessApp() {
   a.load('src/reportes.ts');
   // Solo presentacion/confirmaciones del navegador; reglas y persistencia son reales.
   a.ctx.renderPedidosTable = () => {};
+  a.ctx.posAbrirFicha = () => {};
   a.ctx.updatePedidosStats = () => {};
   a.ctx._fotosArray = () => ({paths:[]});
   return {...a, fields, submit: () => submits[0]({preventDefault() {}})};
@@ -112,15 +113,15 @@ it('el resumen previo muestra variante, anticipo y campos por corregir',()=>{
  a.fields.pedidoEntrega.value='';expect(a.ctx.pedidoResumenAntesDeGuardar().missing).toContain('Fecha de entrega');
 });
 
-it('Kanban muestra pendientes reales y abre la ficha en cada densidad', () => {
+it('Kanban permite abrir ficha sin mostrar controles de preparacion en cada densidad', () => {
   const a = businessApp();
   const p:any = {id:'pedido-1',folio:'PE-1',cliente:'Ana',status:'confirmado',total:100,checklist:{material:false},posDetalle:{}};
   for (const density of ['full','medium','compact']) {
     runInContext(`_kanbanCompacto = '${density}'`, a.ctx);
     const html = a.ctx.kanbanCardHTML(p);
-    expect(html).toContain('Diseño aprobado');
-    expect(html).toContain('Material revisado');
-    expect(html).toContain('data-action="posAbrirFicha" data-arg="pedido-1"');
+    expect(html).not.toContain('mk-kanban-pending');
+    expect(html).not.toContain('Diseño aprobado');
+    expect(html).not.toContain('Material revisado');
     expect(html).toContain('data-kanban-open="pedido-1"');
     expect(html).toContain('tabindex="0"');
   }
@@ -128,7 +129,7 @@ it('Kanban muestra pendientes reales y abre la ficha en cada densidad', () => {
   p.posDetalle.aprobacion = {referencia:'Arte aprobado',fecha:'2026-09-28',firma:a.ctx.posFirmaDiseno(p)};
   expect(a.ctx.kanbanCardHTML(p)).not.toContain('mk-kanban-pending');
   p.status = 'produccion';
-  expect(a.ctx.kanbanCardHTML(p)).toContain('Pedido empacado');
+  expect(a.ctx.kanbanCardHTML(p)).not.toContain('Pedido empacado');
 });
 
 it('editar un producto transmite solo esa fila y no toca otros productos',async()=>{
@@ -281,24 +282,23 @@ describe('Persistencia real del POS', () => {
     expect((await a.ctx.sbLoad('pedidos', []))[0]).toMatchObject({status:'cancelado'});
     expect(await a.ctx.sbLoad('salesHistory', [])).toEqual([]);
   });
-  it('no produce ni finaliza un pedido sin aprobacion y checklist completos', async () => {
+  it('produce y finaliza sin exigir aprobacion ni checklist', async () => {
     const a = businessApp();
     a.ctx.pedidos = [{id:'o1',folio:'PE-PEND',total:100,status:'confirmado',checklist:{material:true}}];
     a.fields.pedidoStatusId.value = 'o1';
     await a.ctx.setPedidoStatus('produccion');
-    expect(a.ctx.pedidos[0].status).toBe('confirmado');
+    expect(a.ctx.pedidos[0].status).toBe('produccion');
     await a.ctx.setPedidoStatus('finalizado');
-    expect(a.ctx.pedidosFinalizados || []).toEqual([]);
-    expect(a.ctx.salesHistory).toEqual([]);
+    expect(a.ctx.pedidos).toEqual([]);
+    expect(a.ctx.pedidosFinalizados[0]).toMatchObject({id:'o1',status:'finalizado'});
   });
-  it('arrastrar en Kanban tampoco omite la aprobacion y el checklist', async () => {
+  it('arrastrar en Kanban avanza sin exigir aprobacion ni checklist', async () => {
     const a = businessApp();
     a.ctx.pedidos = [{id:'o1',folio:'PE-DRAG',total:100,status:'confirmado',productosInventario:[],checklist:{material:false}}];
     a.ctx.kanbanDragStart({dataTransfer:{},currentTarget:{style:{}}},'o1');
     await a.ctx.kanbanDrop({preventDefault(){}},'produccion');
-    expect(a.ctx.pedidos[0].status).toBe('confirmado');
-    expect(a.ctx.pedidos[0].inventarioDescontado).toBeFalsy();
-    expect(a.rows.orders || []).toEqual([]);
+    expect(a.ctx.pedidos[0].status).toBe('produccion');
+    expect(a.rows.orders[0]).toMatchObject({id:'o1',status:'produccion'});
   });
   it('crea pedido con anticipo offline y lo recupera en Balance y Reportes', async () => {
     const first = businessApp();

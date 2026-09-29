@@ -217,3 +217,9 @@
 - [x] Vacio: acciones contextuales en secciones sin datos.
 - [x] Pruebas, verificacion visual movil/escritorio, build, deploy y verificacion Cloudflare.
 - [x] Evidencia, grafo, memoria y commit.
+
+## Flujo sin controles de preparacion 2026-09-29
+
+- [x] Retirar bloqueos de aprobacion, material, produccion y empaque por solicitud del propietario; selector y arrastre permiten avanzar.
+- [x] Retirar avisos Kanban y casillas de ficha; referencias/versiones quedan opcionales, datos historicos conservados.
+- [x] TDD de avance/finalizacion, 187 pruebas, tipos y lint; publicar y verificar SW maneki-b8954a2f35 y ausencia de bloqueos en dominio.
