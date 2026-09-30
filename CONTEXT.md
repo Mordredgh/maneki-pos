@@ -40,3 +40,7 @@ El esquema reproduce columnas y tipos observados; no todos los triggers, constra
 ## Infraestructura
 
 Cloudflare Pages: bicho-capricho-pos. Dominio: https://pos.manekistore.com.mx. Supabase: hoqcrljgmamaumtdrtzi. Coolify/VPS ya no es destino de despliegue. Bot retirado por el propietario.
+
+## Captura simple 2026-09-29
+
+Precio rapido: nota opcional con motivo automatico Actualizacion de precio; ajustes de stock conservan motivo obligatorio. Costos de ficha pueden quedar parciales: faltantes se guardan como null, se muestra Costo incompleto y no se calcula ganancia/margen definitivo. Pedido permite guardar desde cualquier paso con datos esenciales validos; revision opcional. Costo PT calculado por componentes se sugiere inline y solo reemplaza costo manual al pulsar Usar costo calculado. Confirmaciones de cierre sin guardar y finalizacion/cobro permanecen intactas.

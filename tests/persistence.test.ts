@@ -182,6 +182,13 @@ it('los cierres nocturnos usan el dia local y conservan fechas sin hora',()=>{
 });
 
 describe('Persistencia real del POS', () => {
+  it('permite actualizar precio sin nota y registra un motivo automatico',async()=>{
+    const a=app();a.load('src/operations.ts');
+    a.ctx.products=[{id:'p1',name:'Taza',price:50}];a.ctx._fechaHoy=()=> '2026-09-29';
+    await a.ctx.posAjustarInventario('p1','price',60,'');
+    expect(a.ctx.products[0].price).toBe(60);
+    expect(a.ctx.products[0].historialPrecios[0]).toMatchObject({precio:50,motivo:'Actualización de precio'});
+  });
   it('ajuste rapido exige motivo y conserva juntos stock y movimiento al fallar la red',async()=>{
     const a=app();a.load('src/operations.ts');a.load('src/inventory-1.ts');
     a.ctx.products=[{id:'p1',name:'Taza',stock:5}];a.ctx.stockMovements=[];a.ctx._fechaHoy=()=> '2026-09-27';

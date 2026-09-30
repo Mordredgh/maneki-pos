@@ -81,3 +81,23 @@ it('la cotización abre un documento revisable y espera la orden de imprimir',()
   expect(html).toContain('$280.00');
   expect(printed).toBe(false);
 });
+
+it('guarda un pedido completo desde Productos sin exigir la revision',()=>{
+ const c=load('src/pedidos-1-views.ts');const handlers:any={};let saved=0;
+ const form:any={dataset:{},querySelectorAll:()=>[],addEventListener:(type:string,cb:any)=>{handlers[type]=cb;},dispatchEvent:(e:any)=>{handlers.submit?.(e);if(!e.defaultPrevented)saved++;}};
+ const elements:any={pedidoForm:form,pedidoCosto:{value:'100'},'pos-pedido-save':{hidden:true}};
+ c.document.getElementById=(id:string)=>elements[id]||null;c.document.querySelectorAll=()=>[];
+ c.mkRound2=(v:any)=>Number(v)||0;c.fmtMoney=String;c.Event=Event;
+ c.window.pedidoResumenAntesDeGuardar=()=>({missing:[]});
+ c._updatePedidoStep(2);c.posPedidoGuardar();
+ expect(saved).toBe(1);expect(form.dataset.step).toBe('2');expect(elements['pos-pedido-save'].hidden).toBe(false);
+ c.window.pedidoResumenAntesDeGuardar=()=>({missing:['Nombre del cliente']});c.posPedidoGuardar();expect(saved).toBe(1);
+});
+it('sugiere costo por materiales sin reemplazar el costo manual hasta solicitarlo',()=>{
+ const c=load('src/inventory-2-pt.ts');const elements:any={ptCosto:{value:'42'},ptCostoDesglose:{textContent:''},ptUsarCostoBtn:{hidden:true}};
+ c.document.getElementById=(id:string)=>elements[id]||null;
+ c.window._ptMpComponentes=[{id:'m',nombre:'Tela',qty:2,costUnit:10}];
+ c.recalcularCostoPt();expect(elements.ptCosto.value).toBe('42');expect(elements.ptCostoDesglose.textContent).toContain('20.00');expect(elements.ptUsarCostoBtn.hidden).toBe(false);
+ c.ptUsarCostoCalculado();expect(elements.ptCosto.value).toBe('20.00');
+ c.window._ptMpComponentes=[];c.recalcularCostoPt();expect(elements.ptUsarCostoBtn.hidden).toBe(true);
+});

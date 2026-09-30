@@ -223,3 +223,12 @@
 - [x] Retirar bloqueos de aprobacion, material, produccion y empaque por solicitud del propietario; selector y arrastre permiten avanzar.
 - [x] Retirar avisos Kanban y casillas de ficha; referencias/versiones quedan opcionales, datos historicos conservados.
 - [x] TDD de avance/finalizacion, 187 pruebas, tipos y lint; publicar y verificar SW maneki-b8954a2f35 y ausencia de bloqueos en dominio.
+
+## Simplificar captura 2026-09-29
+
+- [x] Mantener confirmaciones de cierre sin guardar y finalizacion/cobro intactas (puntos 1 y 2).
+- [x] Precio: nota opcional y motivo automatico Actualizacion de precio; stock mantiene motivo.
+- [x] Ficha: guardar costos parciales como null, mostrar Costo incompleto y evitar ganancia definitiva.
+- [x] Pedido: guardar desde cualquier paso; revision opcional, datos esenciales validados.
+- [x] PT: sugerir costo inline sin sobrescribir valor manual ni abrir confirmacion al guardar.
+- [x] Verificacion visual: precio sin nota, costo parcial persistido, guardado desde Productos y costo aplicado a boton; 191 pruebas, tipos/lint, deploy 6adc6ad7, dominio 401/200 y SW maneki-c3eb9d1624; grafo y memoria actualizados.

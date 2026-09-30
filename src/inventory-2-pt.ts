@@ -125,6 +125,7 @@ function injectPtModal() {
                                 oninput="ptActualizarPrecioSugerido()"
                                 style="width:100%;padding:10px 14px 10px 28px;border:1.5px solid #fde68a;border-radius:10px;font-size:.9rem;outline:none;background:#fff;box-sizing:border-box;font-weight:700;">
                         </div>
+                        <button type="button" id="ptUsarCostoBtn" class="mk-btn-secondary" onclick="ptUsarCostoCalculado()" hidden style="margin-top:8px;">Usar costo calculado</button>
                         <p id="ptCostoDesglose" style="font-size:.72rem;color:#92400e;margin-top:4px;line-height:1.4;"></p>
                     </div>
                     <div>
@@ -514,6 +515,7 @@ function updateMpQtyPt(idx, val) {
 window.updateMpQtyPt = updateMpQtyPt;
 
 function renderPtMpList() {
+    recalcularCostoPt();
     const el = document.getElementById('ptMpList');
     if (!el) return;
     const comps = window._ptMpComponentes||[];
@@ -553,17 +555,25 @@ window.renderPtMpList = renderPtMpList;
 function recalcularCostoPt() {
     const comps = window._ptMpComponentes||[];
     const total = comps.reduce((s,c) => s+(c.qty*c.costUnit), 0);
-    const costoInput = document.getElementById('ptCosto');
-    if (costoInput) costoInput.value = total.toFixed(2);
+    const usar = document.getElementById('ptUsarCostoBtn');
+    if (usar) usar.hidden = !comps.length;
     // Mostrar desglose
     const desglose = document.getElementById('ptCostoDesglose');
     if (desglose && comps.length) {
-        desglose.textContent = comps.map(c=>`${c.nombre} ×${c.qty} = $${(c.qty*c.costUnit).toFixed(2)}`).join(' · ');
+        desglose.textContent = `Costo calculado $${total.toFixed(2)} · ` + comps.map(c=>`${c.nombre} ×${c.qty} = $${(c.qty*c.costUnit).toFixed(2)}`).join(' · ');
     } else if (desglose) desglose.textContent='';
     ptMostrarMargenInfo();
     calcularDisponibilidadPt();
 }
 window.recalcularCostoPt = recalcularCostoPt;
+function ptUsarCostoCalculado() {
+    const comps = window._ptMpComponentes || [];
+    if (!comps.length) return;
+    const input = document.getElementById('ptCosto');
+    if (input) input.value = comps.reduce((sum, c) => sum + c.qty * c.costUnit, 0).toFixed(2);
+    ptActualizarPrecioSugerido();
+}
+window.ptUsarCostoCalculado = ptUsarCostoCalculado;
 
 // Cuántas piezas puedo fabricar con el stock actual de MP
 function calcularDisponibilidadPt() {
@@ -672,29 +682,7 @@ async function guardarProductoTerminado() {
         manekiToastExport(`⚠️ El SKU "${sku}" ya está en uso`,'warn'); return;
     }
 
-    // ── Mejora 3: Validación de costo cero con sugerencia automática ────────
-    let costoFinal = costo;
-    const _mpCompsParaValidar = window._ptMpComponentes || [];
-    if (costoFinal === 0) {
-        if (_mpCompsParaValidar.length > 0) {
-            // Calcular costo desde materias primas
-            const _costoCalculado = _mpCompsParaValidar.reduce((sum, comp) => {
-                const _mp = (window.products || []).find(p => String(p.id) === String(comp.id));
-                return sum + ((comp.qty || 0) * ((_mp && _mp.cost) ? _mp.cost : (comp.costUnit || 0)));
-            }, 0);
-            if (_costoCalculado > 0) {
-                const _usarCosto = await showConfirm(`El costo calculado basado en materias primas es $${_costoCalculado.toFixed(2)}. ¿Deseas usarlo como costo del producto?`);
-                if (_usarCosto) {
-                    costoFinal = _costoCalculado;
-                    const _costoInput = document.getElementById('ptCosto');
-                    if (_costoInput) _costoInput.value = costoFinal.toFixed(2);
-                }
-            }
-        } else {
-            // Sin MPs y costo 0 → solo advertencia, no bloquea
-            manekiToastExport('⚠️ El costo del producto está en $0. Considera agregar un costo.', 'warn');
-        }
-    }
+    const costoFinal = costo;
 
     // FIX loading state: deshabilitar botón para evitar doble guardado
     const _btn = document.getElementById('ptSubmitBtn');

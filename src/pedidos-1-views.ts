@@ -121,15 +121,15 @@ function _updatePedidoStep(step:number):void{
     posPedidoPaso=Math.max(1,Math.min(4,Number(step)));form.dataset.step=String(posPedidoPaso);
     form.querySelectorAll('details.mk-pedido-section').forEach((el:any,i:number)=>{el.hidden=i+1!==posPedidoPaso;el.open=true;});
     const confirm=document.getElementById('pos-pedido-confirm');if(confirm)confirm.hidden=posPedidoPaso!==4;
-    for(const [id,hide] of [['pos-pedido-back',posPedidoPaso===1],['pos-pedido-next',posPedidoPaso===4],['pos-pedido-save',posPedidoPaso!==4]] as [string,boolean][]){const el=document.getElementById(id);if(el)el.hidden=hide;}
+    for(const [id,hide] of [['pos-pedido-back',posPedidoPaso===1],['pos-pedido-next',posPedidoPaso===4],['pos-pedido-save',false]] as [string,boolean][]){const el=document.getElementById(id);if(el)el.hidden=hide;}
     document.querySelectorAll('#pedido-steps button').forEach((el:any,i:number)=>{if(i+1===posPedidoPaso)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
     const stepLabel=document.getElementById('pos-pedido-step-label');
-    if(stepLabel)stepLabel.textContent=`${['Cliente','Productos','Detalles','Confirmar'][posPedidoPaso-1]} · paso ${posPedidoPaso} de 4`;
+    if(stepLabel)stepLabel.textContent=`${['Cliente','Productos','Detalles','Revisar (opcional)'][posPedidoPaso-1]} · paso ${posPedidoPaso} de 4`;
     const progress=document.getElementById('pos-pedido-progress-fill') as HTMLElement;
     if(progress)progress.style.width=`${posPedidoPaso*25}%`;
     const next=document.getElementById('pos-pedido-next');
     if(next)next.textContent=posPedidoPaso===3?'Revisar pedido':'Continuar';
-    if(!form.dataset.wizardBound){form.dataset.wizardBound='1';form.addEventListener('input',posPedidoResumen);form.addEventListener('submit',(e)=>{if(posPedidoPaso!==4){e.preventDefault();e.stopImmediatePropagation();posPedidoSiguiente();}},true);}
+    if(!form.dataset.wizardBound){form.dataset.wizardBound='1';form.addEventListener('input',posPedidoResumen);form.addEventListener('submit',(e)=>{if(!posPedidoValidar(3)||(window.pedidoResumenAntesDeGuardar?.().missing||[]).length){e.preventDefault();e.stopImmediatePropagation();}},true);}
     const error=document.getElementById('pos-pedido-error');if(error)error.textContent='';
     posPedidoResumen();
 }

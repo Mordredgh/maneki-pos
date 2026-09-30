@@ -33,3 +33,6 @@ npm-debug.log*
 # Local Netlify folder
 .netlify
 .claude/worktrees/
+
+# Evidencia visual local, fuera del paquete de produccion
+staging/evidence/

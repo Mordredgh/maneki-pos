@@ -14,7 +14,8 @@ function posRentabilidad(pedido:any,costos:any){
     const total=cents(pedido.total||0),estimado=costos.estimado==null?null:cents(costos.estimado);
     const reposiciones=(pedido.posDetalle?.reposiciones||[]).reduce((s:number,r:any)=>s+cents(r.costo),0);
     const real=costos.reales==null?null:['materiales','empaque','comisiones','envio','merma'].reduce((s,k)=>s+cents(costos.reales[k]??0),reposiciones);
-    return {estimado:estimado==null?null:estimado/100,real:real==null?null:real/100,ganancia:real==null?null:(total-real)/100,margen:real==null||!total?null:Math.round((total-real)/total*10000)/100,diferencia:estimado==null||real==null?null:(real-estimado)/100};
+    const incompleto=costos.reales!=null&&['materiales','empaque','comisiones','envio','merma'].some(k=>costos.reales[k]==null);
+    return {incompleto,estimado:estimado==null?null:estimado/100,real:real==null?null:real/100,ganancia:real==null||incompleto?null:(total-real)/100,margen:real==null||incompleto||!total?null:Math.round((total-real)/total*10000)/100,diferencia:estimado==null||real==null||incompleto?null:(real-estimado)/100};
 }
 window.posRentabilidad=posRentabilidad;
 function posFirmaDiseno(p:any){return JSON.stringify([p.concepto||'',(p.productosInventario||[]).map((i:any)=>[i.id,i.variante||'',i.quantity||i.cantidad||1]),p.referenciasUrls||[],p.referenciaUrl||'']);}
@@ -93,11 +94,11 @@ function posAbrirFicha(id?:string){
     const renderReworks=()=>{reworkList.replaceChildren();for(const r of reworks){const row=document.createElement('p');row.textContent=`${new Date(r.fecha).toLocaleDateString('es-MX')} · ${r.motivo} · ${fmtMoney(r.costo)}`;reworkList.appendChild(row);}};
     renderReworks();
     const collect=()=>({estimado:fields.estimado.value===''?null:Number(fields.estimado.value),reales:['materiales','empaque','comisiones','envio','merma'].every(k=>fields[k].value==='')?null:Object.fromEntries(['materiales','empaque','comisiones','envio','merma'].map(k=>[k,fields[k].value===''?null:Number(fields[k].value)]))});
-    const preview=()=>{try{const values=collect();if(values.reales&&Object.values(values.reales).some(v=>v===null)){profit.textContent='Completa todos los costos reales; usa 0 donde no hubo costo.';return;}const result=posRentabilidad({...p,posDetalle:{...detail,reposiciones:reworks}},values);profit.textContent=result.real==null?'Costos reales sin capturar':`Costo real ${fmtMoney(result.real)} · Ganancia ${fmtMoney(result.ganancia)} · Margen ${result.margen??0}%${result.margen!=null&&result.margen<20?' · Revisar: margen menor al 20%':''}${result.diferencia!=null?' · Diferencia vs estimado '+fmtMoney(result.diferencia):''}`;}catch(e:any){profit.textContent=e.message;}};costs.oninput=preview;preview();
+    const preview=()=>{try{const values=collect();const result=posRentabilidad({...p,posDetalle:{...detail,reposiciones:reworks}},values);profit.textContent=result.real==null?'Costos reales sin capturar':result.incompleto?`Costo incompleto · Capturado ${fmtMoney(result.real)}. Puedes guardar y completar después.`:`Costo real ${fmtMoney(result.real)} · Ganancia ${fmtMoney(result.ganancia)} · Margen ${result.margen??0}%${result.margen!=null&&result.margen<20?' · Revisar: margen menor al 20%':''}${result.diferencia!=null?' · Diferencia vs estimado '+fmtMoney(result.diferencia):''}`;}catch(e:any){profit.textContent=e.message;}};costs.oninput=preview;preview();
     addRework.onclick=()=>{const motivo=reworkReason.value.trim(),costo=Number(reworkCost.value);if(!motivo){reworkReason.setCustomValidity('Escribe el motivo.');reworkReason.reportValidity();return;}reworkReason.setCustomValidity('');if(reworkCost.value===''||!Number.isFinite(costo)||costo<0){reworkCost.setCustomValidity('Escribe un costo válido, incluido 0.');reworkCost.reportValidity();return;}reworkCost.setCustomValidity('');reworks.push({id:mkId(),fecha:new Date().toISOString(),motivo,costo});reworkReason.value='';reworkCost.value='';renderReworks();preview();};
     const history=document.createElement('details');history.innerHTML='<summary>Historial y pagos</summary>';for(const event of [...(p.historialEstados||[]),...(p.pagos||[]),...(detail.historial||[])]){const item=document.createElement('p');item.textContent=`${event.fecha||''} ${event.hora||''} · ${event.estado||event.accion||event.tipo||'Pago'}${event.monto!=null?' · '+fmtMoney(event.monto):''}${event.metodo?' · '+event.metodo:''}`;history.appendChild(item);}form.appendChild(history);
     const status=document.createElement('p');status.setAttribute('role','status');const button=document.createElement('button');button.type='submit';button.className='btn-primary';button.textContent='Guardar ficha';form.append(status,button);dialog.appendChild(form);
-    form.onsubmit=async e=>{e.preventDefault();button.disabled=true;try{if(JSON.stringify(orders.find(x=>x===p))!==before)throw Error('El pedido cambió. Vuelve a abrir su ficha.');const costValues=collect();if(costValues.reales&&Object.values(costValues.reales).some(v=>v===null))throw Error('Completa cada costo real; escribe 0 cuando no aplique.');posRentabilidad({...p,posDetalle:{...detail,reposiciones:reworks}},costValues);
+    form.onsubmit=async e=>{e.preventDefault();button.disabled=true;try{if(JSON.stringify(orders.find(x=>x===p))!==before)throw Error('El pedido cambió. Vuelve a abrir su ficha.');const costValues=collect();posRentabilidad({...p,posDetalle:{...detail,reposiciones:reworks}},costValues);
       await posRunOperation(async()=>{p.posDetalle={...detail,costos:costValues,reposiciones:reworks,versionesDiseno:versions,historial:[...(detail.historial||[]),{fecha:new Date().toISOString(),accion:'Ficha actualizada'}]};if((window.pedidos||[]).includes(p))await savePedidos();else await savePedidosFinalizados();},'Actualizar ficha y costos del pedido');
       status.textContent='Ficha guardada.';form.querySelectorAll('input,button').forEach(el=>el.disabled=true);if(typeof renderPedidosTable==='function')renderPedidosTable();
     }catch(err:any){status.textContent=err.message||'No se pudo guardar.';button.disabled=!!err.pendingSync;}};
@@ -113,7 +114,8 @@ async function posAbrirSalud(){
 }
 window.posAbrirSalud=posAbrirSalud;
 async function posAjustarInventario(id:string,field:string,value:number,reason:string){
-    if(!reason.trim())throw Error('Escribe el motivo del cambio.');
+    reason=reason.trim()||(field==='price'?'Actualización de precio':'');
+    if(!reason)throw Error('Escribe el motivo del cambio.');
     if(!['stock','price'].includes(field)||!Number.isFinite(value)||value<0)throw Error('Importe o cantidad invalida.');
     if(field==='stock'&&!Number.isInteger(value))throw Error('El stock requiere unidades enteras.');
     const product=(window.products||[]).find(p=>String(p.id)===String(id));if(!product)throw Error('Producto no encontrado.');
@@ -122,7 +124,7 @@ async function posAjustarInventario(id:string,field:string,value:number,reason:s
     await posRunOperation(async()=>{
         product[field]=field==='price'?mkRound2(value):value;
         if(field==='stock')await registrarMovimiento({productoId:product.id,productoNombre:product.name,tipo:'ajuste',cantidad:value-before,cantidadSolicitada:value-before,motivo:reason,stockAntes:before,stockDespues:value});
-        else{product.historialPrecios=product.historialPrecios||[];product.historialPrecios.push({precio:before,fecha:_fechaHoy()});}
+        else{product.historialPrecios=product.historialPrecios||[];product.historialPrecios.push({precio:before,fecha:_fechaHoy(),motivo:reason});}
         await saveProducts();
     },reason);
 }
@@ -130,7 +132,7 @@ function posEditarInventario(id:any,field='stock'){
     const product=(window.products||[]).find(p=>String(p.id)===String(id));if(!product)return;
     const dialog=posDialog(field==='stock'?'Ajustar existencias':'Editar precio');
     const name=document.createElement('p');name.textContent=product.name;dialog.appendChild(name);
-    const form=document.createElement('form');form.innerHTML=`<label>${field==='stock'?'Nueva existencia':'Nuevo precio'}<input name="value" type="number" min="0" step="${field==='stock'?'1':'0.01'}" required></label><label>Motivo<input name="reason" maxlength="500" required placeholder="Ej. conteo físico o cambio de precio"></label><p role="status" aria-live="polite"></p><button type="submit">Guardar cambio</button>`;
+    const form=document.createElement('form');form.innerHTML=`<label>${field==='stock'?'Nueva existencia':'Nuevo precio'}<input name="value" type="number" min="0" step="${field==='stock'?'1':'0.01'}" required></label><label>${field==='stock'?'Motivo':'Nota (opcional)'}<input name="reason" maxlength="500" ${field==='stock'?'required':''} placeholder="${field==='stock'?'Ej. conteo físico':'Actualización de precio'}"></label><p role="status" aria-live="polite"></p><button type="submit">Guardar cambio</button>`;
     (form.elements.namedItem('value') as HTMLInputElement).value=String(Number(product[field])||0);dialog.appendChild(form);
     const before=JSON.stringify(product);
     form.onsubmit=async e=>{e.preventDefault();const button=form.querySelector('button')!;button.disabled=true;const status=form.querySelector('[role=status]')!;status.textContent='Guardando…';

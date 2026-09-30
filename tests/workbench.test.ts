@@ -20,3 +20,9 @@ it('incluye reposiciones en costo real sin sumar otra venta',()=>{
  expect(c.posRentabilidad(p,{reales:{materiales:100,empaque:10,comisiones:0,envio:0,merma:0}})).toMatchObject({real:160,ganancia:340,margen:68});
  expect(()=>c.posRentabilidad({total:500,posDetalle:{reposiciones:[{costo:-2}]}},{reales:{materiales:100}})).toThrow();
 });
+
+it('permite costos parciales sin presentar ganancia definitiva',()=>{
+ const c=app();
+ expect(c.posRentabilidad({total:500},{reales:{materiales:120,empaque:null}})).toMatchObject({real:120,incompleto:true,ganancia:null,margen:null,diferencia:null});
+ expect(c.posRentabilidad({total:500},{reales:{materiales:0,empaque:0,comisiones:0,envio:0,merma:0}})).toMatchObject({real:0,incompleto:false,ganancia:500});
+});
