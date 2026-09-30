@@ -5,6 +5,7 @@ import {transformSync} from 'esbuild';
 
 function variable(){
  const ctx:any=createContext({window:{},console,mkRound2:(n:number)=>Math.round(n*100)/100});ctx.window.window=ctx.window;
+ runInContext(transformSync(readFileSync('src/operations.ts','utf8'),{loader:'ts',target:'es2020'}).code,ctx);
  runInContext(transformSync(readFileSync('src/inventory-2-pv.ts','utf8'),{loader:'ts',target:'es2020'}).code,ctx);
  return ctx;
 }

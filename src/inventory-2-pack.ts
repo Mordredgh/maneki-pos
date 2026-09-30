@@ -28,6 +28,7 @@ function openAddMateriaPrimaModal() {
     const btn = document.getElementById('mpSubmitBtn');
     if (btn) btn.textContent = '✅ Guardar Materia Prima';
 
+    posRestaurarCaptura(['mpProveedor']);
     if (typeof openModal === 'function') openModal('mpModal');
 }
 window.openAddMateriaPrimaModal = openAddMateriaPrimaModal;

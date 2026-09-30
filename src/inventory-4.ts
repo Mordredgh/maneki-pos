@@ -92,6 +92,7 @@ async function guardarMateriaPrima() {
         saveProducts(); renderInventoryTable();
         if (typeof updateDashboard === 'function') updateDashboard();
         if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('mpModal');
+        posRecordarCaptura(['mpProveedor']);
         closeMateriaPrimaModal();
         if (window.MKS) MKS.notify();
         manekiToastExport('✅ Materia prima actualizada','ok');
@@ -112,6 +113,7 @@ async function guardarMateriaPrima() {
         saveProducts(); renderInventoryTable();
         if (typeof updateDashboard === 'function') updateDashboard();
         if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('mpModal');
+        posRecordarCaptura(['mpProveedor']);
         closeMateriaPrimaModal();
         if (window.MKS) MKS.notify();
         manekiToastExport('✅ Materia prima agregada','ok');
@@ -187,6 +189,7 @@ window._cascadeVariantesMP = _cascadeVariantesMP;
 function editProduct(id) {
     const p = (window.products||[]).find(x => String(x.id) === String(id));
     if (!p) { console.warn('editProduct: no encontrado', id); return; }
+    posGuardarLugarInventario(String(id));
 
     if (p.tipo === 'materia_prima') {
         // Editar en modal de materia prima

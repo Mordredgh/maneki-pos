@@ -44,3 +44,9 @@ Cloudflare Pages: bicho-capricho-pos. Dominio: https://pos.manekistore.com.mx. S
 ## Captura simple 2026-09-29
 
 Precio rapido: nota opcional con motivo automatico Actualizacion de precio; ajustes de stock conservan motivo obligatorio. Costos de ficha pueden quedar parciales: faltantes se guardan como null, se muestra Costo incompleto y no se calcula ganancia/margen definitivo. Pedido permite guardar desde cualquier paso con datos esenciales validos; revision opcional. Costo PT calculado por componentes se sugiere inline y solo reemplaza costo manual al pulsar Usar costo calculado. Confirmaciones de cierre sin guardar y finalizacion/cobro permanecen intactas.
+
+## Experiencia agil 2026-09-29
+
+Kanban prioriza cliente/producto, fecha/saldo y notas; Estado, Editar rapido y Abono quedan visibles. Mas acciones agrupa herramientas secundarias. Edicion rapida guarda entrega/prioridad/nota en operacion atomica y rechaza cambios concurrentes o fechas inexistentes. Los filtros cuentan pedidos activos dentro de la busqueda/ocasion actual; no agregan requisitos de avance.
+
+Busqueda compartida tolera acentos, palabras en distinto orden y una errata en palabras de al menos cuatro letras; tallas, numeros y folios conservan coincidencia precisa. Inventario conserva filtros/pagina y restaura posicion/foco al cerrar el editor. Categoria, proveedor y metodo son preferencias locales de captura, editables y solo restauradas si la opcion existe. No se cambia esquema de Supabase. Balance limpia la marca de cambios solo despues de confirmar guardado; ante fallo mantiene abierto el formulario.

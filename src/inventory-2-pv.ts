@@ -318,6 +318,7 @@ function pvQuitarRango(idx) {
 window.pvQuitarRango = pvQuitarRango;
 
 function openVariableProductModal(editId) {
+    if(editId)posGuardarLugarInventario(String(editId));
     injectVariableProductModal();
     window._pvMpComponentes = [];
     window._pvTablaPreciosVariable = [];
@@ -346,6 +347,7 @@ function openVariableProductModal(editId) {
             });
         }
         poblarCategoriasPv();
+        if(!editId)posRestaurarCaptura(['pvCategory']);
         renderTagsPv();
     }, 80);
 
@@ -460,6 +462,7 @@ async function guardarProductoVariable(e) {
 
     try{
         await saveProducts();
+        posRecordarCaptura(['pvCategory']);
         renderInventoryTable();
         const modal=document.getElementById('pvModal');
         if(modal)modal._mkDirty=false;

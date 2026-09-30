@@ -426,6 +426,7 @@ function injectSvcModal() {
 window.injectSvcModal = injectSvcModal;
 
 function openServicioModal(editId) {
+    if(editId)posGuardarLugarInventario(String(editId));
     injectSvcModal();
     document.getElementById('svcEditId').value = editId || '';
     document.getElementById('svcModalTitle').textContent = editId ? 'Editar Servicio' : 'Nuevo Servicio';

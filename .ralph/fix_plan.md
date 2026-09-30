@@ -232,3 +232,15 @@
 - [x] Pedido: guardar desde cualquier paso; revision opcional, datos esenciales validados.
 - [x] PT: sugerir costo inline sin sobrescribir valor manual ni abrir confirmacion al guardar.
 - [x] Verificacion visual: precio sin nota, costo parcial persistido, guardado desde Productos y costo aplicado a boton; 191 pruebas, tipos/lint, deploy 6adc6ad7, dominio 401/200 y SW maneki-c3eb9d1624; grafo y memoria actualizados.
+
+## Experiencia agil 2026-09-29
+
+- [x] Kanban limpio en todas las densidades y acciones secundarias en Mas.
+- [x] Edicion rapida de fecha, prioridad y nota sin modificar pagos/importes; concurrencia protegida.
+- [x] Inventario conserva pagina/filtros, posicion y foco al regresar del editor.
+- [x] Busqueda por palabras/acento/una errata en inventario, clientes y buscadores globales.
+- [x] Filtros con cantidades de pedidos activos por hoy, vencidos, saldo y proximos.
+- [x] Recordar categoria/proveedor/metodo localmente, solo sugerencias para altas nuevas.
+- [x] Nota del pedido y nota interna visibles, escapadas, sin bloqueos.
+- [x] 201 pruebas, typecheck/lint/build; UI aislada desktop y 390px, filtros/notas/edicion/persistencia/recuerdo/busqueda confirmados. Deploy 5e8b7baa, dominio 401/200 y SW maneki-6d18a288f1.
+- [x] Evidencia ignorada staging/evidence/kanban-agil-desktop.png y kanban-agil-movil.png; grafo MCP reindexado, CONTEXT y memoria diaria actualizados; commit de experiencia agil. Graphify intentado; extraccion semantica de documentos requiere credencial no configurada.

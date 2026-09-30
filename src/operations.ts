@@ -130,7 +130,9 @@ async function posAjustarInventario(id:string,field:string,value:number,reason:s
 }
 function posEditarInventario(id:any,field='stock'){
     const product=(window.products||[]).find(p=>String(p.id)===String(id));if(!product)return;
+    posGuardarLugarInventario(String(id));
     const dialog=posDialog(field==='stock'?'Ajustar existencias':'Editar precio');
+    dialog.addEventListener('close',posRestaurarLugarInventario,{once:true});
     const name=document.createElement('p');name.textContent=product.name;dialog.appendChild(name);
     const form=document.createElement('form');form.innerHTML=`<label>${field==='stock'?'Nueva existencia':'Nuevo precio'}<input name="value" type="number" min="0" step="${field==='stock'?'1':'0.01'}" required></label><label>${field==='stock'?'Motivo':'Nota (opcional)'}<input name="reason" maxlength="500" ${field==='stock'?'required':''} placeholder="${field==='stock'?'Ej. conteo físico':'Actualización de precio'}"></label><p role="status" aria-live="polite"></p><button type="submit">Guardar cambio</button>`;
     (form.elements.namedItem('value') as HTMLInputElement).value=String(Number(product[field])||0);dialog.appendChild(form);
@@ -232,3 +234,66 @@ function posLimpiarFiltrosInventario(){
  for(const id of ['inventorySearch','inventoryTipoFilter','inventoryTagFilter','inventoryProveedorFilter']){const el=document.getElementById(id);if(el)el.value='';}
  renderInventoryTable();
 }
+
+// ponytail: una errata por palabra de 4+ letras; numeros y tallas requieren coincidencia exacta.
+function posBusquedaCoincide(query:any,target:any):boolean {
+ const normal=(v:any)=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const q=normal(query).trim(),text=normal(target);if(!q)return true;if(text.includes(q))return true;
+ const words=text.split(/[^a-z0-9]+/).filter(Boolean);
+ const oneEdit=(a:string,b:string)=>{
+   if(Math.abs(a.length-b.length)>1)return false;
+   let i=0;while(i<Math.min(a.length,b.length)&&a[i]===b[i])i++;
+   if(i===Math.min(a.length,b.length))return true;
+   if(a.length===b.length)return a.slice(i+1)===b.slice(i+1)||(a[i]===b[i+1]&&a[i+1]===b[i]&&a.slice(i+2)===b.slice(i+2));
+   return a.length>b.length?a.slice(i+1)===b.slice(i):a.slice(i)===b.slice(i+1);
+ };
+ return q.split(/[^a-z0-9]+/).filter(Boolean).every(token=>words.some(word=>word.includes(token)||(token.length>=4&&!/\d/.test(token)&&oneEdit(token,word))));
+}
+window.posBusquedaCoincide=posBusquedaCoincide;
+
+function posFiltrarPedidosRapidos(orders:any[],filter:string,hoy:string):any[] {
+ return orders.filter(p=>['confirmado','pago','produccion','envio','salida','retirar'].includes(p.status||'confirmado')&&(
+   filter==='hoy'?p.entrega===hoy:filter==='vencido'?!!p.entrega&&p.entrega<hoy:filter==='saldo'?calcSaldoPendiente(p)>0:
+   filter==='pronto'?!!p.entrega&&p.entrega>=hoy&&p.entrega<=_posFechaMasDos(hoy):true));
+}
+function _posFechaMasDos(hoy:string):string { const d=new Date(hoy+'T12:00:00');d.setDate(d.getDate()+2);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+window.posFiltrarPedidosRapidos=posFiltrarPedidosRapidos;
+async function posGuardarPedidoRapido(id:string,values:any,before?:string) {
+ const p=(window.pedidos||[]).find(p=>String(p.id)===String(id));if(!p)throw Error('Pedido no encontrado.');
+ if(before!=null&&JSON.stringify(p)!==before)throw Error('El pedido cambió. Vuelve a abrir la edición rápida.');
+ const fecha=new Date(values.entrega+'T12:00:00');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(values.entrega)||!Number.isFinite(fecha.getTime())||fecha.getDate()!==Number(values.entrega.slice(-2))||(p.fecha&&values.entrega<p.fecha))throw Error('Revisa la fecha de entrega.');
+ if(!['normal','alta','baja'].includes(values.prioridad))throw Error('Prioridad inválida.');
+ await posRunOperation(async()=>{p.entrega=values.entrega;p.prioridad=values.prioridad;p.notas=String(values.notas||'').trim().slice(0,2000);await savePedidos();},'Edición rápida de pedido');
+}
+window.posGuardarPedidoRapido=posGuardarPedidoRapido;
+function posEditarPedidoRapido(id:string) {
+ const p=(window.pedidos||[]).find(p=>String(p.id)===String(id));if(!p)return;
+ const before=JSON.stringify(p),dialog=posDialog(`Edición rápida · ${p.folio||'Pedido'}`),form=document.createElement('form');
+ form.innerHTML='<label>Fecha de entrega<input name="entrega" type="date" required></label><label>Prioridad<select name="prioridad"><option value="normal">Normal</option><option value="alta">Alta</option><option value="baja">Baja</option></select></label><label>Nota del pedido<textarea name="notas" rows="3" maxlength="2000" placeholder="Ej. Nombre en dorado"></textarea></label><p role="status"></p><button type="submit" class="mk-btn-primary">Guardar cambios</button>';
+ const field=(name:string)=>form.elements.namedItem(name) as HTMLInputElement;
+ field('entrega').value=p.entrega||'';field('entrega').min=p.fecha||'';field('prioridad').value=p.prioridad||'normal';field('notas').value=p.notas||'';dialog.appendChild(form);
+ form.onsubmit=async e=>{e.preventDefault();const button=form.querySelector('button')!;button.disabled=true;try{
+ await posGuardarPedidoRapido(id,{entrega:field('entrega').value,prioridad:field('prioridad').value,notas:field('notas').value},before);
+ dialog.close();renderPedidosTable();if(typeof updateDashboard==='function')updateDashboard();
+ }catch(err:any){form.querySelector('[role=status]')!.textContent=err.message||'No se pudo guardar.';button.disabled=!!err.pendingSync;}};
+}
+window.posEditarPedidoRapido=posEditarPedidoRapido;
+
+const _posCapturaClaves:Record<string,string>={ptCategory:'categoriaProducto',pvCategory:'categoriaProducto',ptProveedorNombre:'proveedor',mpProveedor:'proveedor',transactionMethod:'metodoBalance',transactionCategoria:'categoriaEgreso'};
+function posRecordarCaptura(ids:string[]) { for(const id of ids){const el=document.getElementById(id) as HTMLInputElement|null;const key=_posCapturaClaves[id];if(el&&key)try{localStorage.setItem('pos_captura_'+key,el.value.trim());}catch{}} }
+function posRestaurarCaptura(ids:string[]) { for(const id of ids){const el=document.getElementById(id) as HTMLSelectElement|null;const key=_posCapturaClaves[id];if(!el||!key)continue;try{const value=localStorage.getItem('pos_captura_'+key);if(value!=null&&(!el.options||Array.from(el.options).some(o=>o.value===value)))el.value=value;}catch{}} }
+window.posRecordarCaptura=posRecordarCaptura;window.posRestaurarCaptura=posRestaurarCaptura;
+let _posLugarInventario:any=null;
+function _posFilaInventario(id:string):HTMLElement|null {
+ const section=document.getElementById('inventory-section');
+ const node=(Array.from(section?.querySelectorAll('[data-id]')||[]) as HTMLElement[]).find(el=>el.dataset.id===String(id));
+ return (node?.closest('tr,article') as HTMLElement)||node||null;
+}
+function posGuardarLugarInventario(id:string) { const row=_posFilaInventario(id);_posLugarInventario={id,y:window.scrollY,top:row?.getBoundingClientRect().top}; }
+function posRestaurarLugarInventario() {
+ if(!_posLugarInventario)return;const place=_posLugarInventario;_posLugarInventario=null;
+ requestAnimationFrame(()=>{const row=_posFilaInventario(place.id);window.scrollTo({top:row&&place.top!=null?window.scrollY+row.getBoundingClientRect().top-place.top:place.y,behavior:'instant'});
+ if(row){row.classList.add('pos-inv-resumed');(row.querySelector('button') as HTMLButtonElement|null)?.focus({preventScroll:true});setTimeout(()=>row.classList.remove('pos-inv-resumed'),2500);}});
+}
+window.posGuardarLugarInventario=posGuardarLugarInventario;window.posRestaurarLugarInventario=posRestaurarLugarInventario;

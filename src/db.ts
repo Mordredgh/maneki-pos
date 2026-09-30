@@ -643,6 +643,7 @@ async function closeModal(idOrEl) {
         if (modal) (modal as any)._mkDirty = false;
         // FIX #11: si no quedan modales abiertos, aplicar updates RT diferidos
         if (!document.querySelector('.modal.active')) _flushRTDeferred();
+        if (['ptModal','mpModal','pvModal','svcModal','packModal'].includes(modal.id) && typeof (window as any).posRestaurarLugarInventario === 'function') (window as any).posRestaurarLugarInventario();
     }, duration);
 }
 

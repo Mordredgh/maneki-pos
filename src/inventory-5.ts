@@ -11,17 +11,7 @@ function _levenshtein(a: string, b: string): number {
     return dp[m][n];
 }
 (window as any)._levenshtein = _levenshtein;
-function _fuzzyMatch(query: string, target: string, threshold = 2): boolean {
-    query = query.toLowerCase().trim();
-    target = target.toLowerCase();
-    if (!query) return true;
-    if (target.includes(query)) return true;
-    const words = target.split(/[\s,.-]+/);
-    return words.some(w => {
-        const cmp = w.substring(0, query.length + 2);
-        return cmp.length >= query.length - 1 && _levenshtein(query, cmp) <= threshold;
-    });
-}
+function _fuzzyMatch(query: string, target: string): boolean { return posBusquedaCoincide(query,target); }
 (window as any)._fuzzyMatch = _fuzzyMatch;
 
 // ── Calcular cuántas unidades se pueden producir desde MP ──────────────────
@@ -488,33 +478,8 @@ function renderInventoryTable() {
     const provQ = (document.getElementById('inventoryProveedorFilter') ||{}).value?.trim().toLowerCase() || '';
 
     function applyFilters(list) {
-        const _ns = window._normSearch || (s => String(s||'').toLowerCase());
-        const qN = _ns(q);
-        const provQN = _ns(provQ);
-        const tagMatch  = (p) => !tagQ  || (p.tags && p.tags.includes(tagQ));
-        const provMatch = (p) => !provQ || _ns(p.proveedor||'').includes(provQN);
-
-        if (!q) return list.filter(p => tagMatch(p) && provMatch(p));
-
-        // Primero: coincidencia exacta (substring)
-        const exactos = list.filter(p => {
-            const nombreMatch = _ns(p.name).includes(qN)
-                || _ns(p.sku||'').includes(qN)
-                || _ns(p.proveedor||'').includes(qN)
-                || _ns(p.notas||'').includes(qN)
-                || (p.tags||[]).some(t => _ns(t).includes(qN));
-            return nombreMatch && tagMatch(p) && provMatch(p);
-        });
-
-        if (exactos.length > 0) return exactos;
-
-        // Fallback: fuzzy matching si no hay resultados exactos (N-SEARCH-004)
-        return list.filter(p =>
-            (_fuzzyMatch(qN, p.name || '') ||
-             _fuzzyMatch(qN, p.sku || '') ||
-             _fuzzyMatch(qN, p.proveedor || '')) &&
-            tagMatch(p) && provMatch(p)
-        );
+        return list.filter(p => posBusquedaCoincide(q,[p.name,p.sku,p.proveedor,p.notas,...(p.tags||[])].join(' '))
+            && (!tagQ || (p.tags||[]).includes(tagQ)) && (!provQ || posBusquedaCoincide(provQ,p.proveedor)));
     }
 
     const mps  = applyFilters(allProducts.filter(p => p.tipo === 'materia_prima'));
@@ -1174,13 +1139,9 @@ function invSectionPage(sectionId, page) {
     const tagQ  = (document.getElementById('inventoryTagFilter')       ||{}).value || '';
     const provQ = (document.getElementById('inventoryProveedorFilter') ||{}).value?.trim().toLowerCase() || '';
     const filteredList = list.filter(p => {
-        const nombreMatch = !q || p.name.toLowerCase().includes(q)
-            || (p.sku||'').toLowerCase().includes(q)
-            || (p.proveedor||'').toLowerCase().includes(q)
-            || (p.notas||'').toLowerCase().includes(q)
-            || (p.tags||[]).some(t => t.toLowerCase().includes(q));
+        const nombreMatch = posBusquedaCoincide(q,[p.name,p.sku,p.proveedor,p.notas,...(p.tags||[])].join(' '));
         const tagMatch  = !tagQ  || (p.tags && p.tags.includes(tagQ));
-        const provMatch = !provQ || (p.proveedor||'').toLowerCase().includes(provQ);
+        const provMatch = !provQ || posBusquedaCoincide(provQ,p.proveedor);
         return nombreMatch && tagMatch && provMatch;
     });
     const totalPgs = Math.max(1, Math.ceil(filteredList.length / (window._invPageSize||10)));

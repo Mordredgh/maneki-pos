@@ -428,35 +428,7 @@ function dismissToast(toast) {
 function manekiToast(msg, tipo) { manekiToastExport(msg, tipo); }
 
 // ===== FUZZY SEARCH HELPER =====
-function fuzzyMatch(str, query) {
-  if (!str || !query) return false;
-  str = str.toLowerCase();
-  query = query.toLowerCase();
-  // Exact includes check first (fast path)
-  if (str.includes(query)) return true;
-  // Fuzzy: score-based character matching
-  let qi = 0;
-  for (let si = 0; si < str.length && qi < query.length; si++) {
-    if (str[si] === query[qi]) qi++;
-  }
-  // All query chars found in order = fuzzy match
-  if (qi === query.length) return true;
-  // Also handle common Spanish typos: remove accents for comparison
-  const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const sn = normalize(str), qn = normalize(query);
-  if (sn.includes(qn)) return true;
-  // Allow 1 character substitution for queries >= 4 chars
-  if (query.length >= 4) {
-    let diff = 0;
-    const shorter = Math.min(str.length, query.length);
-    for (let i = 0; i < shorter; i++) {
-      if (str[i] !== query[i]) diff++;
-    }
-    diff += Math.abs(str.length - query.length);
-    if (diff <= 1) return true;
-  }
-  return false;
-}
+function fuzzyMatch(str, query) { return !!str && !!query && posBusquedaCoincide(query,str); }
 
 // ===== DEBOUNCE para buscador global =====
 let _searchDebounceTimer = null;
@@ -540,11 +512,11 @@ function busquedaGlobal(query) {
         ? `<img src="${p.imageUrl}" alt="${_esc(p.name||'')}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`
         : `<span class="text-lg flex-shrink-0">${p.image||'📦'}</span>`;
       html += `<div class="px-4 py-2 hover:bg-amber-50 cursor-pointer flex items-center gap-3"
-          data-action="_mkSearchClickProduct" data-arg="${(p.id || '').replace(/"/g,'')}">
+          data-action="_mkSearchClickProduct" data-arg="${_esc(p.id || '')}">
         ${img}
         <div class="flex-1 min-w-0">
           <div class="font-medium text-gray-800 truncate">${_esc(p.name)}</div>
-          <div class="text-xs text-gray-400">Stock: ${p.stock ?? '—'} · SKU: ${p.sku||'—'}</div>
+          <div class="text-xs text-gray-400">Stock: ${p.stock ?? '—'} · SKU: ${_esc(p.sku||'—')}</div>
         </div>
         <div class="text-amber-700 font-bold text-sm flex-shrink-0">$${Number(p.price||0).toFixed(2)}</div>
       </div>`;
@@ -563,11 +535,11 @@ function busquedaGlobal(query) {
       const ventas = (window.salesHistory || []).filter(s => (s.customer||'').toLowerCase() === c.name.toLowerCase()).length;
       const pedidosCli = (window.pedidos || []).filter(p => (p.cliente||'').toLowerCase() === c.name.toLowerCase()).length;
       html += `<div class="px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-3"
-          data-action="_mkSearchClickClient" data-arg="${_escAttr(c.name)}">
+          data-action="_mkSearchClickClient" data-arg="${_esc(c.name)}">
         <span class="text-lg">👤</span>
         <div class="flex-1 min-w-0">
           <div class="font-medium text-gray-800">${_esc(c.name)}</div>
-          <div class="text-xs text-gray-400">${c.phone||c.telefono||'Sin teléfono'} · ${ventas} venta${ventas!==1?'s':''} · ${pedidosCli} pedido${pedidosCli!==1?'s':''}</div>
+          <div class="text-xs text-gray-400">${_esc(c.phone||c.telefono||'Sin teléfono')} · ${ventas} venta${ventas!==1?'s':''} · ${pedidosCli} pedido${pedidosCli!==1?'s':''}</div>
         </div>
         <div class="text-blue-400 text-xs flex-shrink-0">Ver →</div>
       </div>`;
@@ -586,15 +558,15 @@ function busquedaGlobal(query) {
       const statusColors = { pendiente:'text-yellow-500', confirmado:'text-blue-500', produccion:'text-purple-500', finalizado:'text-green-500', cancelado:'text-red-400' };
       const color = statusColors[p.status] || 'text-gray-500';
       html += `<div class="px-4 py-2 hover:bg-yellow-50 cursor-pointer flex items-center gap-3"
-          data-action="_mkSearchClickPedido" data-arg="${_escAttr(p.cliente || '')}">
+          data-action="_mkSearchClickPedido" data-arg="${_esc(p.cliente || '')}">
         <span class="text-lg">🛍️</span>
         <div class="flex-1 min-w-0">
-          <div class="font-medium text-gray-800">${p.folio||'—'} — ${p.cliente||'Sin nombre'}</div>
-          <div class="text-xs text-gray-400 truncate">${p.concepto||'Sin descripción'} · Entrega: ${p.entrega||'—'}</div>
+          <div class="font-medium text-gray-800">${_esc(p.folio||'—')} — ${_esc(p.cliente||'Sin nombre')}</div>
+          <div class="text-xs text-gray-400 truncate">${_esc(p.concepto||'Sin descripción')} · Entrega: ${_esc(p.entrega||'—')}</div>
         </div>
         <div class="flex flex-col items-end flex-shrink-0">
           <span class="font-bold text-sm text-gray-700">$${Number(p.total||0).toFixed(2)}</span>
-          <span class="text-xs ${color} capitalize">${p.status||'—'}</span>
+          <span class="text-xs ${color} capitalize">${_esc(p.status||'—')}</span>
         </div>
       </div>`;
     });
@@ -610,17 +582,17 @@ function busquedaGlobal(query) {
     html += `<div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wide border-b border-t mt-1">💰 Ventas</div>`;
     ventas.slice(0,3).forEach(v => {
       html += `<div class="px-4 py-2 hover:bg-green-50 cursor-pointer flex items-center gap-3"
-          data-action="_mkSearchClickVenta" data-arg="${_escAttr(v.folio || '')}">
+          data-action="_mkSearchClickVenta" data-arg="${_esc(v.folio || '')}">
         <span class="text-lg">💰</span>
-        <div class="flex-1 min-w-0"><div class="font-medium text-gray-800">${v.customer||'Cliente General'}</div>
-        <div class="text-xs text-gray-400">${v.date||'—'} · ${v.method||'—'}</div></div>
+        <div class="flex-1 min-w-0"><div class="font-medium text-gray-800">${_esc(v.customer||'Cliente General')}</div>
+        <div class="text-xs text-gray-400">${_esc(v.date||'—')} · ${_esc(v.method||'—')}</div></div>
         <div class="font-bold text-sm text-green-700 flex-shrink-0">$${Number(v.total||0).toFixed(2)}</div>
       </div>`;
     });
   }
 
   if (!html) {
-    html = `<div class="px-4 py-6 text-center text-gray-400 text-sm">Sin resultados para "<b>${query}</b>"</div>`;
+    html = `<div class="px-4 py-6 text-center text-gray-400 text-sm">Sin resultados para "<b>${_esc(query)}</b>"</div>`;
   }
   panel.innerHTML = html;
   panel.classList.remove('hidden');
@@ -1124,7 +1096,7 @@ function _normSearch(texto) {
 
 function _matchBusqueda(valor, q) {
     if (!valor || !q) return false;
-    return _normSearch(valor).includes(q);
+    return posBusquedaCoincide(q,valor);
 }
 
 function _abrirBusquedaOverlay() {

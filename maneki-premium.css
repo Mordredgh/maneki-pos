@@ -6625,3 +6625,27 @@ dialog.pos-gallery-dialog{width:min(900px,calc(100vw - 24px));max-height:95dvh;b
 body:has(dialog[open]) #fabNuevoPedido,body:has(dialog[open]) #mk-help-fab,body:has(dialog[open]) #mk-sound-btn{display:none!important}
 body:has(#balance-section:not(.hidden)) #fabNuevoPedido,body:has(#balance-section:not(.hidden)) #mk-help-fab,body:has(#inventory-section:not(.hidden)) #fabNuevoPedido,body:has(#inventory-section:not(.hidden)) #mk-help-fab{display:none!important}
 @media(max-width:650px){.pos-inv-card button,#balance-section .pos-balance-action,#posBalanceTimeline button{min-height:44px!important}.pos-balance-entry{gap:7px}.pos-balance-timeline-head strong{font-size:.92rem}}
+
+/* Kanban: lectura primero, acciones secundarias desplegables. */
+.pos-kanban-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.pos-kanban-filters [aria-pressed="true"]{background:#1c4f32;color:#fff;border-color:#1c4f32}
+.pos-kanban-filters span{font-variant-numeric:tabular-nums;opacity:.85;margin-left:5px}
+.pos-kanban-card{padding:14px!important;border:1px solid #e2e8df;border-radius:14px;background:#fff;box-shadow:0 3px 12px #1c4f320a;min-width:0}
+.pos-kanban-heading{display:flex;justify-content:space-between;gap:8px;color:#687b6c;font-size:.7rem;font-weight:700;margin-bottom:6px}
+.pos-kanban-heading input{width:18px;height:18px;accent-color:#1c4f32}
+.pos-kanban-client{font-size:.92rem;font-weight:800;color:#1c4f32;overflow-wrap:anywhere;margin:0 0 4px}
+.pos-kanban-product{font-size:.8rem;color:#34443b;line-height:1.4;margin:0 0 10px;overflow-wrap:anywhere}
+.pos-kanban-meta{display:flex;flex-direction:column;gap:4px;font-size:.72rem;color:#637569;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.pos-kanban-meta strong{color:#1c4f32;font-size:.8rem}
+.pos-kanban-overdue{color:#b42318;font-weight:700}.pos-kanban-today{color:#8a6510;font-weight:700}
+.pos-kanban-priority{font-size:.7rem;color:#b42318;font-weight:700}
+.pos-kanban-note{margin:6px 0 10px;padding:7px 9px;border-radius:8px;background:#faf6ec;color:#695324;font-size:.73rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pos-kanban-actions{display:flex;gap:5px;flex-wrap:wrap}.pos-kanban-actions button{flex:1 1 auto;min-width:max-content!important;min-height:36px!important;padding:6px!important;font-size:.7rem!important;white-space:nowrap}
+.pos-kanban-more{margin-top:8px}.pos-kanban-more summary{cursor:pointer;font-size:.73rem;color:#637569;padding:7px 0;min-height:32px}
+.pos-kanban-more>div{display:grid;gap:5px;padding:4px 0}.pos-kanban-more button{text-align:left;justify-content:flex-start!important;min-height:36px!important}
+.pos-kanban-compact .pos-kanban-client{font-size:.8rem}.pos-kanban-compact .pos-kanban-product{font-size:.72rem;margin-bottom:5px}
+.pos-kanban-card:focus-visible,.pos-kanban-more summary:focus-visible{outline:3px solid #9669c4;outline-offset:3px}
+.pos-inv-resumed{outline:2px solid #9669c4;outline-offset:-2px}
+body.dark .pos-kanban-card{background:#23352b;border-color:#486251}body.dark .pos-kanban-client,body.dark .pos-kanban-meta strong{color:#b4e0c0}body.dark .pos-kanban-product,body.dark .pos-kanban-meta,body.dark .pos-kanban-heading,body.dark .pos-kanban-more summary{color:#d0ddd3}body.dark .pos-kanban-note{background:#3c392a;color:#ffe8b0}
+@media(prefers-reduced-motion:reduce){.pos-inv-resumed{transition:none}}
+@media(max-width:650px){.mk-kanban-wrapper:has(.pos-kanban-card){flex:0 0 280px!important;min-width:280px!important;max-width:280px!important}.pos-kanban-actions button,.pos-kanban-more button,.pos-kanban-more summary,#pos-kanban-filtros button{min-height:44px!important}.pos-kanban-more summary{display:flex;align-items:center;gap:6px}}

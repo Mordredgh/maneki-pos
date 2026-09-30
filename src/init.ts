@@ -330,26 +330,26 @@
 
             // Pedidos activos
             (window.pedidos || []).forEach((p: any) => {
-                if (_ns(p.folio||'').includes(qn) || _ns(p.cliente||'').includes(qn) || _ns(p.concepto||'').includes(qn)) {
+                if (posBusquedaCoincide(qn,[p.folio,p.cliente,p.concepto].join(' '))) {
                     results.push({ icon:'📋', title: (p.folio||'')+(p.cliente?' · '+p.cliente:''), sub: p.concepto||p.status||'', action: () => { if (typeof showSection==='function') showSection('pedidos'); setTimeout(()=>{ const el=document.getElementById('kanbanBuscar'); if(el){(el as HTMLInputElement).value=p.folio||p.cliente||''; el.dispatchEvent(new Event('input'));} },300); } });
                 }
             });
             // Pedidos finalizados
             (window.pedidosFinalizados || []).forEach((p: any) => {
-                if (_ns(p.folio||'').includes(qn) || _ns(p.cliente||'').includes(qn)) {
+                if (posBusquedaCoincide(qn,[p.folio,p.cliente].join(' '))) {
                     results.push({ icon:'✅', title: (p.folio||'')+(p.cliente?' · '+p.cliente:''), sub: 'Finalizado · '+(_ns(p.concepto||'')||''), action: () => { if (typeof showSection==='function') showSection('pedidos'); } });
                 }
             });
             // Productos
             (window.products || []).forEach((p: any) => {
-                if (_ns(p.name||'').includes(qn)) {
+                if (posBusquedaCoincide(qn,[p.name,p.sku,p.proveedor].join(' '))) {
                     const stock = typeof getStockEfectivo==='function' ? getStockEfectivo(p) : (p.stock||0);
                     results.push({ icon: p.tipo==='materia_prima'?'🧵':'📦', title: p.name||'', sub: 'Stock: '+stock+(p.tipo?' · '+p.tipo:''), action: () => { if (typeof showSection==='function') showSection('inventory'); } });
                 }
             });
             // Clientes
             (window.clients || []).forEach((c: any) => {
-                if (_ns(c.name||'').includes(qn) || _ns(c.phone||c.telefono||'').includes(qn)) {
+                if (posBusquedaCoincide(qn,[c.name,c.phone,c.telefono].join(' '))) {
                     results.push({ icon:'👤', title: c.name||'', sub: c.phone||c.telefono||'', action: () => { if (typeof showSection==='function') showSection('clientes'); } });
                 }
             });

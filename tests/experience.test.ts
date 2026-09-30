@@ -3,9 +3,9 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {transformSync} from 'esbuild';
 
-function load(file:string) {
+function load(file:string,document:any={addEventListener(){},getElementById(){return null;}}) {
   const window:any = {};
-  const ctx:any = {window,document:{addEventListener(){},getElementById(){return null;}},console};
+  const ctx:any = {window,document,console};
   runInNewContext(transformSync(readFileSync(file,'utf8'),{loader:'ts'}).code,ctx);
   return ctx;
 }
@@ -100,4 +100,80 @@ it('sugiere costo por materiales sin reemplazar el costo manual hasta solicitarl
  c.recalcularCostoPt();expect(elements.ptCosto.value).toBe('42');expect(elements.ptCostoDesglose.textContent).toContain('20.00');expect(elements.ptUsarCostoBtn.hidden).toBe(false);
  c.ptUsarCostoCalculado();expect(elements.ptCosto.value).toBe('20.00');
  c.window._ptMpComponentes=[];c.recalcularCostoPt();expect(elements.ptUsarCostoBtn.hidden).toBe(true);
+});
+
+it('encuentra palabras en distinto orden, acentos y un error sin confundir tallas ni numeros',()=>{
+ const c=load('src/operations.ts');
+ expect(c.posBusquedaCoincide('negro playera','Playera juvenil color Negro')).toBe(true);
+ expect(c.posBusquedaCoincide('jsoe garcia','José García')).toBe(true);
+ expect(c.posBusquedaCoincide('tza','Taza')).toBe(false);
+ expect(c.posBusquedaCoincide('M','Playera talla L')).toBe(false);
+ expect(c.posBusquedaCoincide('0063','PE-0062')).toBe(false);
+ expect(c.posBusquedaCoincide('blanco playera','Playera negra')).toBe(false);
+});
+
+it('edita fecha, prioridad y nota juntos sin alterar saldo ni perder cambios concurrentes',async()=>{
+ const c=load('src/operations.ts');const p:any={id:'p',fecha:'2026-09-29',entrega:'2026-10-01',prioridad:'normal',total:180,pagos:[{monto:90}]};
+ c.window.pedidos=[p];c.posRunOperation=async(fn:any)=>fn();let saved=0;c.savePedidos=async()=>{saved++;};
+ const before=JSON.stringify(p);await c.posGuardarPedidoRapido('p',{entrega:'2026-10-02',prioridad:'alta',notas:'Nombre en dorado'},before);
+ expect(p).toMatchObject({entrega:'2026-10-02',prioridad:'alta',notas:'Nombre en dorado',total:180,pagos:[{monto:90}]});expect(saved).toBe(1);
+ await expect(c.posGuardarPedidoRapido('p',{entrega:'2026-10-03',prioridad:'baja',notas:''},before)).rejects.toThrow('cambió');
+ await expect(c.posGuardarPedidoRapido('p',{entrega:'2026-09-28',prioridad:'normal',notas:''})).rejects.toThrow('fecha');
+});
+it('los filtros cuentan solo pedidos activos por fecha local y saldo',()=>{
+ const c=load('src/operations.ts');c.calcSaldoPendiente=(p:any)=>p.saldo;
+ const orders=[{status:'confirmado',entrega:'2026-09-29',saldo:10},{status:'retirar',entrega:'2026-09-28',saldo:0},{status:'finalizado',entrega:'2026-09-29',saldo:20},{status:'pago',saldo:5}];
+ expect(c.posFiltrarPedidosRapidos(orders,'hoy','2026-09-29')).toHaveLength(1);
+ expect(c.posFiltrarPedidosRapidos(orders,'vencido','2026-09-29')).toHaveLength(1);
+ expect(c.posFiltrarPedidosRapidos(orders,'saldo','2026-09-29')).toHaveLength(2);
+ expect(c.posFiltrarPedidosRapidos(orders,'todos','2026-09-29')).toHaveLength(3);
+});
+
+it('el tablero agrupa entregas de hoy usando la fecha y no el objeto del pedido',()=>{
+ const c=load('src/pedidos-1-views.ts');const col:any={children:[{}],innerHTML:'',closest:()=>null};
+ c.document.getElementById=(id:string)=>id==='kCol-confirmado'?col:null;
+ c.window.pedidos=[{id:'p',status:'confirmado',entrega:'2026-09-29'}];
+ c._fechaHoy=()=> '2026-09-29';c.posBusquedaCoincide=()=>true;c.posFiltrarPedidosRapidos=(orders:any[])=>orders;
+ c.kanbanCardHTML=()=> 'Tarjeta';c.window.diasHastaEntrega=(fecha:any)=>fecha==='2026-09-29'?0:null;
+ c.renderKanbanBoard();expect(col.innerHTML).toContain('Urgente (1)');
+});
+
+it('rechaza fechas inexistentes en la edicion rapida antes de guardar',async()=>{
+ const c=load('src/operations.ts');c.window.pedidos=[{id:'p'}];c.posRunOperation=async(fn:any)=>fn();let saved=0;c.savePedidos=async()=>{saved++;};
+ await expect(c.posGuardarPedidoRapido('p',{entrega:'2026-02-31',prioridad:'normal'})).rejects.toThrow('fecha');expect(saved).toBe(0);
+});
+
+it('recuerda selecciones locales sin aplicar opciones eliminadas ni fallar si almacenamiento esta bloqueado',()=>{
+ const c=load('src/operations.ts');const saved=new Map<string,string>();const el:any={value:'cat-2',options:[{value:'cat-1'},{value:'cat-2'}]};
+ c.localStorage={getItem:(k:string)=>saved.get(k)||null,setItem:(k:string,v:string)=>saved.set(k,v)};c.document.getElementById=()=>el;
+ c.posRecordarCaptura(['ptCategory']);el.value='cat-1';c.posRestaurarCaptura(['ptCategory']);expect(el.value).toBe('cat-2');
+ el.options=[{value:'cat-1'}];el.value='cat-1';c.posRestaurarCaptura(['ptCategory']);expect(el.value).toBe('cat-1');
+ c.localStorage.getItem=()=>{throw Error('Bloqueado');};expect(()=>c.posRestaurarCaptura(['ptCategory'])).not.toThrow();
+});
+it('al volver al inventario restaura el desplazamiento y foco del producto sin reiniciar pagina',()=>{
+ const c=load('src/operations.ts');let top=150,scroll:any,focused=false;
+ const row:any={getBoundingClientRect:()=>({top}),classList:{add(){},remove(){}},querySelector:()=>({focus:()=>{focused=true;}})};
+ const item:any={closest:()=>row};c.document.getElementById=()=>({querySelectorAll:()=>[item]});item.dataset={id:'p'};
+ c.window.scrollY=400;c.window._invPage_pt=3;c.window.scrollTo=(v:any)=>{scroll=v;};c.requestAnimationFrame=(fn:any)=>fn();c.setTimeout=()=>{};
+ c.posGuardarLugarInventario('p');top=220;c.posRestaurarLugarInventario();
+ expect(scroll.top).toBe(470);expect(c.window._invPage_pt).toBe(3);expect(focused).toBe(true);
+});
+
+it('Balance cierra despues de guardar y conserva la advertencia si el guardado falla',async()=>{
+ let submit:any;const modal:any={dataset:{},_mkDirty:true};const fields:any={transactionModal:modal,transactionType:{value:'income'},transactionConcept:{value:'Prueba'},transactionAmount:{value:'10'},transactionDate:{value:'2026-09-29'},transactionMethod:{value:'transferencia'},transactionForm:{addEventListener:(t:string,fn:any)=>{if(t==='submit')submit=fn;},reset(){}}};
+ const c=load('src/balance.ts',{addEventListener(){},getElementById:(id:string)=>fields[id]||null});
+ let saved=false,closedDirty:any;let fail=false;c.incomes=[];c.mkId=()=> 'prueba';c.saveIncomes=async()=>{if(fail)throw Error('Sin red');saved=true;};
+ c.window._mkModalSaved=()=>{modal._mkDirty=false;};c.closeModal=()=>{closedDirty=modal._mkDirty;};c.posRecordarCaptura=()=>{};c.renderBalance=()=>{};c.updateDashboard=()=>{};c.manekiToastExport=()=>{};
+ await submit({preventDefault(){},target:{querySelector:()=>null}});expect(saved).toBe(true);expect(closedDirty).toBe(false);
+ fail=true;modal._mkDirty=true;closedDirty=undefined;await submit({preventDefault(){},target:{querySelector:()=>null}});expect(modal._mkDirty).toBe(true);expect(closedDirty).toBeUndefined();
+});
+
+it('el buscador global encuentra clientes con errata y escapa resultados y consultas',()=>{
+ const c=load('src/operations.ts');const panel:any={innerHTML:'',classList:{add(){},remove(){}}};c.document.getElementById=()=>panel;
+ const source=readFileSync('src/ui-extras.ts','utf8');runInNewContext(transformSync(source.slice(source.indexOf('function busquedaGlobal(query)'),source.indexOf('function cerrarBusquedaGlobal()')),{loader:'ts'}).code,c);
+ c.fuzzyMatch=(text:any,q:any)=>c.posBusquedaCoincide(q,text);
+ c._esc=(value:any)=>String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+ c.window.clients=[{name:'Cliente de prueba " <script>'}];c.window.pedidos=[{cliente:'Cliente de prueba " <script>',folio:'PE-1',concepto:'Playera <script>'}];c.window.salesHistory=[];
+ expect(()=>c.busquedaGlobal('prueba clietne')).not.toThrow();expect(panel.innerHTML).toContain('Cliente de prueba &quot; &lt;script&gt;');expect(panel.innerHTML).not.toContain('<script>');
+ c.busquedaGlobal('<img src=x>');expect(panel.innerHTML).not.toContain('<img src=x>');expect(panel.innerHTML).toContain('&lt;img src=x&gt;');
 });

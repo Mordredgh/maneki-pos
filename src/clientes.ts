@@ -379,8 +379,10 @@ window._clienteFiltroTag = '';
 // ── Helper: obtener clientes a renderizar según filtro activo ─────────────────
 function _clientesFiltrados() {
     const tag = window._clienteFiltroTag || '';
-    if (!tag) return [...clients];
-    return clients.filter(c => {
+    const q=(document.getElementById('searchClient') as HTMLInputElement|null)?.value||'';
+    const base=clients.filter(c=>posBusquedaCoincide(q,[c.name,c.email,c.phone,c.telefono].join(' ')));
+    if (!tag) return [...base];
+    return base.filter(c => {
         const t = _tagActividad(c);
         return t.clase === tag;
     });
@@ -435,7 +437,7 @@ function _renderFiltrosActividad() {
         function renderClientsTable() {
             // P1: hash guard — saltar re-render si los datos no cambiaron
             const _cli = window.clients||[];
-            const _cHash = _cli.length + '_' + _cli.reduce((s: number,c: any)=>s+Number(c.totalPurchases||0),0).toFixed(0);
+            const _cHash = ((document.getElementById('searchClient') as HTMLInputElement|null)?.value||'')+'_'+(window._clienteFiltroTag||'')+'_'+_cli.length + '_' + _cli.reduce((s: number,c: any)=>s+Number(c.totalPurchases||0),0).toFixed(0);
             const _cTbody = document.getElementById('clientsTable');
             if (_cTbody && (_cTbody as any)._lastHash === _cHash) { if (typeof renderRFMPanel === 'function') renderRFMPanel(); return; }
             if (_cTbody) (_cTbody as any)._lastHash = _cHash;
@@ -779,9 +781,7 @@ function closeAddClientModal() {
                 // Aplicar filtro de tag activo también en la búsqueda
                 const baseList = _clientesFiltrados();
                 const filteredClients = baseList.filter(c =>
-                    _normC(c.name).includes(q) ||
-                    _normC(c.email || '').includes(q) ||
-                    (c.phone || c.telefono || '').includes(q)
+                    posBusquedaCoincide(q,[c.name,c.email,c.phone,c.telefono].join(' '))
                 );
 
                 const tbody = document.getElementById('clientsTable');
@@ -891,7 +891,7 @@ function _mkCliRenderInfo() {
     shown = shown.filter(c => (window as any)._tagActividad(c).clase === tag);
   if (q) {
     const qn = _mkCliNorm(q);
-    shown = shown.filter(c => _mkCliNorm(c.name).includes(qn) || _mkCliNorm(c.email||'').includes(qn) || String(c.phone||c.telefono||'').includes(qn));
+    shown = shown.filter(c => posBusquedaCoincide(qn,[c.name,c.email,c.phone,c.telefono].join(' ')));
   }
   const chips: string[] = [];
   if (q) chips.push(`<span class="mk-filter-chip">Buscar: ${_esc(q)}<button data-tip="Quitar" onclick="_mkCliClearSearch()"><i class="fas fa-xmark"></i></button></span>`);

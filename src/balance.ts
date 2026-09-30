@@ -862,6 +862,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             _toggleEtiquetaField(true);
             _toggleCatField(false);
             _poblarConceptosSuggestions();
+            posRestaurarCaptura(['transactionMethod',...(document.getElementById('transactionType')?.value==='expense'?['transactionCategoria']:[])]);
             openModal(modal);
         }
         
@@ -882,6 +883,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
             _toggleCatField(true);
             // MEJORA-3: mostrar etiqueta para egresos
             _toggleEtiquetaField(true);
+            posRestaurarCaptura(['transactionMethod',...(document.getElementById('transactionType')?.value==='expense'?['transactionCategoria']:[])]);
             openModal(modal);
         }
         
@@ -1068,6 +1070,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         if (editType === 'income') await saveIncomes();
         else await saveExpenses();
 
+        if(typeof window._mkModalSaved==='function')window._mkModalSaved(modal);
         _restoreBtn();
         closeTransactionModal();
         renderBalance();
@@ -1121,13 +1124,15 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         await savePayables();
     }
 
+    if(type==='income'||type==='expense')posRecordarCaptura(['transactionMethod',...(type==='expense'?['transactionCategoria']:[])]);
+    if(typeof window._mkModalSaved==='function')window._mkModalSaved(modal);
     _restoreBtn();
     closeTransactionModal();
     renderBalance();
     updateDashboard();
     } catch(err:any) {
         manekiToastExport(err.message||'No se pudo guardar. Revisa el estado de sincronizacion.','warn');
-        closeTransactionModal();renderBalance();updateDashboard();_restoreBtn();
+        renderBalance();updateDashboard();_restoreBtn();
     }
 });
         } // end if (!_txForm._mkBound)

@@ -271,22 +271,12 @@ function renderKanbanBoard() {
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     let lista = window.pedidos || [];
 
-    // NTH-03: aplicar filtro de urgencia
-    if (_kanbanUrgenciaFiltro !== 'todos') {
-        lista = lista.filter(p => {
-            if (!p.entrega) return false;
-            const entrega = new Date(p.entrega + 'T00:00:00');
-            const diff = Math.round((entrega.getTime() - hoy.getTime()) / 86400000);
-            if (_kanbanUrgenciaFiltro === 'vencido') return diff < 0;
-            if (_kanbanUrgenciaFiltro === 'hoy')     return diff === 0;
-            if (_kanbanUrgenciaFiltro === 'pronto')  return diff >= 0 && diff <= 2;
-            return true;
-        });
-    }
-    // Filtro por ocasión
-    if (_kanbanOcasionFiltro) {
-        lista = lista.filter(p => (p.ocasion || '') === _kanbanOcasionFiltro);
-    }
+    const hoyStr=_fechaHoy();
+    lista=lista.filter(p=>!_kanbanOcasionFiltro||(p.ocasion||'')===_kanbanOcasionFiltro);
+    lista=lista.filter(p=>posBusquedaCoincide(q,[p.folio,p.cliente,p.clienteNombre,p.telefono,p.concepto,p.notas,p.notasInternas,...(p.productosInventario||[]).map(i=>i.name||i.nombre)].join(' ')));
+    const filtros=document.getElementById('pos-kanban-filtros');
+    if(filtros)filtros.innerHTML=[['todos','Todos'],['hoy','Para hoy'],['vencido','Vencidos'],['saldo','Saldo pendiente'],['pronto','Próximos']].map(([key,label])=>`<button type="button" class="mk-toolbar-btn" data-action="setKanbanUrgencia" data-arg="${key}" aria-pressed="${_kanbanUrgenciaFiltro===key}">${label} <span>${posFiltrarPedidosRapidos(lista,key,hoyStr).length}</span></button>`).join('');
+    lista=posFiltrarPedidosRapidos(lista,_kanbanUrgenciaFiltro,hoyStr);
 
     // P1: pre-computar saldo de todos los pedidos una sola vez evita llamar calcSaldoPendiente
     // O(n) en cada card + O(n) en los totales de columna = O(2n) → O(n)
@@ -297,16 +287,11 @@ function renderKanbanBoard() {
     (window as any)._kSaldoPreMap = _saldoPreMap;
 
     let totalVisible = 0;
-    const _nsKanban = window._normSearch || (s => String(s||'').toLowerCase());
     cols.forEach(col => {
         const el = document.getElementById('kCol-' + col);
         const badge = document.getElementById('kBadge-' + col);
         if (!el) return;
-        const items = lista.filter(p => (p.status||'').toLowerCase() === col && (
-            !q || [p.folio, p.cliente, p.clienteNombre, p.telefono, p.whatsapp, p.concepto, p.notas, p.descripcion,
-                ...(p.productosInventario||[]).map((i: any) => i.name||i.nombre||'')]
-                .some(v => v && _nsKanban(String(v)).includes(_nsKanban(q)))
-        ));
+        const items = lista.filter(p => (p.status||'').toLowerCase() === col);
         totalVisible += items.length;
         if (badge) {
             badge.textContent = String(items.length);
@@ -343,7 +328,7 @@ function renderKanbanBoard() {
             const urgentes: any[] = [], proximos: any[] = [], normales: any[] = [];
             const _hoyGrp = new Date(); _hoyGrp.setHours(0,0,0,0);
             cards.forEach(p => {
-                const dias = (typeof window.diasHastaEntrega === 'function') ? window.diasHastaEntrega(p) : (p.entrega ? Math.round((new Date(p.entrega + 'T00:00:00').getTime() - _hoyGrp.getTime()) / 86400000) : null);
+                const dias = (typeof window.diasHastaEntrega === 'function') ? window.diasHastaEntrega(p.entrega) : (p.entrega ? Math.round((new Date(p.entrega + 'T00:00:00').getTime() - _hoyGrp.getTime()) / 86400000) : null);
                 if (dias !== null && (dias === 0 || dias === 1)) urgentes.push(p);
                 else if (dias !== null && dias >= 2 && dias <= 4) proximos.push(p);
                 else normales.push(p);
@@ -453,155 +438,31 @@ window._kanbanVerMas = function(col: string) {
 const _statusLabel = s => ({confirmado:'✅ Confirmado',pago:'💰 Pagado',produccion:'🔧 Producción',envio:'📦 Envío',salida:'🚚 Salió',retirar:'🏪 Retirar',finalizado:'🎉 Listo',cancelado:'❌ Cancelado'})[s] || s;
 
 function kanbanCardHTML(p) {
-    const _saldo = (window as any)._kSaldoPreMap?.get(String(p.id)) ?? calcSaldoPendiente(p);
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
-    const entrega = p.entrega ? new Date(p.entrega + 'T00:00:00') : null;
-    const diff = entrega ? Math.round((entrega.getTime() - hoy.getTime()) / 86400000) : null;
-    // U3-S26: pedido vencido = fecha de entrega pasada y aún no finalizado/cancelado.
-    // Se usa para borde rojo de escaneo (ambas vistas) + badge en la vista compacta.
-    const _esVencido = diff !== null && diff < 0 && !['finalizado','cancelado'].includes((p.status||'').toLowerCase());
-    const _bordeVencido = _esVencido ? 'border-left:3px solid #dc2626;' : '';
-    let alertaHtml = '';
-    if (diff !== null) {
-        if (diff < 0) alertaHtml = '<span class="text-xs font-bold text-red-700">⛔ Vencido</span>';
-        else if (diff === 0) alertaHtml = '<span class="text-xs font-bold text-red-600">🔴 ¡Hoy!</span>';
-        else if (diff === 1) alertaHtml = '<span class="text-xs font-bold text-amber-600">🟡 Mañana</span>';
-        else if (diff === 2) alertaHtml = '<span class="text-xs font-bold text-amber-600">🟡 2 días</span>';
-    }
-    const _e = _esc;
-    // MEJORA 4: checkbox de selección en lote (visible on-hover)
-    const _isSelected = window._kanbanSeleccionados && window._kanbanSeleccionados.has(String(p.id));
-    const _checkboxHtml = `<input type="checkbox" ${_isSelected ? 'checked' : ''}
-        onchange="_toggleKanbanSelect('${p.id}', this.checked)"
-        onclick="event.stopPropagation()"
-        style="position:absolute;top:6px;right:6px;width:16px;height:16px;cursor:pointer;accent-color:#FFD166;opacity:${_isSelected ? '1' : '0'};transition:opacity .15s;"
-        class="_kanban-check"
-        title="Seleccionar para acción en lote">`;
-
-    if (_kanbanCompacto === 'compact') {
-        return `<div class="kanban-card bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-100 select-none flex flex-wrap items-center gap-2"
-            data-id="${p.id}" data-kanban-open="${_e(p.id)}" tabindex="0" aria-label="Abrir ficha del pedido ${_e(p.folio || p.id)}" data-status="${p.status || 'confirmado'}"
-            style="position:relative;${_bordeVencido}" onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
-            draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
-            ${_checkboxHtml}
-            <div class="flex-1 min-w-0">
-                ${_esVencido ? '<span class="text-xs font-bold text-red-700" title="Entrega vencida">⛔</span> ' : ''}<span class="text-xs font-bold text-amber-600">${_e(p.folio)}</span>
-                <span class="text-xs text-gray-700 ml-1 truncate">${_e(p.cliente)}</span>
-            </div>
-
-            <span class="text-xs ${_saldo>0?'text-red-500':'text-green-600'} font-bold whitespace-nowrap">$${_saldo.toFixed(0)}</span>
-            <button onclick="openPedidoStatusModal('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-gray-100 hover:bg-amber-100 text-gray-500">⚡</button>
-            <button onclick="eliminarPedido('${p.id}')" class="text-xs px-1 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-500">🗑</button>
-        </div>`;
-    }
-    if (_kanbanCompacto === 'medium') {
-        // P5: vista intermedia — folio, cliente, saldo, entrega y estado sin imagen ni notas
-        return `<div class="kanban-card bg-white rounded-xl px-3 py-2.5 shadow-sm border select-none"
-            data-id="${p.id}" data-kanban-open="${_e(p.id)}" tabindex="0" aria-label="Abrir ficha del pedido ${_e(p.folio || p.id)}" data-status="${p.status || 'confirmado'}"
-            style="position:relative;border-color:${_esVencido?'#fca5a5':'#f3f4f6'};${_bordeVencido}"
-            onmouseover="this.querySelector('._kanban-check').style.opacity='1'" onmouseout="if(!this.querySelector('._kanban-check').checked)this.querySelector('._kanban-check').style.opacity='0'"
-            draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
-            ${_checkboxHtml}
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:3px;">
-                <span style="font-size:.72rem;font-weight:800;color:#FFD166;">${_e(p.folio)}</span>
-                <span style="font-size:.7rem;font-weight:700;color:${_saldo>0?'#dc2626':'#16a34a'};">${_saldo>0?'$'+_saldo.toFixed(0):'✓'}</span>
-            </div>
-            <p style="font-size:.76rem;font-weight:600;color:#1f2937;margin:0 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_e(p.cliente)}</p>
-
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                ${alertaHtml || (p.entrega ? `<span style="font-size:.65rem;color:#9ca3af;">📅 ${p.entrega}</span>` : '<span></span>')}
-                <div style="display:flex;gap:3px;">
-                    <button onclick="openPedidoStatusModal('${p.id}')" style="font-size:.65rem;padding:2px 6px;border-radius:6px;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer;color:#6b7280;">⚡</button>
-                    <button onclick="openAbonoPedido('${p.id}')" style="font-size:.65rem;padding:2px 6px;border-radius:6px;background:#f0fdf4;border:1px solid #bbf7d0;cursor:pointer;color:#15803d;font-weight:700;">$</button>
-                </div>
-            </div>
-        </div>`;
-    }
-    // NTH-05: badge de prioridad
-    const _prioBadge = p.prioridad === 'alta'
-        ? `<span class="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 ml-1">🔺 Alta</span>`
-        : p.prioridad === 'baja'
-        ? `<span class="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 ml-1">🔻 Baja</span>`
-        : '';
-    // NTH-04: thumbnail de foto de referencia
-    const _thumbUrl = (p.referenciasUrls||[])[0] || p.referenciaUrl || null;
-    const _thumbHtml = _thumbUrl
-        ? `<img src="${_thumbUrl}" onclick="abrirFotoReferencia('${p.id}')" class="w-full h-14 object-cover rounded-lg mb-1 cursor-pointer" onerror="this.style.display='none'" alt="Ref">`
-        : '';
-    // MEJORA 3: alerta visual de pedido retrasado
-    const _hoyStr = _fechaHoy();
-    const _retrasado = p.entrega && p.entrega < _hoyStr && !['finalizado','cancelado','retirar','salida'].includes(p.status||'');
-    const _retrasadoHTML = _retrasado
-        ? `<div style="background:#fee2e2;border-radius:8px;padding:3px 8px;margin-bottom:4px;font-size:.72rem;font-weight:700;color:#dc2626;">
-               ⏰ RETRASADO — venció ${p.entrega}
-           </div>`
-        : '';
-    // Badge de ocasión (XV, boda, graduación, etc.)
-    const _ocasionLabels: Record<string,string> = {xv:'👑 XV',boda:'💍 Boda',graduacion:'🎓 Grad.',baby_shower:'🍼 Baby',aniversario:'❤️ Aniv.',navidad:'🎄 Nav.',otro:'✨'};
-    const _ocasionBadge = (p.ocasion && _ocasionLabels[p.ocasion]) ? `<span style="font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:8px;background:#f5f3ff;color:#9669c4;">${_ocasionLabels[p.ocasion]}</span>` : '';
-    // Recordatorio: pedido en "Retirar" más de 3 días sin ser recogido
-    const _retirarAlerta = (function(){
-        if ((p.status||'') !== 'retirar') return '';
-        const _fe = p.fechaUltimoEstado || null;
-        if (!_fe) return '';
-        const _dias = Math.round((Date.now() - new Date(_fe).getTime()) / 86400000);
-        if (_dias < 3) return '';
-        const _tel = (p.telefono || p.whatsapp || '').replace(/\D/g,'');
-        const _waTxt = encodeURIComponent(`Hola ${p.cliente}, tu pedido ${p.folio} está listo para retirar 🛍️ ¿Cuándo pasas?`);
-        return `<div style="background:#fff7ed;border-radius:8px;padding:3px 8px;margin-bottom:4px;font-size:.7rem;font-weight:700;color:#c2410c;display:flex;align-items:center;gap:6px;">⏳ ${_dias}d esperando retiro${_tel ? ` <a href="https://wa.me/52${_tel}?text=${_waTxt}" target="_blank" onclick="event.stopPropagation()" style="color:#25D366;text-decoration:none;font-size:.78rem;">📲 WA</a>` : ''}</div>`;
-    })();
-    // Porcentaje de pago (anticipo+abonos / total) para barra de progreso
-    const _tot = Number(p.total||0);
-    const _pct = _tot > 0 ? Math.min(100, Math.round(((_tot - _saldo) / _tot) * 100)) : (_saldo === 0 ? 100 : 0);
-    return `<div class="kanban-card mk-kanban-card-${p.status || 'confirmado'} bg-white rounded-xl p-2 shadow-sm border border-gray-100 select-none"
-        data-id="${p.id}" data-kanban-open="${_e(p.id)}" tabindex="0" aria-label="Abrir ficha del pedido ${_e(p.folio || p.id)}" data-status="${p.status || 'confirmado'}"
-        style="position:relative;${_bordeVencido}" onmouseover="var c=this.querySelector('._kanban-check');if(c)c.style.opacity='1'" onmouseout="var c=this.querySelector('._kanban-check');if(c&&!c.checked)c.style.opacity='0'"
-        draggable="true" ondragstart="kanbanDragStart(event,'${p.id}')" ondragend="kanbanDragEnd(event)">
-        ${_checkboxHtml}
-        ${_retrasadoHTML}
-        ${_retirarAlerta}
-        <div class="flex justify-between items-center mb-0.5 flex-wrap gap-1">
-            <span class="text-xs font-bold text-amber-600">${_e(p.folio)}${_prioBadge ? ' ' + p.prioridad.slice(0,1).toUpperCase() : ''}${_ocasionBadge ? ' ' + _ocasionBadge : ''}</span>
-            ${alertaHtml || ''}
-        </div>
-        <p class="font-semibold text-gray-800 text-sm leading-tight mb-0.5 truncate">${_e(p.cliente)}</p>
-
-        <p class="text-xs text-gray-400 mb-0.5 truncate">${_e(p.concepto)}</p>
-        <div class="flex justify-between items-center text-xs mb-0.5">
-            <span class="text-gray-400 truncate" ondblclick="window._kanbanQuickEditFecha(event,'${_e(p.id)}')" style="cursor:pointer;" title="Doble-clic para editar fecha">📅 ${p.entrega || '—'}${p.lugarEntrega ? ` · 📍 ${_e(p.lugarEntrega)}` : ''}</span>
-            <span class="ml-1 shrink-0 font-bold ${_saldo > 0 ? 'text-red-500' : 'text-green-600'}">${_saldo > 0 ? '$' + _saldo.toFixed(0) : '✓'}</span>
-        </div>
-        ${diff !== null ? `<div class="kanban-urgency-bar ${diff < 0 ? 'urgency-overdue' : diff === 0 ? 'urgency-urgent' : diff <= 2 ? 'urgency-soon' : 'urgency-ok'}" style="width:${diff < 0 ? 100 : Math.max(8, Math.min(100, 100 - (diff / 14 * 100)))}%;margin-bottom:4px;"></div>` : ''}
-        <div class="flex flex-col gap-1">
-            <button onclick="openPedidoStatusModal('${p.id}')" class="mk-mini-btn" style="width:100%;"><i class="fas fa-bolt"></i> Estado</button>
-            <div class="flex gap-1 items-center" style="position:relative;">
-            <button onclick="openPedidoModal('${p.id}')" class="mk-mini-btn" style="flex:1;" title="Editar"><i class="fas fa-pen"></i></button>
-            <button onclick="openAbonoPedido('${p.id}')" class="mk-mini-btn success" style="flex:1;" title="Registrar abono"><i class="fas fa-dollar-sign"></i></button>
-            <button onclick="abrirWhatsAppPedido('${p.id}')" class="mk-mini-btn success" style="flex:1;" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
-            <button onclick="eliminarPedido('${p.id}')" class="mk-mini-btn danger" style="flex:1;" title="Eliminar"><i class="fas fa-trash"></i></button>
-            <div style="position:relative;">
-                <button onclick="(function(btn){var m=btn.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';var close=function(e){if(!btn.contains(e.target)&&!m.contains(e.target)){m.style.display='none';document.removeEventListener('click',close);}};setTimeout(function(){document.addEventListener('click',close)},0);})(this)" class="mk-mini-btn" title="Más acciones"><i class="fas fa-ellipsis"></i></button>
-                <div style="display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:200;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 -4px 24px rgba(0,0,0,0.13);min-width:150px;padding:4px;">
-                    <button onclick="abrirFotoReferencia('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 rounded-lg text-gray-700"><i class="fas fa-image mr-1.5" style="width:12px;"></i> Fotos ref.${(p.referenciasUrls||[]).length ? ' ('+((p.referenciasUrls||[]).length)+')' : p.referenciaUrl ? ' (1)' : ''}</button>
-                    <button onclick="duplicarPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700"><i class="fas fa-clone mr-1.5" style="width:12px;"></i> Duplicar</button>
-                    <button onclick="generarTicketPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-orange-50 rounded-lg text-gray-700"><i class="fas fa-print mr-1.5" style="width:12px;"></i> Imprimir ticket</button>
-                    <button onclick="exportarPedidoPDF('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 rounded-lg text-gray-700"><i class="fas fa-file-pdf mr-1.5" style="width:12px;"></i> Descargar PDF</button>
-                    <button onclick="imprimirEtiquetaPedido('${p.id}')" class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-50 rounded-lg text-gray-700"><i class="fas fa-tag mr-1.5" style="width:12px;"></i> Etiqueta</button>
-                </div>
-            </div>
-            </div>
-        </div>
-        <div style="margin-top:5px;height:3px;background:#f3f4f6;border-radius:2px;overflow:hidden;" title="${_pct}% pagado">
-            <div style="width:${_pct}%;height:100%;background:${_pct>=100?'#10b981':_pct>=50?'#f59e0b':'#ef4444'};border-radius:2px;transition:width .4s;"></div>
-        </div>
-    </div>`;
+ const e=_esc,id=e(String(p.id)),saldo=(window as any)._kSaldoPreMap?.get(String(p.id))??calcSaldoPendiente(p);
+ const hoy=_fechaHoy(),vencido=!!p.entrega&&p.entrega<hoy,urgente=p.entrega===hoy;
+ const productos=p.concepto||(p.productosInventario||[]).map(i=>`${i.quantity||1} × ${i.name||i.nombre||'Producto'}${i.variante?' · '+i.variante:''}`).join(', ')||'Pedido personalizado';
+ const nota=String(p.notas||'').trim(),interna=String(p.notasInternas||'').trim();
+ const action=(fn:string,label:string,kind='')=>`<button type="button" data-action="${fn}" data-arg="${id}" class="mk-mini-btn ${kind}">${label}</button>`;
+ const selected=window._kanbanSeleccionados?.has(String(p.id));
+ return `<div class="kanban-card pos-kanban-card pos-kanban-${_kanbanCompacto}" data-id="${id}" data-kanban-open="${id}" tabindex="0" aria-label="Abrir ficha del pedido ${e(p.folio||p.id)}" data-status="${e(p.status||'confirmado')}" draggable="true" ondragstart="kanbanDragStart(event,this.dataset.id)" ondragend="kanbanDragEnd(event)">
+ <div class="pos-kanban-heading"><span>${e(p.folio||'Pedido')}</span><input type="checkbox" class="_kanban-check" ${selected?'checked':''} aria-label="Seleccionar para acción en lote" onclick="event.stopPropagation()" onchange="_toggleKanbanSelect(this.closest('[data-id]').dataset.id,this.checked)"></div>
+ <p class="pos-kanban-client">${e(p.cliente||p.clienteNombre||'Sin cliente')}</p>
+ <p class="pos-kanban-product">${e(productos)}</p>
+ <div class="pos-kanban-meta"><span class="${vencido?'pos-kanban-overdue':urgente?'pos-kanban-today':''}">Entrega ${e(p.entrega||'Sin fecha')}${vencido?' · Vencido':urgente?' · Hoy':''}</span><strong>${saldo>0?'Saldo '+fmtMoney(saldo):'Liquidado'}</strong></div>
+ ${p.prioridad==='alta'?'<span class="pos-kanban-priority">Prioridad alta</span>':''}
+ ${nota?`<p class="pos-kanban-note" title="${e(nota)}">Nota: ${e(nota)}</p>`:''}
+ ${interna?`<p class="pos-kanban-note" title="${e(interna)}">Interna: ${e(interna)}</p>`:''}
+ <div class="pos-kanban-actions">${action('openPedidoStatusModal','Estado')}${action('posEditarPedidoRapido','Editar rápido')}${action('openAbonoPedido','Abono','success')}</div>
+ <details class="pos-kanban-more"><summary>Más acciones</summary><div>
+ ${action('openPedidoModal','Editar completo')}${action('abrirWhatsAppPedido','WhatsApp')}${action('abrirFotoReferencia','Fotos de referencia')}${action('duplicarPedido','Duplicar')}${action('generarTicketPedido','Imprimir ticket')}${action('exportarPedidoPDF','Descargar PDF')}${action('imprimirEtiquetaPedido','Etiqueta')}${action('eliminarPedido','Eliminar','danger')}
+ </div></details></div>`;
 }
 
 // La tarjeta abre la ficha sin interceptar sus acciones, selección ni arrastre.
 document.addEventListener('click', event => {
     const target = event.target as HTMLElement;
     const card = target.closest<HTMLElement>('[data-kanban-open]');
-    if (!card || target.closest('button,a,input,select,textarea,[contenteditable]')) return;
+    if (!card || target.closest('button,a,input,select,textarea,summary,[contenteditable]')) return;
     if (typeof posAbrirFicha === 'function') posAbrirFicha(card.dataset.kanbanOpen);
 });
 document.addEventListener('keydown', event => {

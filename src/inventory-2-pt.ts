@@ -304,6 +304,7 @@ function injectPtModal() {
                 </div>`);
             }
         }
+        if(!window.modoEdicion)posRestaurarCaptura(['ptProveedorNombre']);
     }, 80);
 }
 window.injectPtModal = injectPtModal;
@@ -313,6 +314,7 @@ function poblarCategoriasPt() {
     if (!sel) return;
     const cats = window.categories || [];
     sel.innerHTML = cats.map(c => `<option value="${_esc(c.id)}">${c.emoji||''} ${_esc(c.name)}</option>`).join('');
+    if(!window.modoEdicion)posRestaurarCaptura(['ptCategory']);
 }
 window.poblarCategoriasPt = poblarCategoriasPt;
 
@@ -439,7 +441,7 @@ function filtrarMpSelector() {
     const componentes = (window.products||[]).filter(p => p.tipo==='materia_prima' || p.tipo==='servicio');
     const res = document.getElementById('ptMpResults');
     if (!res) return;
-    const lista = q ? componentes.filter(p=>(p.name||'').toLowerCase().includes(q)) : componentes;
+    const lista = q ? componentes.filter(p=>posBusquedaCoincide(q,[p.name,p.sku].join(' '))) : componentes;
     if (!lista.length) { res.innerHTML='<p style="font-size:.8rem;color:#9ca3af;padding:8px;">No hay materias primas ni servicios registrados</p>'; return; }
     res.innerHTML = lista.map(p => {
         const yaAgregado = (window._ptMpComponentes||[]).some(c=>String(c.id)===String(p.id));
@@ -787,6 +789,7 @@ async function guardarProductoTerminado() {
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);
             if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('ptModal');
+            posRecordarCaptura(['ptCategory','ptProveedorNombre']);
             closePtModal();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Producto actualizado','ok');
@@ -814,6 +817,7 @@ async function guardarProductoTerminado() {
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);
             if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('ptModal');
+            posRecordarCaptura(['ptCategory','ptProveedorNombre']);
             closePtModal();
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Producto agregado exitosamente','ok');

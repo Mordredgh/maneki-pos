@@ -98,6 +98,7 @@ function businessApp() {
   // Solo presentacion/confirmaciones del navegador; reglas y persistencia son reales.
   a.ctx.renderPedidosTable = () => {};
   a.ctx.posAbrirFicha = () => {};
+  a.ctx.fmtMoney=(n:any)=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(n));
   a.ctx.updatePedidosStats = () => {};
   a.ctx._fotosArray = () => ({paths:[]});
   return {...a, fields, submit: () => submits[0]({preventDefault() {}})};
@@ -130,6 +131,13 @@ it('Kanban permite abrir ficha sin mostrar controles de preparacion en cada dens
   expect(a.ctx.kanbanCardHTML(p)).not.toContain('mk-kanban-pending');
   p.status = 'produccion';
   expect(a.ctx.kanbanCardHTML(p)).not.toContain('Pedido empacado');
+});
+
+it('Kanban destaca producto y nota segura, con acciones secundarias dentro de Mas',()=>{
+ const a=businessApp();const html=a.ctx.kanbanCardHTML({id:'p',folio:'PE-1',cliente:'Ana',concepto:'Playera roja',notas:'Nombre <script>',total:180,status:'confirmado'});
+ expect(html).toContain('Playera roja');expect(html).toContain('Nombre &lt;script&gt;');expect(html).toContain('posEditarPedidoRapido');
+ expect(html.indexOf('eliminarPedido')).toBeGreaterThan(html.indexOf('<summary'));
+ expect(html).toContain('Saldo');
 });
 
 it('editar un producto transmite solo esa fila y no toca otros productos',async()=>{
