@@ -50,3 +50,8 @@ Precio rapido: nota opcional con motivo automatico Actualizacion de precio; ajus
 Kanban prioriza cliente/producto, fecha/saldo y notas; Estado, Editar rapido y Abono quedan visibles. Mas acciones agrupa herramientas secundarias. Edicion rapida guarda entrega/prioridad/nota en operacion atomica y rechaza cambios concurrentes o fechas inexistentes. Los filtros cuentan pedidos activos dentro de la busqueda/ocasion actual; no agregan requisitos de avance.
 
 Busqueda compartida tolera acentos, palabras en distinto orden y una errata en palabras de al menos cuatro letras; tallas, numeros y folios conservan coincidencia precisa. Inventario conserva filtros/pagina y restaura posicion/foco al cerrar el editor. Categoria, proveedor y metodo son preferencias locales de captura, editables y solo restauradas si la opcion existe. No se cambia esquema de Supabase. Balance limpia la marca de cambios solo despues de confirmar guardado; ante fallo mantiene abierto el formulario.
+
+
+## Identidad Bicho - 2026-09-30
+
+Direccion visual aprobada en DESIGN.md: taller creativo mate, crema/verde bosque/mantequilla, Nunito y Fredoka One locales, mascotas originales WebP. css/bicho-brand.css se carga al final; inventario conserva tabla/tarjetas y variantes, Pedidos usa fichas legibles, Balance vacios con Tago. Sin cambios de reglas comerciales, SQL o controles de avance. Fuentes/estilos entran en cache critico del SW; mascotas en secundario.

@@ -633,7 +633,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     // Badge informativo debajo del selector de mes
     _renderMesBadge(_mesActivoInc, listaInc.length, null);
     container.innerHTML = listaInc.length === 0
-        ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p><button type="button" data-action="openIncomeModal" class="mk-btn-primary">Registrar ingreso</button></div>'
+        ? '<div class="mk-empty-state"><div class="mk-empty-icon"><img src="/img/brand/tago.webp" width="72" height="82" alt="" loading="lazy"></div><p class="mk-empty-title">Sin ingresos registrados</p><p class="mk-empty-sub">Agrega tu primer ingreso del mes</p><button type="button" data-action="openIncomeModal" class="mk-btn-primary">Registrar ingreso</button></div>'
         : listaInc.slice().reverse().map(income => `
             <div class="mk-tx-income flex justify-between items-center p-3 bg-green-50 rounded-xl mb-2">
                 <div>
@@ -669,7 +669,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     // Actualizar badge con conteo de egresos
     _renderMesBadge(_mesActivoExp, null, listaExp.length);
     container.innerHTML = listaExp.length === 0
-        ? '<div class="mk-empty-state"><div class="mk-empty-icon">📭</div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p><button type="button" data-action="openExpenseModal" class="mk-btn-primary">Registrar egreso</button></div>'
+        ? '<div class="mk-empty-state"><div class="mk-empty-icon"><img src="/img/brand/tago.webp" width="72" height="82" alt="" loading="lazy"></div><p class="mk-empty-title">Sin egresos registrados</p><p class="mk-empty-sub">Agrega tu primer egreso del mes</p><button type="button" data-action="openExpenseModal" class="mk-btn-primary">Registrar egreso</button></div>'
         : listaExp.slice().reverse().map(expense => `
             <div class="mk-tx-expense flex justify-between items-center p-3 bg-red-50 rounded-xl mb-2">
                 <div>
@@ -740,7 +740,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                         </div>
                     </div>
                 </div>`;
-            }).join('') || '<div class="mk-empty"><div class="mk-empty-icon">📭</div><div class="mk-empty-title">Sin cuentas por cobrar</div><div class="mk-empty-sub">No hay saldos pendientes de clientes</div></div>';
+            }).join('') || '<div class="mk-empty"><div class="mk-empty-icon"><img src="/img/brand/tago.webp" width="72" height="82" alt="" loading="lazy"></div><div class="mk-empty-title">Sin cuentas por cobrar</div><div class="mk-empty-sub">No hay saldos pendientes de clientes</div></div>';
 
             // CxC de pedidos activos
             renderCxCPedidos();
@@ -798,7 +798,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
                         </button>
                     </div>
                 </div>
-            `).join('') || '<div class="mk-empty"><div class="mk-empty-icon">🗂️</div><div class="mk-empty-title">Sin cuentas por pagar</div><div class="mk-empty-sub">No hay pagos pendientes a proveedores</div></div>';
+            `).join('') || '<div class="mk-empty"><div class="mk-empty-icon"><img src="/img/brand/tago.webp" width="72" height="82" alt="" loading="lazy"></div><div class="mk-empty-title">Sin cuentas por pagar</div><div class="mk-empty-sub">No hay pagos pendientes a proveedores</div></div>';
         }
         
         // UX9: poblar datalist con últimas 10 descripciones únicas de incomes+expenses

@@ -1,10 +1,13 @@
-const CACHE_NAME = "maneki-6d18a288f1";
+const CACHE_NAME = "maneki-e757a0fc7c";
 
 // P6: assets críticos (deben estar en caché para que la app arranque)
 const CRITICAL_ASSETS = [
   "/",
   "/index.html",
   "/css/tailwind.css",
+  "/css/bicho-brand.css",
+  "/css/fonts/nunito.woff2",
+  "/css/fonts/fredoka-one.woff2",
   "/maneki-premium.css",
   "/logo.png",
   "/js/core.bundle.js",
@@ -18,7 +21,10 @@ const SECONDARY_ASSETS = [
   "/js/reportes.bundle.js",
   "/js/clientes.bundle.js",
   "/js/envios.bundle.js",
-  "/js/backup.bundle.js"
+  "/js/backup.bundle.js",
+  "/img/brand/crafty.webp",
+  "/img/brand/estampilla.webp",
+  "/img/brand/tago.webp"
 ];
 
 self.addEventListener("install", (e) => {

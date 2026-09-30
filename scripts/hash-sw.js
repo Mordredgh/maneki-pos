@@ -11,6 +11,12 @@ const ASSETS_TO_HASH = [
   'manifest.json',
   'logo.png',
   'css/tailwind.css',
+  'css/bicho-brand.css',
+  'css/fonts/nunito.woff2',
+  'css/fonts/fredoka-one.woff2',
+  'img/brand/crafty.webp',
+  'img/brand/estampilla.webp',
+  'img/brand/tago.webp',
 ];
 
 const jsDir = path.join(ROOT, 'js');

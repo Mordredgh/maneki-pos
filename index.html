@@ -20,12 +20,10 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/logo.png">
 
     <!-- Preconnect a dominios CDN para acelerar carga diferida -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="preload" href="/css/fonts/nunito.woff2" as="font" type="font/woff2" crossorigin>
 
     <!-- Leaflet CSS — cargado por lazy-loader al entrar a Envíos -->
     <!-- html2pdf (500KB) — cargado por lazy-loader al exportar PDF -->
@@ -35,6 +33,7 @@
     <link rel="stylesheet" href="maneki-premium.css?v=5.0">
   <!-- CDN Libraries -->
   <link rel="stylesheet" href="/css/tailwind.css">
+  <link rel="stylesheet" href="/css/bicho-brand.css">
   <!-- Chart.js: async para no bloquear render; lazy-loader lo prefetchea a 200ms -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" async crossorigin="anonymous"></script>
   <!-- Supabase: necesario al arranque para autenticación y datos -->
@@ -276,6 +275,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="mk-dash-hero-glow"></div>
     <div style="position:relative;z-index:1;" data-hero-stagger="1">
       <div class="flex items-center gap-3 mb-2">
+        <img class="bc-hero-mascot" src="/img/brand/crafty.webp" width="76" height="76" alt="" decoding="async">
         <span id="dashGreetingEmoji" class="leading-none" style="font-size:2.2rem;filter:drop-shadow(0 2px 10px rgba(255,210,80,.4))">☀️</span>
         <h1 id="dashGreeting" class="mk-dash-greeting-text">¡Buenos días!</h1>
       </div>
@@ -656,7 +656,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <section id="quotes-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
-                <div class="mk-page-header"><div><p class="mk-page-kicker">Ventas</p><h1 class="mk-page-title">Cotizaciones</h1><p class="mk-page-sub">Genera presupuestos para tus clientes</p></div></div>
+                <div class="mk-page-header"><img class="bc-section-mascot" src="/img/brand/crafty.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Cotizaciones</h1><p class="mk-page-sub">Genera presupuestos para tus clientes</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2" id="quotesHeaderButtons">
                         <button type="button" data-action="openQuoteModal"
@@ -776,7 +776,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <section id="inventory-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
-                <div class="mk-page-header"><div><p class="mk-page-kicker">Catálogo</p><h1 class="mk-page-title">Inventario</h1><p class="mk-page-sub">Gestiona tu stock de productos</p></div></div>
+                <div class="mk-page-header"><img class="bc-section-mascot" src="/img/brand/estampilla.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Inventario</h1><p class="mk-page-sub">Gestiona tu stock de productos</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2 flex-wrap">
 
@@ -906,7 +906,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- Header + navegación de mes -->
                 <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
-                    <div class="mk-page-header" style="margin-bottom:0;"><div><p class="mk-page-kicker">Finanzas</p><h1 class="mk-page-title">Balance</h1><p class="mk-page-sub">Tu dinero de un vistazo</p></div></div>
+                    <div class="mk-page-header" style="margin-bottom:0;"><img class="bc-section-mascot" src="/img/brand/tago.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Balance</h1><p class="mk-page-sub">Tu dinero de un vistazo</p></div></div>
                     <div class="flex items-center gap-2">
                     <button type="button" onclick="typeof abrirCorteCaja==='function'?abrirCorteCaja():manekiToastExport('Cargando...','warn')"
                             class="mk-toolbar-btn"
@@ -1025,7 +1025,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <section id="clientes-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
-                <div class="mk-page-header"><div><p class="mk-page-kicker">Relaciones</p><h1 class="mk-page-title">Clientes</h1><p class="mk-page-sub">Tus clientes m&#225;s especiales</p></div></div>
+                <div class="mk-page-header"><img class="bc-section-mascot" src="/img/brand/crafty.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Clientes</h1><p class="mk-page-sub">Tus clientes m&#225;s especiales</p></div></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2">
                         <button type="button" data-action="manekiExportar" data-arg="clientes" class="mk-toolbar-btn">
@@ -1115,7 +1115,7 @@ input:focus, select:focus, textarea:focus, button:focus {
             <div class="max-w-5xl mx-auto">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
-                        <div class="mk-page-header"><div><p class="mk-page-kicker">Catálogo</p><h1 class="mk-page-title">Categor&#237;as</h1><p class="mk-page-sub">Organiza tus productos</p></div></div>
+                        <div class="mk-page-header"><img class="bc-section-mascot" src="/img/brand/tago.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Categor&#237;as</h1><p class="mk-page-sub">Organiza tus productos</p></div></div>
                         <p class="text-gray-600 mt-1">Administra las categorías de tus productos</p>
                     </div>
                     <button type="button" data-action="openAddCategoryModal"
@@ -1136,7 +1136,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
-                    <div class="mk-page-header" style="margin-bottom:0;"><div><p class="mk-page-kicker">Inteligencia</p><h1 class="mk-page-title">Análisis de productos</h1><p class="mk-page-sub">Descubre qué productos generan más valor</p></div></div>
+                    <div class="mk-page-header" style="margin-bottom:0;"><div><h1 class="mk-page-title">Análisis de productos</h1><p class="mk-page-sub">Descubre qué productos generan más valor</p></div></div>
                     <button type="button" data-action="exportarAnalisisCSV" data-tip="Descarga un archivo .csv con el ranking completo de productos para abrirlo en Excel"
                             class="mk-toolbar-btn">
                         <i class="fas fa-file-excel mk-tb-ico" style="color:#10B981;"></i> Exportar CSV
@@ -1325,7 +1325,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
-                    <div class="mk-page-header" style="margin-bottom:0;"><div><p class="mk-page-kicker">Inteligencia</p><h1 class="mk-page-title">Reportes</h1><p class="mk-page-sub">Estadísticas detalladas de tu negocio</p></div></div>
+                    <div class="mk-page-header" style="margin-bottom:0;"><div><h1 class="mk-page-title">Reportes</h1><p class="mk-page-sub">Estadísticas detalladas de tu negocio</p></div></div>
                     <button type="button" data-action="descargarReporteVentas" class="mk-toolbar-btn"><i class="fas fa-file-download mk-tb-ico"></i> Descargar CSV</button>
                 </div>
 
@@ -1457,7 +1457,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <div class="mk-page-header"><div><p class="mk-page-kicker">Operación</p><h1 class="mk-page-title">Equipos / ROI</h1><p class="mk-page-sub">Controla tus herramientas e inversiones</p></div></div>
+                <div class="mk-page-header"><div><h1 class="mk-page-title">Equipos / ROI</h1><p class="mk-page-sub">Controla tus herramientas e inversiones</p></div></div>
                 <p class="text-gray-500 text-sm mt-1">Lleva control de cuánto has recuperado de cada equipo</p>
             </div>
             <div class="flex gap-2 flex-wrap">
@@ -1555,8 +1555,8 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <!-- Fila 1: título editorial + badge de count -->
         <div class="mk-page-header">
+            <img class="bc-section-mascot" src="/img/brand/crafty.webp" width="72" height="72" alt="" decoding="async">
             <div>
-                <p class="mk-page-kicker">Pedidos por encargo</p>
                 <h1 class="mk-page-title">Gestiona cada encargo <span id="pedidosCountBadge" style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 8px;border-radius:99px;background:rgba(150,105,196,0.12);color:#7d4fa3;font-size:.85rem;font-weight:700;font-family:'Nunito',sans-serif;vertical-align:middle;margin-left:6px;">0</span></h1>
             </div>
         </div>
@@ -1815,7 +1815,7 @@ input:focus, select:focus, textarea:focus, button:focus {
     <template id="configuracion-section-tpl">
     <div class="max-w-3xl mx-auto">
         <div class="mb-8">
-            <div class="mk-page-header"><div><p class="mk-page-kicker">Sistema</p><h1 class="mk-page-title">Configuraci&#243;n</h1><p class="mk-page-sub">Personaliza tu experiencia Bicho Capricho</p></div></div>
+            <div class="mk-page-header"><div><h1 class="mk-page-title">Configuraci&#243;n</h1><p class="mk-page-sub">Personaliza tu experiencia Bicho Capricho</p></div></div>
             <p class="text-gray-600">Personaliza los datos que aparecen en tickets y cotizaciones</p>
         </div>
 

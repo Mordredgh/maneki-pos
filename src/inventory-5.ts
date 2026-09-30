@@ -319,20 +319,20 @@ function inventoryCardHTML(product: any, stock: number, kind: string): string {
     const id = _esc(String(product.id));
     const name = _esc(product.name || 'Sin nombre');
     const image = product.imageUrl
-        ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${id}" aria-label="Ampliar fotos de ${name}"><img src="${_esc(product.imageUrl)}" alt="${name}" loading="lazy" style="width:100%;height:132px;object-fit:cover;border-radius:12px;background:#f8f4ec;"></button>`
-        : `<div aria-hidden="true" style="height:132px;display:grid;place-items:center;border-radius:12px;background:#f8f4ec;font-size:2.6rem;">${_esc(product.image || (kind === 'mp' ? '🏭' : '📦'))}</div>`;
+        ? `<button type="button" class="pos-inv-image-button pos-inv-visual" data-action="inventoryOpenGallery" data-arg="${id}" aria-label="Ampliar fotos de ${name}"><img src="${_esc(product.imageUrl)}" alt="${name}" loading="lazy"></button>`
+        : `<div class="pos-inv-visual" aria-hidden="true">${product.image ? `<span style="font-size:2.5rem">${_esc(product.image)}</span>` : '<img src="/img/categorias/otros.webp" alt="" loading="lazy">'}</div>`;
     const ranges = (product.tablaPreciosVariable || []).slice().sort((a:any,b:any) => Number(a.cantidadMin) - Number(b.cantidadMin));
     const price = kind === 'pv' && ranges.length ? Number(ranges[0].precio) / Math.max(1, Number(ranges[0].cantidadMin)) : Number(kind === 'mp' || kind === 'svc' ? product.cost : product.price);
     const stockText = kind === 'svc' ? 'Servicio' : `${Math.max(0, Number(stock) || 0)} disponibles`;
     const low = kind !== 'svc' && stock <= Number(product.stockMin ?? 5);
     const type = {pt:'Producto',pv:'Precio por cantidad',mp:'Materia prima',svc:'Servicio'}[kind] || 'Producto';
-    return `<article class="pos-inv-card" data-id="${id}" style="background:#fff;border:1px solid #e6e2d8;border-radius:16px;padding:12px;box-shadow:0 3px 14px #1c4f320d;display:flex;flex-direction:column;gap:8px;min-width:0;">
+    return `<article class="pos-inv-card" data-id="${id}" style="display:flex;flex-direction:column;min-width:0;">
         ${image}
-        <div style="font-size:.69rem;color:#678d47;font-weight:800;text-transform:uppercase;letter-spacing:.06em;">${type}</div>
-        <strong style="font-size:.96rem;color:#243529;line-height:1.3;min-height:2.5em;">${name}</strong>
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">
-            <span style="font-size:1.08rem;font-weight:800;color:#1c4f32;">${fmtMoney(Number.isFinite(price) ? price : 0)}</span>
-            <span style="font-size:.73rem;font-weight:700;color:${low?'#a63126':'#236449'};background:${low?'#fff0ed':'#eaf7ee'};border-radius:99px;padding:4px 8px;">${stockText}</span>
+        <div class="pos-inv-type">${type}</div>
+        <strong class="pos-inv-name">${name}</strong>
+        <div class="pos-inv-price-row">
+            <div><span class="pos-inv-price-label">${kind==='mp'||kind==='svc'?'Costo':kind==='pv'?'Desde / pieza':'Precio'}</span><span class="pos-inv-price">${fmtMoney(Number.isFinite(price) ? price : 0)}</span></div>
+            <span class="pos-inv-stock" data-low="${low}">${stockText}</span>
         </div>
         ${kind === 'pt' || kind === 'pv' ? inventoryVariantGridHTML(product) : ''}
         ${typeof window.posRecordSyncStatus === 'function' ? `<small class="pos-record-sync" data-sync-table="products" data-sync-id="${id}" data-state="${window.posRecordSyncStatus('products', String(product.id)).state}">${window.posRecordSyncStatus('products', String(product.id)).text}</small>` : ''}

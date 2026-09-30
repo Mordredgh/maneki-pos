@@ -244,3 +244,14 @@
 - [x] Nota del pedido y nota interna visibles, escapadas, sin bloqueos.
 - [x] 201 pruebas, typecheck/lint/build; UI aislada desktop y 390px, filtros/notas/edicion/persistencia/recuerdo/busqueda confirmados. Deploy 5e8b7baa, dominio 401/200 y SW maneki-6d18a288f1.
 - [x] Evidencia ignorada staging/evidence/kanban-agil-desktop.png y kanban-agil-movil.png; grafo MCP reindexado, CONTEXT y memoria diaria actualizados; commit de experiencia agil. Graphify intentado; extraccion semantica de documentos requiere credencial no configurada.
+
+## Identidad visual Bicho 2026-09-30
+
+- [x] Paleta y superficies mate, controles uniformes y tipografia local.
+- [x] Mascotas originales en encabezados/pantallas vacias y assets WebP.
+- [x] Inventario fotografico y fichas de encargo legibles, variantes/precios alineados.
+- [x] Estados oscuro/foco/hover/deshabilitado y tactil.
+- [x] Build/regresiones, revision desktop/movil acotada, detector y deploy verificado.
+- [x] DESIGN/CONTEXT, grafo, memoria, commit y push.
+
+Validacion: 201 pruebas y tipos/lint/build correctos. UI ficticia escritorio, oscuro y 390 px; corregida prioridad de superficies/KPI. Detector una corrida: sin hallazgos en nueva hoja; advertencias legacy conservadas. Cloudflare 288b3b7e, dominio 401/200, SW maneki-e757a0fc7c y 5 assets 200. Grafo MCP actualizado; graphify necesita credencial de extraccion documental no configurada.
