@@ -909,13 +909,13 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <!-- Header + navegación de mes -->
                 <div class="flex items-center justify-between mb-6" style="flex-wrap:wrap;gap:12px;">
                     <div class="mk-page-header" style="margin-bottom:0;"><img class="bc-section-mascot" src="/img/brand/tago.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Balance</h1><p class="mk-page-sub">Tu dinero de un vistazo</p></div></div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 pos-balance-toolbar">
                     <button type="button" onclick="typeof abrirCorteCaja==='function'?abrirCorteCaja():manekiToastExport('Cargando...','warn')"
                             class="mk-toolbar-btn"
                             title="Corte de caja del día">
                         <i class="fas fa-cash-register mk-tb-ico" style="color:#10B981;"></i> <span class="hidden sm:inline">Corte de caja</span>
                     </button>
-                    <div class="flex items-center gap-1 bg-white rounded-xl border border-gray-200 px-1 py-1">
+                    <div class="flex items-center gap-1 bg-white rounded-xl border border-gray-200 px-1 py-1 pos-balance-period">
                         <button type="button" data-action="cambiarMesBalance" data-arg="-1" class="pos-balance-month-btn" aria-label="Mes anterior">‹</button>
                         <span id="balanceMesLabel" class="text-sm font-semibold text-gray-700 min-w-28 text-center px-2"></span>
                         <button type="button" data-action="cambiarMesBalance" data-arg="1" class="pos-balance-month-btn" aria-label="Mes siguiente">›</button>

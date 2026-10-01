@@ -615,7 +615,7 @@ const _lazySections = new Set();
 
 // Muestra/oculta spinner de carga en una sección
 function _sectionSpinner(name, show) {
-    const sectionId = 'section-' + name;
+    const sectionId = (name === 'inventario' ? 'inventory' : name) + '-section';
     const el = document.getElementById(sectionId) ||
                document.querySelector('[data-section="' + name + '"]');
     if (!el) return;
@@ -644,8 +644,8 @@ function _lazyLoad(name) {
     if (_lazySections.has(name)) return;
     _lazySections.add(name);
     const _render = async () => {
-        // balance y reportes usan Chart.js — garantizar que esté cargado antes de renderizar
-        if ((name==='balance' || name==='reportes' || name==='analisis') && (window as any)._mkEnsureChartJs) {
+        // Las tablas de Balance no dependen de la libreria de graficas.
+        if ((name==='reportes' || name==='analisis') && (window as any)._mkEnsureChartJs) {
             await (window as any)._mkEnsureChartJs();
         }
         if (name==='analisis'  && (window as any).renderAnalisis)       (window as any).renderAnalisis();
@@ -663,18 +663,12 @@ function _lazyLoad(name) {
             if ((window as any).renderHistorialPedidos) (window as any).renderHistorialPedidos();
         }
     };
-    if (!window._mkLazyLoad || window._mkGrupoListo(name)) {
-        // Ya listo — renderizar directo sin spinner
-        const _load = window._mkLazyLoad ? window._mkLazyLoad(name) : Promise.resolve();
-        _load.then(() => setTimeout(_render, 80));
-        return;
-    }
-    // Scripts aún cargando — mostrar spinner mientras esperamos
-    _sectionSpinner(name, true);
-    window._mkLazyLoad(name).then(() => {
-        _sectionSpinner(name, false);
-        setTimeout(_render, 80);
-    });
+    if (window._mkLazyLoad && !window._mkGrupoListo(name)) _sectionSpinner(name, true);
+    const load = window._mkLazyLoad ? window._mkLazyLoad(name) : Promise.resolve();
+    return load.then(_render).catch(() => {
+        _lazySections.delete(name);
+        window.manekiToastExport?.('No se pudo abrir la sección. Revisa la conexión y vuelve a seleccionarla.', 'warn');
+    }).finally(() => _sectionSpinner(name, false));
 }
 // #23 — Exponer _lazyLoad en window para uso desde showSection consolidado en reportes.js
 // (reportes.js llama: if (typeof _lazyLoad === 'function') _lazyLoad(sectionName);)

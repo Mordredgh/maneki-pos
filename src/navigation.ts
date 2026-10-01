@@ -70,7 +70,7 @@ function showSection(sectionName) {
     }
     if (sectionName === 'bienvenida') if (typeof renderBienvenida === 'function') renderBienvenida();
     if (sectionName === 'inventory') {
-        setTimeout(() => { const s = document.getElementById('inventorySearch'); if (s) s.focus(); }, 200);
+        setTimeout(() => { const s = document.getElementById('inventorySearch'); if (s && window.innerWidth >= 768 && !target?.classList.contains('hidden')) s.focus({ preventScroll: true }); }, 200);
         if (typeof patchInventoryButtons === 'function') setTimeout(patchInventoryButtons, 100);
     }
     if (sectionName === 'clientes')   if (typeof renderClientsTable  === 'function') renderClientsTable();
@@ -79,7 +79,7 @@ function showSection(sectionName) {
     if (typeof window._lazyLoad === 'function') window._lazyLoad(sectionName);
     // La navegación puede ocurrir durante la carga inicial del bundle diferido.
     if (sectionName === 'balance' && typeof window._mkLazyLoad === 'function') {
-        window._mkLazyLoad('balance').then(() => window.renderBalance?.());
+        window._mkLazyLoad('balance').then(() => { if (!target?.classList.contains('hidden')) window.renderBalance?.(); }).catch(() => {});
     }
 }
 window.showSection = showSection;

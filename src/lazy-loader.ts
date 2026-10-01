@@ -88,26 +88,16 @@
             _scriptPromises.set(src, resolved);
             return resolved;
         }
-        // Si el script está en el DOM pero aún cargando, esperar su onload
-        if (existing) {
-            var waitExisting = new Promise(function(resolve) {
-                existing.addEventListener('load', resolve, { once: true });
-                existing.addEventListener('error', resolve, { once: true }); // resolver aunque falle
-            });
-            _scriptPromises.set(src, waitExisting);
-            return waitExisting;
-        }
-
-        // Script no existe: crear, insertar, esperar
-        var p = new Promise<void>(function (resolve) {
-            var el = document.createElement('script');
-            el.src = src;
-            el.onload  = () => resolve();
-            el.onerror = function () {
-                console.warn('[Bicho Capricho Lazy] No se pudo cargar:', src);
-                resolve();
-            };
-            document.body.appendChild(el);
+        // ponytail: compartir la carga; un fallo libera el recurso para reintentar.
+        var el = existing || document.createElement('script');
+        var p = new Promise<void>(function (resolve, reject) {
+            el.addEventListener('load', () => resolve(), { once: true });
+            el.addEventListener('error', () => {
+                _scriptPromises.delete(src);
+                el.remove();
+                reject(new Error('No se pudo cargar la sección. Revisa la conexión y vuelve a abrirla.'));
+            }, { once: true });
+            if (!existing) { el.src = src; document.body.appendChild(el); }
         });
         _scriptPromises.set(src, p);
         return p;
@@ -159,6 +149,7 @@
             _cargados.add(grupo);
         })();
 
+        promise = promise.catch(function (error) { _cargando.delete(grupo); throw error; });
         _cargando.set(grupo, promise);
         return promise;
     }
@@ -174,7 +165,7 @@
     // Carga una URL CDN arbitraria bajo demanda (JS o CSS)
     window._mkLoadCDN = function (url) {
         if (_cargando.has(url)) return _cargando.get(url);
-        var p = _cargarRecurso(url).then(function () { _cargados.add(url); });
+        var p = _cargarRecurso(url).then(function () { _cargados.add(url); }).catch(function (error) { _cargando.delete(url); throw error; });
         _cargando.set(url, p);
         return p;
     };
@@ -208,16 +199,16 @@
             if (dash && !dash.classList.contains('hidden')) {
                 if (typeof window.renderCashFlowChart === 'function') window.renderCashFlowChart();
             }
-        });
-        _cargarCSS(CDN.leafletCSS); _cargarScript(CDN.leafletJS);  // para envios/mapas
+        }).catch(() => {});
+        _cargarCSS(CDN.leafletCSS); _cargarScript(CDN.leafletJS).catch(() => {});  // para envios/mapas
         setTimeout(function () {
-            _cargarGrupo('pedidos');
-            _cargarGrupo('inventario');
-            _cargarGrupo('balance');
-            _cargarGrupo('clientes');
-            _cargarGrupo('reportes');
-            _cargarGrupo('envios');
-            _cargarGrupo('backup');
+            _cargarGrupo('pedidos').catch(() => {});
+            _cargarGrupo('inventario').catch(() => {});
+            _cargarGrupo('balance').catch(() => {});
+            _cargarGrupo('clientes').catch(() => {});
+            _cargarGrupo('reportes').catch(() => {});
+            _cargarGrupo('envios').catch(() => {});
+            _cargarGrupo('backup').catch(() => {});
         }, 300);
     }, { once: true });
 

@@ -285,3 +285,12 @@ Validacion: 217 pruebas, tipos/lint/build correctos; UI aislada de apartar/liber
 - [x] Documentacion, memoria y commit.
 
 Validacion mascotas: 217 pruebas, tipos/lint/build correctos; siete WebP diferentes cargados, fondo computado transparente y padding cero. Balance contiene una mascota y ninguna en vacios; escritorio y 390px revisados. Detector conserva advertencias legacy ajenas al cambio. Cloudflare 93d7b7a1, dominio 401/200 y cuatro WebP identicos a originales. SW maneki-705ce942f4 incluye 61 archivos en hash.
+
+## Revision de molestias existentes - 2026-10-01
+- [x] Fallos de carga recuperables y sin marcar secciones incompletas como listas.
+- [x] Balance sin espera de graficas; foco de inventario limitado a escritorio/seccion activa.
+- [x] Controles de Balance en movil y selectores oscuros consistentes.
+- [x] Regresiones de guardado, build, UI aislada y deploy.
+- [x] Documentacion, memoria y commit.
+
+Validacion revision: 221 pruebas y tipos/lint/build correctos; nuevas pruebas reproducen fallo de carga/reintento, deduplicacion concurrente, Balance independiente de Chart.js y foco de Inventario. UI ficticia escritorio/390px, tema oscuro, mes anterior y KPI formateados. Detector: cero avisos en CSS marca; 161 avisos legacy HTML ajenos al cambio. Cloudflare 62b476c1, 401/200, HTML/CSS/core/pedidos/SW identicos; cache maneki-1b49648b77. Grafo MCP actualizado (5267 nodos); graphify requiere credencial de extraccion documental no configurada.

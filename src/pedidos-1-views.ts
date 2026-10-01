@@ -218,8 +218,8 @@ function updatePedidosStats() {
     const elAnticipo = document.getElementById('pedidosAnticipos');
     const elMes = document.getElementById('pedidosMes');
     if (elActivos) elActivos.textContent = String(activos.length);
-    if (elCobrar) elCobrar.textContent = '$' + porCobrar.toFixed(2);
-    if (elAnticipo) elAnticipo.textContent = '$' + anticipos.toFixed(2);
+    if (elCobrar) elCobrar.textContent = fmtMoney(porCobrar);
+    if (elAnticipo) elAnticipo.textContent = fmtMoney(anticipos);
     if (elMes) elMes.textContent = String(esMes);
     // Actualizar badge de count en el header de la sección
     const elBadge = document.getElementById('pedidosCountBadge');

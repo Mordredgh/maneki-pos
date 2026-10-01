@@ -52,7 +52,7 @@ function manekiExportar(tipo) {
     if (typeof XLSX === 'undefined') {
         manekiToastExport('⏳ Cargando exportador Excel...', 'info');
         window._mkLoadCDN('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js')
-            .then(function () { manekiExportar(tipo); });
+            .then(function () { manekiExportar(tipo); }).catch(() => manekiToastExport("No se pudo abrir el exportador. Revisa la conexión y vuelve a intentarlo.", "warn"));
         return;
     }
 

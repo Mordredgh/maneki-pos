@@ -56,8 +56,8 @@ body :is(main button,.modal button,dialog button){font-family:var(--font-body)!i
 body :is(.mk-btn-primary,.btn-primary,.mk-btn-gold){background:var(--bc-butter)!important;color:#283e20!important;border:1px solid transparent!important;font-size:.85rem!important;font-weight:800!important;min-height:40px;padding:9px 16px!important;box-shadow:none!important;transform:none!important}
 body :is(.mk-btn-primary,.btn-primary,.mk-btn-gold)::before{display:none!important}
 body :is(.mk-btn-primary,.btn-primary,.mk-btn-gold):hover{background:#ffdd85!important}
-body :is(.mk-toolbar-btn,.mk-btn-ghost,.btn-secondary,.pos-inv-edit,.pos-inv-icon,.pos-balance-action){background:var(--bc-surface)!important;color:var(--bc-forest)!important;border:1px solid var(--bc-border)!important;min-height:38px;font-size:.82rem!important;font-weight:700!important;box-shadow:none!important;transform:none!important}
-body :is(.mk-toolbar-btn,.mk-btn-ghost,.btn-secondary,.pos-inv-edit,.pos-inv-icon,.pos-balance-action):hover{background:var(--bc-soft)!important;border-color:#9db39e!important}
+body :is(.mk-toolbar-btn,.mk-btn-ghost,.mk-btn-secondary,.pos-dialog-close,.btn-secondary,.pos-inv-edit,.pos-inv-icon,.pos-balance-action){background:var(--bc-surface)!important;color:var(--bc-forest)!important;border:1px solid var(--bc-border)!important;min-height:38px;font-size:.82rem!important;font-weight:700!important;box-shadow:none!important;transform:none!important}
+body :is(.mk-toolbar-btn,.mk-btn-ghost,.mk-btn-secondary,.pos-dialog-close,.btn-secondary,.pos-inv-edit,.pos-inv-icon,.pos-balance-action):hover{background:var(--bc-soft)!important;border-color:#9db39e!important}
 body :is(button.danger,button[data-action^="delete"],button[data-action^="eliminar"]){color:#9c2945!important;background:#fff2f5!important;border:1px solid #efcbd4!important}
 body :is(button.danger,button[data-action^="delete"],button[data-action^="eliminar"]):hover{background:#ffe3eb!important}
 body button:disabled{opacity:.55!important;cursor:not-allowed!important;transform:none!important}
@@ -158,7 +158,7 @@ body .pos-actionbar .pos-primary{background:var(--bc-butter)!important;color:#28
 body.dark{background:#14271c!important;color:var(--bc-ink)!important}
 body.dark #sidebar.sidebar,body.dark aside#sidebar{background:#1c4f32!important;box-shadow:none!important;border-color:#45614b!important}
 body.dark #global-search-bar{background:#14271c!important;border-color:#45614b!important}
-body.dark :is(.mk-card,.mk-toolbar-btn,.mk-btn-ghost,.btn-secondary,#invKpiBar>div){background:var(--bc-surface)!important;color:var(--bc-ink)!important;border-color:var(--bc-border)!important}
+body.dark :is(.mk-card,.mk-toolbar-btn,.mk-btn-ghost,.mk-btn-secondary,.pos-dialog-close,.btn-secondary,#invKpiBar>div){background:var(--bc-surface)!important;color:var(--bc-ink)!important;border-color:var(--bc-border)!important}
 body.dark .mk-card.mk-kpi-solid{background:#1c4f32!important}
 body.dark #inventory-section [id^="invSec_"]>div:first-child>div:first-child{background:#2b4533!important;color:#c3ec9f!important}
 body.dark #inventory-section :is(.pos-inv-edit,.pos-inv-icon){background:var(--bc-surface)!important;color:#c3ec9f!important}
@@ -258,10 +258,21 @@ body .pos-commerce-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}body 
 body .pos-capacity-scroll{max-height:48vh;overflow:auto}body .pos-capacity-scroll table{width:100%;border-collapse:collapse}body .pos-capacity-scroll th{position:sticky;top:0;background:var(--bc-cream);text-align:left}body .pos-capacity-scroll td,body .pos-capacity-scroll th{padding:12px;border-bottom:1px solid var(--bc-border)}body .pos-capacity-scroll small{display:block;font-weight:400}body .pos-capacity-scroll [data-over=true]{background:#fff5de;color:#6c471e}
 body .pos-promo-row,body .pos-promo-component{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--bc-border)}body .pos-promo-row strong{flex:1;min-width:160px}body .pos-promo-row input{width:65px;min-height:44px}body .pos-promo-component label:first-child{flex:1;min-width:180px}body .pos-promo-component label:nth-child(2){width:72px}
 body .pos-promo-badge{display:inline-block;background:#edf4e8;color:#245737;border-radius:7px;padding:3px 7px;font-size:.76rem;line-height:1.5}body .pedido-line-input[readonly]{background:#edf4e8!important;color:#245737!important}
-body.dark-mode .pos-commerce-form label{color:#ddebd2}body.dark-mode .pos-promo-badge{background:#324e37;color:#d7edc8}body.dark-mode .pos-capacity-scroll [data-over=true]{background:#594626;color:#ffdfa0}
+body.dark .pos-commerce-form label{color:#ddebd2}body.dark .pos-promo-badge{background:#324e37;color:#d7edc8}body.dark .pos-capacity-scroll [data-over=true]{background:#594626;color:#ffdfa0}
 
 body .pos-commerce-form input:not([type=checkbox]),body .pos-commerce-form select{min-height:44px!important}body .pos-commerce-check{min-height:44px}
 
 @media(max-width:650px){body .pos-capacity-scroll table{table-layout:fixed}body .pos-capacity-scroll th:first-child{width:38%}body .pos-capacity-scroll th:nth-child(2),body .pos-capacity-scroll th:nth-child(3){width:18%}body .pos-capacity-scroll td,body .pos-capacity-scroll th{padding:10px 5px;font-size:.72rem;overflow-wrap:anywhere;white-space:normal!important}body .pos-capacity-scroll small{font-size:.65rem;margin-top:5px}}
 
 @media(max-width:650px){body .pos-capacity-scroll th{font-size:.62rem!important;letter-spacing:0!important;text-transform:none!important;padding:10px 3px!important;white-space:nowrap!important}}
+
+/* Controles de mes legibles y al alcance en pantallas estrechas. */
+body .pos-balance-toolbar{flex-wrap:wrap;min-width:0;max-width:100%}
+body #balance-section .pos-balance-period{flex-wrap:wrap;min-width:0;max-width:100%;background:var(--bc-surface)!important}
+body #balance-section .pos-balance-month-btn{min-width:44px;min-height:44px;flex-shrink:0;color:var(--bc-forest)!important}
+body #balanceMesLabel{flex:1;min-width:0;color:var(--bc-ink)!important}
+body #balMesFiltradoBadge{color:var(--bc-muted)!important}
+@media(max-width:650px){body .pos-balance-toolbar{width:100%;display:grid;grid-template-columns:44px minmax(0,1fr)}body .pos-balance-period{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;width:100%}body .pos-balance-period #balMesFiltradoBadge,body .pos-balance-period #btnExportarBalance{grid-column:1/-1;max-width:100%;order:1}body .pos-balance-period #balMesFiltradoBadge{text-align:center;white-space:normal}body .pos-balance-toolbar>.mk-toolbar-btn{padding:8px!important;min-width:44px}}
+
+body dialog :is(.mk-btn-secondary,.pos-dialog-close){min-height:44px;padding:9px 16px}
+body.dark :is(input,select,textarea){color-scheme:dark}
