@@ -55,3 +55,8 @@ Busqueda compartida tolera acentos, palabras en distinto orden y una errata en p
 ## Identidad Bicho - 2026-09-30
 
 Direccion visual aprobada en DESIGN.md: taller creativo mate, crema/verde bosque/mantequilla, Nunito y Fredoka One locales, mascotas originales WebP. css/bicho-brand.css se carga al final; inventario conserva tabla/tarjetas y variantes, Pedidos usa fichas legibles, Balance vacios con Tago. Sin cambios de reglas comerciales, SQL o controles de avance. Fuentes/estilos entran en cache critico del SW; mascotas en secundario.
+
+
+## Tabla de encargos - 2026-10-01
+Cliente y descripcion son la identidad principal. Cobrado usa posTotalPagado y saldo calcSaldoPendiente; fechas civiles validas muestran etiqueta relativa y fecha exacta. Editar/Abonar/Estado/Mas quedan visibles incluso en movil; contacto conserva WhatsApp/Facebook. Columnas opcionales se guardan en pos-table-hidden y se filtran por lista permitida. La ficha usa el orden visible de tabla, restaura scroll y conserva posTablaSelectedId al renderizar. Densidad usa preferencia mk-dense existente. Barras fijas requieren overflow clip/visible en main y secciones; scroll de tabla mantiene sus encabezados. Sin cambios de SQL ni requisitos comerciales.
+Documentos usan logo existente, Nunito local, bosque/crema y numeros tabulares; imprimir sigue siendo una accion explicita. UI verificada con 24 encargos sinteticos, variantes M/Blanco, columnas tras recarga, ficha/seleccion, encabezado y Estado en movil. Los tres HTML se generaron con funciones reales para revision visual, porque IAB no expuso las ventanas emergentes. No se probo impresora fisica.

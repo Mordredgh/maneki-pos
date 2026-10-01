@@ -101,7 +101,7 @@ async function imprimirTicketPedido(id) {
   }
   /* Cabecera dorada */
   .header {
-    background: linear-gradient(135deg, #1a0533 0%, #2d0a4e 100%);
+    background: #1c4f32;
     padding: 28px 24px 24px;
     text-align: center;
     position: relative;
@@ -124,7 +124,7 @@ async function imprimirTicketPedido(id) {
   }
   .brand-sub {
     font-size: 11px;
-    color: rgba(255,221,133,.65);
+    color: #f8f4ec;
     letter-spacing: .08em;
     text-transform: uppercase;
     margin-top: 3px;
@@ -138,7 +138,7 @@ async function imprimirTicketPedido(id) {
     align-items: center;
     gap: 6px;
     background: linear-gradient(135deg,#FFD166,#FFDD85);
-    color: #fff;
+    color: #1c4f32;
     font-size: 12px;
     font-weight: 800;
     padding: 4px 12px;
@@ -162,7 +162,7 @@ async function imprimirTicketPedido(id) {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .08em;
-    color: #9ca3af;
+    color: #566b5c;
     margin-bottom: 3px;
   }
   .info-value {
@@ -177,7 +177,7 @@ async function imprimirTicketPedido(id) {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: .1em;
-    color: #9ca3af;
+    color: #566b5c;
     padding: 0 24px 8px;
   }
   .divider {
@@ -191,7 +191,7 @@ async function imprimirTicketPedido(id) {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .08em;
-    color: #9ca3af;
+    color: #566b5c;
     padding: 8px 12px;
     background: #fafafa;
   }
@@ -216,7 +216,7 @@ async function imprimirTicketPedido(id) {
   }
   .total-row:last-child { border-bottom: none; }
   .total-row.grand {
-    background: linear-gradient(135deg,#1a0533,#2d0a4e);
+    background: #1c4f32;
     color: #FFDD85;
     font-weight: 800;
     font-size: 15px;
@@ -228,7 +228,7 @@ async function imprimirTicketPedido(id) {
   .footer {
     text-align: center;
     padding: 16px 24px 24px;
-    color: #9ca3af;
+    color: #566b5c;
     font-size: 11px;
     line-height: 1.6;
   }
@@ -264,7 +264,7 @@ async function imprimirTicketPedido(id) {
     .actions { display: none; }
     .header::after { display: none; }
   }
-</style>
+@font-face{font-family:Nunito;src:url('/css/fonts/nunito.woff2') format('woff2');font-weight:400 900;font-display:swap}body{font-family:Nunito,system-ui,sans-serif!important;color:#243f2e}h1{color:#1c4f32!important}table{font-variant-numeric:tabular-nums}th{background:#f4f5ee;color:#1c4f32}td{vertical-align:top}.pos-document-logo{width:60px;height:60px;object-fit:contain;margin-right:16px}.total{background:#f8f4ec;color:#1c4f32;padding:16px;border-radius:10px}button{font-family:inherit!important}@media print{body{background:#fff!important}th,.total{background:#fff;color:#000}.pos-document-logo{width:48px;height:48px}}</style>
 </head><body>
 <div class="ticket">
 
@@ -457,9 +457,9 @@ async function exportarPedidoPDF(id) {
             </table></div>` : '';
 
     const div = document.createElement('div');
-    div.style.cssText = 'width:480px;font-family:Segoe UI,system-ui,sans-serif;background:#fff;';
+    div.style.cssText = 'width:480px;font-family:Nunito,system-ui,sans-serif;background:#fff;';
     div.innerHTML = `
-        <div style="background:linear-gradient(135deg,#1a0533,#2d0a4e);padding:28px 24px;text-align:center;color:white;border-radius:12px 12px 0 0;">
+        <div style="background:#1c4f32;padding:28px 24px;text-align:center;color:white;border-radius:12px 12px 0 0;">
             ${logoBase64?`<img src="${logoBase64}" alt="${_e(storeName)}" style="height:52px;margin-bottom:8px;">`:''}
             <div style="font-size:20px;font-weight:800;color:#FFDD85;">${_e(storeName)}</div>
             ${storePhone?`<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;">${_e(storePhone)}</div>`:''}
@@ -681,13 +681,13 @@ function seleccionarProductoPedido(id) {
                 return `<option value="${_esc(v.type)}:${_esc(v.value)}">${_esc(label)}</option>`;
             }).join('');
             varRow.classList.remove('hidden');
-            const hasSizes=p.tipo==='producto_variable'&&_effVariants.some(v=>v.type==='Talla/Color');
+            const hasSizes=_effVariants.some(v=>v.type==='Talla/Color'||(v.size&&v.color));
             varSel.classList.toggle('pedido-variant-select--chips',hasSizes);
             varSel.tabIndex=hasSizes?-1:0;
             varSel.setAttribute('aria-hidden',String(hasSizes));
             if(choices){
                 choices.hidden=!hasSizes;
-                choices.innerHTML=hasSizes?_effVariants.filter(v=>v.type==='Talla/Color').map(v=>{
+                choices.innerHTML=hasSizes?_effVariants.filter(v=>v.type==='Talla/Color'||(v.size&&v.color)).map(v=>{
                     const value=`${v.type}:${v.value}`;
                     const stock=Number(v.qty)||0;
                     const recargo=Number(v.priceDelta)||0;
@@ -1455,7 +1455,7 @@ function imprimirOrdenProduccion() {
         <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                 <div>
-                    <span style="font-weight:800;color:#FFD166;font-size:1.1rem;">${_e(p.folio)}</span>
+                    <span style="font-weight:800;color:#1c4f32;font-size:1.1rem;">${_e(p.folio)}</span>
                     <span style="margin-left:10px;font-size:.8rem;background:#f3f4f6;padding:2px 8px;border-radius:99px;">${statusLabel(p.status)}</span>
                     ${p.ocasion ? `<span style="margin-left:6px;font-size:.78rem;background:#f5f3ff;color:#9669c4;padding:2px 8px;border-radius:99px;">${_e(p.ocasion)}</span>` : ''}
                 </div>
@@ -1474,13 +1474,13 @@ function imprimirOrdenProduccion() {
   body{font-family:system-ui,sans-serif;color:#1f2937;padding:24px;max-width:860px;margin:0 auto;}
   h1{color:#FFD166;margin-bottom:4px;}
   @media print{body{padding:0;}.no-print{display:none}}
-</style>
+@font-face{font-family:Nunito;src:url('/css/fonts/nunito.woff2') format('woff2');font-weight:400 900;font-display:swap}body{font-family:Nunito,system-ui,sans-serif!important;color:#243f2e}h1{color:#1c4f32!important}table{font-variant-numeric:tabular-nums}th{background:#f4f5ee;color:#1c4f32}td{vertical-align:top}.pos-document-logo{width:60px;height:60px;object-fit:contain;margin-right:16px}.total{background:#f8f4ec;color:#1c4f32;padding:16px;border-radius:10px}button{font-family:inherit!important}@media print{body{background:#fff!important}th,.total{background:#fff;color:#000}.pos-document-logo{width:48px;height:48px}}</style>
 </head><body>
 <button class="no-print" onclick="window.print()" style="padding:10px 18px;background:#1c4f32;color:#fff;border:0;border-radius:10px;cursor:pointer;">Imprimir orden</button>
-<h1>🔧 Orden de Producción</h1>
+<header style="display:flex;align-items:center"><img class="pos-document-logo" src="/logo.png" alt="Logo Bicho Capricho"><div><b>Bicho Capricho</b><h1>Orden de Producción</h1></div></header>
 <p style="color:#6b7280;margin-bottom:20px;">Fecha: <b>${hoy}</b> · ${pedidos.length} pedido${pedidos.length!==1?'s':''} en producción</p>
 ${filas}
-<p style="margin-top:24px;font-size:.75rem;color:#d1d5db;text-align:center;">Bicho Capricho · generado ${new Date().toLocaleString('es-MX')}</p>
+<p style="margin-top:24px;font-size:.75rem;color:#566b5c;text-align:center;">Bicho Capricho · generado ${new Date().toLocaleString('es-MX')}</p>
 </body></html>`;
     const w = window.open('', '_blank');
     if (!w) { if (typeof manekiToastExport === 'function') manekiToastExport('Permite ventanas emergentes para imprimir', 'warn'); return; }

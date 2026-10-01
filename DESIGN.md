@@ -23,3 +23,7 @@ Inventario en tabla mantiene densidad y acciones; tarjetas destacan foto complet
 
 ## Estados y limites
 Tema oscuro con superficies verdes profundas y contraste claro. Foco uva, hover sin saltos, disabled visible, movimiento reducido respetado. No agregar confirmaciones, checklist ni requisitos para avanzar pedidos. Preservar configuracion de negocio, filtros, densidad y preferencia de tabla/tarjetas. Cache SW incluye tipografia/estilos e imagenes de marca. No SQL, autenticacion ni logica financiera modificados.
+
+
+## Tabla y documentos - 2026-10-01
+Tabla: folio secundario, cliente destacado y descripcion que permite varias lineas. Total/Cobrado/Saldo alineados; Pagado con texto ademas de color. Hoy/Manana/Vencido conserva fecha exacta. Acciones 2x2 estables, secundarias en Mas; columnas opcionales locales. Compacto reduce espacio sin esconder cliente/fecha/saldo. Busqueda y accion primaria fijas, tres filas compactas en movil. Formularios usan separadores suaves y detalles opcionales; muestras de color nunca reemplazan nombre/talla. Ticket/PDF/cotizacion/orden usan logo Bicho, Nunito, bosque/crema y totales legibles.

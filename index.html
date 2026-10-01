@@ -657,7 +657,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <section id="quotes-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
                 <div class="mk-page-header"><img class="bc-section-mascot" src="/img/brand/crafty.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Cotizaciones</h1><p class="mk-page-sub">Genera presupuestos para tus clientes</p></div></div>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div class="pos-section-controls flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2" id="quotesHeaderButtons">
                         <button type="button" data-action="openQuoteModal"
                                 class="btn-primary px-6 py-3 rounded-xl text-white font-semibold">
@@ -777,7 +777,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <section id="inventory-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
                 <div class="mk-page-header"><img class="bc-section-mascot" src="/img/brand/estampilla.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Inventario</h1><p class="mk-page-sub">Gestiona tu stock de productos</p></div></div>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div class="pos-section-controls flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2 flex-wrap">
 
                         <!-- ── + Agregar ▾ (primaria) ── -->
@@ -858,7 +858,8 @@ input:focus, select:focus, textarea:focus, button:focus {
                     </div>
                     <div id="movimientosLista" class="space-y-2 max-h-96 overflow-y-auto"></div>
                 </div>
-                <div class="flex flex-wrap gap-2 mb-3 items-center">
+                <div class="pos-workbar flex flex-wrap gap-2 mb-3 items-center">
+  <button type="button" data-action="openAddProductModal" class="mk-btn-primary">Nuevo producto</button>
   <div class="relative flex-1 min-w-[200px]">
     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
     <input type="text" id="inventorySearch" placeholder="Buscar producto, SKU o código..."
@@ -1026,7 +1027,7 @@ input:focus, select:focus, textarea:focus, button:focus {
         <section id="clientes-section" class="p-4 md:p-8 hidden">
             <div class="max-w-7xl mx-auto">
                 <div class="mk-page-header"><img class="bc-section-mascot" src="/img/brand/crafty.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Clientes</h1><p class="mk-page-sub">Tus clientes m&#225;s especiales</p></div></div>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div class="pos-section-controls flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center gap-2">
                         <button type="button" data-action="manekiExportar" data-arg="clientes" class="mk-toolbar-btn">
                             <i class="fas fa-file-excel mk-tb-ico" style="color:#10B981;"></i> Exportar Excel
@@ -1113,7 +1114,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 
         <section id="categorias-section" class="p-4 md:p-8 hidden">
             <div class="max-w-5xl mx-auto">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div class="pos-section-controls flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
                         <div class="mk-page-header"><img class="bc-section-mascot" src="/img/brand/tago.webp" width="72" height="72" alt="" decoding="async"><div><h1 class="mk-page-title">Categor&#237;as</h1><p class="mk-page-sub">Organiza tus productos</p></div></div>
                         <p class="text-gray-600 mt-1">Administra las categorías de tus productos</p>
@@ -1749,16 +1750,16 @@ input:focus, select:focus, textarea:focus, button:focus {
                 </select>
             </div>
             <div class="mk-card overflow-hidden">
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto pos-order-table-scroll">
                     <table id="pedidosTableEl" class="w-full">
                         <thead class="bg-gray-50 border-b"><tr>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Folio</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cliente</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Concepto</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">F.Pedido</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">F.Entrega</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cobro</th>
-                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Estado</th>
+                            <th data-column="folio" class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Folio</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cliente y pedido</th>
+                            <th data-column="concepto" class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Contacto / entrega</th>
+                            <th data-column="creacion" class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Creado</th>
+                            <th data-column="entrega" class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Entrega</th>
+                            <th data-column="cobro" class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Importes</th>
+                            <th data-column="estado" class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Estado</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Acciones</th>
                         </tr></thead>
                         <tbody id="pedidosTable" class="divide-y divide-gray-200"></tbody>

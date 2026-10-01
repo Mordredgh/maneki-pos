@@ -170,3 +170,83 @@ body.dark #bienvenida-section :is(.mk-kpi-label,.mk-kpi-sub){color:#b7c6b4!impor
 body.dark #bienvenida-section :is(.mk-card,.mk-quick-access-btn) p,body.dark #mornUrgentList :is(div,span){color:var(--bc-ink)!important}
 body .mk-kpi-v2::before,body .mk-kpi-v2::after{display:none!important}
 body .mk-dash-go-btn{background:var(--bc-butter)!important;box-shadow:none!important;border-radius:10px!important}
+
+/* Tabla de encargos: identidad, numeros y controles estables. */
+body #pedidosTableEl{border-collapse:separate;border-spacing:0;min-width:850px}
+body #pedidosTableEl th{position:sticky;top:0;z-index:2;background:var(--bc-soft)!important;font-size:.78rem!important;white-space:nowrap}
+body .pos-order-table-scroll{max-height:65vh;overflow:auto;scroll-padding-top:44px;scroll-padding-bottom:12px}
+body #pedidosTableEl td{padding:16px 12px;vertical-align:top;border-bottom:1px solid var(--bc-border);font-size:.85rem;line-height:1.4}
+body #pedidosTableEl [hidden]{display:none!important}
+body .pos-order-folio{color:var(--bc-muted);font-size:.74rem;white-space:nowrap}
+body .pos-order-identity{min-width:220px;max-width:330px}
+body .pos-order-open{color:var(--bc-forest)!important;background:transparent;border:0;text-align:left;font-size:.95rem!important;padding:0;min-height:32px}
+body .pos-order-identity p{margin:5px 0 0;color:var(--bc-muted);overflow-wrap:anywhere;line-height:1.5}
+body .pos-order-money{min-width:140px;font-variant-numeric:tabular-nums}
+body .pos-order-money>div{display:flex;justify-content:space-between;gap:12px;white-space:nowrap;margin:3px 0}
+body .pos-order-money dt{color:var(--bc-muted);font-size:.76rem}
+body .pos-order-money dd{font-weight:800;text-align:right;color:var(--bc-ink)}
+body .pos-order-balance[data-paid="false"] dd{color:#9c2945}
+body .pos-order-balance[data-paid="true"] dd{color:#17683b}
+body #pedidosTableEl time{display:block;color:var(--bc-muted);font-size:.74rem;margin-top:3px;white-space:nowrap}
+body .pos-order-date{display:block;white-space:nowrap;font-weight:800;font-size:.82rem}
+body .pos-order-date[data-state="late"]{color:#9c2945}
+body .pos-order-date[data-state="today"]{color:#805d0a}
+body .pos-order-actions>div{display:grid;grid-template-columns:repeat(2,minmax(70px,1fr));gap:6px}
+body .pos-order-actions .mk-mini-btn{background:var(--bc-surface)!important;color:var(--bc-forest)!important;border:1px solid var(--bc-border)!important;min-height:34px;font-size:.75rem!important;padding:6px 8px!important}
+body #pedidosTable .pos-order-selected>td{background:#edf4e7!important}
+body #pedidosTable .pos-order-selected .pos-order-open{text-decoration:underline;text-underline-offset:4px}
+body .pos-workbar{position:sticky;top:8px;z-index:12;background:var(--bc-cream);padding:8px 0}
+body .pos-table-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body #posTablaColumnas{position:relative;font-size:.82rem}
+body #posTablaColumnas summary{padding:10px 12px;border:1px solid var(--bc-border);border-radius:10px;background:var(--bc-surface);cursor:pointer;min-height:40px}
+body #posTablaColumnas>div{position:absolute;right:0;top:100%;z-index:20;min-width:200px;background:var(--bc-surface);padding:12px;box-shadow:var(--bc-elevation);border-radius:10px}
+body #posTablaColumnas label{display:flex;align-items:center;gap:8px;min-height:36px;cursor:pointer;color:var(--bc-ink)}
+body #posTablaColumnas input{width:18px;height:18px;accent-color:#1c4f32}
+body.mk-dense #pedidosTableEl td{padding:9px 12px}
+body.mk-dense .pos-order-identity p{font-size:.78rem;line-height:1.35;margin-top:2px}
+body.mk-dense .pos-order-money>div{margin:0}
+body.mk-dense .pos-inv-visual,body.mk-dense .pos-inv-visual img{height:112px!important}
+body.mk-dense .pos-inv-card{padding:12px!important;gap:6px!important}
+body.mk-dense .pos-kanban-card{padding:10px!important}
+body.mk-dense .pos-kanban-client{font-size:.9rem!important}
+body #_mkTblMenuDrop{background:var(--bc-surface)!important;color:var(--bc-ink);border:1px solid var(--bc-border)!important}
+body #_mkTblMenuDrop button{font-family:Nunito,system-ui;min-height:40px;color:var(--bc-ink)!important}
+/* Formularios: grupos claros, sin nueva captura obligatoria. */
+body :is(.modal-content,dialog) fieldset{border:0;border-top:1px solid var(--bc-border);padding:20px 0 4px;margin:20px 0 0;min-width:0}
+body :is(.modal-content,dialog) legend{font-weight:800;color:var(--bc-forest);font-size:1rem;padding-right:10px}
+body :is(.modal-content,dialog) label{line-height:1.4}
+body :is(.modal-content,dialog) :is(input,select,textarea){margin-top:5px}
+body dialog.pos-order-drawer fieldset label{display:inline-flex;flex-direction:column;gap:4px;width:calc(50% - 12px);margin:8px 12px 8px 0;vertical-align:top}
+body dialog.pos-order-drawer fieldset p{font-size:.84rem;color:var(--bc-muted);line-height:1.5}
+body dialog.pos-order-drawer details{margin:16px 0}
+body dialog.pos-order-drawer summary{font-weight:800;cursor:pointer;padding:10px 0;color:var(--bc-forest)}
+body .pedido-color-swatch{display:inline-block;width:16px;height:16px;border:1px solid #809080;border-radius:50%;vertical-align:middle;margin-right:6px;flex-shrink:0}
+body .pedido-variant-choices button[aria-pressed="true"]{background:#edf4e7!important;border:2px solid #1c4f32!important;color:#1c4f32!important;box-shadow:none!important}
+body .pedido-variant-choices button{min-height:48px!important}
+body.dark #pedidosTable .pos-order-selected>td{background:#334f39!important}
+body.dark .pos-order-balance[data-paid="false"] dd,body.dark .pos-order-date[data-state="late"]{color:#ffc6d4}
+body.dark .pos-order-balance[data-paid="true"] dd{color:#c3ec9f}
+body.dark .pos-order-date[data-state="today"]{color:#ffe8b0}
+@media(max-width:650px){
+ body .pos-workbar{top:64px;padding:6px 0}
+ body .pos-order-actions .mk-mini-btn,body .pos-order-open{min-height:44px!important}
+ body .pos-order-table-scroll{max-height:60vh}
+ body #tablaBuscadorBar>div:first-child{min-width:100%!important}
+ body #posTablaColumnas label{min-height:44px}
+ body dialog.pos-order-drawer fieldset label{width:100%;margin-right:0}
+}
+
+body .pos-section-controls{position:sticky;top:8px;background:var(--bc-cream);z-index:11;padding:8px 0}
+body #inventory-section .pos-section-controls{position:static}
+body.mk-dense .pos-inv-price{font-size:1.05rem}
+@media(max-width:650px){body .pos-section-controls{top:64px}body #tablaBuscadorBar,body #inventory-section .pos-workbar{max-height:30vh;overflow-y:auto;scroll-padding:8px}body #posTablaColumnas>div{position:fixed;right:16px;top:140px}}
+
+/* Las preferencias de columnas mandan tambien en movil. */
+body #pedidosTableEl thead tr th:not([hidden]),body #pedidosTable tr td:not([hidden]){display:table-cell!important}
+
+body #pedidosTable .pos-order-identity,body #pedidosTable .pos-order-identity p{white-space:normal!important;overflow-wrap:anywhere}
+body:has(#pedidos-section:not(.hidden) #vistaTabla:not(.hidden)) #fabNuevoPedido{display:none!important}
+
+/* Permitir que las barras se fijen al viewport, no a un overflow sin scroll. */
+body #main-content,body #main-content>section{overflow-x:clip!important;overflow-y:visible!important}
+@media(max-width:650px){body #tablaBuscadorBar{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;max-height:none!important;overflow:visible!important}body #tablaBuscadorBar>div:first-child,body #tablaBuscadorBar>.pos-table-tools{grid-column:1/-1;min-width:0!important}body #tablaBuscadorBar>select{width:100%;min-width:0}body .pos-table-tools{flex-wrap:nowrap;gap:4px}body .pos-table-tools>button,body .pos-table-tools summary{padding:8px;font-size:.75rem;white-space:nowrap}body .pos-table-tools .mk-density-toggle button{padding:8px 6px;font-size:.75rem}}

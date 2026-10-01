@@ -1,3 +1,5 @@
+function posColorMuestra(color:string){const palette={negro:'#191919',blanco:'#ffffff',rojo:'#cb3540',azul:'#3172bc',verde:'#32855d',amarillo:'#e8b52f',rosa:'#e17da1',morado:'#8654b6',gris:'#969a9e',crema:'#eee1c8'};const key=String(color||'').toLowerCase().trim(),value=palette[key]||(/^#[0-9a-f]{6}$/i.test(key)?key:null);return value?`<span class="pedido-color-swatch" style="background:${value}" aria-hidden="true"></span>`:'';}
+(window as any).posColorMuestra=posColorMuestra;
 // Herramientas operativas: calculos puros compartidos y dialogos nativos.
 function posMatrizVariantes(product:any,orders:any[]){
     const variants=(product.variants||[]).map((v:any,index:number)=>({...v,index,size:v.size||String(v.value||'').split('/')[0]?.trim(),color:v.color||String(v.value||'').split('/')[1]?.trim()})).filter((v:any)=>v.size&&v.color);
@@ -33,7 +35,7 @@ async function posAbrirMatriz(id?:string){
     const matrix=posMatrizVariantes(product,window.pedidos||[]),before=JSON.stringify(product);
     const form=document.createElement('form');const scroll=document.createElement('div');scroll.className='pos-table-scroll';
     const table=document.createElement('table');table.className='pos-data-table';
-    table.innerHTML=`<caption>Modifica piezas terminadas. Los pedidos en producción ya fueron descontados. La capacidad de fabricación comparte materiales entre combinaciones y no se suma.</caption><thead><tr><th>Talla</th>${matrix.colors.map(c=>`<th>${_esc(c)}</th>`).join('')}</tr></thead>`;
+    table.innerHTML=`<caption>Modifica piezas terminadas. Los pedidos en producción ya fueron descontados. La capacidad de fabricación comparte materiales entre combinaciones y no se suma.</caption><thead><tr><th>Talla</th>${matrix.colors.map(c=>`<th>${posColorMuestra(c)}${_esc(c)}</th>`).join('')}</tr></thead>`;
     const body=document.createElement('tbody');
     for(const size of matrix.sizes){const row=document.createElement('tr');const header=document.createElement('th');header.textContent=size;row.appendChild(header);
       for(const color of matrix.colors){const cell=matrix.cells.find(c=>c.size===size&&c.color===color)!;const td=document.createElement('td');
@@ -60,10 +62,16 @@ window.posAbrirMatriz=posAbrirMatriz;
 function posAbrirFicha(id?:string){
     document.querySelector('dialog.pos-order-drawer')?.close();
     const allOrders=[...(window.pedidos||[]),...(window.pedidosFinalizados||[])];
-    const visibleIds=Array.from(document.querySelectorAll('#vistaKanban [data-kanban-open]')).map(el=>el.dataset.kanbanOpen);
+    const tableVisible=!document.getElementById('vistaTabla')?.classList.contains('hidden');
+    const visibleIds=Array.from(document.querySelectorAll(tableVisible?'#pedidosTable [data-table-open]':'#vistaKanban [data-kanban-open]')).map(el=>tableVisible?el.dataset.tableOpen:el.dataset.kanbanOpen);
     const orders=id&&visibleIds.includes(String(id))?visibleIds.map(key=>allOrders.find(p=>String(p.id)===key)).filter(Boolean):allOrders;
     const p=orders.find(p=>String(p.id)===String(id))||orders[0];const dialog=posDialog('Ficha del pedido',false);dialog.classList.add('pos-wide-dialog','pos-order-drawer');
     if(!p){dialog.append('Todavía no hay pedidos.');return;}
+    window.posTablaSelectedId=String(p.id);
+    const scroll=document.querySelector('.pos-order-table-scroll') as HTMLElement,top=scroll?.scrollTop,left=scroll?.scrollLeft,pageY=window.scrollY;
+    document.querySelectorAll('#pedidosTable [data-table-open]').forEach((row:any)=>row.classList.toggle('pos-order-selected',row.dataset.tableOpen===String(p.id)));
+    dialog.addEventListener('close',()=>{if(scroll){scroll.scrollTop=top;scroll.scrollLeft=left;}window.scrollTo({top:pageY,behavior:'instant'});},{once:true});
+
     const nav=document.createElement('div');nav.className='pos-order-drawer-nav';const previous=document.createElement('button');previous.type='button';previous.textContent='← Anterior';const next=document.createElement('button');next.type='button';next.textContent='Siguiente →';const index=orders.indexOf(p);previous.disabled=index<=0;next.disabled=index>=orders.length-1;previous.onclick=()=>posAbrirFicha(String(orders[index-1].id));next.onclick=()=>posAbrirFicha(String(orders[index+1].id));nav.append(previous,next);dialog.appendChild(nav);
     const selector=document.createElement('select');selector.setAttribute('aria-label','Pedido');orders.forEach(ped=>{const option=document.createElement('option');option.value=String(ped.id);option.textContent=`${ped.folio||ped.id} · ${ped.cliente||'Sin cliente'}`;option.selected=ped===p;selector.appendChild(option);});selector.onchange=()=>posAbrirFicha(selector.value);dialog.appendChild(selector);
     const sync=document.createElement('small');sync.className='pos-record-sync';sync.dataset.syncTable=(window.pedidosFinalizados||[]).includes(p)?'orders_finalizados':'orders';sync.dataset.syncId=String(p.id);const current=window.posRecordSyncStatus?.(sync.dataset.syncTable,sync.dataset.syncId);sync.textContent=current?.text||'Estado no disponible';sync.dataset.state=current?.state||'unknown';dialog.appendChild(sync);

@@ -1,3 +1,20 @@
+// Fechas civiles: UTC solo se usa para contar dias, nunca para convertir la fecha local.
+function posTablaFechaEntrega(value:string,hoy?:string){
+ const day=(s:string)=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return null;const [y,m,d]=s.split('-').map(Number),n=Date.UTC(y,m-1,d);return new Date(n).toISOString().slice(0,10)===s?n:null;};
+ const raw=String(value||'').split('T')[0],date=day(raw);
+ const now=new Date(),today=day(hoy||`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`);
+ if(date==null||today==null)return {label:'Sin fecha válida',date:raw,state:'missing'};
+ const days=Math.round((date-today)/86400000),exact=raw.split('-').reverse().join('/');
+ return {label:days===0?'Hoy':days===1?'Mañana':days<0?`Vencido hace ${-days} ${days===-1?'día':'días'}`:`En ${days} días`,date:exact,state:days<0?'late':days===0?'today':'future'};
+}
+const posTablaOpcionales={folio:'Folio',concepto:'Detalle adicional',creacion:'Fecha de pedido',entrega:'Entrega',cobro:'Importes',estado:'Estado'};
+function posTablaPreferencias(){try{const list=JSON.parse(localStorage.getItem('pos-table-hidden')||'[]');return Array.isArray(list)?list.filter(k=>Object.prototype.hasOwnProperty.call(posTablaOpcionales,k)):[];}catch{return [];}}
+function posTablaAplicarColumnas(){const hidden=posTablaPreferencias();document.querySelectorAll('#pedidosTableEl [data-column]').forEach((el:any)=>{el.hidden=hidden.includes(el.dataset.column);});document.querySelectorAll('#posTablaColumnas input').forEach((el:any)=>{el.checked=!hidden.includes(el.value);});}
+function posTablaCambiarColumna(input:HTMLInputElement){const hidden=posTablaPreferencias().filter(k=>k!==input.value);if(!input.checked&&Object.prototype.hasOwnProperty.call(posTablaOpcionales,input.value))hidden.push(input.value);try{localStorage.setItem('pos-table-hidden',JSON.stringify(hidden));}catch{}posTablaAplicarColumnas();}
+function posTablaAbrirFicha(id:string){posAbrirFicha(id);}
+(window as any).posTablaCambiarColumna=posTablaCambiarColumna;
+(window as any).posTablaAbrirFicha=posTablaAbrirFicha;
+
 // ── Cambiar vista kanban / tabla ──
 function setVistaPedidos(vista) {
     _pedidoVistaActual = vista;
@@ -444,7 +461,7 @@ function kanbanCardHTML(p) {
  const nota=String(p.notas||'').trim(),interna=String(p.notasInternas||'').trim();
  const action=(fn:string,label:string,kind='')=>`<button type="button" data-action="${fn}" data-arg="${id}" class="mk-mini-btn ${kind}">${label}</button>`;
  const selected=window._kanbanSeleccionados?.has(String(p.id));
- return `<div class="kanban-card pos-kanban-card pos-kanban-${_kanbanCompacto}" data-id="${id}" data-kanban-open="${id}" tabindex="0" aria-label="Abrir ficha del pedido ${e(p.folio||p.id)}" data-status="${e(p.status||'confirmado')}" draggable="true" ondragstart="kanbanDragStart(event,this.dataset.id)" ondragend="kanbanDragEnd(event)">
+ return `<div class="kanban-card pos-kanban-card pos-kanban-${_kanbanCompacto}" data-arg="${id}" data-kanban-open="${id}" tabindex="0" aria-label="Abrir ficha del pedido ${e(p.folio||p.id)}" data-status="${e(p.status||'confirmado')}" draggable="true" ondragstart="kanbanDragStart(event,this.dataset.id)" ondragend="kanbanDragEnd(event)">
  <div class="pos-kanban-heading"><span>${e(p.folio||'Pedido')}</span><input type="checkbox" class="_kanban-check" ${selected?'checked':''} aria-label="Seleccionar para acción en lote" onclick="event.stopPropagation()" onchange="_toggleKanbanSelect(this.closest('[data-id]').dataset.id,this.checked)"></div>
  <p class="pos-kanban-client">${e(p.cliente||p.clienteNombre||'Sin cliente')}</p>
  <p class="pos-kanban-product">${e(productos)}</p>
@@ -484,6 +501,7 @@ function _inyectarBuscadorTabla() {
     if (!tabla) return;
     const bar = document.createElement('div');
     bar.id = 'tablaBuscadorBar';
+    bar.className='pos-workbar';
     bar.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;';
     bar.innerHTML = `
         <div style="flex:1;min-width:200px;position:relative;">
@@ -506,7 +524,9 @@ function _inyectarBuscadorTabla() {
             <option value="semana">🟡 Esta semana</option>
             <option value="vencido">⚫ Vencido</option>
         </select>`;
-    tabla.prepend(bar);
+    const tools=document.createElement('div');tools.className='pos-table-tools';
+    tools.innerHTML=`<button class="mk-btn-primary" data-action="openPedidoModal">Nuevo pedido</button><div class="mk-density-toggle" aria-label="Densidad de pedidos"><button data-density="comfortable" data-action="mkToggleDensidad" data-arg="comfortable">Cómodo</button><button data-density="compact" data-action="mkToggleDensidad" data-arg="compact">Compacto</button></div><details id="posTablaColumnas"><summary>Columnas</summary><div>${Object.entries(posTablaOpcionales).map(([key,label])=>`<label><input type="checkbox" value="${key}" data-change="posTablaCambiarColumna" data-pass-el="before"> ${label}</label>`).join('')}</div></details>`;
+    bar.appendChild(tools);tabla.prepend(bar);posTablaAplicarColumnas();if(typeof mkAplicarDensidad==='function')mkAplicarDensidad();
 }
 
 // P3: menú "···" compacto en tabla — abre dropdown con acciones secundarias
@@ -528,8 +548,8 @@ function _mkTblMenu(btn: HTMLElement, id: string) {
     document.body.appendChild(menu);
     const rect = btn.getBoundingClientRect();
     const menuW = 164, menuH = 160;
-    menu.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
-    menu.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - menuW - 8) + 'px';
+    menu.style.top  = Math.max(8,Math.min(rect.bottom + 4,window.innerHeight-menuH-8)) + 'px';
+    menu.style.left = Math.min(rect.left, window.innerWidth - menuW - 8) + 'px';
     setTimeout(() => document.addEventListener('click', function _close(e) {
         if (!menu.contains(e.target as Node)) { menu.remove(); document.removeEventListener('click', _close); }
     }), 0);
@@ -544,7 +564,7 @@ function renderTablaPedidos() {
     if ((_pedidoVistaActual || 'kanban') === 'kanban') return;
     // P1: hash guard — saltar re-render si los datos no cambiaron (incluye valores de filtros activos)
     const _qHash = ((document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null)?.value || '') + ((document.getElementById('tablaFiltroPago') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('pedidoFechaDesde') as HTMLInputElement|null)?.value || '') + ((document.getElementById('pedidoFechaHasta') as HTMLInputElement|null)?.value || '');
-    const _tHash = (window.pedidos||[]).length + '_' + (window.pedidos||[]).reduce((s,p)=>s+Number(p.total||0)+Number(p.resta||0),0).toFixed(0) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash;
+    const _tHash = JSON.stringify((window.pedidos||[]).map(p=>[p.id,p.folio,p.cliente,p.concepto,p.entrega,p.fechaPedido,p.fecha,p.status,p.total,p.anticipo,p.resta,p.pagos,p.telefono,p.lugarEntrega])) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash + '_' + String(window.posTablaSelectedId||'');
     if ((tbody as any)._lastHash === _tHash) return;
     (tbody as any)._lastHash = _tHash;
     const q = ((document.getElementById('tablaPedidosBuscar') || document.getElementById('kanbanBuscar') || {}).value || '').toLowerCase().trim();
@@ -637,51 +657,25 @@ function renderTablaPedidos() {
         }
     } else {
     tbody.innerHTML = page.map(p => {
-            const _wa  = p.telefono || p.whatsapp || '';
-            const _fb  = p.redes   || p.facebook  || '';
-            const _dir = p.lugarEntrega || '';
-            const _r   = calcSaldoPendiente(p), _a = Number(p.anticipo||0);
-            const _badge = _r<=0
-                ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#dcfce7;color:#166534;">Liquidado</span>'
-                : _a>0
-                    ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#fef9c3;color:#854d0e;">Anticipo</span>'
-                    : '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:9999px;font-size:.65rem;font-weight:700;background:#fee2e2;color:#991b1b;">Pendiente</span>';
-            const _fbUrl = _fb ? (_fb.startsWith('http') ? _fb : `https://facebook.com/${_fb.replace(/^@/,'')}`) : '';
-            return `<tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm font-bold text-amber-600">${_et(p.folio)||'—'}</td>
-            <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                    ${typeof _mkAvatar==='function'?_mkAvatar(p.cliente):''}
-                    <p class="text-sm font-semibold text-gray-800">${_et(p.cliente)||'—'}</p>
-                </div>
-                <div class="flex gap-1 mt-1 flex-wrap">
-                    ${_wa ? `<button onclick="abrirWhatsAppPedido('${p.id}')" title="WhatsApp: ${_et(_wa)}" style="color:#fff;background:#25D366;border:none;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;cursor:pointer;letter-spacing:.02em;">WA</button>` : ''}
-                    ${_fb ? `<a href="${_fbUrl}" target="_blank" rel="noopener noreferrer" title="Facebook: ${_et(_fb)}" style="color:#fff;background:#1877F2;border-radius:6px;padding:2px 7px;font-size:.78rem;font-weight:700;text-decoration:none;display:inline-block;letter-spacing:.02em;">FB</a>` : ''}
-                </div>
-            </td>
-            <td class="px-4 py-3 text-xs text-gray-500 max-w-[160px]">
-                <p class="truncate">${_et(p.concepto)||'—'}</p>
-                ${_dir ? `<p class="truncate mt-1" style="color:#9669c4;">📍 ${_et(_dir)}</p>` : ''}
-            </td>
-            <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.fechaPedido)||''}">${_fmtFechaCorta((p.fechaPedido||'').split('T')[0].split(' ')[0])||'—'}</span></td>
-            <td class="px-4 py-3 text-xs text-gray-500"><span title="${_et(p.entrega)||''}">${_fmtFechaCorta((p.entrega||'').split('T')[0].split(' ')[0])||'—'}</span></td>
-            <td class="px-4 py-3 text-xs leading-snug">
-                <div class="text-gray-500">Total: <span class="font-bold text-gray-800">$${Number(p.total||0).toFixed(2)}</span></div>
-                <div class="text-gray-500">Anticipo: <span class="font-semibold text-green-700">$${Number(p.anticipo||0).toFixed(2)}</span></div>
-                <div class="text-gray-500">Resta: <span class="font-bold ${_r>0?'text-red-600':'text-green-600'}">$${_r.toFixed(2)}</span> ${_badge}</div>
-            </td>
-            <td class="px-4 py-3 text-xs">${statusLabel[(p.status||'').toLowerCase()]||p.status||'—'}</td>
-            <td class="px-4 py-3">
-                <div style="display:flex;gap:4px;align-items:center;">
-                    <button onclick="openPedidoStatusModal('${p.id}')" title="Cambiar estado" class="mk-mini-btn"><i class="fas fa-bolt"></i> Estado</button>
-                    <button onclick="openAbonoPedido('${p.id}')" title="Registrar abono" class="mk-mini-btn success"><i class="fas fa-dollar-sign"></i></button>
-                    <div style="position:relative;display:inline-block;" class="_mk-tbl-menu-wrap">
-                        <button onclick="_mkTblMenu(this,'${p.id}')" title="Más acciones" class="mk-mini-btn"><i class="fas fa-ellipsis"></i></button>
-                    </div>
-                </div>
-            </td>
+            const fb=String(p.redes||p.facebook||''),fbUrl=fb?(/^https?:\/\//i.test(fb)?fb:'https://facebook.com/'+fb.replace(/^@/,'')):'';
+            const id=_et(String(p.id)),saldo=calcSaldoPendiente(p),cobrado=posTotalPagado(p),fecha=posTablaFechaEntrega(p.entrega);
+            return `<tr data-table-open="${id}" class="pos-order-row${String(window.posTablaSelectedId)===String(p.id)?' pos-order-selected':''}">
+            <td data-column="folio"><small class="pos-order-folio">${_et(p.folio)||'—'}</small></td>
+            <td class="pos-order-identity"><button class="pos-order-open" data-action="posTablaAbrirFicha" data-arg="${id}" aria-label="Abrir ficha de ${_et(p.folio||p.cliente)}"><strong>${_et(p.cliente)||'Sin cliente'}</strong></button><p>${_et(p.concepto)||'Sin descripción'}</p></td>
+            <td data-column="concepto"><span>${_et(p.lugarEntrega)||'—'}</span>${p.telefono||p.whatsapp?`<button class="mk-mini-btn" data-action="abrirWhatsAppPedido" data-arg="${id}">WhatsApp</button>`:''}${fbUrl?`<a class="mk-mini-btn" href="${_et(fbUrl)}" target="_blank" rel="noopener noreferrer">Facebook</a>`:''}</td>
+            <td data-column="creacion"><time>${_et(_fmtFechaCorta((p.fechaPedido||p.fecha||'').split('T')[0].split(' ')[0]))||'—'}</time></td>
+            <td data-column="entrega"><span class="pos-order-date" data-state="${fecha.state}">${fecha.label}</span><time datetime="${_et(p.entrega||'')}">${_et(fecha.date)}</time></td>
+            <td data-column="cobro"><dl class="pos-order-money"><div><dt>Total</dt><dd>${fmtMoney(Number(p.total)||0)}</dd></div><div><dt>Cobrado</dt><dd>${fmtMoney(cobrado)}</dd></div><div class="pos-order-balance" data-paid="${saldo<=0}"><dt>${saldo<=0?'Pagado':'Saldo'}</dt><dd>${fmtMoney(saldo)}</dd></div></dl></td>
+            <td data-column="estado">${statusLabel[(p.status||'').toLowerCase()]||_et(p.status)||'—'}</td>
+            <td class="pos-order-actions"><div>
+              <button class="mk-mini-btn" data-action="openPedidoModal" data-arg="${id}" aria-label="Editar ${_et(p.folio)}">Editar</button>
+              <button class="mk-mini-btn" data-action="openAbonoPedido" data-arg="${id}" aria-label="Abonar ${_et(p.folio)}">Abonar</button>
+              <button class="mk-mini-btn" data-action="openPedidoStatusModal" data-arg="${id}" aria-label="Estado de ${_et(p.folio)}">Estado</button>
+              <button class="mk-mini-btn" data-action="_mkTblMenu" data-pass-el="before" data-arg="${id}" aria-label="Más acciones de ${_et(p.folio)}" aria-haspopup="true">Más</button>
+            </div></td>
         </tr>`;}).join('');
     } // fin del else (page.length > 0)
+    posTablaAplicarColumnas();
     // Render pagination controls
     let paginador = document.getElementById('pedidosTablePaginador');
     if (!paginador) {

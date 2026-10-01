@@ -255,3 +255,12 @@
 - [x] DESIGN/CONTEXT, grafo, memoria, commit y push.
 
 Validacion: 201 pruebas y tipos/lint/build correctos. UI ficticia escritorio, oscuro y 390 px; corregida prioridad de superficies/KPI. Detector una corrida: sin hallazgos en nueva hoja; advertencias legacy conservadas. Cloudflare 288b3b7e, dominio 401/200, SW maneki-e757a0fc7c y 5 assets 200. Grafo MCP actualizado; graphify necesita credencial de extraccion documental no configurada.
+
+## Tabla de encargos y captura visual 2026-09-30
+- [x] Cliente/descripcion, importes cobrados, fechas civiles y encabezado fijo.
+- [x] Acciones estables, columnas persistidas, fila seleccionada y posicion conservada.
+- [x] Compacto/comodo, barras principales, formularios y colores de variantes.
+- [x] Documentos con logo/tipografia/totales, sin impresion automatica.
+- [x] TDD, build, UI escritorio/movil, deploy, memoria y commit.
+
+Validacion: 203 pruebas, tipos/lint/build correctos; UI ficticia con 24 pedidos, escritorio/390px, encabezado al desplazar tabla, columnas tras recarga, fila resaltada, variantes y Estado movil. Documentos HTML generados por funciones reales y revisados visualmente; IAB no expuso popups y no se probo impresora fisica. Cloudflare 0902b053, dominio 401/200, SW maneki-ab4f842eda y assets publicados correctos. Grafo MCP reindexado intentado dos veces: transporte cerrado; graphify requiere clave documental no configurada.

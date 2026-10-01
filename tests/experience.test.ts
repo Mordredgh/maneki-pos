@@ -77,6 +77,8 @@ it('la cotización abre un documento revisable y espera la orden de imprimir',()
   c.fmtMoney=(value:number)=>'$'+Number(value).toFixed(2);
   c.imprimirCotizacionVista('q1');
   expect(html).toContain('Imprimir / guardar PDF');
+  expect(html).toContain('pos-document-logo');
+  expect(html).toContain('nunito.woff2');
   expect(html).toContain('Ana &lt;script&gt;');
   expect(html).toContain('$280.00');
   expect(printed).toBe(false);
@@ -176,4 +178,22 @@ it('el buscador global encuentra clientes con errata y escapa resultados y consu
  c.window.clients=[{name:'Cliente de prueba " <script>'}];c.window.pedidos=[{cliente:'Cliente de prueba " <script>',folio:'PE-1',concepto:'Playera <script>'}];c.window.salesHistory=[];
  expect(()=>c.busquedaGlobal('prueba clietne')).not.toThrow();expect(panel.innerHTML).toContain('Cliente de prueba &quot; &lt;script&gt;');expect(panel.innerHTML).not.toContain('<script>');
  c.busquedaGlobal('<img src=x>');expect(panel.innerHTML).not.toContain('<img src=x>');expect(panel.innerHTML).toContain('&lt;img src=x&gt;');
+});
+
+
+it('la tabla distingue hoy, manana, vencidos y fecha exacta sin depender de UTC',()=>{
+ const c=load('src/pedidos-1-views.ts');
+ expect(c.posTablaFechaEntrega('2026-09-30','2026-09-30')).toEqual({label:'Hoy',date:'30/09/2026',state:'today'});
+ expect(c.posTablaFechaEntrega('2026-10-01','2026-09-30').label).toBe('Mañana');
+ expect(c.posTablaFechaEntrega('2026-09-27','2026-09-30').label).toBe('Vencido hace 3 días');
+ expect(c.posTablaFechaEntrega('2026-02-31','2026-09-30').label).toBe('Sin fecha válida');
+});
+
+it('la tabla muestra lo realmente cobrado y actualiza cliente sin cambiar importes',()=>{
+ const body:any={innerHTML:'',closest(){return {parentElement:{appendChild(){}}};}};
+ const doc:any={addEventListener(){},getElementById(id:string){return id==='pedidosTable'?body:id==='pedidosTablePaginador'?{innerHTML:''}:null;},querySelectorAll(){return [];}};
+ const c=load('src/pedidos-1-views.ts',doc);c._inyectarBuscadorTabla=()=>{};c._pedidoVistaActual='tabla';c._pedidoFiltroActivo='todos';c._pedidosTablePage=1;c._PEDIDOS_PER_PAGE=20;c._esc=(v:any)=>String(v??'');c._fmtFechaCorta=(v:string)=>v;c.fmtMoney=(v:number)=>'$'+v.toFixed(2);c.calcSaldoPendiente=()=>45;c.posTotalPagado=()=>55;
+ c.window.pedidos=[{id:'p1',folio:'PE-001',cliente:'Ana',concepto:'Playera azul',total:100,anticipo:25,entrega:'2026-09-30'}];
+ c.renderTablaPedidos();expect(body.innerHTML).toContain('Cobrado');expect(body.innerHTML).toContain('$55.00');expect(body.innerHTML).toContain('data-action="openPedidoModal" data-arg="p1"');
+ c.window.posTablaSelectedId='p1';c.window.pedidos[0].cliente='Beatriz';c.renderTablaPedidos();expect(body.innerHTML).toContain('pos-order-selected');expect(body.innerHTML).toContain('Beatriz');expect(body.innerHTML).not.toContain('>Ana<');
 });
