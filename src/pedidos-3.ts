@@ -29,7 +29,7 @@ async function imprimirTicketPedido(id) {
     const entrega  = p.entrega || '—';
 
     // Mostrar todos los items de productosInventario; si no hay, mostrar concepto como fila
-    const items = (p.productosInventario || []).filter(it => it.id !== 'libre');
+    const items = (p.productosInventario || []).filter(it => it.name || it.concepto);
 
     const itemsHtml = items.length > 0
         ? items.map(it => {
@@ -434,7 +434,7 @@ async function exportarPedidoPDF(id) {
     const sumPagos = (p.pagos||[]).reduce((s,ab)=>s+Number(ab.monto||0),0);
     const totalPagado = sumPagos>0?sumPagos:Number(p.anticipo||0);
     const resta = Math.max(0,total-totalPagado);
-    const items = (p.productosInventario||[]).filter(it=>it.id!=='libre');
+    const items = (p.productosInventario||[]).filter(it=>it.name||it.concepto);
     const storeName = window.storeConfig?.name||'Bicho Capricho';
     const storePhone = window.storeConfig?.phone||'';
     const _e = _esc;
@@ -852,7 +852,7 @@ async function agregarProductoPedido() {
         }
     }
 
-    const existe = window.pedidoProductosSeleccionados.find(x => String(x.id) === String(id) && x.variante === variante);
+    const existe = window.pedidoProductosSeleccionados.find(x => String(x.id) === String(id) && x.variante === variante && !x.posPromocion);
     if (existe) existe.quantity = (existe.quantity || 1) + qty;
     else window.pedidoProductosSeleccionados.push({ id, name: p.name, price: precioFinal, quantity: qty, variante });
     if(typeof pvRecalcularLineas==='function')pvRecalcularLineas(window.pedidoProductosSeleccionados,window.products||[]);
@@ -883,14 +883,14 @@ function renderPedidoProductosList() {
         <div class="pedido-line-item">
             <div class="flex-1 min-w-0">
                 <div class="pedido-line-title">${_esc(item.name || '')}</div>
-                ${item.variante?`<div class="pedido-line-variant">${_esc(item.variante.startsWith('Talla/Color:')?item.variante.slice(12).trim():item.variante)}</div>`:''}
+                ${item.posPromocion?`<small class="pos-promo-badge">Promoción · ${_esc(item.posPromocion.nombre)}</small>`:''}${item.variante?`<div class="pedido-line-variant">${_esc(item.variante.startsWith('Talla/Color:')?item.variante.slice(12).trim():item.variante)}</div>`:''}
                 <div class="pedido-line-controls">
                     <label>Cantidad
                     <input type="number" min="1" value="${item.quantity || 1}" data-pedido-qty="${i}" aria-label="Cantidad de ${_esc(item.name||'producto')}"
-                        class="pedido-line-input"></label>
+                        ${item.posPromocion?'readonly':''} class="pedido-line-input"></label>
                     <label>Precio por pieza
                     <input type="number" step="0.01" min="0" value="${precio.toFixed(2)}" data-pedido-price="${i}" aria-label="Precio por pieza de ${_esc(item.name||'producto')}"
-                        ${((window.products||[]).find(x=>String(x.id)===String(item.id))?.tipo==='producto_variable')?'readonly title="Precio automático según cantidad, talla y color"':''}
+                        ${((window.products||[]).find(x=>String(x.id)===String(item.id))?.tipo==='producto_variable'||item.posPromocion)?'readonly title="Precio automático según cantidad, talla y color"':''}
                         class="pedido-line-input"></label>
                     <span class="pedido-line-total">$${lineaTotal.toFixed(2)}</span>
                 </div>
@@ -980,7 +980,8 @@ function editarCantidadEmpaquePedido(idx, valor) {
 window.editarCantidadEmpaquePedido = editarCantidadEmpaquePedido;
 
 function quitarProductoPedido(idx) {
-    (window.pedidoProductosSeleccionados || []).splice(idx, 1);
+    const items=window.pedidoProductosSeleccionados||[],promo=items[idx]?.posPromocion?.id;
+    if(promo)window.pedidoProductosSeleccionados=items.filter(i=>i.posPromocion?.id!==promo);else items.splice(idx,1);
     if(typeof pvRecalcularLineas==='function')pvRecalcularLineas(window.pedidoProductosSeleccionados||[],window.products||[]);
     renderPedidoProductosList();
 }
@@ -988,7 +989,7 @@ window.quitarProductoPedido = quitarProductoPedido;
 
 function editarPrecioPedidoProducto(idx, valor) {
     const items = window.pedidoProductosSeleccionados || [];
-    if (items[idx] !== undefined) {
+    if (items[idx] !== undefined && !items[idx].posPromocion) {
         items[idx].price = parseFloat(valor) || 0;
         renderPedidoProductosList();
     }
@@ -997,7 +998,7 @@ window.editarPrecioPedidoProducto = editarPrecioPedidoProducto;
 
 function editarCantidadPedidoProducto(idx, valor) {
     const items = window.pedidoProductosSeleccionados || [];
-    if (items[idx] !== undefined) {
+    if (items[idx] !== undefined && !items[idx].posPromocion) {
         const qty = parseInt(valor) || 1;
         items[idx].quantity = qty;
         // Auto-actualizar precio si es producto variable

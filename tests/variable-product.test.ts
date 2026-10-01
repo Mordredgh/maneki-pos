@@ -48,3 +48,5 @@ it('cierra sin pedir descartar cambios despues de confirmar el guardado',async()
  await ctx.guardarProductoVariable({preventDefault(){}});
  expect(closedDirty).toBe(false);
 });
+
+it('conserva el precio aplicado al combo al recalcular rangos de otros productos',()=>{const c=variable();const products=[{id:'p',tipo:'producto_variable',tablaPreciosVariable:[{cantidadMin:1,precio:100}]}];const items=[{id:'p',quantity:1,price:40,posPromocion:{id:'combo'}},{id:'p',quantity:1,price:0}];c.pvRecalcularLineas(items,products);expect(items.map(x=>x.price)).toEqual([40,100]);});

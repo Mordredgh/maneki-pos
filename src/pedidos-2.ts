@@ -11,6 +11,12 @@ async function _eliminarFotoStorageAlFinalizar(pedido) {
 
 // ── Helpers de inventario para pedidos ──────────────────────────────────────
 async function _descontarInventarioPedido(pedido) {
+    if(pedido.posDetalle?.apartado?.modo==='terminado'){
+        const items=(pedido.productosInventario||[]).filter((i:any)=>i.id!=='libre');
+        const n=window.posComStock(items,-1,`Apartado ${pedido.folio}`);
+        Object.assign(pedido.posDetalle.apartado,{activo:true,items:JSON.parse(JSON.stringify(items))});
+        await saveProducts();return n;
+    }
     const items = pedido.productosInventario || [];
     if (items.length === 0) return 0;
     let descontados = 0;
@@ -270,6 +276,7 @@ function _regresarEmpaquesInventario(pedido) {
 window._regresarEmpaquesInventario = _regresarEmpaquesInventario;
 
 function _regresarInventarioPedido(pedido) {
+    if(window.posComRestaurarApartado?.(pedido)){saveProducts();return;}
     const items = pedido.productosInventario || [];
     if (items.length === 0) return;
     items.forEach(item => {
@@ -335,6 +342,7 @@ function _regresarInventarioPedido(pedido) {
 
 // Regresa PT + MP al inventario (espejo de _descontarInventarioPedido)
 function _regresarInventarioCompleto(pedido) {
+    if(window.posComRestaurarApartado?.(pedido)){saveProducts();return;}
     const items = pedido.productosInventario || [];
     if (items.length === 0) return;
     items.forEach(item => {
@@ -1262,6 +1270,7 @@ function reactivarPedidoCompleto(id) {
     if (idx === -1) { manekiToastExport('⚠️ Pedido no encontrado.', 'warn'); return; }
 
     const p = fuente === 'finalizados' ? window.pedidosFinalizados[idx] : window.pedidos[idx];
+    if(window.posComPuedeReescribir && !window.posComPuedeReescribir(p))return;
     return showConfirm(
         `¿Reactivar el pedido ${p.folio||p.id} de ${p.cliente||'—'}? Volverá al kanban como "Confirmado".`,
         '↩ Reactivar pedido'
@@ -1601,6 +1610,7 @@ function renderHistorialPedidos() {
                 : `<button onclick="imprimirTicketPedido('${p.id}')" class="text-xs text-gray-400 hover:text-gray-600" title="Imprimir comprobante">🖨️</button>
                    <button onclick="exportarPedidoPDF('${p.id}')" class="text-xs text-purple-400 hover:text-purple-600" title="Descargar PDF">📄</button>
                    <button onclick="reactivarPedido('${p.id}')" class="text-xs text-blue-500 hover:text-blue-700" title="Mover de nuevo al kanban">↩ Reactivar</button>
+                   <button type="button" data-action="posAbrirComercial" data-arg="${_esc(String(p.id))}" class="mk-mini-btn">Cambios y tiempo</button>
                    <button onclick="editarPedidoFinalizado('${p.id}')" class="text-xs text-amber-500 hover:text-amber-700">✏️ Editar</button>
                    <button onclick="eliminarPedidoFinalizado('${p.id}')" class="text-xs text-red-400 hover:text-red-600">🗑 Eliminar</button>`;
             return `<div class="flex items-center justify-between p-4 ${_esCancelado ? 'bg-red-50' : 'bg-gray-50'} rounded-xl hover:bg-amber-50 transition-all">
@@ -1914,6 +1924,7 @@ function _initKanbanTouchSwipe() {
 let _editandoPedidoFinalizadoId = null;
 
 function editarPedidoFinalizado(id) {
+    if(window.posComPuedeReescribir && !window.posComPuedeReescribir((window.pedidosFinalizados||[]).find(p=>String(p.id)===String(id))))return;
     const p = (window.pedidosFinalizados || []).find(x => String(x.id) === String(id));
     if (!p) return;
     _editandoPedidoFinalizadoId = id;
@@ -1970,6 +1981,7 @@ window.editarPedidoFinalizado = editarPedidoFinalizado;
         const realId = editId.replace('__finalizado__', '');
         const idx = (window.pedidosFinalizados || []).findIndex(x => String(x.id) === String(realId));
         if (idx === -1) { manekiToastExport('⚠️ No se encontró el pedido.', 'warn'); return; }
+        if(window.posComPuedeReescribir && !window.posComPuedeReescribir(window.pedidosFinalizados[idx]))return;
         const pedidoAnterior = {
             ...window.pedidosFinalizados[idx],
             productosInventario: (window.pedidosFinalizados[idx].productosInventario || []).map((i: any) => ({...i}))

@@ -26,3 +26,12 @@ it('el ticket muestra datos como texto y abre la ventana antes de esperar la red
   expect(html).toContain('$45.00');
   expect(html).toContain('BICHO CAPRICHO');
 });
+
+
+it('el PDF conserva extras de personalizacion y su importe junto a los productos',async()=>{
+ let html='';const node:any={style:{},innerHTML:'',remove(){}};
+ const chain:any={set(){return chain},from(el:any){html=el.innerHTML;return chain},save:async()=>{}};
+ const ctx:any=createContext({console,URL,Number,Date,fetch:async()=>{throw Error('sin logo')},location:{href:'https://pos.example/'},document:{createElement:()=>node,body:{appendChild(){}}},html2pdf:()=>chain,manekiToastExport(){},_esc:(s:any)=>String(s||''),pedidos:[{id:'extras',folio:'PE-EXTRA',total:130,productosInventario:[{id:'p',name:'Taza',quantity:1,price:100},{id:'libre',name:'Personalizacion · Nombre',quantity:2,price:15}]}]});ctx.window=ctx;
+ const source=readFileSync('src/pedidos-3.ts','utf8');runInContext(transformSync(source.slice(source.indexOf('async function exportarPedidoPDF'),source.indexOf('window.exportarPedidoPDF')+ 'window.exportarPedidoPDF = exportarPedidoPDF;'.length),{loader:'ts'}).code,ctx);
+ await ctx.exportarPedidoPDF('extras');expect(html).toContain('Personalizacion · Nombre');expect(html).toContain('$30.00');
+});

@@ -1154,10 +1154,10 @@ async function guardarSnapshotInventario() {
     fecha,
     hora: new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'}),
     totalProductos: window.products.length,
-    valorTotal: window.products.reduce((s,p) => s + (Number(p.cost)||0)*(Number(p.stock)||0), 0),
+    valorTotal: window.products.reduce((s,p) => s + (Number(p.cost)||0)*(window.posComStockFisico?.(p)??(Number(p.stock)||0)), 0),
     items: window.products.map(p => ({
       id: p.id, name: p.name, tipo: p.tipo||'pt',
-      stock: p.stock||0, cost: p.cost||0, price: p.price||0,
+      stock: window.posComStockFisico?.(p)??(p.stock||0), disponibles:p.stock||0, apartadas:window.posComApartadas?.(String(p.id))||0, cost: p.cost||0, price: p.price||0,
       sku: p.sku||''
     }))
   };

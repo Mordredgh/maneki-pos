@@ -371,6 +371,7 @@ describe('Persistencia real del POS', () => {
   it('un abono offline conserva saldo e ingreso y venta al reconectar', async () => {
     const first = app();
     first.ctx.document.readyState = 'loading';
+    first.ctx._fechaHoy=()=> '2026-10-01';first.ctx.localStorage.setItem('maneki_resumen_2026-10','1');
     first.load('src/pedidos-1-views.ts');
     first.ctx.document.getElementById = (id: string) => id === 'pedidoForm' ? {onsubmit: null, addEventListener() {}} : null;
     first.load('src/pedidos-2.ts');
@@ -597,4 +598,26 @@ describe('Persistencia real del POS', () => {
       await pending;
       expect(ctx._pendingSync).toBe(false);
     });
+});
+
+
+it('apartado y tiempo conservan variantes y ficha comercial tras recargar desde la base',async()=>{
+ const a=app();a.load('src/operations.ts');a.load('src/commerce.ts');
+ a.ctx.mkId=()=>randomUUID();a.ctx.registrarMovimiento=()=>{};
+ a.ctx.products=[{id:'com-p',name:'Playera',price:100,stock:3,variants:[{type:'Talla/Color',value:'M / Negro',qty:3}]}];
+ a.ctx.pedidos=[{id:'com-o',folio:'PE-COM',cliente:'Prueba',status:'confirmado',total:100,productosInventario:[{id:'com-p',name:'Playera',quantity:1,price:100,variante:'Talla/Color:M / Negro'}]}];a.ctx.pedidosFinalizados=[];
+ await a.ctx.posApartarPedido('com-o');await a.ctx.posRegistrarTiempo('com-o',{minutos:25,actividad:'Impresion',fecha:'2026-10-01'});
+ const products=await a.ctx.sbLoad('products',[]),orders=await a.ctx.sbLoad('pedidos',[]);
+ expect(products[0].variants[0].qty).toBe(2);expect(orders[0].posDetalle.apartado).toMatchObject({activo:true,modo:'terminado'});expect(orders[0].posDetalle.tiempos[0].minutos).toBe(25);
+ a.ctx.products=products;a.ctx.pedidos=orders;await a.ctx.posLiberarApartado('com-o');
+ expect((await a.ctx.sbLoad('products',[]))[0].stock).toBe(3);expect((await a.ctx.sbLoad('pedidos',[]))[0].posDetalle.apartado.activo).toBe(false);
+});
+it('devolucion persiste dinero, piezas y venta original como una operacion recuperable',async()=>{
+ const a=app();a.load('src/operations.ts');a.load('src/commerce.ts');
+ a.ctx.mkId=()=>randomUUID();a.ctx.registrarMovimiento=()=>{};a.ctx.posTotalPagado=(p:any)=>p.anticipo;
+ a.ctx.products=[{id:'com-p',name:'Taza',price:100,stock:2}];a.ctx.pedidos=[];a.ctx.incomes=[];a.ctx.expenses=[];
+ a.ctx.pedidosFinalizados=[{id:'com-fin',folio:'PE-FIN',cliente:'Prueba',status:'finalizado',total:200,anticipo:200,productosInventario:[{id:'com-p',name:'Taza',quantity:2,price:100}]}];
+ await a.ctx.posRegistrarDevolucion('com-fin',{index:0,quantity:1,monto:100,recuperar:true,motivo:'Diseno',method:'cash'});
+ const orders=await a.ctx.sbLoad('pedidosFinalizados',[]),expenses=await a.ctx.sbLoad('expenses',[]);
+ expect(orders[0].total).toBe(200);expect(orders[0].posDetalle.devoluciones[0].reembolso).toBe(100);expect(expenses).toHaveLength(1);expect(expenses[0].amount).toBe(100);expect((await a.ctx.sbLoad('products',[]))[0].stock).toBe(3);
 });

@@ -421,6 +421,7 @@ function limpiarMovimientos() {
 function eliminarPedidoFinalizado(id) {
     const pedido = pedidosFinalizados.find(p => String(p.id) === String(id));
     if (!pedido) return;
+    if(window.posComPuedeReescribir && !window.posComPuedeReescribir(pedido))return;
     showConfirm(`El pedido ${pedido.folio || id} será eliminado del historial de ventas.`, '⚠️ Eliminar pedido').then(ok => {
         if (!ok) return;
         const _idElim = String(id);

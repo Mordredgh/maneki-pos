@@ -264,3 +264,16 @@ Validacion: 201 pruebas y tipos/lint/build correctos. UI ficticia escritorio, os
 - [x] TDD, build, UI escritorio/movil, deploy, memoria y commit.
 
 Validacion: 203 pruebas, tipos/lint/build correctos; UI ficticia con 24 pedidos, escritorio/390px, encabezado al desplazar tabla, columnas tras recarga, fila resaltada, variantes y Estado movil. Documentos HTML generados por funciones reales y revisados visualmente; IAB no expuso popups y no se probo impresora fisica. Cloudflare 0902b053, dominio 401/200, SW maneki-ab4f842eda y assets publicados correctos. Grafo MCP reindexado intentado dos veces: transporte cerrado; graphify requiere clave documental no configurada.
+
+
+## Operacion comercial - 2026-10-01
+- [x] Apartados de piezas terminadas: disponibilidad, liberacion, cierre y cancelacion atomicos.
+- [x] Promociones con componentes/variantes y precio combinado exacto.
+- [x] Cambios/devoluciones con piezas recuperables y movimientos de dinero idempotentes.
+- [x] Calendario de capacidad informativo, con limite configurable.
+- [x] Extras de personalizacion visibles en captura y documentos.
+- [x] Tiempo de produccion por pedido y ganancia por hora cuando existan costos completos.
+- [x] TDD en interfaces publicas existentes de inventario/dinero/persistencia, UI aislada, build y deploy.
+- [x] ADR/CONTEXT, memoria y commit.
+
+Validacion: 217 pruebas, tipos/lint/build correctos; UI aislada de apartar/liberar/cancelar/finalizar sin doble descuento, combo 250 mas extras 30 = 280, devolucion 100 y cambio con cobro 80, tiempo tras recarga y capacidad 3 con exceso informativo. Formularios y calendario revisados a 390 px. Cloudflare b2516b4f, dominio 401/200, assets y SW maneki-c871830088 confirmados. Impeccable detect sin hallazgos en archivos nuevos. Grafo MCP transporte cerrado; graphify requiere credencial documental no configurada. Sin SQL nuevo ni ventas reales de prueba.

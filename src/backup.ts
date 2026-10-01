@@ -51,6 +51,8 @@ function _buildBackupObject() {
             gastosRecurrentes: window.gastosRecurrentes || [],
             stockMovimientos: window.stockMovimientos || window.stockMovements || [],
             cashClosures: window.cashClosures || [],
+            posPromociones: window.posPromociones || [],
+            posCapacidad: window.posCapacidad || {piezas:0},
             folioCounter: window._folioCounter || 0
         }
     };
@@ -58,6 +60,7 @@ function _buildBackupObject() {
 
 async function exportarBackupJSON() {
     window.cashClosures=await sbLoad('cashClosures',[]);
+    await window.posComCargarConfig?.();
     const backup = _buildBackupObject();
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -71,6 +74,7 @@ async function exportarBackupJSON() {
 
 async function exportarBackupComprimido() {
     window.cashClosures=await sbLoad('cashClosures',[]);
+    await window.posComCargarConfig?.();
     const backup = _buildBackupObject();
     const json = JSON.stringify(backup);
     const datosStr = JSON.stringify(backup.datos);
@@ -123,7 +127,7 @@ function _activarBackupPendiente(data, fileName) {
     if (!data || !data.datos || typeof data.datos !== 'object' || Array.isArray(data.datos)) throw new Error('Formato inválido');
     const arrays = ['products', 'salesHistory', 'pedidos', 'pedidosFinalizados', 'abonos',
         'receivables', 'payables', 'incomes', 'expenses', 'categories', 'quotes', 'equipos',
-        'roiHistorial', 'envioAnillos', 'notas', 'clients', 'gastosRecurrentes', 'stockMovimientos', 'cashClosures'];
+        'roiHistorial', 'envioAnillos', 'notas', 'clients', 'gastosRecurrentes', 'stockMovimientos', 'cashClosures', 'posPromociones'];
     for (const key of arrays) {
         const value = data.datos[key];
         if (value !== undefined && (!Array.isArray(value) || value.some(item => !item || typeof item !== 'object' || Array.isArray(item)))) {
@@ -188,6 +192,9 @@ function procesarArchivoBackup(file) {
 }
 
 async function restaurarDatosBackup(d) {
+    if(d.posCapacidad!==undefined && (!Number.isSafeInteger(d.posCapacidad?.piezas)||d.posCapacidad.piezas<0))throw Error('Capacidad del respaldo inválida.');
+    if(d.posPromociones!==undefined){if(!Array.isArray(d.posPromociones))throw Error('Promociones del respaldo inválidas.');for(const promo of d.posPromociones)window.posPromocionLineas(promo,d.products||window.products||[]);await sbSave('posPromociones',d.posPromociones);window.posPromociones=d.posPromociones;}
+    if(d.posCapacidad!==undefined){await sbSave('posCapacidad',d.posCapacidad);window.posCapacidad=d.posCapacidad;}
     if(d.cashClosures!==undefined){await sbSave('cashClosures',d.cashClosures);window.cashClosures=d.cashClosures;}
     if (d.products !== undefined)     { window.products = d.products; products = d.products; await saveProducts(); }
     if (d.salesHistory !== undefined) { window.salesHistory = d.salesHistory; salesHistory = d.salesHistory; await saveSalesHistory(); }
@@ -279,6 +286,7 @@ document.getElementById('backupModal').addEventListener('click', function(e) {
     async function _doAutoBackup() {
         try {
             window.cashClosures=await sbLoad('cashClosures',[]);
+    await window.posComCargarConfig?.();
             const backup=_buildBackupObject();
             localStorage.setItem('maneki_autoBackup',JSON.stringify(backup));
             localStorage.setItem(LS_KEY, new Date().toISOString());

@@ -740,7 +740,7 @@ function initReports() {
 }
 
 function updateInventoryStats() {
-    const inventoryValue = (window.products||[]).reduce((sum, p) => sum + ((Number(p.cost) || 0) * (Number(p.stock) || 0)), 0);
+    const inventoryValue = (window.products||[]).reduce((sum, p) => sum + ((Number(p.cost) || 0) * (window.posComStockFisico?.(p)??(Number(p.stock)||0))), 0);
     const activeProducts = (window.products||[]).filter(p => p.stock > 0).length;
     const lowStockCount = (window.products||[]).filter(p => {
         const s = typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (p.stock||0);

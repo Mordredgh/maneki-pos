@@ -49,7 +49,7 @@ if(errors){console.error('Compilacion incompleta: se cancela el empaquetado.');p
 // ── Step 2: Bundle groups (concat in order) ─────────────────────────────────
 const BUNDLES = {
   'core.bundle.js': [
-    'icons.js', 'session.js', 'auth.js', 'db.js', 'operations.js', 'app-data.js', 'equipos.js',
+    'icons.js', 'session.js', 'auth.js', 'db.js', 'operations.js', 'commerce.js', 'app-data.js', 'equipos.js',
     'config.js', 'dashboard.js', 'ui-extras.js', 'navigation.js',
     'lazy-loader.js', 'design-system.js', 'templates.js', 'csp-delegate.js', 'init.js'
   ],

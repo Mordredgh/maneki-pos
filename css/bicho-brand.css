@@ -250,3 +250,18 @@ body:has(#pedidos-section:not(.hidden) #vistaTabla:not(.hidden)) #fabNuevoPedido
 /* Permitir que las barras se fijen al viewport, no a un overflow sin scroll. */
 body #main-content,body #main-content>section{overflow-x:clip!important;overflow-y:visible!important}
 @media(max-width:650px){body #tablaBuscadorBar{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;max-height:none!important;overflow:visible!important}body #tablaBuscadorBar>div:first-child,body #tablaBuscadorBar>.pos-table-tools{grid-column:1/-1;min-width:0!important}body #tablaBuscadorBar>select{width:100%;min-width:0}body .pos-table-tools{flex-wrap:nowrap;gap:4px}body .pos-table-tools>button,body .pos-table-tools summary{padding:8px;font-size:.75rem;white-space:nowrap}body .pos-table-tools .mk-density-toggle button{padding:8px 6px;font-size:.75rem}}
+
+/* Operacion comercial: mismas superficies y controles del POS. */
+body .pos-commerce-dialog{width:min(780px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}
+body .pos-commerce-form{display:grid;gap:16px;margin-top:20px}body .pos-commerce-form label{display:grid;gap:6px;color:var(--bc-forest);font-weight:700}body .pos-commerce-form input,body .pos-commerce-form select{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--bc-border);border-radius:10px;background:var(--bc-surface);color:var(--bc-ink)}
+body .pos-commerce-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}body .pos-commerce-check{display:flex!important;align-items:center;gap:10px!important}body .pos-commerce-check input{width:20px;min-height:20px}
+body .pos-capacity-scroll{max-height:48vh;overflow:auto}body .pos-capacity-scroll table{width:100%;border-collapse:collapse}body .pos-capacity-scroll th{position:sticky;top:0;background:var(--bc-cream);text-align:left}body .pos-capacity-scroll td,body .pos-capacity-scroll th{padding:12px;border-bottom:1px solid var(--bc-border)}body .pos-capacity-scroll small{display:block;font-weight:400}body .pos-capacity-scroll [data-over=true]{background:#fff5de;color:#6c471e}
+body .pos-promo-row,body .pos-promo-component{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--bc-border)}body .pos-promo-row strong{flex:1;min-width:160px}body .pos-promo-row input{width:65px;min-height:44px}body .pos-promo-component label:first-child{flex:1;min-width:180px}body .pos-promo-component label:nth-child(2){width:72px}
+body .pos-promo-badge{display:inline-block;background:#edf4e8;color:#245737;border-radius:7px;padding:3px 7px;font-size:.76rem;line-height:1.5}body .pedido-line-input[readonly]{background:#edf4e8!important;color:#245737!important}
+body.dark-mode .pos-commerce-form label{color:#ddebd2}body.dark-mode .pos-promo-badge{background:#324e37;color:#d7edc8}body.dark-mode .pos-capacity-scroll [data-over=true]{background:#594626;color:#ffdfa0}
+
+body .pos-commerce-form input:not([type=checkbox]),body .pos-commerce-form select{min-height:44px!important}body .pos-commerce-check{min-height:44px}
+
+@media(max-width:650px){body .pos-capacity-scroll table{table-layout:fixed}body .pos-capacity-scroll th:first-child{width:38%}body .pos-capacity-scroll th:nth-child(2),body .pos-capacity-scroll th:nth-child(3){width:18%}body .pos-capacity-scroll td,body .pos-capacity-scroll th{padding:10px 5px;font-size:.72rem;overflow-wrap:anywhere;white-space:normal!important}body .pos-capacity-scroll small{font-size:.65rem;margin-top:5px}}
+
+@media(max-width:650px){body .pos-capacity-scroll th{font-size:.62rem!important;letter-spacing:0!important;text-transform:none!important;padding:10px 3px!important;white-space:nowrap!important}}

@@ -538,7 +538,7 @@ function _mkTblMenu(btn: HTMLElement, id: string) {
     menu.id = '_mkTblMenuDrop';
     menu.dataset.id = id;
     menu.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:160px;overflow:hidden;font-size:.78rem;';
-    menu.innerHTML = `
+    menu.innerHTML = `<button class="mk-mini-btn" data-action="posAbrirComercial" data-arg="${_e(id)}">Apartado y tiempo</button>
         <button onclick="openPedidoModal('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#374151;text-align:left;" onmouseover="this.style.background='#fef9f0'" onmouseout="this.style.background='none'">✏️ Editar pedido</button>
         <button onclick="exportarPedidoPDF('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#1d4ed8;text-align:left;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='none'">📄 Descargar PDF</button>
         <button onclick="duplicarPedido('${_e(id)}');document.getElementById('_mkTblMenuDrop')?.remove()" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;color:#9669c4;text-align:left;" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='none'">⧉ Duplicar</button>
@@ -547,7 +547,7 @@ function _mkTblMenu(btn: HTMLElement, id: string) {
     `;
     document.body.appendChild(menu);
     const rect = btn.getBoundingClientRect();
-    const menuW = 164, menuH = 160;
+    const menuW = 190, menuH = 205;
     menu.style.top  = Math.max(8,Math.min(rect.bottom + 4,window.innerHeight-menuH-8)) + 'px';
     menu.style.left = Math.min(rect.left, window.innerWidth - menuW - 8) + 'px';
     setTimeout(() => document.addEventListener('click', function _close(e) {
@@ -564,7 +564,7 @@ function renderTablaPedidos() {
     if ((_pedidoVistaActual || 'kanban') === 'kanban') return;
     // P1: hash guard — saltar re-render si los datos no cambiaron (incluye valores de filtros activos)
     const _qHash = ((document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null)?.value || '') + ((document.getElementById('tablaFiltroPago') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('pedidoFechaDesde') as HTMLInputElement|null)?.value || '') + ((document.getElementById('pedidoFechaHasta') as HTMLInputElement|null)?.value || '');
-    const _tHash = JSON.stringify((window.pedidos||[]).map(p=>[p.id,p.folio,p.cliente,p.concepto,p.entrega,p.fechaPedido,p.fecha,p.status,p.total,p.anticipo,p.resta,p.pagos,p.telefono,p.lugarEntrega])) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash + '_' + String(window.posTablaSelectedId||'');
+    const _tHash = JSON.stringify((window.pedidos||[]).map(p=>[p.id,p.folio,p.cliente,p.concepto,p.entrega,p.fechaPedido,p.fecha,p.status,p.total,p.anticipo,p.resta,p.pagos,p.telefono,p.lugarEntrega,p.posDetalle])) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash + '_' + String(window.posTablaSelectedId||'');
     if ((tbody as any)._lastHash === _tHash) return;
     (tbody as any)._lastHash = _tHash;
     const q = ((document.getElementById('tablaPedidosBuscar') || document.getElementById('kanbanBuscar') || {}).value || '').toLowerCase().trim();
@@ -661,7 +661,7 @@ function renderTablaPedidos() {
             const id=_et(String(p.id)),saldo=calcSaldoPendiente(p),cobrado=posTotalPagado(p),fecha=posTablaFechaEntrega(p.entrega);
             return `<tr data-table-open="${id}" class="pos-order-row${String(window.posTablaSelectedId)===String(p.id)?' pos-order-selected':''}">
             <td data-column="folio"><small class="pos-order-folio">${_et(p.folio)||'—'}</small></td>
-            <td class="pos-order-identity"><button class="pos-order-open" data-action="posTablaAbrirFicha" data-arg="${id}" aria-label="Abrir ficha de ${_et(p.folio||p.cliente)}"><strong>${_et(p.cliente)||'Sin cliente'}</strong></button><p>${_et(p.concepto)||'Sin descripción'}</p></td>
+            <td class="pos-order-identity"><button class="pos-order-open" data-action="posTablaAbrirFicha" data-arg="${id}" aria-label="Abrir ficha de ${_et(p.folio||p.cliente)}"><strong>${_et(p.cliente)||'Sin cliente'}</strong></button><p>${_et(p.concepto)||'Sin descripción'}</p>${p.posDetalle?.apartado?.activo?'<small class="pos-promo-badge">Piezas apartadas</small>':''}</td>
             <td data-column="concepto"><span>${_et(p.lugarEntrega)||'—'}</span>${p.telefono||p.whatsapp?`<button class="mk-mini-btn" data-action="abrirWhatsAppPedido" data-arg="${id}">WhatsApp</button>`:''}${fbUrl?`<a class="mk-mini-btn" href="${_et(fbUrl)}" target="_blank" rel="noopener noreferrer">Facebook</a>`:''}</td>
             <td data-column="creacion"><time>${_et(_fmtFechaCorta((p.fechaPedido||p.fecha||'').split('T')[0].split(' ')[0]))||'—'}</time></td>
             <td data-column="entrega"><span class="pos-order-date" data-state="${fecha.state}">${fecha.label}</span><time datetime="${_et(p.entrega||'')}">${_et(fecha.date)}</time></td>

@@ -27,3 +27,6 @@ Tema oscuro con superficies verdes profundas y contraste claro. Foco uva, hover 
 
 ## Tabla y documentos - 2026-10-01
 Tabla: folio secundario, cliente destacado y descripcion que permite varias lineas. Total/Cobrado/Saldo alineados; Pagado con texto ademas de color. Hoy/Manana/Vencido conserva fecha exacta. Acciones 2x2 estables, secundarias en Mas; columnas opcionales locales. Compacto reduce espacio sin esconder cliente/fecha/saldo. Busqueda y accion primaria fijas, tres filas compactas en movil. Formularios usan separadores suaves y detalles opcionales; muestras de color nunca reemplazan nombre/talla. Ticket/PDF/cotizacion/orden usan logo Bicho, Nunito, bosque/crema y totales legibles.
+
+
+Operacion comercial: herramientas secundarias desde tabla/historial; dialogos nativos con bosque/crema, campos relacionados y botones consistentes. Apartados distinguidos con texto; capacidad informativa sin bloquear. Formularios de devolucion muestran diferencia de dinero antes de guardar. Controles tactiles de 44px, tabla de capacidad adaptable y foco visible.

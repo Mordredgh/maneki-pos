@@ -334,6 +334,7 @@ function inventoryCardHTML(product: any, stock: number, kind: string): string {
             <div><span class="pos-inv-price-label">${kind==='mp'||kind==='svc'?'Costo':kind==='pv'?'Desde / pieza':'Precio'}</span><span class="pos-inv-price">${fmtMoney(Number.isFinite(price) ? price : 0)}</span></div>
             <span class="pos-inv-stock" data-low="${low}">${stockText}</span>
         </div>
+        ${window.posComApartadas?.(String(product.id))?`<small class="pos-promo-badge">${window.posComApartadas(String(product.id))} apartadas · disponibilidad sin apartados</small>`:''}
         ${kind === 'pt' || kind === 'pv' ? inventoryVariantGridHTML(product) : ''}
         ${typeof window.posRecordSyncStatus === 'function' ? `<small class="pos-record-sync" data-sync-table="products" data-sync-id="${id}" data-state="${window.posRecordSyncStatus('products', String(product.id)).state}">${window.posRecordSyncStatus('products', String(product.id)).text}</small>` : ''}
         <div style="display:flex;gap:7px;margin-top:auto;">
@@ -710,7 +711,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-600 text-sm capitalize">${_esc(catName)}</td>
             <td class="px-4 py-3">${varsHTML}</td>
             <td class="px-4 py-3 text-right text-gray-800 font-semibold" style="font-size:.95rem;"><button type="button" class="pos-inv-edit" data-action="invInlineEditPrice" data-arg="${pid}" aria-label="Editar precio">$${Number(product.price||0).toFixed(2)} <span>Editar</span></button></td>
-            <td class="px-4 py-3">${stockCell}<button type="button" class="pos-inv-edit pos-inv-edit--stock" data-action="invInlineEditStock" data-arg="${pid}">Ajustar stock</button></td>
+            <td class="px-4 py-3">${stockCell}${window.posComApartadas?.(String(product.id))?`<small class="pos-promo-badge">${window.posComApartadas(String(product.id))} apartadas</small>`:''}<button type="button" class="pos-inv-edit pos-inv-edit--stock" data-action="invInlineEditStock" data-arg="${pid}">Ajustar stock</button></td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
@@ -819,7 +820,7 @@ function renderInventoryTable() {
             <td class="px-4 py-3 text-gray-600 text-sm">${_esc(catName)}</td>
             <td class="px-4 py-3"><div style="display:flex;flex-wrap:wrap;gap:3px;">${tablaHTML}</div></td>
             <td class="px-4 py-3 text-right">${precioCell}</td>
-            <td class="px-4 py-3">${stockCell}</td>
+            <td class="px-4 py-3"><small>${Math.max(0,Number(product.stock)||0)} terminadas disponibles</small>${stockCell}${window.posComApartadas?.(String(product.id))?`<small class="pos-promo-badge">${window.posComApartadas(String(product.id))} apartadas</small>`:''}</td>
             <td class="px-4 py-3">${badgeCell}</td>
             <td class="px-4 py-3">${margenHTML}</td>
             <td class="px-2 py-3">
@@ -932,7 +933,7 @@ function renderInventoryTable() {
     const totalProductos = activeProds.length;
     const valorInventario = activeProds.reduce((s, p) => {
         const stk = _stockCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (Number(p.stock)||0));
-        return s + (Number(p.cost)||0) * Math.max(0, stk);
+        return s + (Number(p.cost)||0) * Math.max(0, stk+(window.posComApartadas?.(String(p.id))||0));
     }, 0);
     const bajoStock = activeProds.filter(p => {
         const stk = _stockCache.get(String(p.id)) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(p) : (Number(p.stock)||0));
@@ -1886,7 +1887,7 @@ function _mkInvSummaryRow() {
     if (!ids.has(String(p.id))) return;
     n++;
     const st = stockCache?.get(String(p.id)) ?? (Number(p.stock) || 0);
-    valor += (Number(p.cost) || 0) * Math.max(0, st);
+    valor += (Number(p.cost) || 0) * Math.max(0, st+(window.posComApartadas?.(String(p.id))||0));
     if (st <= (Number(p.stockMin) || 5)) low++;
   });
   let sum = document.getElementById('mkInvSummary');

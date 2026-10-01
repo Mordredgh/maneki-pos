@@ -495,7 +495,7 @@ function pvRecalcularLineas(items:any[],products:any[]){
     for(const item of items)totals.set(String(item.id),(totals.get(String(item.id))||0)+(Number(item.quantity)||0));
     for(const item of items){
         const p=products.find(x=>String(x.id)===String(item.id));
-        if(p?.tipo==='producto_variable')item.price=pvGetPrecio(p,totals.get(String(item.id))||1,item.variante);
+        if(p?.tipo==='producto_variable'&&!item.posPromocion)item.price=pvGetPrecio(p,totals.get(String(item.id))||1,item.variante);
     }
 }
 window.pvRecalcularLineas=pvRecalcularLineas;
