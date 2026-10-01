@@ -17,6 +17,10 @@ const ASSETS_TO_HASH = [
   'img/brand/crafty.webp',
   'img/brand/estampilla.webp',
   'img/brand/tago.webp',
+  'img/brand/mugsy.webp',
+  'img/brand/garabato.webp',
+  'img/brand/tote.webp',
+  'img/brand/ticker.webp',
 ];
 
 const jsDir = path.join(ROOT, 'js');

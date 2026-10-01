@@ -277,3 +277,11 @@ Validacion: 203 pruebas, tipos/lint/build correctos; UI ficticia con 24 pedidos,
 - [x] ADR/CONTEXT, memoria y commit.
 
 Validacion: 217 pruebas, tipos/lint/build correctos; UI aislada de apartar/liberar/cancelar/finalizar sin doble descuento, combo 250 mas extras 30 = 280, devolucion 100 y cambio con cobro 80, tiempo tras recarga y capacidad 3 con exceso informativo. Formularios y calendario revisados a 390 px. Cloudflare b2516b4f, dominio 401/200, assets y SW maneki-c871830088 confirmados. Impeccable detect sin hallazgos en archivos nuevos. Grafo MCP transporte cerrado; graphify requiere credencial documental no configurada. Sin SQL nuevo ni ventas reales de prueba.
+
+## Mascotas transparentes y distintas - 2026-10-01
+- [x] Eliminar fondos CSS y conservar transparencia original.
+- [x] Mascota distinta por seccion; quitar repeticiones de Balance.
+- [x] Build, regresiones, revision visual desktop/movil y deploy.
+- [x] Documentacion, memoria y commit.
+
+Validacion mascotas: 217 pruebas, tipos/lint/build correctos; siete WebP diferentes cargados, fondo computado transparente y padding cero. Balance contiene una mascota y ninguna en vacios; escritorio y 390px revisados. Detector conserva advertencias legacy ajenas al cambio. Cloudflare 93d7b7a1, dominio 401/200 y cuatro WebP identicos a originales. SW maneki-705ce942f4 incluye 61 archivos en hash.

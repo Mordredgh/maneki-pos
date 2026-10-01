@@ -68,3 +68,6 @@ Promociones reutilizables en store.posPromociones: lineas reales, reparto exacto
 Cambios/devoluciones solo sobre venta cerrada: posDetalle.devoluciones e itemsCambio conservan original; recuperacion de pieza requiere seleccion explicita. Diferencias entran a incomes/expenses y al kardex mediante posRunOperation. Limites por piezas restantes y dinero cobrado neto; no se permite reescribir/reactivar/eliminar venta con devoluciones registradas.
 Capacidad diaria store.posCapacidad.piezas: referencia de 30 dias, incluye confirmado/pago/produccion, excluye apartado terminado, nunca bloquea captura. Tiempo por pedido en posDetalle.tiempos con actividad/fecha/minutos, ganancia/hora usa costos completos de ficha y ajustes de devolucion.
 Backup manual incluye promociones/capacidad; respaldo externo ya incluye store y orders.pos_detalle. Sin nuevas tablas, dependencias, permisos ni cargo. Las reglas nuevas reutilizan transacciones optimistas/recibos existentes.
+
+## Mascotas - 2026-10-01
+Una mascota distinta por encabezado: Inicio Mugsy, Pedidos Crafty, Cotizaciones Garabato, Inventario Estampilla, Balance Tago, Clientes Tote, Categorias Ticker. Originales WebP transparentes; sin fondo/padding/marco CSS. Balance no repite mascotas en estados vacios. Los siete assets se incluyen en cache y hash SW.

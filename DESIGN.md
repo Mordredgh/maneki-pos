@@ -16,7 +16,7 @@ BICHO CAPRICHO - MASTER en F:/Gerardo Brain/01 - PROYECTOS/Bicho Capricho. Conti
 Nunito variable 400-900 para datos/formularios, Fredoka One 400 para titulo de seccion y marca. Ambas autoalojadas en WOFF2 latino, con licencias OFL. Importes con cifras tabulares. Botones primarios mantequilla, secundarios neutros, seleccion verde, eliminacion rosa con texto oscuro. Objetivos tactiles de al menos 44px en controles modificados.
 
 ## Ilustracion
-Crafty acompana pedidos/cotizaciones y bienvenida; Estampilla acompana Inventario; Tago acompana categorias/Balance y estados vacios. Archivos originales del propietario, exportados a WebP de 240px (menos de 19KB en conjunto). Imagenes decorativas con alt vacio, sin interaccion ni animacion permanente.
+Una mascota por seccion: Mugsy en Inicio, Crafty en Pedidos, Garabato en Cotizaciones, Estampilla en Inventario, Tago en Balance, Tote en Clientes y Ticker en Categorias. WebP originales del propietario con transparencia, sin superficies blancas ni marcos CSS. Las pantallas vacias de Balance conservan texto y acciones sin repetir Tago.
 
 ## Superficies
 Inventario en tabla mantiene densidad y acciones; tarjetas destacan foto completa sin recorte, precio/costo y variantes. Kanban mantiene cliente/producto primero, entrega/saldo, nota crema y acciones existentes. Balance mantiene importes alineados y etiquetas legibles. Formularios, tabs y botones comparten css/bicho-brand.css en toda la aplicacion.
