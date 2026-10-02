@@ -1012,8 +1012,9 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         }
 
         // BUG-1 FIX: closeTransactionModal — faltaba completamente
-        function closeTransactionModal() {
-            closeModal('transactionModal');
+        async function closeTransactionModal() {
+            await closeModal('transactionModal');
+            if(document.getElementById('transactionModal')?.classList?.contains('active'))return;
             const form = document.getElementById('transactionForm') as HTMLFormElement | null;
             if (form) form.reset();
             const modal = document.getElementById('transactionModal');
@@ -1081,7 +1082,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
 
     // ── MODO CREAR ──
     const newItem = {
-        id: mkId(),
+        id: modal.dataset.posDraftWriteId || mkId(),
         concept: concept,
         concepto: concept,
         amount: amount,
@@ -1096,32 +1097,36 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         recurrente: false
     };
 
+    modal.dataset.posDraftWriteId = String(newItem.id);
+    const retain = (list:any[], item:any) => {const idx=list.findIndex(x=>String(x.id)===String(item.id));if(idx<0)list.push(item);else list[idx]={...list[idx],...item};};
+    await window.posGuardarBorrador?.(modal);
+
     if (type === 'income') {
         // MEJORA-2: soporte recurrente para ingresos
         const esRecurrenteInc = document.getElementById('transactionRecurrente')?.checked;
         if (esRecurrenteInc) {
             newItem.recurrente = true;
             if (!window.ingresosRecurrentes) window.ingresosRecurrentes = [];
-            window.ingresosRecurrentes.push({ concept, amount, dia: (date && date.includes('-')) ? parseInt(date.split('-')[2], 10) || 1 : (new Date(date).getDate() || 1) });
+            retain(window.ingresosRecurrentes, { id:newItem.id, concept, amount, dia: (date && date.includes('-')) ? parseInt(date.split('-')[2], 10) || 1 : (new Date(date).getDate() || 1) });
             await saveIngresosRecurrentes();
         }
-        incomes.push(newItem);
+        retain(incomes,newItem);
         await saveIncomes();
     } else if (type === 'expense') {
         const esRecurrente = document.getElementById('transactionRecurrente')?.checked;
         if (esRecurrente) {
             newItem.recurrente = true;
             if (!gastosRecurrentes) gastosRecurrentes = [];
-            gastosRecurrentes.push({ concept, amount, dia: (date && date.includes('-')) ? parseInt(date.split('-')[2], 10) || 1 : (new Date(date).getDate() || 1) });
+            retain(gastosRecurrentes, { id:newItem.id, concept, amount, dia: (date && date.includes('-')) ? parseInt(date.split('-')[2], 10) || 1 : (new Date(date).getDate() || 1) });
             await saveGastosRecurrentes();
         }
-        expenses.push(newItem);
+        retain(expenses,newItem);
         await saveExpenses();
     } else if (type === 'receivable') {
-        receivables.push({ ...newItem, status: 'pending' });
+        retain(receivables,{ ...newItem, status: 'pending' });
         await saveReceivables();
     } else if (type === 'payable') {
-        payables.push({ ...newItem, status: 'pending' });
+        retain(payables,{ ...newItem, status: 'pending' });
         await savePayables();
     }
 
@@ -1132,6 +1137,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
     renderBalance();
     updateDashboard();
     } catch(err:any) {
+        await window.posGuardarBorrador?.(modal).catch(()=>{});
         manekiToastExport(err.message||'No se pudo guardar. Revisa el estado de sincronizacion.','warn');
         renderBalance();updateDashboard();_restoreBtn();
     }
@@ -1192,7 +1198,7 @@ window.eliminarPedidoFinalizado = eliminarPedidoFinalizado;
         if (!window.ingresosRecurrentes) window.ingresosRecurrentes = [];
 
         function saveIngresosRecurrentes() {
-            (async () => { await sbSave('ingresosRecurrentes', window.ingresosRecurrentes); })();
+            return sbSave('ingresosRecurrentes', window.ingresosRecurrentes);
         }
         window.saveIngresosRecurrentes = saveIngresosRecurrentes;
 

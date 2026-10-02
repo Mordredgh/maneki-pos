@@ -326,7 +326,7 @@ function closePedidoModal() {
 
     if (!editId && (cliente || (costo && costo !== '0'))) {
         // Pedido nuevo con datos — preguntar antes de cerrar
-        showConfirm('¿Cerrar sin guardar los cambios?', '⚠️ Cambios sin guardar').then(ok => { if (ok) _cerrar(); });
+        showConfirm('¿Cerrar sin guardar los cambios?', '⚠️ Cambios sin guardar').then(ok => { if (ok) { (document.getElementById('pedidoModal') as any)._mkDirty=false; _cerrar(); } });
     } else if (editId && !editId.startsWith('__finalizado__')) {
         // Modo edición — comparar campos vs pedido guardado
         const saved = (window.pedidos||[]).find(p => String(p.id) === String(editId));
@@ -348,7 +348,7 @@ function closePedidoModal() {
                               notasActuales  !== (saved.notas||'')     ||
                               niActual       !== niOriginal;
             if (hayCambio) {
-                showConfirm('¿Cerrar sin guardar los cambios?', '⚠️ Cambios sin guardar').then(ok => { if (ok) _cerrar(); });
+                showConfirm('¿Cerrar sin guardar los cambios?', '⚠️ Cambios sin guardar').then(ok => { if (ok) { (document.getElementById('pedidoModal') as any)._mkDirty=false; _cerrar(); } });
                 return;
             }
         }
@@ -492,8 +492,9 @@ document.getElementById('pedidoForm').addEventListener('submit', function(e) {
         if (typeof checkAlertasCobro === 'function') checkAlertasCobro();
         if (window.MKS) MKS.sale();
         manekiToastExport('Pedido guardado correctamente.', 'ok');
-    }).catch(err => {
+    }).catch(async err => {
         if (!err.pendingSync) document.getElementById('editPedidoId').value = originalId;
+        await window.posGuardarBorrador?.(document.getElementById('pedidoModal')).catch(()=>{});
         manekiToastExport(err.pendingSync ? 'El pedido quedó pendiente de sincronizar. Tus campos se conservan; reintentar actualiza el mismo pedido.' : (err.message || 'No se confirmó el guardado. Tus campos se conservan.'), 'warn');
     }).finally(() => {
         _pedidoGuardando = false; _pedidoEnviando = false;

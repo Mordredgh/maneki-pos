@@ -814,6 +814,7 @@ async function guardarProductoTerminado() {
             syncStockFromVariants(np);
             window.products.push(np as ManekiProduct);
             window.modoEdicion = true; window.edicionProductoId = np.id;
+            await window.posGuardarBorrador?.(document.getElementById('ptModal')).catch(()=>{});
             await saveProducts(); renderInventoryTable();
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);

@@ -461,6 +461,7 @@ async function guardarProductoVariable(e) {
         };
         window.products.unshift(np as ManekiProduct);
         document.getElementById('pvEditId').value = String(np.id);
+        await window.posGuardarBorrador?.(document.getElementById('pvModal')).catch(()=>{});
     }
 
         await saveProducts();

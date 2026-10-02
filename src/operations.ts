@@ -184,6 +184,14 @@ async function posCargarCaja(date:string,opening:number){
     if(error)throw error;if(!data)throw Error('La base de datos no devolvió los movimientos.');
     return posResumenCaja(date,data.sales_history,data.incomes,data.expenses,opening);
 }
+function posTextoCambio(row:any):string {
+ const labels:Record<string,string>={stock:'Existencias',stock_min:'Stock mínimo',price:'Precio',cost:'Costo',total:'Total',amount:'Importe',anticipo:'Anticipo',name:'Nombre',cliente:'Cliente',status:'Estado',entrega:'Entrega',fecha:'Fecha',concepto:'Descripción',notas:'Notas',category:'Categoría',sku:'SKU',variants:'Variantes',proveedor:'Proveedor'};
+ const money=['price','cost','total','amount','anticipo'];
+ const value=(key:string,v:any):string=>v==null?'—':money.includes(key)?fmtMoney(Number(v)):typeof v==='boolean'?(v?'Sí':'No'):Array.isArray(v)?v.map(x=>typeof x==='object'?`${x.value||x.name||x.nombre||x.id||''}${x.qty!=null?' ('+x.qty+' piezas)':''}`:String(x)).join(', '):typeof v==='object'?JSON.stringify(v):String(v);
+ const keys=[...new Set([...Object.keys(row.old_data||{}),...Object.keys(row.new_data||{})])].filter(k=>!['updated_at','created_at','device_id'].includes(k)&&!_sameStoredValue(row.old_data?.[k],row.new_data?.[k]));
+ return ({INSERT:'Registro creado',UPDATE:'Registro actualizado',DELETE:'Registro eliminado'}[row.action]||'Cambio')+'\n'+keys.map(k=>`${labels[k]||k.replace(/_/g,' ')}: ${value(k,row.old_data?.[k])} → ${value(k,row.new_data?.[k])}`).join('\n');
+}
+window.posTextoCambio=posTextoCambio;
 async function abrirHistorialCambios(){
     const dialog=posDialog('Historial de cambios');const status=document.createElement('p');status.textContent='Consultando últimos cambios…';dialog.appendChild(status);
     try{
@@ -192,9 +200,7 @@ async function abrirHistorialCambios(){
         for(const row of data||[]){
             const detail=document.createElement('details');const title=document.createElement('summary');
             title.textContent=`${new Date(row.occurred_at).toLocaleString('es-MX')} · ${row.actor_label||'Usuario'} · ${row.reason} · ${row.new_data?.folio||row.new_data?.name||row.old_data?.name||row.record_id}`;detail.appendChild(title);
-            const text=document.createElement('pre');const names={INSERT:'Registro creado',UPDATE:'Registro actualizado',DELETE:'Registro eliminado'};
-            const keys=[...new Set([...Object.keys(row.old_data||{}),...Object.keys(row.new_data||{})])].filter(k=>k!=='updated_at'&&!_sameStoredValue(row.old_data?.[k],row.new_data?.[k]));
-            text.textContent=names[row.action]+'\n'+keys.map(k=>`${k.replace(/_/g,' ')}: ${JSON.stringify(row.old_data?.[k]??null)} → ${JSON.stringify(row.new_data?.[k]??null)}`).join('\n');detail.appendChild(text);dialog.appendChild(detail);
+            const text=document.createElement('pre');text.textContent=posTextoCambio(row);detail.appendChild(text);dialog.appendChild(detail);
         }
     }catch(e:any){status.textContent='No se pudo consultar el historial. '+(e.message||'Intenta de nuevo.');}
 }
@@ -305,3 +311,66 @@ function posRestaurarLugarInventario() {
  if(row){row.classList.add('pos-inv-resumed');(row.querySelector('button') as HTMLButtonElement|null)?.focus({preventScroll:true});setTimeout(()=>row.classList.remove('pos-inv-resumed'),2500);}});
 }
 window.posGuardarLugarInventario=posGuardarLugarInventario;window.posRestaurarLugarInventario=posRestaurarLugarInventario;
+
+
+// Borradores locales: IndexedDB conserva File/Blob sin base64 ni servidor.
+let _posUIDB:Promise<IDBDatabase>|null=null;
+function posUIStore(action:'get'|'put'|'delete',key:string,value?:any):Promise<any>{
+ if(!_posUIDB)_posUIDB=new Promise((resolve,reject)=>{const r=indexedDB.open('bicho-ui',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>resolve(r.result);r.onerror=()=>{_posUIDB=null;reject(r.error);};});
+ return _posUIDB.then(db=>new Promise((resolve,reject)=>{const tx=db.transaction('kv',action==='get'?'readonly':'readwrite'),store=tx.objectStore('kv');let result:any;const r=action==='get'?store.get(key):action==='put'?store.put(value,key):store.delete(key);r.onsuccess=()=>result=r.result;tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);}));
+}
+const _posDraftAux:Record<string,string[]>={
+ pedidoModal:['pedidoProductosSeleccionados','pedidoEmpaquesSeleccionados'],
+ ptModal:['modoEdicion','edicionProductoId','currentProductImage','currentProductImageFile','_ptMpComponentes','_ptVariants','_ptTagsActuales','_ptGaleriaUrls','_ptGaleriaFiles'],
+ pvModal:['_pvMpComponentes','_pvTablaPreciosVariable','_pvCombinaciones','_pvTagsActuales','_pvProductImage','_pvProductImageFile'],
+ transactionModal:[]
+};
+const _posDraftWrites:Record<string,Promise<any>>={};
+function posDraftKey(modal:any):string{
+ if(!modal.dataset.posDraftKey){const id=modal.id==='pedidoModal'?document.getElementById('editPedidoId')?.value:modal.id==='pvModal'?document.getElementById('pvEditId')?.value:modal.id==='ptModal'&&window.modoEdicion?window.edicionProductoId:modal.dataset.editId;modal.dataset.posDraftKey=modal.id+':'+(modal.id==='transactionModal'?(document.getElementById('transactionType')?.value||'')+':':'')+(id||'nuevo');}
+ return 'draft:'+modal.dataset.posDraftKey;
+}
+async function posGuardarBorrador(modal:any){
+ if(!_posDraftAux[modal.id]||!modal._mkDirty)return;
+ const key=posDraftKey(modal),fields=Array.from(modal.querySelectorAll('input[id],select[id],textarea[id]') as NodeListOf<HTMLInputElement>).filter(el=>!['password','file'].includes(el.type)).map(el=>({id:el.id,value:el.value,checked:el.checked}));
+ const aux=Object.fromEntries(_posDraftAux[modal.id].map(key=>[key,window[key]]));
+ const draft={fields,aux:structuredClone(aux),writeId:modal.dataset.posDraftWriteId,at:Date.now()};
+ _posDraftWrites[key]=(_posDraftWrites[key]||Promise.resolve()).catch(()=>{}).then(()=>posUIStore('put',key,draft));
+ return _posDraftWrites[key];
+}
+async function posBorrarBorrador(modal:any){const key=posDraftKey(modal);modal._mkDirty=false;_posDraftWrites[key]=(_posDraftWrites[key]||Promise.resolve()).catch(()=>{}).then(()=>posUIStore('delete',key));return _posDraftWrites[key];}
+async function posRecuperarBorrador(modal:any){
+ if(!_posDraftAux[modal.id])return false;const generation=modal._posDraftGeneration||0,key=posDraftKey(modal);await _posDraftWrites[key];const draft=await posUIStore('get',key);
+ if(!draft)return false;if(Date.now()-draft.at>7*86400000){await posUIStore('delete',key);return false;}
+ if((modal._posDraftGeneration||0)!==generation||!modal.classList.contains('active'))return false;
+ if(draft.writeId)modal.dataset.posDraftWriteId=draft.writeId;
+ for(const f of draft.fields||[]){const el=document.getElementById(f.id) as HTMLInputElement;if(el){el.value=f.value;el.checked=f.checked;}}
+ for(const name of _posDraftAux[modal.id])if(name in (draft.aux||{}))window[name]=draft.aux[name];modal._mkDirty=true;
+ if(modal.id==='pedidoModal'){window.renderPedidoProductosList?.();window.renderPedidoEmpaquesList?.();window.calcPedidoTotal?.();window.posPedidoResumen?.();}
+ if(modal.id==='ptModal'){window.renderPtMpList?.();window.renderTagsPt?.();window.renderVariantsListPt?.();window.ptRenderGaleria?.();const img=document.getElementById('ptPreviewImg') as HTMLImageElement;if(img&&window.currentProductImage){img.src=window.currentProductImage;document.getElementById('ptImagePreview')?.classList.remove('hidden');}}
+ if(modal.id==='pvModal'){window.pvRenderMpList?.();window.pvRenderTablaPreciosList?.();window.renderTagsPv?.();window.pvRenderCombinaciones?.();const img=document.getElementById('pvPreviewImg') as HTMLImageElement;if(img&&window._pvProductImage){img.src=window._pvProductImage;document.getElementById('pvImagePreview')?.classList.remove('hidden');}}
+ const label=document.getElementById('pedidoSubmitBtn');if(modal.id==='pedidoModal'&&label)label.textContent=document.getElementById('editPedidoId')?.value?'Actualizar Pedido':'Guardar Pedido';
+ window.manekiToastExport?.('Captura recuperada en este dispositivo.','ok');return true;
+}
+window.posGuardarBorrador=posGuardarBorrador;window.posBorrarBorrador=posBorrarBorrador;window.posRecuperarBorrador=posRecuperarBorrador;
+if(typeof document!=='undefined')for(const type of ['input','change','click'])document.addEventListener(type,(e:Event)=>{const modal=((e.target as HTMLElement)?.closest?.('.modal.active')||(type==='click'?document.querySelector('.modal.active'):null)) as any;if(!modal||!_posDraftAux[modal.id])return;if(type!=='click'){modal._mkDirty=true;modal._posDraftGeneration=(modal._posDraftGeneration||0)+1;}setTimeout(()=>{if(modal.classList.contains('active')&&modal._mkDirty)posGuardarBorrador(modal).catch(()=>window.manekiToastExport?.('No se pudo guardar la copia de la captura en este dispositivo. Mantén la ficha abierta.','warn'));},0);},true);
+window.addEventListener?.('pagehide',()=>{document.querySelectorAll('.modal.active').forEach(modal=>{posGuardarBorrador(modal).catch(()=>{});});});
+
+
+const _posThumbPending:Record<string,Promise<Blob>>={};
+let _posThumbIndexWrite=Promise.resolve();
+async function posMiniatura(url:string):Promise<Blob>{
+ const key='thumb:'+url;if(_posThumbPending[key])return _posThumbPending[key];
+ return _posThumbPending[key]=(async()=>{const cached=await posUIStore('get',key);if(cached)return cached;
+ const response=await fetch(url,{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('No se pudo cargar la foto');const blob=await response.blob();const thumb=await _comprimirFile(blob,240);await posUIStore('put',key,thumb);
+ _posThumbIndexWrite=_posThumbIndexWrite.catch(()=>{}).then(async()=>{const keys:string[]=await posUIStore('get','thumb:index')||[];if(!keys.includes(key))keys.push(key);while(keys.length>200)await posUIStore('delete',keys.shift()!);await posUIStore('put','thumb:index',keys);});await _posThumbIndexWrite;return thumb;
+ })().finally(()=>delete _posThumbPending[key]);
+}
+window.posMiniatura=posMiniatura;
+function posCargarMiniaturas(root:HTMLElement){
+ if(!root)return;(root as any)._posThumbObserver?.disconnect();
+ const load=async(img:HTMLImageElement)=>{const source=img.dataset.posThumb!;delete img.dataset.posThumb;try{const blob=await posMiniatura(source);if(!img.isConnected)return;const url=URL.createObjectURL(blob);img.onload=img.onerror=()=>{URL.revokeObjectURL(url);img.onload=img.onerror=null;};img.src=url;}catch{if(img.isConnected)img.src=source;}};
+ const images=root.querySelectorAll('img[data-pos-thumb]');if(typeof IntersectionObserver==='undefined'){images.forEach(img=>load(img as HTMLImageElement));return;}
+ const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);load(entry.target as HTMLImageElement);}}, {rootMargin:'100px'});(root as any)._posThumbObserver=observer;images.forEach(img=>observer.observe(img));
+}
+window.posCargarMiniaturas=posCargarMiniaturas;

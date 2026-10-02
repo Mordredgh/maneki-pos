@@ -84,3 +84,10 @@ Fotos: MIME imagen, maximo 20 MB de entrada, dimension mayor 1200, WebP 0.82; er
 Validacion 227 pruebas y UI ficticia de captura, error, reintento, Enter y Tab; sin ventas reales.
 
 Publicado d11cda84; SW maneki-e3b125f4d1; dominio 401/200 y archivos identicos al paquete compilado.
+
+## Recuperacion de capturas - 2026-10-02
+IndexedDB nativo bicho-ui/kv guarda una captura por tipo de modal y registro, con vencimiento de 7 dias. Balance separa income/expense/receivable/payable. Snapshot de campos y auxiliares (productos, empaques, variantes, componentes, File/Blob y galeria) sin base64 ni dependencia. Restauracion solo al abrir la misma captura y si el usuario no ha escrito mientras carga. Guardado confirmado o descarte explicito elimina borrador; cancelar cierre lo conserva. Es local al dispositivo/navegador, no respaldo externo. Pedido/PT/PV retienen ID preparado tras fallo; Balance usa posDraftWriteId y reemplaza por ID al reintentar, tambien plantilla recurrente.
+Historial con nombres, fmtMoney y anterior -> nuevo; excluye timestamps/dispositivo. Miniaturas WebP240 bajo demanda al entrar en pantalla, cache local hasta 200 URLs. Primera generacion descarga original; vistas posteriores reutilizan miniatura. Galeria usa originales. Sin SQL ni datos reales modificados.
+Validacion: 233 pruebas, tipos/lint/build; UI ficticia recupera Pedido/Balance tras recarga, cancelar cierre conserva y descartar cierra con una sola confirmacion. Lista240px frente a galeria1024px. SW maneki-df42d95317.
+
+Publicado en Cloudflare 442d2201; dominio 401 anonimo/200 autorizado, index/core/inventario/pedidos/balance/SW identicos al paquete. SW maneki-df42d95317.

@@ -319,7 +319,7 @@ function inventoryCardHTML(product: any, stock: number, kind: string): string {
     const id = _esc(String(product.id));
     const name = _esc(product.name || 'Sin nombre');
     const image = product.imageUrl
-        ? `<button type="button" class="pos-inv-image-button pos-inv-visual" data-action="inventoryOpenGallery" data-arg="${id}" aria-label="Ampliar fotos de ${name}"><img src="${_esc(product.imageUrl)}" alt="${name}" loading="lazy"></button>`
+        ? `<button type="button" class="pos-inv-image-button pos-inv-visual" data-action="inventoryOpenGallery" data-arg="${id}" aria-label="Ampliar fotos de ${name}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${name}" loading="lazy"></button>`
         : `<div class="pos-inv-visual" aria-hidden="true">${product.image ? `<span style="font-size:2.5rem">${_esc(product.image)}</span>` : '<img src="/img/categorias/otros.webp" alt="" loading="lazy">'}</div>`;
     const ranges = (product.tablaPreciosVariable || []).slice().sort((a:any,b:any) => Number(a.cantidadMin) - Number(b.cantidadMin));
     const price = kind === 'pv' && ranges.length ? Number(ranges[0].precio) / Math.max(1, Number(ranges[0].cantidadMin)) : Number(kind === 'mp' || kind === 'svc' ? product.cost : product.price);
@@ -370,6 +370,7 @@ function inventoryOpenGallery(id: string) {
 window.inventoryOpenGallery = inventoryOpenGallery;
 
 function renderInventoryTable() {
+    queueMicrotask(()=>window.posCargarMiniaturas?.(document.getElementById('inventory-section')));
     const tbody = document.getElementById('inventoryTable');
     if (!tbody) return;
 
@@ -525,7 +526,7 @@ function renderInventoryTable() {
         const pid     = String(product.id);
         const stockEf = _stockCache.get(pid) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : parseInt(product.stock) || 0);
         const imgHTML = product.imageUrl
-            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img src="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'🏭'}</span>`;
         let badge;
         if      (stockEf === 0)                    badge = '<span class="badge-danger"><i class="fas fa-circle-xmark"></i> Agotado</span>';
@@ -611,7 +612,7 @@ function renderInventoryTable() {
     function renderFilaPT(product, ri) {
         const pid     = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img src="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'📦'}</span>`;
         const cat = (window.categories||[]).find(c => c.id === product.category);
         const catName = cat ? cat.name : (product.category||'');
@@ -743,7 +744,7 @@ function renderInventoryTable() {
     function renderFilaVariable(product, ri) {
         const pid = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img src="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'🎯'}</span>`;
 
         // Tabla de precios como pills

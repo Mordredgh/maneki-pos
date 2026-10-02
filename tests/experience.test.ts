@@ -5,7 +5,7 @@ import {transformSync} from 'esbuild';
 
 function load(file:string,document:any={addEventListener(){},getElementById(){return null;}}) {
   const window:any = {};
-  const ctx:any = {window,document,console};
+  const ctx:any = {window,document,console,structuredClone};
   runInNewContext(transformSync(readFileSync(file,'utf8'),{loader:'ts'}).code,ctx);
   return ctx;
 }
@@ -205,4 +205,43 @@ it('Enter en campos de captura no guarda; conserva textarea, botones y atajos ex
  input.tagName='TEXTAREA';handlers.keydown({key:'Enter',target:input,preventDefault:()=>{prevented++;}});expect(prevented).toBe(1);
  input.tagName='INPUT';input.type='submit';handlers.keydown({key:'Enter',target:input,preventDefault:()=>{prevented++;}});expect(prevented).toBe(1);
  input.type='text';handlers.keydown({key:'Tab',target:input,preventDefault:()=>{prevented++;}});expect(prevented).toBe(1);
+});
+
+
+it('historial muestra stock y precios con valores legibles, sin ruido tecnico',()=>{
+ const c=load('src/operations.ts');c.fmtMoney=(n:number)=>'$'+n.toFixed(2);c._sameStoredValue=(a:any,b:any)=>JSON.stringify(a)===JSON.stringify(b);
+ const detail=c.posTextoCambio({action:'UPDATE',old_data:{stock:12,price:180,updated_at:'ayer'},new_data:{stock:8,price:200,updated_at:'hoy'}});
+ expect(detail).toContain('Existencias: 12 → 8');expect(detail).toContain('Precio: $180.00 → $200.00');expect(detail).not.toContain('updated');
+});
+
+
+function uiDisk(){const data=new Map();return {open(){const r:any={};queueMicrotask(()=>{const db:any={objectStoreNames:{contains:()=>true},transaction(){const tx:any={objectStore(){return {get(k:string){const q:any={};queueMicrotask(()=>{q.result=structuredClone(data.get(k));q.onsuccess?.();tx.oncomplete?.();});return q;},put(v:any,k:string){const q:any={};data.set(k,structuredClone(v));queueMicrotask(()=>{q.onsuccess?.();tx.oncomplete?.();});return q;},delete(k:string){const q:any={};data.delete(k);queueMicrotask(()=>{q.onsuccess?.();tx.oncomplete?.();});return q;}};}};return tx;}};r.result=db;r.onsuccess?.();});return r;}};}
+it('recupera campos y variantes del borrador tras otra carga y lo borra al guardar',async()=>{
+ const disk=uiDisk();const field:any={id:'pedidoCliente',type:'text',value:'Ana',checked:false};const modal:any={id:'pedidoModal',dataset:{posDraftKey:'pedidoModal:nuevo'},querySelectorAll:()=>[field],querySelector:()=>null,_mkDirty:true,classList:{contains:()=>true}};
+ const a=load('src/operations.ts');a.indexedDB=disk;a.window.pedidoProductosSeleccionados=[{id:'p1',variante:'M / Negro',quantity:2}];a.window.pedidoEmpaquesSeleccionados=[];
+ await a.posGuardarBorrador(modal);
+ const b=load('src/operations.ts');b.indexedDB=disk;b.document.getElementById=(id:string)=>id===field.id?field:null;b.window.renderPedidoProductosList=()=>{};b.window.renderPedidoEmpaquesList=()=>{};b.window.calcPedidoTotal=()=>{};b.window.manekiToastExport=()=>{};
+ field.value='';expect(await b.posRecuperarBorrador(modal)).toBe(true);expect(field.value).toBe('Ana');expect(b.window.pedidoProductosSeleccionados[0].quantity).toBe(2);
+ await b.posBorrarBorrador(modal);field.value='';expect(await b.posRecuperarBorrador(modal)).toBe(false);expect(field.value).toBe('');
+});
+
+it('el borrador de producto conserva archivos de foto y galeria sin base64',async()=>{
+ const c=load('src/operations.ts');c.indexedDB=uiDisk();c.window.currentProductImageFile=new Blob(['foto'],{type:'image/webp'});c.window._ptGaleriaFiles=[new Blob(['galeria'])];
+ const modal:any={id:'ptModal',dataset:{posDraftKey:'ptModal:nuevo'},querySelectorAll:()=>[],_mkDirty:true,classList:{contains:()=>true}};await c.posGuardarBorrador(modal);c.window.currentProductImageFile=null;c.window._ptGaleriaFiles=[];expect(await c.posRecuperarBorrador(modal)).toBe(true);expect(await c.window.currentProductImageFile.text()).toBe('foto');expect(await c.window._ptGaleriaFiles[0].text()).toBe('galeria');
+});
+
+it('listas usan miniaturas y la galeria conserva foto original',async()=>{
+ const c=load('src/operations.ts');c.indexedDB=uiDisk();c.AbortSignal=AbortSignal;let downloads=0;c.fetch=async()=>{downloads++;return {ok:true,blob:async()=>new Blob(['original'])};};c._comprimirFile=async(file:any,size:number)=>{expect(size).toBe(240);return new Blob(['miniatura'],{type:'image/webp'});};
+ expect(await (await c.posMiniatura('https://example.test/foto.webp')).text()).toBe('miniatura');await c.posMiniatura('https://example.test/foto.webp');expect(downloads).toBe(1);
+ const inv=load('src/inventory-5.ts');inv._esc=String;inv.fmtMoney=String;const html=inv.inventoryCardHTML({id:'p1',name:'Foto',imageUrl:'https://example.test/foto.webp',price:10},2,'pt');expect(html).toContain('data-pos-thumb="https://example.test/foto.webp"');expect(html).not.toContain('src="https://example.test/foto.webp"');
+});
+it('Balance reintenta la captura recuperada con el mismo ID sin duplicar dinero',async()=>{
+ let submit:any;const modal:any={dataset:{posDraftWriteId:'estable'},_mkDirty:true};const fields:any={transactionModal:modal,transactionType:{value:'income'},transactionConcept:{value:'Prueba'},transactionAmount:{value:'10'},transactionDate:{value:'2026-10-02'},transactionMethod:{value:'transferencia'},transactionForm:{addEventListener:(t:string,fn:any)=>{if(t==='submit')submit=fn;},reset(){}}};
+ const c=load('src/balance.ts',{addEventListener(){},getElementById:(id:string)=>fields[id]||null});c.incomes=[{id:'estable',amount:10}];c.mkId=()=> 'otro';c.saveIncomes=async()=>{throw Error('Sin red');};let copied=0;c.window.posGuardarBorrador=async()=>{copied++;};c.renderBalance=()=>{};c.updateDashboard=()=>{};c.manekiToastExport=()=>{};
+ await submit({preventDefault(){},target:{querySelector:()=>null}});await submit({preventDefault(){},target:{querySelector:()=>null}});
+ expect(c.incomes).toHaveLength(1);expect(c.incomes[0].id).toBe('estable');expect(copied).toBe(4);
+});
+
+it('cancelar cierre en Balance conserva campos y registro editado',async()=>{
+ const modal:any={dataset:{editId:'i1',editType:'income'},classList:{contains:()=>true}};let resets=0;const c=load('src/balance.ts',{addEventListener(){},getElementById:(id:string)=>id==='transactionModal'?modal:id==='transactionForm'?{addEventListener(){},reset(){resets++;}}:null});c.closeModal=async()=>{};await c.closeTransactionModal();expect(resets).toBe(0);expect(modal.dataset.editId).toBe('i1');
 });

@@ -503,7 +503,7 @@ async function _applyRTDesktopConDatos(key, fresh) {
 
 // BUG-009 FIX: comprimir imagen antes de subir a Supabase Storage
 // Evita rechazos por tamaño y reduce uso de bandwidth
-function _comprimirFile(file):Promise<Blob> {
+function _comprimirFile(file, max = 1200):Promise<Blob> {
     return new Promise((resolve, reject) => {
         if (!String(file.type || '').startsWith('image/')) { reject(new Error('Selecciona un archivo de imagen válido.')); return; }
         if (file.size > 20 * 1024 * 1024) { reject(new Error('La imagen supera 20 MB. Usa una copia más pequeña.')); return; }
@@ -518,7 +518,7 @@ function _comprimirFile(file):Promise<Blob> {
             img.onload = () => {
                 if (finished) return;
                 try {
-                    const ratio = Math.min(1200 / img.width, 1200 / img.height, 1);
+                    const ratio = Math.min(max / img.width, max / img.height, 1);
                     const canvas = document.createElement('canvas');
                     canvas.width = Math.max(1, Math.round(img.width * ratio)); canvas.height = Math.max(1, Math.round(img.height * ratio));
                     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -609,6 +609,7 @@ async function closeModal(idOrEl) {
         if (!ok) return;
         (modal as any)._mkDirty = false;
     }
+    await window.posBorrarBorrador?.(modal).catch(()=>{});
     if (!modal.classList.contains('active')) {
         modal.style.display = '';
         return;
@@ -629,7 +630,7 @@ async function closeModal(idOrEl) {
 // Limpiar flag dirty cuando el modal guarda exitosamente
 (window as any)._mkModalSaved = function(idOrEl: any) {
     const modal = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
-    if (modal) (modal as any)._mkDirty = false;
+    if (modal) { (modal as any)._mkDirty = false; window.posBorrarBorrador?.(modal).catch(()=>{}); }
 };
 window.closeModal = closeModal;
 
@@ -641,6 +642,9 @@ function openModal(idOrEl) {
     modal.style.display = '';
     modal.classList.remove('closing');
     modal.classList.add('active');
+    delete modal.dataset.posDraftKey;
+    delete modal.dataset.posDraftWriteId;
+    window.posRecuperarBorrador?.(modal).catch(()=>{});
     // C19: accesibilidad — marcar como dialog y aplicar focus-trap
     if (!modal.hasAttribute('role')) modal.setAttribute('role', 'dialog');
     if (!modal.hasAttribute('aria-modal')) modal.setAttribute('aria-modal', 'true');

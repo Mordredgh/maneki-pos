@@ -307,3 +307,13 @@ Validacion revision: 221 pruebas y tipos/lint/build correctos; nuevas pruebas re
 Validacion: 227 pruebas, tipos/lint/build correctos. UI ficticia: Enter, Tab, fallo de transporte y reintento con campos conservados y cierre tras confirmacion. El boton real es pos-pedido-save; pedidoSubmitBtn es su span, se restaura sin destruirlo. Sin nuevos pasos, SQL ni datos reales. Diferir realtime conserva captura al volver a una pestaña; no se incorpora recuperacion general de formularios despues de una recarga forzada. Grafo MCP reindexado (5271 nodos).
 
 Publicacion captura: Cloudflare d11cda84, dominio 401 anonimo/200 autorizado, HTML/core/inventario/pedidos/SW identicos al paquete. SW maneki-e3b125f4d1.
+
+## Recuperacion, historial y miniaturas - 2026-10-02
+- [x] Borradores locales de Pedido, PT, PV y Balance con campos, variantes y archivos.
+- [x] Historial anterior/nuevo con nombres e importes legibles.
+- [x] Miniaturas WebP 240px cacheadas y originales en galeria.
+- [x] Reintento Balance con ID estable y cancelacion de cierre sin perder captura.
+- [x] 233 pruebas, tipos/lint/build y comprobacion UI aislada.
+- [x] Publicacion, verificacion, documentacion y commit.
+
+Publicado en Cloudflare 442d2201; dominio 401 anonimo/200 autorizado, index/core/inventario/pedidos/balance/SW identicos al paquete. SW maneki-df42d95317.
