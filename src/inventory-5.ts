@@ -1945,65 +1945,8 @@ function _mkInvModal(id: string, titulo: string, contenidoHtml: string, ancho = 
 }
 
 // ── 1. Conteo físico ─────────────────────────────────
-function abrirConteoFisico() {
-  const prods = (window.products || []).filter((p: any) => p.tipo !== 'servicio' && p.activo !== false);
-  if (!prods.length) { if (typeof manekiToastExport==='function') manekiToastExport('Sin productos para contar','warn'); return; }
-  const _e = _esc;
-  const filas = prods.map((p: any, i: number) => {
-    const st = typeof getStockEfectivo==='function' ? getStockEfectivo(p) : (Number(p.stock)||0);
-    return `<tr style="${i%2?'background:#f9fafb':''}">
-      <td style="padding:7px 10px;font-weight:600;font-size:.85rem;">${_e(p.name)}</td>
-      <td style="padding:7px 10px;text-align:center;color:#6b7280;font-size:.82rem;">${_e(p.category||'—')}</td>
-      <td style="padding:7px 10px;text-align:center;font-weight:700;">${st}</td>
-      <td style="padding:7px 10px;text-align:center;">
-        <input type="number" min="0" value="${st}" data-pid="${_e(p.id)}" data-sistema="${st}"
-          style="width:70px;border:1.5px solid #e5e7eb;border-radius:8px;padding:4px 8px;font-size:.85rem;text-align:center;outline:none;"
-          onfocus="this.style.borderColor='#FFD166'" onblur="this.style.borderColor='#e5e7eb'" class="conteo-input">
-      </td>
-    </tr>`;
-  }).join('');
-  const html = `
-    <p style="font-size:.85rem;color:#6b7280;margin-bottom:16px;">Ingresa las cantidades físicas. Solo se ajustan los productos donde el conteo difiere del sistema.</p>
-    <table style="width:100%;border-collapse:collapse;">
-      <thead><tr style="background:#f9fafb;">
-        <th style="padding:8px 10px;text-align:left;font-size:.78rem;color:#6b7280;font-weight:700;">Producto</th>
-        <th style="padding:8px 10px;text-align:center;font-size:.78rem;color:#6b7280;font-weight:700;">Categoría</th>
-        <th style="padding:8px 10px;text-align:center;font-size:.78rem;color:#6b7280;font-weight:700;">Sistema</th>
-        <th style="padding:8px 10px;text-align:center;font-size:.78rem;color:#6b7280;font-weight:700;">Conteo físico</th>
-      </tr></thead>
-      <tbody>${filas}</tbody>
-    </table>
-    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
-      <button onclick="document.getElementById('mkConteo_ov').remove()" style="padding:9px 20px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;font-weight:600;">Cancelar</button>
-      <button onclick="_mkAplicarConteoFisico()" class="mk-btn-primary" style="padding:9px 24px;">✅ Aplicar ajustes</button>
-    </div>`;
-  _mkInvModal('mkConteo', '📋 Conteo Físico de Inventario', html, '780px');
-}
-(window as any).abrirConteoFisico = abrirConteoFisico;
-
-(window as any)._mkAplicarConteoFisico = function() {
-  const inputs = document.querySelectorAll('#mkConteo_ov .conteo-input');
-  let ajustes = 0;
-  inputs.forEach((inp: any) => {
-    const pid = inp.dataset.pid;
-    const sistema = Number(inp.dataset.sistema);
-    const conteo = Number(inp.value);
-    if (isNaN(conteo) || conteo === sistema) return;
-    const prod = (window.products || []).find((p: any) => String(p.id) === String(pid));
-    if (!prod) return;
-    const diff = conteo - sistema;
-    prod.stock = conteo;
-    if (typeof registrarMovimiento === 'function') {
-      registrarMovimiento({ productoId: prod.id, productoNombre: prod.name, tipo: diff > 0 ? 'entrada_manual' : 'salida_manual', cantidad: Math.abs(diff), motivo: 'Conteo físico', stockAntes: sistema, stockDespues: conteo });
-    }
-    ajustes++;
-  });
-  if (ajustes === 0) { if (typeof manekiToastExport==='function') manekiToastExport('Sin diferencias que ajustar','warn'); return; }
-  if (typeof saveProducts==='function') saveProducts();
-  if (typeof renderInventoryTable==='function') renderInventoryTable();
-  document.getElementById('mkConteo_ov')?.remove();
-  if (typeof manekiToastExport==='function') manekiToastExport(`✅ ${ajustes} ajuste${ajustes!==1?'s':''} aplicados`, 'ok');
-};
+function abrirConteoFisico(){return window.posAbrirConteoFisico();}
+(window as any).abrirConteoFisico=abrirConteoFisico;
 
 // ── 2. Lista de reabastecimiento por proveedor ───────
 function abrirReabastecimiento() {

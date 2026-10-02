@@ -327,3 +327,12 @@ Publicado en Cloudflare 442d2201; dominio 401 anonimo/200 autorizado, index/core
 - [x] Documentacion, memoria y commit.
 
 Validacion: 241 pruebas, tipos/lint/build; UI ficticia escritorio/390px y Ctrl+V. Cloudflare6058b76f, dominio401/200 y index/CSS/core/pedidos/SW identicos. Cache maneki-c3577f6f60. Sin SQL ni cambios de permisos.
+
+## Conteo fisico por partes - 2026-10-02
+- [x] Matriz talla/color y captura parcial durable en IndexedDB.
+- [x] Comparacion con diferencias seleccionadas y movimientos posteriores.
+- [x] RPC atomico y recibo estable para reintentos tras respuesta perdida.
+- [x] Verificacion visual escritorio/movil, build y publicacion.
+- [x] Documentacion, memoria y commit del conteo fisico.
+
+Publicado Cloudflare f16b00ce. Dominio 401 anonimo/200 autorizado; index/CSS/core/inventario/SW identicos al paquete. Cache maneki-679c081b8a. Comparacion final: escritorio 708/708px y movil 320/320px, sin desplazamiento horizontal; encabezado movil accesible oculto sin espacio residual.

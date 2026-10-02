@@ -36,7 +36,8 @@
             'js/inventory-2-pv.js',
             'js/inventory-3.js',
             'js/inventory-4.js',
-            'js/inventory-5.js'
+            'js/inventory-5.js',
+            'js/inventory-count.js'
         ],
         pedidos: [
             'js/whatsapp.js',

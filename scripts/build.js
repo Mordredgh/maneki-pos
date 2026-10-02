@@ -55,7 +55,7 @@ const BUNDLES = {
   ],
   'inventario.bundle.js': [
     'categorias.js', 'inventory-1.js', 'inventory-2-pt.js', 'inventory-2-pack.js',
-    'inventory-2-pv.js', 'inventory-3.js', 'inventory-4.js', 'inventory-5.js'
+    'inventory-2-pv.js', 'inventory-3.js', 'inventory-4.js', 'inventory-5.js', 'inventory-count.js'
   ],
   'pedidos.bundle.js': [
     'whatsapp.js', 'pedidos-1-modal.js', 'pedidos-1-views.js',
