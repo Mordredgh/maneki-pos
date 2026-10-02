@@ -177,7 +177,7 @@ function posDialog(title:string,modal=true):HTMLDialogElement {
     const header=document.createElement('div');header.className='pos-dialog-header';
     const h=document.createElement('h2');h.textContent=title;header.appendChild(h);
     const close=document.createElement('button');close.textContent='Cerrar';close.type='button';close.className='pos-dialog-close';close.onclick=()=>dialog.close();header.appendChild(close);dialog.appendChild(header);
-    dialog.addEventListener('close',()=>{dialog.remove();if(trigger?.isConnected)trigger.focus();},{once:true});document.body.appendChild(dialog);if(modal)dialog.showModal();else dialog.show();return dialog;
+    dialog.addEventListener('close',()=>{dialog.remove();window._flushRTDeferred?.();if(trigger?.isConnected)trigger.focus();},{once:true});document.body.appendChild(dialog);if(modal)dialog.showModal();else dialog.show();return dialog;
 }
 async function posCargarCaja(date:string,opening:number){
     const {data,error}=await db.rpc('pos_cash_movements',{p_date:date,p_zone:Intl.DateTimeFormat().resolvedOptions().timeZone});

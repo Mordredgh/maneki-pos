@@ -94,6 +94,10 @@
     // ── Keyboard delegation: [data-onkeydown] ────────────────────
     document.addEventListener('keydown', function (e) {
         var el = e.target as HTMLElement;
+        // Enter en un campo no equivale a pulsar Guardar. Los atajos propios siguen activos.
+        if (e.key === 'Enter' && !e.isComposing && !e.defaultPrevented && el.tagName === 'INPUT' &&
+            !el.dataset.onkeydown && !['button','submit','checkbox','radio','file'].includes((el as HTMLInputElement).type) &&
+            ['pedidoForm','pvForm','ptForm','transactionForm'].includes(el.closest('form')?.id || '')) e.preventDefault();
         var action = el.dataset.onkeydown;
         if (!action) return;
         var fn = (window as any)[action];

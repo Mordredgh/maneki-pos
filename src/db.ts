@@ -229,10 +229,12 @@ function _rtTransformarFila(tabla, row) {
 // Las actualizaciones no se descartan — se encolan y se aplican al cerrar el modal.
 const _rtDeferredQueue: Array<() => void> = [];
 function _flushRTDeferred() {
-    if (document.querySelector('.modal.active')) return; // aún hay modales abiertos
+    if (document.querySelector('.modal.active, dialog[open]')) return; // aún hay modales abiertos
     const tasks = _rtDeferredQueue.splice(0);
     tasks.forEach(fn => fn());
 }
+
+window._flushRTDeferred = _flushRTDeferred;
 
 function _setupRealtime() {
     // Guard: db puede ser null si la inicialización async todavía no completó
@@ -305,7 +307,7 @@ function _rtInPlace(arr, fresh) {
 // MEJ-13: Aplica cambio relacional en memoria sin recargar tabla completa.
 // Usa el payload del evento (INSERT/UPDATE/DELETE) para modificar el array local.
 async function _applyRTRelacional(tabla, payload) {
-    if (document.querySelector('.modal.active')) {
+    if (document.querySelector('.modal.active, dialog[open]')) {
         _rtDeferredQueue.push(() => _applyRTRelacional(tabla, payload));
         return;
     }
@@ -391,7 +393,7 @@ async function _applyRTRelacional(tabla, payload) {
 
 // _applyRTDesktop — carga desde store legacy y aplica al estado local
 async function _applyRTDesktop(key) {
-    if (document.querySelector('.modal.active')) {
+    if (document.querySelector('.modal.active, dialog[open]')) {
         _rtDeferredQueue.push(() => _applyRTDesktop(key));
         return;
     }
@@ -501,73 +503,50 @@ async function _applyRTDesktopConDatos(key, fresh) {
 
 // BUG-009 FIX: comprimir imagen antes de subir a Supabase Storage
 // Evita rechazos por tamaño y reduce uso de bandwidth
-function _comprimirFile(file) {
-    return new Promise((resolve) => {
+function _comprimirFile(file):Promise<Blob> {
+    return new Promise((resolve, reject) => {
+        if (!String(file.type || '').startsWith('image/')) { reject(new Error('Selecciona un archivo de imagen válido.')); return; }
+        if (file.size > 20 * 1024 * 1024) { reject(new Error('La imagen supera 20 MB. Usa una copia más pequeña.')); return; }
+        let finished = false;
+        const finish = (error?, blob?) => { if (finished) return; finished = true; clearTimeout(timer); error ? reject(error) : resolve(blob); };
+        const timer = setTimeout(() => finish(new Error('La imagen tardó demasiado en procesarse. Prueba con otra foto.')), 15000);
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onerror = () => finish(new Error('No se pudo leer la imagen. Selecciónala de nuevo.'));
+        reader.onload = ev => {
             const img = new Image();
+            img.onerror = () => finish(new Error('No se pudo abrir la imagen. Puede estar dañada o tener un formato incompatible.'));
             img.onload = () => {
-                const MAX = 1200;
-                let w = img.width, h = img.height;
-                if (w > MAX || h > MAX) {
-                    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-                    else       { w = Math.round(w * MAX / h); h = MAX; }
-                }
-                const canvas = document.createElement('canvas');
-                canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', 0.82);
+                if (finished) return;
+                try {
+                    const ratio = Math.min(1200 / img.width, 1200 / img.height, 1);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(img.width * ratio)); canvas.height = Math.max(1, Math.round(img.height * ratio));
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => finish(blob ? null : new Error('No se pudo procesar la imagen.'), blob), 'image/webp', 0.82);
+                } catch (_) { finish(new Error('No se pudo procesar la imagen. Prueba con otra foto.')); }
             };
-            img.onerror = () => resolve(file);
             img.src = ev.target.result as string;
         };
-        reader.onerror = () => resolve(file);
         reader.readAsDataURL(file);
     });
 }
 
 async function subirImagenStorage(file) {
-    // BUG7 FIX: si falla Supabase Storage, guardar como base64 local
+    // ponytail: comprimir una vez; el respaldo local usa la misma imagen reducida.
+    const compressed = await _comprimirFile(file);
     try {
-        // BUG-009 FIX: comprimir antes de subir para evitar rechazos por tamaño
-        const fileComprimido = await _comprimirFile(file);
-        const ext = file.name.split('.').pop();
-        const fileName = `producto_${Date.now()}.${ext}`;
-        const { data, error } = await db.storage
-            .from('product-images')
-            .upload(fileName, fileComprimido, { upsert: true });
+        const ext = compressed.type === 'image/webp' ? 'webp' : compressed.type === 'image/png' ? 'png' : 'jpg';
+        const fileName = `producto_${mkId()}.${ext}`;
+        const { error } = await db.storage.from('product-images').upload(fileName, compressed, { upsert: true, contentType: compressed.type });
         if (error) throw error;
-        const { data: urlData } = db.storage
-            .from('product-images')
-            .getPublicUrl(fileName);
-        return urlData.publicUrl;
-    } catch(e: any) {
-        console.warn('Supabase Storage no disponible, guardando imagen localmente:', e);
-        // Convertir imagen a base64 como respaldo offline
-        return new Promise((resolve) => {
+        const { data } = db.storage.from('product-images').getPublicUrl(fileName);
+        return data.publicUrl;
+    } catch (_) {
+        return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                // Comprimir si es muy grande (max ~200KB en base64)
-                const base64 = ev.target.result as string;
-                if (base64.length > 270000) {
-                    // Reducir calidad usando canvas
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX = 400;
-                        const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
-                        canvas.width  = img.width  * ratio;
-                        canvas.height = img.height * ratio;
-                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.src = base64;
-                } else {
-                    resolve(base64);
-                }
-            };
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(file);
+            reader.onload = ev => resolve(ev.target.result);
+            reader.onerror = () => reject(new Error('No se pudo conservar la imagen. Selecciónala de nuevo.'));
+            reader.readAsDataURL(compressed);
         });
     }
 }
@@ -642,7 +621,7 @@ async function closeModal(idOrEl) {
         modal.style.display = '';
         if (modal) (modal as any)._mkDirty = false;
         // FIX #11: si no quedan modales abiertos, aplicar updates RT diferidos
-        if (!document.querySelector('.modal.active')) _flushRTDeferred();
+        if (!document.querySelector('.modal.active, dialog[open]')) _flushRTDeferred();
         if (['ptModal','mpModal','pvModal','svcModal','packModal'].includes(modal.id) && typeof (window as any).posRestaurarLugarInventario === 'function') (window as any).posRestaurarLugarInventario();
     }, duration);
 }

@@ -637,6 +637,7 @@ window.ptMostrarMargenInfo = ptMostrarMargenInfo;
 
 // ── Guardar Producto Terminado ─────────────────────────────────────────────
 async function guardarProductoTerminado() {
+    if (document.getElementById('ptSubmitBtn')?.disabled) return;
     const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
     const nombre   = gv('ptNombre').trim();
     const sku      = gv('ptSku').trim();
@@ -695,7 +696,7 @@ async function guardarProductoTerminado() {
         // Subir imagen principal si hay
         if (window.currentProductImageFile) {
             manekiToastExport('⏳ Subiendo imagen principal...','ok');
-            const uploaded = await subirImagenStorage(window.currentProductImageFile).catch(()=>null);
+            const uploaded = await subirImagenStorage(window.currentProductImageFile);
             if (uploaded) {
                 window.currentProductImage = uploaded;
             } else {
@@ -708,12 +709,11 @@ async function guardarProductoTerminado() {
         const galeriaFiles = window._ptGaleriaFiles || [];
         if (galeriaFiles.length > 0) {
             manekiToastExport(`⏳ Subiendo ${galeriaFiles.length} foto(s) de galería...`, 'ok');
-            const subidas = await Promise.all(galeriaFiles.map(f => subirImagenStorage(f).catch(() => null)));
-            const urlsNuevas = subidas.filter(Boolean);
-            const fallidas = subidas.filter(x => x === null).length;
-            if (fallidas > 0) manekiToastExport(`⚠️ ${fallidas} foto(s) de galería no se pudieron subir.`, 'warn');
-            window._ptGaleriaUrls = [...(window._ptGaleriaUrls || []), ...urlsNuevas];
-            window._ptGaleriaFiles = [];
+            while (galeriaFiles.length) {
+                const url = await subirImagenStorage(galeriaFiles[0]);
+                window._ptGaleriaUrls = [...(window._ptGaleriaUrls || []), url];
+                galeriaFiles.shift();
+            }
         }
         const imageUrls = [...(window._ptGaleriaUrls || [])];
 
@@ -785,7 +785,7 @@ async function guardarProductoTerminado() {
                 if (window.products[idx].movimientos.length > 30)
                     window.products[idx].movimientos = window.products[idx].movimientos.slice(0, 30);
             }
-            saveProducts(); renderInventoryTable();
+            await saveProducts(); renderInventoryTable();
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);
             if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('ptModal');
@@ -813,7 +813,8 @@ async function guardarProductoTerminado() {
             };
             syncStockFromVariants(np);
             window.products.push(np as ManekiProduct);
-            saveProducts(); renderInventoryTable();
+            window.modoEdicion = true; window.edicionProductoId = np.id;
+            await saveProducts(); renderInventoryTable();
             if (typeof updateDashboard==='function') updateDashboard();
             _done(true);
             if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('ptModal');
@@ -822,6 +823,8 @@ async function guardarProductoTerminado() {
             if (window.MKS) MKS.notify();
             manekiToastExport('✅ Producto agregado exitosamente','ok');
         }
+    } catch (err:any) {
+        _done(false);manekiToastExport('No se confirmó el guardado: '+(err.message||'revisa la conexión')+'. Tus campos se conservan.', 'warn');
     } finally {
         if (_btn) _btn.disabled = false;
     }

@@ -294,3 +294,16 @@ Validacion mascotas: 217 pruebas, tipos/lint/build correctos; siete WebP diferen
 - [x] Documentacion, memoria y commit.
 
 Validacion revision: 221 pruebas y tipos/lint/build correctos; nuevas pruebas reproducen fallo de carga/reintento, deduplicacion concurrente, Balance independiente de Chart.js y foco de Inventario. UI ficticia escritorio/390px, tema oscuro, mes anterior y KPI formateados. Detector: cero avisos en CSS marca; 161 avisos legacy HTML ajenos al cambio. Cloudflare 62b476c1, 401/200, HTML/CSS/core/pedidos/SW identicos; cache maneki-1b49648b77. Grafo MCP actualizado (5267 nodos); graphify requiere credencial de extraccion documental no configurada.
+
+
+## Captura y guardado confiables - 2026-10-01
+- [x] Pedido/PV/PT sin doble envio ni duplicacion al reintentar.
+- [x] Fotos danadas rechazan; WebP reducido tambien en fallback offline.
+- [x] Actualizaciones remotas diferidas en modal y ficha lateral.
+- [x] Error conserva campos; pedido solo anuncia exito tras sincronizacion confirmada.
+- [x] Enter en captura sin envio accidental; Tab probado Cliente/Telefono.
+- [x] Publicacion, verificacion del dominio, memoria y commit.
+
+Validacion: 227 pruebas, tipos/lint/build correctos. UI ficticia: Enter, Tab, fallo de transporte y reintento con campos conservados y cierre tras confirmacion. El boton real es pos-pedido-save; pedidoSubmitBtn es su span, se restaura sin destruirlo. Sin nuevos pasos, SQL ni datos reales. Diferir realtime conserva captura al volver a una pestaña; no se incorpora recuperacion general de formularios despues de una recarga forzada. Grafo MCP reindexado (5271 nodos).
+
+Publicacion captura: Cloudflare d11cda84, dominio 401 anonimo/200 autorizado, HTML/core/inventario/pedidos/SW identicos al paquete. SW maneki-e3b125f4d1.

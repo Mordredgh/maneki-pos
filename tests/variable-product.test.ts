@@ -50,3 +50,13 @@ it('cierra sin pedir descartar cambios despues de confirmar el guardado',async()
 });
 
 it('conserva el precio aplicado al combo al recalcular rangos de otros productos',()=>{const c=variable();const products=[{id:'p',tipo:'producto_variable',tablaPreciosVariable:[{cantidadMin:1,precio:100}]}];const items=[{id:'p',quantity:1,price:40,posPromocion:{id:'combo'}},{id:'p',quantity:1,price:0}];c.pvRecalcularLineas(items,products);expect(items.map(x=>x.price)).toEqual([40,100]);});
+
+it('un doble envio y un reintento tras fallo conservan un solo producto y todos los campos',async()=>{
+ const c=variable();const fields:any={pvNombre:{value:'Playera azul'},pvSku:{value:'P1'},pvEditId:{value:''},pvNotas:{value:'Nombre bordado'},pvSubmitBtn:{disabled:false,textContent:''},pvModal:{_mkDirty:true}};
+ c.document={getElementById:(id:string)=>fields[id]||{value:''}};c.window.products=[];c.window._pvTablaPreciosVariable=[{cantidadMin:1,precio:180}];c._genId=()=>String(c.window.products.length+1);c.manekiToastExport=()=>{};c.renderInventoryTable=()=>{};c.closeModal=()=>{};
+ let saves=0;c.saveProducts=async()=>{saves++;throw Error('Sin red');};
+ await Promise.all([c.guardarProductoVariable({preventDefault(){}}),c.guardarProductoVariable({preventDefault(){}})]);
+ expect(saves).toBe(1);expect(fields.pvModal._mkDirty).toBe(true);
+ c.saveProducts=async()=>{};await c.guardarProductoVariable({preventDefault(){}});
+ expect(c.window.products).toHaveLength(1);expect(fields.pvNotas.value).toBe('Nombre bordado');expect(c.window.products[0].name).toBe('Playera azul');
+});

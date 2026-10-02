@@ -400,6 +400,7 @@ window.openVariableProductModal = openVariableProductModal;
 
 async function guardarProductoVariable(e) {
     if (e) e.preventDefault();
+    if (document.getElementById('pvSubmitBtn')?.disabled) return;
     const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
     const nombre = gv('pvNombre').trim();
     const sku = gv('pvSku').trim();
@@ -421,12 +422,13 @@ async function guardarProductoVariable(e) {
     if (_btn) { _btn.disabled = true; _btn.textContent = '⏳ Guardando...'; }
     const _restore = () => { if (_btn) { _btn.disabled = false; _btn.textContent = editId ? 'Guardar cambios' : 'Guardar producto'; } };
 
+    try {
     // Subir imagen si hay archivo nuevo
     let imageUrl = window._pvProductImage || '';
     if (window._pvProductImageFile) {
         manekiToastExport('⏳ Subiendo imagen...', 'ok');
-        const uploaded = await subirImagenStorage(window._pvProductImageFile).catch(() => null);
-        if (uploaded) imageUrl = uploaded;
+        const uploaded = await subirImagenStorage(window._pvProductImageFile);
+        if (uploaded) { imageUrl = uploaded; window._pvProductImage = uploaded; }
         window._pvProductImageFile = null;
     }
 
@@ -458,9 +460,9 @@ async function guardarProductoVariable(e) {
             stock: 0, variants:combinations,image: '🎨', category, tags, notas, imageUrl,
         };
         window.products.unshift(np as ManekiProduct);
+        document.getElementById('pvEditId').value = String(np.id);
     }
 
-    try{
         await saveProducts();
         posRecordarCaptura(['pvCategory']);
         renderInventoryTable();

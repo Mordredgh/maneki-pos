@@ -197,3 +197,12 @@ it('la tabla muestra lo realmente cobrado y actualiza cliente sin cambiar import
  c.renderTablaPedidos();expect(body.innerHTML).toContain('Cobrado');expect(body.innerHTML).toContain('$55.00');expect(body.innerHTML).toContain('data-action="openPedidoModal" data-arg="p1"');
  c.window.posTablaSelectedId='p1';c.window.pedidos[0].cliente='Beatriz';c.renderTablaPedidos();expect(body.innerHTML).toContain('pos-order-selected');expect(body.innerHTML).toContain('Beatriz');expect(body.innerHTML).not.toContain('>Ana<');
 });
+
+it('Enter en campos de captura no guarda; conserva textarea, botones y atajos explicitos',()=>{
+ const handlers:any={};load('src/csp-delegate.ts',{addEventListener:(name:string,fn:any)=>{handlers[name]=fn;}});
+ const input:any={tagName:'INPUT',type:'text',dataset:{},closest:()=>({id:'pedidoForm'})};let prevented=0;
+ handlers.keydown({key:'Enter',target:input,preventDefault:()=>{prevented++;}});expect(prevented).toBe(1);
+ input.tagName='TEXTAREA';handlers.keydown({key:'Enter',target:input,preventDefault:()=>{prevented++;}});expect(prevented).toBe(1);
+ input.tagName='INPUT';input.type='submit';handlers.keydown({key:'Enter',target:input,preventDefault:()=>{prevented++;}});expect(prevented).toBe(1);
+ input.type='text';handlers.keydown({key:'Tab',target:input,preventDefault:()=>{prevented++;}});expect(prevented).toBe(1);
+});

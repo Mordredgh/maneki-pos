@@ -475,10 +475,32 @@ function pedidoResumenAntesDeGuardar() {
 }
 window.pedidoResumenAntesDeGuardar = pedidoResumenAntesDeGuardar;
 
+let _pedidoEnviando = false;
 document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    return posRunOperation(() => guardarPedidoCompleto(e)).catch(err => {
-        _pedidoGuardando=false;manekiToastExport(err.message,'warn');
+    if (_pedidoEnviando) return;
+    _pedidoEnviando = true;
+    const originalId = document.getElementById('editPedidoId').value;
+    return posRunOperation(() => guardarPedidoCompleto(e)).then(saved => {
+        if (!saved) return;
+        window.pedidoProductosSeleccionados = [];
+        window.pedidoEmpaquesSeleccionados = [];
+        window._mkModalSaved?.('pedidoModal');
+        closeModal('pedidoModal');
+        renderPedidosTable(); updatePedidosStats();
+        if (typeof checkAlertasEntregas === 'function') checkAlertasEntregas();
+        if (typeof checkAlertasCobro === 'function') checkAlertasCobro();
+        if (window.MKS) MKS.sale();
+        manekiToastExport('Pedido guardado correctamente.', 'ok');
+    }).catch(err => {
+        if (!err.pendingSync) document.getElementById('editPedidoId').value = originalId;
+        manekiToastExport(err.pendingSync ? 'El pedido quedó pendiente de sincronizar. Tus campos se conservan; reintentar actualiza el mismo pedido.' : (err.message || 'No se confirmó el guardado. Tus campos se conservan.'), 'warn');
+    }).finally(() => {
+        _pedidoGuardando = false; _pedidoEnviando = false;
+        const button = document.getElementById('pos-pedido-save') as HTMLButtonElement;
+        if (button) { button.disabled = false; button.style.opacity = ''; }
+        const label = document.getElementById('pedidoSubmitBtn');
+        if (label) label.textContent = document.getElementById('editPedidoId').value ? 'Actualizar Pedido' : 'Guardar Pedido';
     });
 });
 async function guardarPedidoCompleto(e) {
@@ -600,8 +622,10 @@ async function guardarPedidoCompleto(e) {
     }
     _pedidoGuardando = true;
     // FIX C7: deshabilitar botón guardar durante el proceso para evitar doble envío
-    const _btnSubmit = document.getElementById('pedidoSubmitBtn');
-    if (_btnSubmit) { _btnSubmit.disabled = true; _btnSubmit.style.opacity = '0.6'; _btnSubmit.innerHTML = '⏳ Guardando...'; }
+    const _btnSubmit = document.getElementById('pos-pedido-save') as HTMLButtonElement;
+    if (_btnSubmit) { _btnSubmit.disabled = true; _btnSubmit.style.opacity = '0.6'; }
+    const _submitLabel = document.getElementById('pedidoSubmitBtn');
+    if (_submitLabel) _submitLabel.textContent = '⏳ Guardando...';
     // FIX: safety timeout — liberar lock si el guardado tarda más de 30 segundos
     const _lockTimeout = setTimeout(() => {
         if (_pedidoGuardando) {
@@ -667,7 +691,7 @@ async function guardarPedidoCompleto(e) {
             manekiToastExport('Pedido guardado localmente; pendiente de sincronizar.', 'warn');
         });
             if (window.MKS) MKS.notify();
-            manekiToastExport('✅ Pedido actualizado.', 'ok');
+
         }
     } else {
         const folio = await generarFolioPedido();
@@ -700,8 +724,7 @@ async function guardarPedidoCompleto(e) {
             fechaUltimoEstado: new Date().toISOString()
         };
         window.pedidos.push(pedido);
-        window.pedidoProductosSeleccionados = [];
-        window.pedidoEmpaquesSeleccionados = [];
+        document.getElementById('editPedidoId').value = String(pedido.id);
         await savePedidos().catch(e => {
             if (!e?.pendingSync) throw e;
             manekiToastExport('Pedido guardado localmente; pendiente de sincronizar.', 'warn');
@@ -743,20 +766,10 @@ async function guardarPedidoCompleto(e) {
                 if (typeof saveIncomes === 'function') saveIncomes();
             }
         }
-        if (window.MKS) MKS.sale();
-        manekiToastExport('✅ Pedido creado: ' + pedido.folio, 'ok');
+
     }
     clearTimeout(_lockTimeout);
-    _pedidoGuardando = false;
-    // FIX C7: re-habilitar botón guardar al terminar (éxito o error)
-    if (_btnSubmit) { _btnSubmit.disabled = false; _btnSubmit.style.opacity = ''; _btnSubmit.innerHTML = editId ? 'Actualizar Pedido' : 'Guardar Pedido'; }
-    // Limpiar flag dirty para que closeModal no pida confirmación
-    if (typeof (window as any)._mkModalSaved === 'function') (window as any)._mkModalSaved('pedidoModal');
-    closeModal('pedidoModal');
-    renderPedidosTable();
-    updatePedidosStats();
-    if (typeof checkAlertasEntregas === 'function') checkAlertasEntregas();
-    if (typeof checkAlertasCobro === 'function') checkAlertasCobro();
+    return true;
 }
 
 // ── BUG-2: Ajustar stock cuando se edita un pedido que ya descontó inventario ──

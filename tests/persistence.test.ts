@@ -621,3 +621,35 @@ it('devolucion persiste dinero, piezas y venta original como una operacion recup
  const orders=await a.ctx.sbLoad('pedidosFinalizados',[]),expenses=await a.ctx.sbLoad('expenses',[]);
  expect(orders[0].total).toBe(200);expect(orders[0].posDetalle.devoluciones[0].reembolso).toBe(100);expect(expenses).toHaveLength(1);expect(expenses[0].amount).toBe(100);expect((await a.ctx.sbLoad('products',[]))[0].stock).toBe(3);
 });
+
+it('una foto danada se rechaza sin subirla ni bloquear el guardado',async()=>{
+ const a=app();let uploads=0;
+ a.ctx.FileReader=class {onload:any;readAsDataURL(){this.onload({target:{result:'data:image/png;base64,invalid'}});}};
+ a.ctx.Image=class {onerror:any;set src(value:string){this.onerror();}};
+ a.ctx.testApi.storage={from:()=>({upload:async()=>{uploads++;return {error:null};},getPublicUrl:()=>({data:{publicUrl:'https://example.test/foto.webp'}})})};
+ await expect(a.ctx.subirImagenStorage({name:'foto.png',type:'image/png',size:100})).rejects.toThrow('imagen');expect(uploads).toBe(0);
+});
+
+it('pedido conserva captura ante fallo de sincronizacion y no duplica al reintentar',async()=>{
+ const a=businessApp();let closed=0;const messages:string[]=[];a.ctx.closeModal=()=>{closed++;};a.ctx.manekiToastExport=(text:string)=>messages.push(text);a.ctx.getNextFolio=async()=>62;
+ a.fields.pedidoCliente.value='Cliente de prueba';a.fields.pedidoConcepto.value='Taza azul';a.fields.pedidoPrecioLibre.value='100';a.fields.pedidoFecha.value='2026-10-01';a.fields.pedidoEntrega.value='2026-10-02';
+ a.fields.pedidoSubmitBtn={textContent:'Guardar Pedido',style:{}};a.fields['pos-pedido-save']={disabled:false,style:{}};
+ a.fail();await a.submit();expect(a.fields.pedidoSubmitBtn.textContent).toBe('Actualizar Pedido');expect(a.fields['pos-pedido-save'].disabled).toBe(false);expect(closed).toBe(0);expect(messages.some(x=>x.includes('Pedido creado'))).toBe(false);expect(a.fields.pedidoConcepto.value).toBe('Taza azul');
+ a.recover();await a.submit();expect(await a.ctx.sbLoad('pedidos',[])).toHaveLength(1);expect(closed).toBe(1);
+});
+
+it('una actualizacion remota espera mientras hay una ficha lateral abierta',async()=>{
+ const a=app();a.ctx.products=[{id:'p1',name:'Nombre anterior',stock:2}];let open=true;
+ a.ctx.document.querySelector=(q:string)=>open&&q.includes('dialog[open]')?{}:null;
+ await a.ctx._applyRTRelacional('products',{eventType:'UPDATE',new:{id:'p1',name:'Nombre remoto',stock:4,variants:[],mp_componentes:[]}});
+ expect(a.ctx.products[0].name).toBe('Nombre anterior');open=false;a.ctx._flushRTDeferred();await new Promise(resolve=>setTimeout(resolve,0));expect(a.ctx.products[0].name).toBe('Nombre remoto');
+});
+
+it('foto grande se reduce a WebP y el respaldo offline usa la imagen reducida',async()=>{
+ const a=app();const reduced={type:'image/webp',size:8000};const reads:any[]=[];let dimensions:any;
+ a.ctx.FileReader=class {onload:any;readAsDataURL(blob:any){reads.push(blob);this.onload({target:{result:blob===reduced?'data:image/webp;base64,small':'data:image/png;base64,large'}});}};
+ a.ctx.Image=class {onload:any;width=4000;height=3000;set src(value:string){this.onload();}};
+ a.ctx.document.createElement=()=>({width:0,height:0,getContext:()=>({drawImage(){}}),toBlob(fn:any,type:string){expect(type).toBe('image/webp');dimensions=this;fn(reduced);}});
+ a.ctx.testApi.storage={from:()=>({upload:async(name:string,blob:any,options:any)=>{expect(name).toMatch(/\.webp$/);expect(blob).toBe(reduced);expect(options.contentType).toBe('image/webp');return {error:{message:'Sin red'}};}})};
+ const file={name:'foto.png',type:'image/png',size:4000000};expect(await a.ctx.subirImagenStorage(file)).toBe('data:image/webp;base64,small');expect(dimensions.width).toBe(1200);expect(dimensions.height).toBe(900);expect(reads).toEqual([file,reduced]);
+});
