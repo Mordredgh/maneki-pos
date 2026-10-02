@@ -173,7 +173,7 @@
 - [x] Panel de salud: conexion comprobada y cola/conflictos; no inventa una fecha de respaldo que el navegador no puede consultar.
 - [x] Incluir product-images y pedidos-referencias en el respaldo cifrado y verificado; conservar copias sin retencion destructiva.
 - [x] Propietario eligio mantener el respaldo programado en su PC por ahora; no ampliar Workers ni activar pagos.
-- [ ] Propietario guardara despues una copia separada de la clave de recuperacion; nunca en Git/Obsidian.
+- [ ] Propietario guardara despues una copia separada de la clave de recuperacion; nunca en Git/Obsidian. <!-- BLOQUEADO: el propietario eligio guardarla despues; fuera del alcance de captura agil. -->
 - [x] Cuadricula talla/color: terminadas, fabricables, comprometidas sin duplicar descuentos, ajustes masivos con motivo y faltantes.
 - [x] Ficha unica de pedido con referencias/aprobacion, variantes, materiales, pagos, entrega e historial; validacion antes de producir/entregar.
 - [x] Costos estimados frente a reales por pedido: materiales, empaque, comisiones, envio y merma; advertencia de margen bajo.
@@ -317,3 +317,13 @@ Publicacion captura: Cloudflare d11cda84, dominio 401 anonimo/200 autorizado, HT
 - [x] Publicacion, verificacion, documentacion y commit.
 
 Publicado en Cloudflare 442d2201; dominio 401 anonimo/200 autorizado, index/core/inventario/pedidos/balance/SW identicos al paquete. SW maneki-df42d95317.
+
+## Captura agil y consistencia - 2026-10-02
+- [x] Pegar imagenes y subir lote con reintento individual.
+- [x] Cambiar variante conservando cantidad, precio y extras.
+- [x] Aviso no bloqueante de pedidos parecidos.
+- [x] Revision informativa con origen y paginacion completa.
+- [x] Revision visual, build final y publicacion.
+- [x] Documentacion, memoria y commit.
+
+Validacion: 241 pruebas, tipos/lint/build; UI ficticia escritorio/390px y Ctrl+V. Cloudflare6058b76f, dominio401/200 y index/CSS/core/pedidos/SW identicos. Cache maneki-c3577f6f60. Sin SQL ni cambios de permisos.

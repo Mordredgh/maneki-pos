@@ -245,3 +245,20 @@ it('Balance reintenta la captura recuperada con el mismo ID sin duplicar dinero'
 it('cancelar cierre en Balance conserva campos y registro editado',async()=>{
  const modal:any={dataset:{editId:'i1',editType:'income'},classList:{contains:()=>true}};let resets=0;const c=load('src/balance.ts',{addEventListener(){},getElementById:(id:string)=>id==='transactionModal'?modal:id==='transactionForm'?{addEventListener(){},reset(){resets++;}}:null});c.closeModal=async()=>{};await c.closeTransactionModal();expect(resets).toBe(0);expect(modal.dataset.editId).toBe('i1');
 });
+it('cambiar talla o color conserva piezas, precio y personalizacion de la linea',()=>{
+ const c=load('src/operations.ts');c.window.products=[{id:'p',variants:[{type:'Talla/Color',value:'M / Negro'},{type:'Talla/Color',value:'L / Blanco'}]}];c.window.pedidoProductosSeleccionados=[{id:'p',name:'Playera',quantity:2,price:175,variante:'Talla/Color:M / Negro',posPersonalizacion:{nombre:'Ana'},posPromocion:{id:'combo',nombre:'Regalo'}}];
+ c.editarVariantePedidoProducto(0,'Talla/Color:L / Blanco');expect(c.window.pedidoProductosSeleccionados[0]).toMatchObject({quantity:2,price:175,variante:'Talla/Color:L / Blanco',posPersonalizacion:{nombre:'Ana'},posPromocion:{id:'combo'}});
+ expect(()=>c.editarVariantePedidoProducto(0,'Talla/Color:Inexistente')).toThrow();
+});
+
+it('avisa pedidos similares sin confundir variantes, cantidades ni el mismo registro',()=>{
+ const c=load('src/operations.ts');c.posCentavos=(n:any)=>Math.round(Number(n)*100);const a={id:'a',folio:'PE-1',cliente:'José García',total:360,status:'confirmado',productosInventario:[{id:'p',quantity:2,price:180,variante:'M / Negro'}]};
+ const draft={cliente:'jose garcia',total:360,productosInventario:[{id:'p',quantity:1,price:180,variante:'M / Negro'},{id:'p',quantity:1,price:180,variante:'M / Negro'}]};
+ expect(c.posPedidosSimilares(draft,[a])).toHaveLength(1);expect(c.posPedidosSimilares({...draft,id:'a'},[a])).toHaveLength(0);expect(c.posPedidosSimilares({...draft,productosInventario:[{id:'p',quantity:2,price:180,variante:'L / Negro'}]},[a])).toHaveLength(0);expect(c.posPedidosSimilares({...draft,total:361},[a])).toHaveLength(0);
+});
+it('revision informativa relaciona saldo, cobros y stock sin alterar registros',()=>{
+ const c=load('src/operations.ts');c.posCentavos=(n:any)=>Math.round(Number(n)*100);c.posTotalPagado=(p:any)=>p.pagos?.length?p.pagos.reduce((s:number,x:any)=>s+x.monto,0):p.anticipo||0;
+ const snapshot={orders:[{id:'o',folio:'PE-2',cliente:'Ana',total:200,resta:180,pagos:[{monto:50}],productosInventario:[{id:'p',quantity:2,price:100}]}],incomes:[{id:'i',pedidoId:'o',amount:30}],products:[{id:'p',name:'Playera',stock:5,variants:[{qty:2},{qty:2}]}],movements:[{id:'m',productoId:'p',cantidad:-1,stockAntes:5,stockDespues:2}]};const before=JSON.stringify(snapshot);
+ const issues=c.posRevisarConsistencia(snapshot);expect(issues.map((x:any)=>x.field)).toEqual(expect.arrayContaining(['saldo','cobros','stock','movimiento']));expect(issues.find((x:any)=>x.field==='saldo')).toMatchObject({id:'o',expected:150,actual:180});expect(JSON.stringify(snapshot)).toBe(before);
+ const clean={orders:[{id:'o',total:200,resta:150,pagos:[{monto:50}],productosInventario:[{id:'p',quantity:2,price:100}]}],incomes:[{pedidoId:'o',amount:50}],products:[{id:'p',name:'Playera',stock:4,variants:[{qty:2},{qty:2}]}],movements:[{id:'m',productoId:'p',cantidad:-1,stockAntes:5,stockDespues:4}]};expect(c.posRevisarConsistencia(clean)).toEqual([]);
+});

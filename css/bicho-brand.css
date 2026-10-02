@@ -276,3 +276,31 @@ body #balMesFiltradoBadge{color:var(--bc-muted)!important}
 
 body dialog :is(.mk-btn-secondary,.pos-dialog-close){min-height:44px;padding:9px 16px}
 body.dark :is(input,select,textarea){color-scheme:dark}
+/* Captura ágil: avisos informativos y fotos con estado explícito. */
+body .pos-inline-notice{margin:6px 0 0;font-size:.8rem;line-height:1.45;color:var(--bc-ink);background:var(--bc-soft);padding:8px 12px;border-radius:10px}
+body .pos-inline-notice[hidden]{display:none}
+body .pedido-line-controls label:has(select){grid-column:1/-1;min-width:0}
+body .pedido-line-controls select.pedido-line-input{width:100%;min-height:44px;padding:8px;background:var(--bc-surface);color:var(--bc-ink);border-color:var(--bc-border)}
+body .pos-photo-modal{max-height:88dvh;overflow:auto}
+body .pos-photo-toolbar{display:flex;align-items:center;gap:12px;margin-top:16px}
+body .pos-photo-toolbar p,body .pos-review-note{color:var(--bc-muted);font-size:.82rem;line-height:1.5}
+body .pos-photo-toolbar button,body .pos-photo-job button{min-height:44px;flex-shrink:0}
+body #fotoRefEstado{font-size:.85rem;font-weight:700;margin-top:12px;color:var(--bc-ink)}
+body .pos-photo-progress{list-style:none;padding:0;margin:8px 0 0}
+body .pos-photo-job{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--bc-border);font-size:.82rem}
+body .pos-photo-job strong,body .pos-photo-job span{overflow-wrap:anywhere}
+body .pos-photo-job strong{color:var(--bc-ink)}
+body .pos-photo-job span{grid-column:1;color:var(--bc-muted)}
+body .pos-photo-job button{grid-column:2;grid-row:1/3;align-self:center}
+body .pos-photo-job[data-state=done] span{color:var(--bc-forest)}
+body .pos-photo-job[data-state=failed] span{color:#9d283e}
+body.dark .pos-photo-job[data-state=failed] span{color:#ffb4c8}
+body .pos-consistency-row{padding:12px 0;border-top:1px solid var(--bc-border);color:var(--bc-ink)}
+body .pos-consistency-row summary{min-height:44px;padding:10px 0;font-weight:800;cursor:pointer;overflow-wrap:anywhere}
+body .pos-consistency-row p{margin:8px 0;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:600px){body .pos-photo-toolbar{align-items:stretch;flex-direction:column}body .pos-photo-job{grid-template-columns:minmax(0,1fr)}body .pos-photo-job button{grid-column:1;grid-row:auto;justify-self:start}body .pedido-line-controls label:has(select){grid-column:1/-1}}
+body .pos-reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+body .pos-reference-view{width:100%;aspect-ratio:1;border:0;padding:0;border-radius:12px;overflow:hidden;background:var(--bc-soft);cursor:zoom-in}
+body .pos-reference-view img{width:100%;height:100%;object-fit:contain}
+body .pos-reference-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+body .pos-reference-actions button{min-height:44px;padding:8px 10px;font-size:.78rem;flex:1}

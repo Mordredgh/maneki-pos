@@ -304,6 +304,7 @@ function openPedidoModal(id = null) {
     })();
 
     openModal('pedidoModal');
+    window.posAvisoPedidoSimilar?.();
 }
 
 function closePedidoModal() {

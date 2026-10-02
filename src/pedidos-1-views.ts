@@ -120,6 +120,7 @@ window._calcularCostoProduccionPedido = _calcularCostoProduccionPedido;
 // Flujo de pedido con validacion por paso y resumen fijo.
 let posPedidoPaso=1;
 function posPedidoResumen(){
+    window.posAvisoPedidoSimilar?.();
     const val=(id:string)=>document.getElementById(id)?.value||'';
     const total=mkRound2(val('pedidoCosto'));const anticipo=mkRound2(val('pedidoAnticipo'));
     const summary=document.getElementById('pos-pedido-summary');

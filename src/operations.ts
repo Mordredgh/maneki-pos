@@ -114,6 +114,7 @@ function posAbrirFicha(id?:string){
 window.posAbrirFicha=posAbrirFicha;
 async function posAbrirSalud(){
  const dialog=posDialog('Salud del POS');const status=document.createElement('p');status.textContent='Comprobando conexión…';dialog.appendChild(status);
+ const consistency=document.createElement('button');consistency.className='mk-btn-secondary';consistency.textContent='Revisar consistencia';consistency.onclick=()=>{dialog.close();posAbrirConsistencia();};dialog.appendChild(consistency);
  const list=document.createElement('dl');list.className='pos-health-list';dialog.appendChild(list);
  const row=(label:string,value:string,kind='ok')=>{const dt=document.createElement('dt');dt.textContent=label;const dd=document.createElement('dd');dd.textContent=value;dd.dataset.state=kind;list.append(dt,dd);};
  row('Navegador',navigator.onLine?'En línea':'Sin conexión',navigator.onLine?'ok':'warn');const sync=typeof posSyncStatus==='function'?posSyncStatus():null;row('Sincronización',sync?.text||'No disponible',sync?.state==='saved'?'ok':sync?.state==='conflict'?'error':'warn');
@@ -374,3 +375,76 @@ function posCargarMiniaturas(root:HTMLElement){
  const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);load(entry.target as HTMLImageElement);}}, {rootMargin:'100px'});(root as any)._posThumbObserver=observer;images.forEach(img=>observer.observe(img));
 }
 window.posCargarMiniaturas=posCargarMiniaturas;
+
+function editarVariantePedidoProducto(index:number,key:string){
+ const item=window.pedidoProductosSeleccionados?.[index],product=(window.products||[]).find(p=>String(p.id)===String(item?.id));
+ const variants=window._variantesPedido?window._variantesPedido(product||{}):product?.variants||[];
+ if(!item||!variants.some(v=>`${v.type}:${v.value}`===key))throw Error('Esta combinación ya no está disponible en el producto.');
+ // ponytail: cambia la combinación; el precio acordado y los extras pertenecen a la línea.
+ item.variante=key;
+ const modal=document.getElementById('pedidoModal') as any;if(modal){modal._mkDirty=true;modal._posDraftGeneration=(modal._posDraftGeneration||0)+1;}
+ window.renderPedidoProductosList?.();if(modal)window.posGuardarBorrador?.(modal).catch(()=>{});
+}
+window.editarVariantePedidoProducto=editarVariantePedidoProducto;
+
+function posPedidosSimilares(draft:any,orders:any[]):any[]{
+ const norm=(v:any)=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ');
+ const signature=(p:any)=>{const lines=new Map<string,number>();for(const i of p.productosInventario||[]){const key=JSON.stringify([String(i.id||''),norm(i.id==='libre'?i.name:''),norm(i.variante),posCentavos(i.price),!!i.posPersonalizacion]);lines.set(key,(lines.get(key)||0)+Number(i.quantity||1));}return JSON.stringify([...lines].sort((a,b)=>a[0].localeCompare(b[0])));};
+ if(!norm(draft.cliente)||!(Number(draft.total)>0))return [];
+ const key=signature(draft),hasItems=!!draft.productosInventario?.length;
+ return orders.filter(p=>String(p.id)!==String(draft.id)&&!['cancelado','finalizado','entregado','completado'].includes(p.status)&&norm(p.cliente)===norm(draft.cliente)&&posCentavos(p.total)===posCentavos(draft.total)&&
+  (hasItems?signature(p)===key:(!p.productosInventario?.length||p.productosInventario.every(i=>i.id==='libre'&&!i.posPersonalizacion))&&!!norm(draft.concepto)&&norm(p.concepto)===norm(draft.concepto)));
+}
+window.posPedidosSimilares=posPedidosSimilares;
+function posAvisoPedidoSimilar(){
+ const modal=document.getElementById('pedidoModal');if(!modal?.classList.contains('active'))return;
+ const val=(id:string)=>document.getElementById(id)?.value||'';
+ const matches=posPedidosSimilares({id:val('editPedidoId'),cliente:val('pedidoCliente'),total:val('pedidoCosto'),concepto:val('pedidoConcepto'),productosInventario:window.pedidoProductosSeleccionados||[]},window.pedidos||[]);
+ let notice=document.getElementById('pos-pedido-similar');if(!notice){const anchor=document.getElementById('pos-pedido-summary');if(!anchor)return;notice=document.createElement('p');notice.id='pos-pedido-similar';notice.className='pos-inline-notice';notice.setAttribute('role','status');anchor.after(notice);}
+ notice.hidden=!matches.length;notice.textContent=matches.length?`Pedido parecido: ${matches.slice(0,3).map(p=>p.folio||'Sin folio').join(', ')}${matches.length>3?` y ${matches.length-3} más`:''}. Puedes guardar si es otro encargo.`:'';
+}
+window.posAvisoPedidoSimilar=posAvisoPedidoSimilar;
+
+function posRevisarConsistencia(data:any):any[]{
+ const issues:any[]=[],products=data.products||[],orders=data.orders||[];
+ const add=(entity:string,record:any,field:string,message:string,expected?:number,actual?:number)=>issues.push({entity,id:String(record.id),field,message,expected,actual,record});
+ for(const p of orders){
+  if(p.status==='cancelado')continue;
+  const paid=posCentavos(posTotalPagado(p)),total=posCentavos(p.total),saldo=Math.max(0,total-paid);
+  if(p.resta!=null&&posCentavos(p.resta)!==saldo)add('pedido',p,'saldo','El saldo guardado difiere del total menos los pagos.',saldo/100,Number(p.resta));
+  const cash=(data.incomes||[]).filter(i=>String(i.pedidoId||'')===String(p.id)||(p.folio&&i.folioOrigen===p.folio));
+  const collected=cash.reduce((s,i)=>s+posCentavos(i.amount??i.monto),0);
+  if(collected!==paid)add('pedido',p,'cobros','Los pagos del pedido difieren de los ingresos vinculados. Revisa también registros antiguos sin vínculo.',paid/100,collected/100);
+  const items=p.productosInventario||[];
+  if(items.length&&items.every(i=>i.price!=null&&Number.isFinite(Number(i.price)))){const subtotal=items.reduce((s,i)=>s+Math.round(posCentavos(i.price)*Number(i.quantity||1)),0);if(subtotal!==total)add('pedido',p,'total','El importe de las líneas difiere del total guardado.',subtotal/100,total/100);}
+  for(const item of items)if(item.id&&item.id!=='libre'&&!products.some(x=>String(x.id)===String(item.id)))add('pedido',p,'producto',`Producto referenciado sin registro actual: ${item.name||item.id}. Puede haber sido retirado del catálogo.`);
+ }
+ for(const p of products){
+  if(!Number.isFinite(Number(p.stock))||Number(p.stock)<0)add('producto',p,'stock','Las existencias no son una cantidad válida.',undefined,Number(p.stock));
+  else if(p.variants?.length){const sum=p.variants.reduce((s,v)=>s+Number(v.qty||0),0);if(!Number.isFinite(sum)||p.variants.some(v=>Number(v.qty)<0)||Math.abs(sum-Number(p.stock))>.000001)add('producto',p,'stock','Las existencias guardadas difieren de la suma de variantes.',sum,Number(p.stock));}
+ }
+ // ponytail: verifica cada movimiento; un kardex recortado no permite reconstruir todo el stock.
+ for(const m of data.movements||[])if(m.stockAntes!=null&&m.stockDespues!=null&&m.cantidad!=null){const before=Number(m.stockAntes),after=Number(m.stockDespues),delta=Number(m.cantidad);if(![before,after,delta].every(Number.isFinite)||Math.abs(after-before-delta)>.000001)add('movimiento',m,'movimiento','La variación de existencias no coincide con la cantidad del movimiento.',before+delta,after);}
+ return issues;
+}
+window.posRevisarConsistencia=posRevisarConsistencia;
+async function posCargarConsistencia(){
+ if(window._pendingSync)throw Error('Hay cambios pendientes de sincronizar. La comparación con la nube todavía no es definitiva.');
+ const data:any={products:[],orders:[],incomes:[],movements:[]};
+ for(const [key,target] of [['products','products'],['pedidos','orders'],['pedidosFinalizados','orders'],['incomes','incomes'],['stockMovimientos','movements']]){
+  const cfg=_RELATIONAL_TABLES[key];
+  for(let offset=0;;offset+=1000){const {data:rows,error}=await db.from(cfg.table).select('*').order('id').range(offset,offset+999);if(error)throw error;data[target].push(...(rows||[]).map(row=>({...cfg.map(row),id:row.id})));if(!rows||rows.length<1000)break;}
+ }
+ if(window._pendingSync)throw Error('Hay cambios pendientes de sincronizar. La comparación con la nube todavía no es definitiva.');
+ return data;
+}
+window.posCargarConsistencia=posCargarConsistencia;
+async function posAbrirConsistencia(){
+ const dialog=posDialog('Revisión de consistencia');dialog.classList.add('pos-wide-dialog');const status=document.createElement('p');status.setAttribute('role','status');status.textContent='Leyendo pedidos, ingresos e inventario…';dialog.appendChild(status);
+ const note=document.createElement('p');note.className='pos-review-note';note.textContent='Solo consulta. Estas diferencias son pistas para revisar; no se corrige ni se bloquea ningún registro.';dialog.appendChild(note);
+ try{const data=await posCargarConsistencia();if(!dialog.isConnected)return;const issues=posRevisarConsistencia(data);status.textContent=issues.length?`${issues.length} diferencias para revisar`:`Sin diferencias en ${data.orders.length} pedidos, ${data.products.length} productos y ${data.movements.length} movimientos consultados.`;
+ const money=new Set(['saldo','cobros','total']);for(const issue of issues){const details=document.createElement('details');details.className='pos-consistency-row';const summary=document.createElement('summary');summary.textContent=`${issue.record.folio||issue.record.name||issue.record.productoNombre||issue.id} · ${issue.field}`;details.appendChild(summary);const text=document.createElement('p');text.textContent=issue.message;details.appendChild(text);if(issue.expected!=null){const values=document.createElement('p');values.textContent=`Calculado: ${money.has(issue.field)?fmtMoney(issue.expected):issue.expected} · Guardado: ${money.has(issue.field)?fmtMoney(issue.actual):issue.actual}`;details.appendChild(values);}const record=document.createElement('p');record.textContent=`Registro ${issue.id}${issue.record.cliente?' · '+issue.record.cliente:''}${issue.record.entrega?' · Entrega '+issue.record.entrega:''}${issue.record.motivo?' · '+issue.record.motivo:''}`;details.appendChild(record);
+ if(issue.entity==='pedido'&&(window.pedidos||[]).some(p=>String(p.id)===issue.id)){const open=document.createElement('button');open.className='mk-btn-secondary';open.textContent='Abrir pedido';open.onclick=async()=>{dialog.close();await window.ensurePedidos?.();window.openPedidoModal?.(issue.id);};details.appendChild(open);}dialog.appendChild(details);}
+ }catch(e:any){status.textContent='No se pudo completar la revisión: '+(e.message||'error de conexión');const retry=document.createElement('button');retry.className='mk-btn-secondary';retry.textContent='Reintentar revisión';retry.onclick=()=>{dialog.close();posAbrirConsistencia();};dialog.appendChild(retry);}
+}
+window.posAbrirConsistencia=posAbrirConsistencia;

@@ -2832,13 +2832,16 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 <!-- Modal: Foto de referencia -->
 <div id="fotoReferenciaModal" class="modal" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6 animate-fade-in pos-photo-modal">
         <div class="flex justify-between items-center mb-1">
             <h3 class="text-lg font-bold text-gray-800">&#128247; Fotos de referencia</h3>
             <button type="button" data-action="closeModal" data-arg="fotoReferenciaModal" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar"><i class="fas fa-times text-lg"></i></button>
         </div>
         <p id="fotoRefFolio" class="text-xs font-bold mb-4" style="color:#FFD166;">—</p>
         <div id="fotoRefContent"></div>
+        <div class="pos-photo-toolbar"><button type="button" class="mk-btn-secondary" data-action="posElegirFotosReferencia">Elegir fotos</button><p>Selecciona varias o pega una imagen con Ctrl+V. Hasta 20 fotos, 5 MB por imagen.</p></div>
+        <p id="fotoRefEstado" role="status" aria-live="polite"></p>
+        <ul id="fotoRefProgreso" class="pos-photo-progress" aria-label="Estado de cada foto"></ul>
         <input type="file" id="fotoRefInput" accept="image/*" multiple class="hidden" data-change="subirFotoReferencia">
     </div>
 </div>

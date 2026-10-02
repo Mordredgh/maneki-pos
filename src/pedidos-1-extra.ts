@@ -267,92 +267,78 @@ function _fotosArray(p) {
     return { urls: [], paths: [] };
 }
 
-function abrirFotoReferencia(id) {
+function abrirFotoReferencia(id, refresh=false) {
     _fotoRefPedidoId = id;
-    const p = (window.pedidos || []).find(x => String(x.id) === String(id));
-    if (!p) return;
-    const { urls } = _fotosArray(p);
-    const folioEl = document.getElementById('fotoRefFolio');
-    if (folioEl) folioEl.textContent = `${p.folio || id} · ${urls.length}/${_FOTO_MAX} fotos`;
-    const content = document.getElementById('fotoRefContent');
-    if (!content) return;
-
-    if (!urls.length) {
-        content.innerHTML = `<div onclick="document.getElementById('fotoRefInput').click()" style="border:2px dashed #d1d5db;border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='#FFD166'" onmouseout="this.style.borderColor='#d1d5db'">
-            <p style="font-size:2.2rem;">📷</p>
-            <p style="font-size:.85rem;color:#6b7280;margin-top:8px;font-weight:600;">Toca para subir fotos de referencia</p>
-            <p style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Hasta ${_FOTO_MAX} fotos · JPG, PNG, WEBP · máx 5 MB c/u</p>
-        </div>`;
-    } else {
-        let grid = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px;">';
-        urls.forEach((url, i) => {
-            grid += `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#f3f4f6;cursor:pointer;" onclick="window.open('${url}','_blank')">
-                <img src="${url}" alt="Foto de referencia ${i+1}" style="width:100%;height:100%;object-fit:cover;">
-                <button onclick="event.stopPropagation();eliminarFotoReferencia('${id}',${i})" style="position:absolute;top:3px;right:3px;background:rgba(220,38,38,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;">✕</button>
-                <button onclick="event.stopPropagation();descargarFotoReferencia('${id}',${i})" style="position:absolute;bottom:3px;right:3px;background:rgba(59,130,246,.85);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;line-height:1;">⬇</button>
-            </div>`;
-        });
-        if (urls.length < _FOTO_MAX) {
-            grid += `<div onclick="document.getElementById('fotoRefInput').click()" style="aspect-ratio:1;border:2px dashed #d1d5db;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#fafafa;" onmouseover="this.style.borderColor='#FFD166'" onmouseout="this.style.borderColor='#d1d5db'">
-                <span style="font-size:1.4rem;color:#9ca3af;">+</span>
-                <span style="font-size:.6rem;color:#9ca3af;margin-top:2px;">Agregar</span>
-            </div>`;
-        }
-        grid += '</div>';
-        content.innerHTML = grid;
-    }
-    openModal('fotoReferenciaModal');
+    const p = (window.pedidos || []).find(x => String(x.id) === String(id));if (!p) return;
+    const {urls}=_fotosArray(p),folio=document.getElementById('fotoRefFolio'),content=document.getElementById('fotoRefContent');
+    if(folio)folio.textContent=`${p.folio||id} · ${urls.length}/${_FOTO_MAX} fotos`;if(!content)return;
+    content.replaceChildren();
+    if(!urls.length){const empty=document.createElement('p');empty.className='pos-review-note';empty.textContent='Añade diseños o referencias para este pedido.';content.appendChild(empty);}
+    else{const grid=document.createElement('div');grid.className='pos-reference-grid';urls.forEach((url,i)=>{const cell=document.createElement('div');const view=document.createElement('button');view.type='button';view.className='pos-reference-view';view.setAttribute('aria-label',`Ampliar referencia ${i+1}`);view.onclick=()=>{if(/^(https?:|blob:|data:image\/)/i.test(url))window.open(url,'_blank','noopener,noreferrer');};const img=document.createElement('img');img.src=url;img.alt=`Referencia ${i+1}`;view.appendChild(img);cell.appendChild(view);
+      const actions=document.createElement('div');actions.className='pos-reference-actions';for(const [label,fn] of [['Descargar',()=>descargarFotoReferencia(id,i)],['Quitar',()=>eliminarFotoReferencia(id,i)]] as [string,()=>any][]){const button=document.createElement('button');button.type='button';button.className='mk-btn-secondary';button.textContent=label;button.setAttribute('aria-label',`${label} referencia ${i+1}`);button.onclick=fn;actions.appendChild(button);}cell.appendChild(actions);grid.appendChild(cell);});content.appendChild(grid);}
+    posRenderFotosPendientes(String(id));if(!refresh)openModal('fotoReferenciaModal');
 }
 window.abrirFotoReferencia = abrirFotoReferencia;
 
-async function subirFotoReferencia() {
-    const input = document.getElementById('fotoRefInput');
-    if (!input || !input.files.length || !_fotoRefPedidoId) return;
-    const p = (window.pedidos || []).find(x => String(x.id) === String(_fotoRefPedidoId));
-    if (!p) return;
-    const { urls: urlsActuales, paths: pathsActuales } = _fotosArray(p);
-    const disponibles = _FOTO_MAX - urlsActuales.length;
-    if (disponibles <= 0) { manekiToastExport(`Ya tienes el máximo de ${_FOTO_MAX} fotos.`, 'warn'); input.value = ''; return; }
-    const _filesRaw = Array.from(input.files).slice(0, disponibles);
-    input.value = '';
-    const filesFiltrados = [];
-    for (const file of _filesRaw) {
-        if (file.size > 5 * 1024 * 1024) {
-            manekiToastExport(`"${file.name}" supera 5 MB — omitida.`, 'warn');
-        } else {
-            filesFiltrados.push(file);
-        }
-    }
-    if (!filesFiltrados.length) return;
-    manekiToastExport(`Subiendo ${filesFiltrados.length} foto(s)...`, 'ok');
-    const idx = (window.pedidos || []).findIndex(x => String(x.id) === String(p.id));
-    const nuevasUrls = [...urlsActuales];
-    const nuevasPaths = [...pathsActuales];
-    for (const file of filesFiltrados) {
-        const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
-        const path = `${p.id}/ref_${Date.now()}_${Math.random().toString(36).substr(2,4)}.${ext}`;
-        try {
-            const { error } = await db.storage.from(FOTO_BUCKET).upload(path, file, { upsert: false });
-            if (error) throw error;
-            const { data: { publicUrl } } = db.storage.from(FOTO_BUCKET).getPublicUrl(path);
-            nuevasUrls.push(publicUrl);
-            nuevasPaths.push(path);
-        } catch(e: any) {
-            console.error('[Foto] Error completo:', e);
-            manekiToastExport(`❌ Error: ${e.message || JSON.stringify(e)}`, 'warn');
-        }
-    }
-    if (idx !== -1) {
-        window.pedidos[idx].referenciasUrls = nuevasUrls;
-        window.pedidos[idx].referenciasPaths = nuevasPaths;
-        delete window.pedidos[idx].referenciaUrl;
-        delete window.pedidos[idx].referenciaPath;
-        savePedidos();
-    }
-    manekiToastExport('✅ Foto(s) subidas correctamente.', 'ok');
-    abrirFotoReferencia(p.id);
+// Cola por pedido: una ruta estable por foto; una respuesta perdida no crea otra copia.
+const _fotoRefLotes:Record<string,any[]>={};
+const _fotoRefProcesos:Record<string,Promise<any>>={};
+function posRenderFotosPendientes(id:string){
+ if(String(_fotoRefPedidoId)!==String(id))return;
+ const list=document.getElementById('fotoRefProgreso');if(!list)return;list.replaceChildren();
+ const jobs=_fotoRefLotes[id]||[];const labels={waiting:'En espera',uploading:'Subiendo…',saving:'Guardando en el pedido…',done:'Guardada',failed:'No guardada'};
+ for(const job of jobs){const row=document.createElement('li');row.className='pos-photo-job';row.dataset.state=job.state;const name=document.createElement('strong');name.textContent=job.name;const state=document.createElement('span');state.textContent=labels[job.state]+(job.error?' · '+job.error:'');row.append(name,state);
+ if(job.state==='failed'&&!job.permanent){const retry=document.createElement('button');retry.type='button';retry.className='mk-btn-secondary';retry.textContent='Reintentar';retry.setAttribute('aria-label','Reintentar '+job.name);retry.onclick=()=>posReintentarFotoReferencia(id,job.id).catch(e=>manekiToastExport(e.message,'warn'));row.appendChild(retry);}list.appendChild(row);}
+ const summary=document.getElementById('fotoRefEstado');if(summary)summary.textContent=jobs.length?`${jobs.filter(j=>j.state==='done').length} de ${jobs.length} fotos guardadas${jobs.some(j=>j.state==='failed')?' · Revisa las pendientes':''}`:'';
 }
-window.subirFotoReferencia = subirFotoReferencia;
+async function posProcesarFotosReferencia(id:string){
+ if(_fotoRefProcesos[id])return _fotoRefProcesos[id];
+ const task=(async()=>{for(const job of _fotoRefLotes[id]||[]){if(job.state!=='waiting')continue;
+  try{
+   const p=(window.pedidos||[]).find(p=>String(p.id)===String(id));if(!p)throw Error('El pedido ya no está activo.');
+   if(!job.url){job.state='uploading';posRenderFotosPendientes(id);job.blob=job.blob||await _comprimirFile(job.file);
+    const storage=db.storage.from(FOTO_BUCKET);
+    const {error}=await storage.upload(job.path,job.blob,{upsert:false,contentType:'image/webp'});
+    if(error){
+     if(String(error.statusCode)!=='409'&&!/already exists|duplicate/i.test(error.message||''))throw error;
+     // Una respuesta perdida puede dejar el archivo creado. Verifica los bytes antes de enlazarlo.
+     const {data:existing,error:readError}=await storage.download(job.path);if(readError)throw readError;
+     if(!existing||existing.size!==job.blob.size)throw Error('La foto existente no coincide. Conserva esta captura y revisa la referencia.');
+     const oldBytes=new Uint8Array(await existing.arrayBuffer()),newBytes=new Uint8Array(await job.blob.arrayBuffer());
+     if(!oldBytes.every((byte,index)=>byte===newBytes[index]))throw Error('La foto existente no coincide con la seleccionada.');
+    }
+    job.url=db.storage.from(FOTO_BUCKET).getPublicUrl(job.path).data.publicUrl;if(!job.url)throw Error('No se recibió la dirección de la foto.');}
+   job.state='saving';posRenderFotosPendientes(id);
+   const current=(window.pedidos||[]).find(p=>String(p.id)===String(id));if(!current)throw Error('El pedido ya no está activo.');
+   const {urls,paths}=_fotosArray(current);if(!paths.includes(job.path)){current.referenciasUrls=[...urls,job.url];current.referenciasPaths=[...paths,job.path];delete current.referenciaUrl;delete current.referenciaPath;}
+   await savePedidos();job.state='done';job.file=null;job.blob=null;job.error='';
+  }catch(e:any){job.state='failed';job.error=(job.url?'Foto subida, falta confirmar el pedido. ':'')+(e.message||'Revisa la conexión y reintenta.');}
+  posRenderFotosPendientes(id);
+ }
+ if(String(_fotoRefPedidoId)===String(id)&&document.getElementById('fotoReferenciaModal')?.classList.contains('active'))abrirFotoReferencia(id,true);
+ return _fotoRefLotes[id];})();
+ _fotoRefProcesos[id]=task;try{return await task;}finally{delete _fotoRefProcesos[id];}
+}
+async function posSubirFotosReferencia(id:string,files:File[]){
+ id=String(id);const p=(window.pedidos||[]).find(p=>String(p.id)===id);if(!p)throw Error('Pedido no encontrado.');
+ const jobs=_fotoRefLotes[id]||(_fotoRefLotes[id]=[]),{urls,paths}=_fotosArray(p);
+ let slots=_FOTO_MAX-urls.length-jobs.filter(j=>j.state!=='done'&&!j.permanent&&!paths.includes(j.path)).length;
+ for(const file of files){if(slots<=0){window.manekiToastExport?.(`Hasta ${_FOTO_MAX} fotos por pedido, incluidas las pendientes.`,'warn');break;}
+  const invalid=!String(file.type).startsWith('image/')?'Selecciona una imagen.':file.size>5*1024*1024?'Supera 5 MB. Usa una copia más pequeña.':'';
+  const uid=mkId();jobs.push({id:uid,name:file.name||'Imagen pegada',file,path:`${id.replace(/[^a-zA-Z0-9_-]/g,'_')}/ref_${uid}.webp`,state:invalid?'failed':'waiting',error:invalid,permanent:!!invalid});if(!invalid)slots--;
+ }
+ posRenderFotosPendientes(id);return posProcesarFotosReferencia(id);
+}
+async function posReintentarFotoReferencia(id:string,jobId:string){if(_fotoRefProcesos[id])await _fotoRefProcesos[id];const job=(_fotoRefLotes[id]||[]).find(j=>j.id===jobId);if(!job||job.state!=='failed'||job.permanent)return;job.state='waiting';job.error='';return posProcesarFotosReferencia(id);}
+function posPegarFotosReferencia(event:any){
+ if(!document.getElementById('fotoReferenciaModal')?.classList.contains('active')||!_fotoRefPedidoId)return false;
+ const files=Array.from(event.clipboardData?.items||[]).filter((item:any)=>item.kind==='file'&&item.type.startsWith('image/')).map((item:any)=>item.getAsFile()).filter(Boolean) as File[];
+ if(!files.length)return false;event.preventDefault();return posSubirFotosReferencia(String(_fotoRefPedidoId),files);
+}
+async function subirFotoReferencia(){const input=document.getElementById('fotoRefInput') as HTMLInputElement;if(!input?.files?.length||!_fotoRefPedidoId)return;const files=Array.from(input.files);input.value='';try{return await posSubirFotosReferencia(String(_fotoRefPedidoId),files);}catch(e:any){manekiToastExport(e.message,'warn');}}
+Object.assign(window,{subirFotoReferencia,posSubirFotosReferencia,posReintentarFotoReferencia,posPegarFotosReferencia});
+window.posElegirFotosReferencia=()=>document.getElementById('fotoRefInput')?.click();
+if(typeof document!=='undefined')document.addEventListener('paste',e=>{const result=posPegarFotosReferencia(e);if(result)Promise.resolve(result).catch(err=>manekiToastExport(err.message,'warn'));});
 
 async function descargarFotoReferencia(id, fotoIdx = 0) {
     const p = (window.pedidos || []).find(x => String(x.id) === String(id));

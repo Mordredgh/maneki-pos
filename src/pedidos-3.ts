@@ -870,6 +870,7 @@ function renderPedidoProductosList() {
             const el=event.target;
             if(el?.dataset?.pedidoQty!==undefined)editarCantidadPedidoProducto(Number(el.dataset.pedidoQty),el.value);
             if(el?.dataset?.pedidoPrice!==undefined)editarPrecioPedidoProducto(Number(el.dataset.pedidoPrice),el.value);
+            if(el?.dataset?.pedidoVariant!==undefined)try{window.editarVariantePedidoProducto(Number(el.dataset.pedidoVariant),el.value);}catch(e:any){manekiToastExport(e.message,'warn');renderPedidoProductosList();}
         });
         list._pvBound=true;
     }
@@ -879,12 +880,15 @@ function renderPedidoProductosList() {
     list.innerHTML = items.map((item, i) => {
         const precio = parseFloat(item.price) || 0;
         const lineaTotal = precio * (item.quantity || 1);
+        const product=(window.products||[]).find(x=>String(x.id)===String(item.id));
+        const variants=product?_variantesPedido(product):[];
         return `
         <div class="pedido-line-item">
             <div class="flex-1 min-w-0">
                 <div class="pedido-line-title">${_esc(item.name || '')}</div>
                 ${item.posPromocion?`<small class="pos-promo-badge">Promoción · ${_esc(item.posPromocion.nombre)}</small>`:''}${item.variante?`<div class="pedido-line-variant">${_esc(item.variante.startsWith('Talla/Color:')?item.variante.slice(12).trim():item.variante)}</div>`:''}
                 <div class="pedido-line-controls">
+                    ${variants.length?`<label>Talla / color<select data-pedido-variant="${i}" aria-label="Variante de ${_esc(item.name||'producto')}" class="pedido-line-input"><option value="" disabled ${!variants.some(v=>`${v.type}:${v.value}`===item.variante)?'selected':''}>${_esc(item.variante||'Selecciona una combinación')}</option>${variants.map(v=>{const key=`${v.type}:${v.value}`;return `<option value="${_esc(key)}" ${key===item.variante?'selected':''}>${_esc(v.value)}</option>`;}).join('')}</select></label>`:''}
                     <label>Cantidad
                     <input type="number" min="1" value="${item.quantity || 1}" data-pedido-qty="${i}" aria-label="Cantidad de ${_esc(item.name||'producto')}"
                         ${item.posPromocion?'readonly':''} class="pedido-line-input"></label>
