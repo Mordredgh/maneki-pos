@@ -51,6 +51,7 @@ const _pendingRows: PendingRowWrite[] = _loadLocalMirror('pendingRows') || [];
 const _rowBases: Record<string, Record<string, any>> = _loadLocalMirror('rowBases') || {};
 let _rowFlush: Promise<void> | null = null;
 const _kvWriteQueues: Record<string, Promise<void>> = {};
+const _tableReads = new Map<string, Promise<any>>();
 let _posOperation: {id:string;reason:string;writes:PendingRowWrite[];tasks:Promise<any>[]} | null = null;
 async function posRunOperation<T>(action:()=>Promise<T>,reason='Operacion del POS'):Promise<T> {
     if(_posOperation)throw new Error('Termina la operacion en curso antes de iniciar otra.');
@@ -1095,11 +1096,15 @@ async function _loadFromTable(key) {
     if (!cfg || !db) return null;
     try {
         _lastRelationalLoadStatus[key] = 'ok';
-        let query = db.from(cfg.table).select('*');
-        if ((cfg as any).filter) query = (cfg as any).filter(query);
-        if (cfg.orderBy) query = query.order(cfg.orderBy, { ascending: false });
-        if (cfg.limit) query = query.limit(cfg.limit);
-        const { data, error } = await _withTimeout(query, 10000);
+        // ponytail: compartir solo la consulta en vuelo; sin cache de datos ni escritura compartida.
+        if (!_tableReads.has(key)) {
+            let query = db.from(cfg.table).select('*');
+            if ((cfg as any).filter) query = (cfg as any).filter(query);
+            if (cfg.orderBy) query = query.order(cfg.orderBy, { ascending: false });
+            if (cfg.limit) query = query.limit(cfg.limit);
+            _tableReads.set(key,_withTimeout(query,10000).finally(()=>_tableReads.delete(key)));
+        }
+        const { data, error } = structuredClone(await _tableReads.get(key));
         if (error || !data) {
             _lastRelationalLoadStatus[key] = 'error';
             return null;

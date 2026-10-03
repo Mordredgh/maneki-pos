@@ -9,6 +9,8 @@ function app(schema: Record<string, string[]> = {}, initialStorage?: Map<string,
   const stored = new Map<string, string>(initialStorage);
   const rows: Record<string, any[]> = {};
   let failure = false;
+  let readWait: Promise<void> = Promise.resolve();
+  const reads: string[] = [];
   let loseAck = false;
   const api = { from(table: string) {
     const query: any = {
@@ -17,9 +19,10 @@ function app(schema: Record<string, string[]> = {}, initialStorage?: Map<string,
       eq(field: string, key: string) { query.key = key; query.field = field; return query; },
       async maybeSingle() { return { data: (rows[table] || []).find(r => r.key === query.key) ?? null, error: null }; },
       then(resolve: any, reject: any) {
-        if (failure) return Promise.resolve({data: null, error: {message: 'Fallo de red simulado'}}).then(resolve, reject);
+        reads.push(table);
+        if (failure) return readWait.then(()=>({data: null, error: {message: 'Fallo de red simulado'}})).then(resolve, reject);
         if (query.deleting) rows[table] = (rows[table] || []).filter(r => String(r[query.field]) !== String(query.key));
-        return Promise.resolve({ data: rows[table] || [], error: null }).then(resolve, reject);
+        return readWait.then(()=>({ data: rows[table] || [], error: null })).then(resolve, reject);
       },
       async insert(data: any) { return query.upsert([data]); },
       async upsert(data: any[]) {
@@ -45,6 +48,7 @@ function app(schema: Record<string, string[]> = {}, initialStorage?: Map<string,
     document: { addEventListener() {}, getElementById() { return null; }, querySelector() { return null; }, querySelectorAll() { return []; } },
     addEventListener() {}, setTimeout: (fn: any, ms: number) => { const t = setTimeout(fn, ms); t.unref(); return t; },
     clearTimeout, crypto: { randomUUID },
+    structuredClone,
     __mkCfg: { getSupabase: () => new Promise(() => {}) },
     products: [], clients: [], salesHistory: [], incomes: [], expenses: [], categories: [],
     testApi: api
@@ -52,10 +56,31 @@ function app(schema: Record<string, string[]> = {}, initialStorage?: Map<string,
   ctx.window = ctx;
   runInContext(transformSync(readFileSync('src/db.ts', 'utf8'), { loader: 'ts', target: 'es2020' }).code, ctx);
   runInContext('db = testApi', ctx);
-  return { ctx, rows, stored, loseAck: () => { loseAck = true; }, fail: () => { failure = true; }, recover: () => { failure = false; }, load(file: string) {
+  return { ctx, rows, stored, reads, delayReads: (wait:Promise<void>)=>{readWait=wait;}, loseAck: () => { loseAck = true; }, fail: () => { failure = true; }, recover: () => { failure = false; }, load(file: string) {
     runInContext(transformSync(readFileSync(file, 'utf8'), { loader: 'ts', target: 'es2020' }).code, ctx);
   } };
 }
+
+it('lecturas simultaneas del mismo catalogo comparten consulta pero conservan objetos propios y vuelven a leer datos nuevos',async()=>{
+ const a=app();a.rows.products=[{id:'p1',name:'Playera',price:10,stock:3,variants:[{type:'Talla',value:'M',qty:3}]}];
+ let release!:()=>void;a.delayReads(new Promise<void>(r=>{release=r;}));
+ const one=a.ctx.sbLoad('products',[]),two=a.ctx.sbLoad('products',[]);
+ await new Promise(r=>setTimeout(r,0));expect(a.reads.filter(x=>x==='products')).toHaveLength(1);
+ release();const [first,second]=await Promise.all([one,two]);expect(first[0].stock).toBe(3);
+ first[0].variants[0].qty=99;expect(second[0].variants[0].qty).toBe(3);
+ a.rows.products[0].stock=7;const fresh=await a.ctx.sbLoad('products',[]);expect(fresh[0].stock).toBe(7);expect(a.reads.filter(x=>x==='products')).toHaveLength(2);
+});
+
+it('una tabla grande permite recorrer paginas aun con busqueda y fecha activas sin volver a la primera',()=>{
+ const a=app();a.load('src/config.ts');a.load('src/pedidos-1-views.ts');
+ const fields:any={pedidosTable:{innerHTML:''},pedidosTablePaginador:{innerHTML:''},tablaPedidosBuscar:{value:''},pedidoFechaDesde:{value:''},filtrosActivosBadges:{innerHTML:'',style:{},querySelectorAll:()=>[]}};
+ a.ctx.document.getElementById=(id:string)=>fields[id]||null;a.ctx._pedidoVistaActual='tabla';
+ a.ctx.pedidos=Array.from({length:60},(_,i)=>({id:'p'+(i+1),folio:'PE-'+(i+1),cliente:'Cliente '+(i+1),concepto:'Playera',entrega:'2026-10-02',total:100,anticipo:0,pagos:[],status:'confirmado'}));
+ a.ctx.filterPedidos('todos',null);expect(fields.pedidosTable.innerHTML).toContain('>PE-60<');expect(fields.pedidosTable.innerHTML.match(/data-table-open=/g)).toHaveLength(25);
+ a.ctx._pedidosNextPage(3);expect(fields.pedidosTablePaginador.innerHTML).toContain('Página 2 de 3');expect(fields.pedidosTable.innerHTML).toContain('>PE-35<');expect(fields.pedidosTable.innerHTML).not.toContain('>PE-60<');
+ fields.tablaPedidosBuscar.value='cliente';fields.pedidoFechaDesde.value='2026-10-01';a.ctx.renderTablaPedidos();expect(fields.pedidosTablePaginador.innerHTML).toContain('Página 1 de 3');a.ctx._pedidosNextPage(3);
+ expect(fields.pedidosTablePaginador.innerHTML).toContain('Página 2 de 3');expect(fields.pedidosTable.innerHTML).toContain('>PE-35<');a.ctx._pedidosPrevPage();expect(fields.pedidosTable.innerHTML).toContain('>PE-60<');
+});
 
 it('conserva aprobacion, checklist, referencias y costos tras recargar pedidos',async()=>{
  const a=app();a.ctx.pedidos=[{id:'ficha-1',total:100,posDetalle:{aprobacion:{referencia:'Diseno v2',fecha:'2026-09-27'},costos:{estimado:40,reales:{materiales:30}}},checklist:{disenio:true},referenciasUrls:['https://example.test/diseno.webp'],referenciasPaths:['ficha-1/diseno.webp']}];

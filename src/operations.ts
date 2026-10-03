@@ -370,7 +370,7 @@ async function posMiniatura(url:string):Promise<Blob>{
 window.posMiniatura=posMiniatura;
 function posCargarMiniaturas(root:HTMLElement){
  if(!root)return;(root as any)._posThumbObserver?.disconnect();
- const load=async(img:HTMLImageElement)=>{const source=img.dataset.posThumb!;delete img.dataset.posThumb;try{const blob=await posMiniatura(source);if(!img.isConnected)return;const url=URL.createObjectURL(blob);img.onload=img.onerror=()=>{URL.revokeObjectURL(url);img.onload=img.onerror=null;};img.src=url;}catch{if(img.isConnected)img.src=source;}};
+ const load=async(img:HTMLImageElement)=>{const source=img.dataset.posThumb!;delete img.dataset.posThumb;img.decoding='async';try{const blob=await posMiniatura(source);if(!img.isConnected)return;const url=URL.createObjectURL(blob);img.onload=img.onerror=()=>{URL.revokeObjectURL(url);img.onload=img.onerror=null;};img.src=url;}catch{if(img.isConnected)img.src=source;}};
  const images=root.querySelectorAll('img[data-pos-thumb]');if(typeof IntersectionObserver==='undefined'){images.forEach(img=>load(img as HTMLImageElement));return;}
  const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);load(entry.target as HTMLImageElement);}}, {rootMargin:'100px'});(root as any)._posThumbObserver=observer;images.forEach(img=>observer.observe(img));
 }

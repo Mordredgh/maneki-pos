@@ -565,7 +565,9 @@ function renderTablaPedidos() {
     if ((_pedidoVistaActual || 'kanban') === 'kanban') return;
     // P1: hash guard — saltar re-render si los datos no cambiaron (incluye valores de filtros activos)
     const _qHash = ((document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null)?.value || '') + ((document.getElementById('tablaFiltroPago') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('pedidoFechaDesde') as HTMLInputElement|null)?.value || '') + ((document.getElementById('pedidoFechaHasta') as HTMLInputElement|null)?.value || '');
-    const _tHash = JSON.stringify((window.pedidos||[]).map(p=>[p.id,p.folio,p.cliente,p.concepto,p.entrega,p.fechaPedido,p.fecha,p.status,p.total,p.anticipo,p.resta,p.pagos,p.telefono,p.lugarEntrega,p.posDetalle])) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash + '_' + String(window.posTablaSelectedId||'');
+    const filterHash = JSON.stringify([_qHash,_pedidoFiltroActivo||'']);
+    if ((tbody as any)._filterHash !== filterHash) { _pedidosTablePage=1; (tbody as any)._filterHash=filterHash; }
+    const _tHash = JSON.stringify((window.pedidos||[]).map(p=>[p.id,p.folio,p.cliente,p.concepto,p.entrega,p.fechaPedido,p.fecha,p.status,p.total,p.anticipo,p.resta,p.pagos,p.telefono,p.lugarEntrega,p.posDetalle])) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash + '_' + String(window.posTablaSelectedId||'') + '_' + _pedidosTablePage;
     if ((tbody as any)._lastHash === _tHash) return;
     (tbody as any)._lastHash = _tHash;
     const q = ((document.getElementById('tablaPedidosBuscar') || document.getElementById('kanbanBuscar') || {}).value || '').toLowerCase().trim();
@@ -584,7 +586,6 @@ function renderTablaPedidos() {
             (p.telefono||'').includes(q) ||
             (p.whatsapp||'').includes(q)
         );
-        _pedidosTablePage = 1;
     }
     // Filtro de pago
     const _fp = (document.getElementById('tablaFiltroPago')||{}).value || '';
@@ -622,7 +623,6 @@ function renderTablaPedidos() {
             if (hasta && fe > hasta) return false;
             return true;
         });
-        _pedidosTablePage = 1;
     }
     const totalItems = lista.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / _PEDIDOS_PER_PAGE));
@@ -791,4 +791,3 @@ function _pedidosResetPageAndRender() {
     });
     renderTablaPedidos();
 };
-

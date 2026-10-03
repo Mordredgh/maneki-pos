@@ -45,7 +45,7 @@ function showSection(sectionName) {
     if (window.innerWidth < 768) document.getElementById('sidebar')?.classList.add('collapsed');
 
     if (sectionName === 'reportes') {
-        salesHistoryPage = 1;
+        if (typeof salesHistoryPage !== 'undefined') salesHistoryPage = 1;
         const si = document.getElementById('salesSearchInput'); if (si) si.value = '';
         setTimeout(() => {
             if (typeof initCategoryChart === 'function') initCategoryChart();

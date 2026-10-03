@@ -336,3 +336,13 @@ Validacion: 241 pruebas, tipos/lint/build; UI ficticia escritorio/390px y Ctrl+V
 - [x] Documentacion, memoria y commit del conteo fisico.
 
 Publicado Cloudflare f16b00ce. Dominio 401 anonimo/200 autorizado; index/CSS/core/inventario/SW identicos al paquete. Cache maneki-679c081b8a. Comparacion final: escritorio 708/708px y movil 320/320px, sin desplazamiento horizontal; encabezado movil accesible oculto sin espacio residual.
+
+## Apertura mas rapida de secciones - 2026-10-02
+- [x] Quitar renders ocultos duplicados al entrar a Pedidos.
+- [x] Precarga en reposo secuencial de secciones frecuentes, mapas bajo demanda.
+- [x] Deduplicar consultas relacionales simultaneas sin cachear datos antiguos.
+- [x] Revisar miniaturas diferidas y usar decodificacion asincrona.
+- [x] Build completo y verificacion UI/recursos/paginacion.
+- [x] Publicacion, documentacion, memoria y commit.
+
+Validacion final: 253 pruebas, tipos/lint/build correctos. UI ficticia con 500 pedidos, 25 filas visibles, pagina 2 de 20 con busqueda; Reportes carga historial en primera apertura, Clientes y Categorias visibles. Inicial: core mas tres bundles frecuentes frente a core mas siete; Leaflet ausente hasta mapas. Cloudflare f0b1b61b; dominio 401 anonimo/200 autorizado y index/CSS/core/inventario/pedidos/SW identicos. Cache maneki-2d7e2fcf3a. Sin SQL, dependencias, permisos ni datos reales de prueba. Grafo MCP actualizado; graphify no extrae docs por falta de credencial LLM.

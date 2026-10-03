@@ -188,9 +188,7 @@
         return Promise.all([_cargarCSS(CDN.leafletCSS), _cargarScript(CDN.leafletJS)]);
     };
 
-    // ── Prefetch agresivo — todos los grupos en paralelo a 300ms ──
-    // Chart.js y Leaflet arrancan de inmediato (sin esperar 300ms)
-    // para que estén listos cuando el usuario interactúe con ellos.
+    // ponytail: preparar las dos secciones frecuentes en reposo; el resto bajo demanda.
     window.addEventListener('load', function () {
         // Chart.js: al terminar de cargar, re-renderizar el gráfico de flujo de caja
         // si el dashboard está activo (en la carga inicial, la gráfica queda en blanco
@@ -201,16 +199,12 @@
                 if (typeof window.renderCashFlowChart === 'function') window.renderCashFlowChart();
             }
         }).catch(() => {});
-        _cargarCSS(CDN.leafletCSS); _cargarScript(CDN.leafletJS).catch(() => {});  // para envios/mapas
-        setTimeout(function () {
-            _cargarGrupo('pedidos').catch(() => {});
-            _cargarGrupo('inventario').catch(() => {});
-            _cargarGrupo('balance').catch(() => {});
-            _cargarGrupo('clientes').catch(() => {});
-            _cargarGrupo('reportes').catch(() => {});
-            _cargarGrupo('envios').catch(() => {});
-            _cargarGrupo('backup').catch(() => {});
-        }, 300);
+        const prepare=async()=>{
+            if ((navigator as any).connection?.saveData) return;
+            for (const group of ['pedidos','inventario']) await _cargarGrupo(group).catch(() => {});
+        };
+        if (typeof window.requestIdleCallback==='function') window.requestIdleCallback(()=>{void prepare();},{timeout:3000});
+        else setTimeout(()=>{void prepare();},1500);
     }, { once: true });
 
 })();

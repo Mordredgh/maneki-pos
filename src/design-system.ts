@@ -644,8 +644,15 @@ function _lazyLoad(name) {
     if (_lazySections.has(name)) return;
     _lazySections.add(name);
     const _render = async () => {
-        // Las tablas de Balance no dependen de la libreria de graficas.
-        if ((name==='reportes' || name==='analisis') && (window as any)._mkEnsureChartJs) {
+        // Las tablas de Balance y Reportes no esperan la libreria de graficas.
+        if (name==='reportes' && (window as any)._mkEnsureChartJs) {
+            void (window as any)._mkEnsureChartJs().then(()=>{
+                const section=document.getElementById('reportes-section');
+                if(section?.classList.contains('hidden'))return;
+                for(const fn of ['initCategoryChart','initComparativaMeses','initTopProductosChart','initMargenCategoriaChart']) (window as any)[fn]?.();
+            }).catch(()=>{});
+        }
+        if (name==='analisis' && (window as any)._mkEnsureChartJs) {
             await (window as any)._mkEnsureChartJs();
         }
         if (name==='analisis'  && (window as any).renderAnalisis)       (window as any).renderAnalisis();
@@ -658,9 +665,8 @@ function _lazyLoad(name) {
             if ((window as any).renderInventoryTable)  (window as any).renderInventoryTable();
         }
         if (name==='pedidos') {
+            // ponytail: el coordinador ya dibuja la vista activa y el historial visible.
             if ((window as any).renderPedidosTable)     (window as any).renderPedidosTable();
-            if ((window as any).renderKanbanBoard)      (window as any).renderKanbanBoard();
-            if ((window as any).renderHistorialPedidos) (window as any).renderHistorialPedidos();
         }
     };
     if (window._mkLazyLoad && !window._mkGrupoListo(name)) _sectionSpinner(name, true);
