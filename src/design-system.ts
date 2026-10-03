@@ -624,8 +624,10 @@ function _sectionSpinner(name, show) {
         if (el.querySelector('#' + spinnerId)) return;
         const s = document.createElement('div');
         s.id = spinnerId;
-        s.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);z-index:99;border-radius:12px;';
-        s.innerHTML = '<div style="width:36px;height:36px;border:3px solid #f3f3f3;border-top:3px solid #FFD166;border-radius:50%;animation:mkSpin .7s linear infinite;"></div>';
+        s.className = 'pos-section-loading';
+        s.setAttribute('role', 'status');
+        s.innerHTML = '<span class="pos-loading-wheel" aria-hidden="true"></span><span>Cargando sección…</span>';
+        el.setAttribute('aria-busy', 'true');
         if (!document.getElementById('mk-spin-style')) {
             const st = document.createElement('style');
             st.id = 'mk-spin-style';
@@ -637,6 +639,7 @@ function _sectionSpinner(name, show) {
     } else {
         const s = el.querySelector('#' + spinnerId);
         if (s) s.remove();
+        el.removeAttribute('aria-busy');
     }
 }
 

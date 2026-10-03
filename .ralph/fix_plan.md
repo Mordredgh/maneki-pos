@@ -346,3 +346,14 @@ Publicado Cloudflare f16b00ce. Dominio 401 anonimo/200 autorizado; index/CSS/cor
 - [x] Publicacion, documentacion, memoria y commit.
 
 Validacion final: 253 pruebas, tipos/lint/build correctos. UI ficticia con 500 pedidos, 25 filas visibles, pagina 2 de 20 con busqueda; Reportes carga historial en primera apertura, Clientes y Categorias visibles. Inicial: core mas tres bundles frecuentes frente a core mas siete; Leaflet ausente hasta mapas. Cloudflare f0b1b61b; dominio 401 anonimo/200 autorizado y index/CSS/core/inventario/pedidos/SW identicos. Cache maneki-2d7e2fcf3a. Sin SQL, dependencias, permisos ni datos reales de prueba. Grafo MCP actualizado; graphify no extrae docs por falta de credencial LLM.
+
+## Fluidez y continuidad visual - 2026-10-03
+- [x] Cliente/acciones fijos en tabla amplia y hover/foco suave.
+- [x] Espacio e indicador de carga por tema; fotos con dimensiones reservadas.
+- [x] Busquedas agrupadas y cancelacion al navegar, sin retrasar campos de captura.
+- [x] Actualizar celdas de Pedidos conservando filas; filtros y totales de una pagina.
+- [x] Jerarquia: crear una vez en tabla y resumen de cobro desplegable.
+- [x] Confirmacion movil/escritorio, build final y publicacion.
+- [x] Documentacion, memoria y commit.
+
+Fluidez validada:264 pruebas, tipos/lint/build; UI ficticia escritorio/movil, foco/seleccion, filtros y temas. Cloudflare1d2b2d95, dominio401/200 y seis archivos identicos. Cachemaneki-a556a2e2de. Grafo5414; graphify docs limitado por credencial LLM ausente.

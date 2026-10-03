@@ -76,13 +76,24 @@
     });
 
     // ── Input delegation: [data-oninput] ─────────────────────────
-    document.addEventListener('input', function (e) {
+    function dispatchInput(e: any) {
         var el = e.target as HTMLElement;
         var action = el.dataset.oninput;
         if (!action) return;
+        if (e.type === 'compositionend' && !['_pedidosResetPageAndRender','_mkDebounceInv','_mkDebounceInc','_mkDebounceExp','_mkDebouncePed','_mkDebounceHp','_mkDebounceMov','_debouncedSearch'].includes(action)) return;
         var fn = (window as any)[action];
-        if (typeof fn === 'function') fn(el);
-    });
+        if (typeof fn !== 'function') return;
+        if (action === '_pedidosResetPageAndRender') {
+            clearTimeout(window._posSearchTimeout);
+            if (e.isComposing) return;
+            window._posSearchTimeout = setTimeout(function () {
+                window._posSearchTimeout = null;
+                if (el.isConnected) fn(el);
+            }, 180);
+        } else if (!e.isComposing) fn(el);
+    }
+    document.addEventListener('input', dispatchInput);
+    document.addEventListener('compositionend', dispatchInput);
 
     // ── Submit prevention: [data-prevent-submit] ─────────────────
     document.addEventListener('submit', function (e) {
@@ -236,31 +247,20 @@
         el.value = '';
     };
 
-    // ── Debounced oninput wrappers ──────────────────────────────
-    (window as any)._mkDebounceMov = function () {
-        clearTimeout((window as any)._movT);
-        (window as any)._movT = setTimeout(renderMovimientos, 160);
-    };
-    (window as any)._mkDebounceInv = function () {
-        clearTimeout((window as any)._invSearchT);
-        (window as any)._invSearchT = setTimeout(function () { renderInventoryTable(); }, 160);
-    };
-    (window as any)._mkDebounceInc = function () {
-        clearTimeout((window as any)._incT);
-        (window as any)._incT = setTimeout(function () { renderIncomeList(); }, 160);
-    };
-    (window as any)._mkDebounceExp = function () {
-        clearTimeout((window as any)._expT);
-        (window as any)._expT = setTimeout(function () { renderExpenseList(); }, 160);
-    };
-    (window as any)._mkDebouncePed = function () {
-        clearTimeout((window as any)._pedT);
-        (window as any)._pedT = setTimeout(renderPedidosTable, 160);
-    };
-    (window as any)._mkDebounceHp = function () {
-        clearTimeout((window as any)._hpT);
-        (window as any)._hpT = setTimeout(renderHistorialPedidos, 160);
-    };
+    // Una sola busqueda pendiente; showSection la cancela al navegar.
+    function scheduleSearch(render: () => void) {
+        clearTimeout(window._posSearchTimeout);
+        window._posSearchTimeout = setTimeout(function () {
+            window._posSearchTimeout = null;
+            render();
+        }, 160);
+    }
+    (window as any)._mkDebounceMov = () => scheduleSearch(() => renderMovimientos());
+    (window as any)._mkDebounceInv = () => scheduleSearch(() => renderInventoryTable());
+    (window as any)._mkDebounceInc = () => scheduleSearch(() => renderIncomeList());
+    (window as any)._mkDebounceExp = () => scheduleSearch(() => renderExpenseList());
+    (window as any)._mkDebouncePed = () => scheduleSearch(() => renderPedidosTable());
+    (window as any)._mkDebounceHp = () => scheduleSearch(() => renderHistorialPedidos());
 
     // ── Blur delegation: [data-onblur] ──────────────────────────
     document.addEventListener('focusout', function (e) {

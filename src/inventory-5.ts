@@ -319,8 +319,8 @@ function inventoryCardHTML(product: any, stock: number, kind: string): string {
     const id = _esc(String(product.id));
     const name = _esc(product.name || 'Sin nombre');
     const image = product.imageUrl
-        ? `<button type="button" class="pos-inv-image-button pos-inv-visual" data-action="inventoryOpenGallery" data-arg="${id}" aria-label="Ampliar fotos de ${name}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${name}" loading="lazy"></button>`
-        : `<div class="pos-inv-visual" aria-hidden="true">${product.image ? `<span style="font-size:2.5rem">${_esc(product.image)}</span>` : '<img src="/img/categorias/otros.webp" alt="" loading="lazy">'}</div>`;
+        ? `<button type="button" class="pos-inv-image-button pos-inv-visual" data-action="inventoryOpenGallery" data-arg="${id}" aria-label="Ampliar fotos de ${name}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${name}" loading="lazy" decoding="async" width="240" height="240"></button>`
+        : `<div class="pos-inv-visual" aria-hidden="true">${product.image ? `<span style="font-size:2.5rem">${_esc(product.image)}</span>` : '<img src="/img/categorias/otros.webp" alt="" loading="lazy" decoding="async" width="240" height="240">'}</div>`;
     const ranges = (product.tablaPreciosVariable || []).slice().sort((a:any,b:any) => Number(a.cantidadMin) - Number(b.cantidadMin));
     const price = kind === 'pv' && ranges.length ? Number(ranges[0].precio) / Math.max(1, Number(ranges[0].cantidadMin)) : Number(kind === 'mp' || kind === 'svc' ? product.cost : product.price);
     const stockText = kind === 'svc' ? 'Servicio' : `${Math.max(0, Number(stock) || 0)} disponibles`;
@@ -526,7 +526,7 @@ function renderInventoryTable() {
         const pid     = String(product.id);
         const stockEf = _stockCache.get(pid) ?? (typeof getStockEfectivo === 'function' ? getStockEfectivo(product) : parseInt(product.stock) || 0);
         const imgHTML = product.imageUrl
-            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy" decoding="async" width="240" height="240"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'🏭'}</span>`;
         let badge;
         if      (stockEf === 0)                    badge = '<span class="badge-danger"><i class="fas fa-circle-xmark"></i> Agotado</span>';
@@ -612,7 +612,7 @@ function renderInventoryTable() {
     function renderFilaPT(product, ri) {
         const pid     = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy" decoding="async" width="240" height="240"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'📦'}</span>`;
         const cat = (window.categories||[]).find(c => c.id === product.category);
         const catName = cat ? cat.name : (product.category||'');
@@ -744,7 +744,7 @@ function renderInventoryTable() {
     function renderFilaVariable(product, ri) {
         const pid = String(product.id);
         const imgHTML = product.imageUrl
-            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy"></button>`
+            ? `<button type="button" class="pos-inv-image-button" data-action="inventoryOpenGallery" data-arg="${_esc(pid)}" aria-label="Ampliar fotos de ${_esc(product.name||'producto')}"><img data-pos-thumb="${_esc(product.imageUrl)}" alt="${_esc(product.name||'')}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:#f9fafb;" loading="lazy" decoding="async" width="240" height="240"></button>`
             : `<span style="font-size:1.6rem;">${product.image||'🎯'}</span>`;
 
         // Tabla de precios como pills
@@ -1085,17 +1085,9 @@ function renderInventoryTable() {
             dualContainer.appendChild(secEl);
         }
 
-        const secDataHash = secDef.products
-            .map(p => [
-                p.id,
-                p.updatedAt || '',
-                p.stock || 0,
-                p.price || 0,
-                p.cost || 0,
-                p.activo === false ? '0' : '1',
-            ].join(':'))
-            .join('|');
-        const secHash = secDef.products.length + '_' + secDataHash + '_' + (window[`_invPage_${secDef.id}`] || 1) + '_' + (window._invPageSize || 10) + '_' + (window._invSortCol || '') + (window._invSortDir || '') + '_' + _tipoQ + '_' + viewMode;
+        // La vista depende tambien de nombres, fotos, variantes y materiales compartidos.
+        // Comparar el HTML calculado evita saltarse cambios sin updatedAt.
+        const secHash = html;
         if ((secEl as any)._hash !== secHash) {
             secEl.innerHTML = html;
             (secEl as any)._hash = secHash;

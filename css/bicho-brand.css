@@ -331,3 +331,34 @@ body .pos-count-review{min-width:0!important}body .pos-count-review caption{widt
 @media(max-width:600px){body .pos-count-review thead{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important}body .pos-count-review tr{box-sizing:border-box;width:100%}}
 @media(min-width:601px){body .pos-count-review{width:100%;table-layout:fixed}body .pos-count-review :is(th,td){min-width:0!important;padding:10px 8px!important;white-space:normal!important;overflow-wrap:anywhere}body .pos-count-review th{font-size:.68rem!important;letter-spacing:0!important}body .pos-count-review th:first-child{width:88px}body .pos-count-review th:nth-child(3),body .pos-count-review th:nth-child(4){width:78px}body .pos-count-review th:last-child{width:180px}}
 @media(max-width:600px){body .pos-count-review thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}body .pos-count-review,body .pos-count-review tbody{display:block;width:100%}body .pos-count-review tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border:1px solid var(--bc-border);border-radius:10px;margin:12px 0;padding:8px}body .pos-count-review td{display:block!important;min-width:0!important;padding:8px!important;white-space:normal!important;border:0!important}body .pos-count-review td:first-child,body .pos-count-review td:nth-child(2),body .pos-count-review td:last-child{grid-column:1/-1}body .pos-count-review td:nth-child(2){font-weight:800}body .pos-count-review td:nth-child(3)::before,body .pos-count-review td:nth-child(4)::before{content:attr(data-label);display:block;color:var(--bc-muted);font-size:.76rem}body .pos-count-check{justify-content:flex-start}body .pos-count-review caption{display:block;text-align:left;line-height:1.5}}
+
+/* Fluidez: identidad visible, fotos estables y carga legible en ambos temas. */
+body #pedidosTable .pos-order-row>td{background:var(--bc-surface)}
+body #pedidosTable .pos-order-row:hover>td,
+body #pedidosTable .pos-order-row:focus-within>td{background:var(--bc-soft)!important}
+body #pedidosTable .pos-order-selected:hover>td,
+body #pedidosTable .pos-order-selected:focus-within>td{background:#edf4e7!important}
+body.dark #pedidosTable .pos-order-selected:hover>td,
+body.dark #pedidosTable .pos-order-selected:focus-within>td{background:#334f39!important}
+@media(min-width:1100px){
+ body #pedidosTableEl .pos-order-identity,body #pedidosTableEl th:nth-child(2){position:sticky;left:0;z-index:3;min-width:220px;max-width:280px}
+ body #pedidosTableEl .pos-order-actions,body #pedidosTableEl th:last-child{position:sticky;right:0;z-index:3;min-width:164px;border-left:1px solid var(--bc-border)}
+ body #pedidosTableEl th:nth-child(2),body #pedidosTableEl th:last-child{z-index:5}
+}
+body #main-content>section[aria-busy="true"]{min-height:320px}
+body .pos-section-loading{position:absolute;inset:0;display:flex;gap:12px;align-items:center;justify-content:center;background:var(--bc-surface);color:var(--bc-ink);z-index:99;border-radius:16px;font-weight:700}
+body .pos-loading-wheel{width:30px;height:30px;border:3px solid var(--bc-border);border-top-color:var(--bc-forest);border-radius:50%;animation:mkSpin .7s linear infinite}
+body .pos-inv-image-button img:not([src]){background:var(--bc-soft)!important;color:var(--bc-muted)}
+body :is(.mk-kpi-value,.pos-order-money dd){font-variant-numeric:tabular-nums;min-height:1.4em}
+body:has(#pedidos-section:not(.hidden) #vistaTabla:not(.hidden)) .pos-pedidos-header-create{display:none!important}
+body #alertaCobro{background:var(--bc-surface)!important;border:1px solid var(--bc-border)!important;padding:12px 16px!important}
+body .pos-payment-reminder-details summary{color:var(--bc-forest);cursor:pointer;font-weight:700;font-size:.85rem;min-height:44px;display:list-item;align-content:center}
+body .pos-payment-reminder-details[open] #alertaCobroLista{margin-top:8px}
+@media(prefers-reduced-motion:reduce){body .pos-loading-wheel{animation:none}}
+@media(max-width:650px){
+ body #tablaBuscadorBar .pos-table-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+ body #tablaBuscadorBar .pos-table-tools>button{grid-column:1/-1}
+ body #tablaBuscadorBar .mk-density-toggle{display:flex;min-width:0}
+ body #tablaBuscadorBar .mk-density-toggle button{min-height:44px;flex:1}
+ body #tablaBuscadorBar #posTablaColumnas summary{min-height:44px}
+}

@@ -1598,7 +1598,7 @@ input:focus, select:focus, textarea:focus, button:focus {
                     class="mk-toolbar-btn" title="Hoja de ruta del día — entregas de hoy">
                 <i class="fas fa-route mk-tb-ico"></i> <span class="hidden sm:inline">Ruta del día</span>
             </button>
-            <button type="button" data-action="openPedidoModal" class="mk-btn-primary">
+            <button type="button" data-action="openPedidoModal" class="mk-btn-primary pos-pedidos-header-create">
                 <i class="fas fa-plus"></i> Nuevo Pedido
             </button>
             <button type="button" id="btnKanbanFocus" data-action="toggleKanbanFocus"
@@ -1627,7 +1627,10 @@ input:focus, select:focus, textarea:focus, button:focus {
                 <button type="button" data-action="_mkHideAlertaCobro"
                     class="text-red-300 hover:text-red-500 text-lg leading-none">✕</button>
             </div>
-            <div id="alertaCobroLista" class="flex flex-col gap-2"></div>
+            <details class="pos-payment-reminder-details">
+                <summary>Ver pedidos por cobrar</summary>
+                <div id="alertaCobroLista" class="flex flex-col gap-2"></div>
+            </details>
         </div>
 
         <div id="vistaKanban">

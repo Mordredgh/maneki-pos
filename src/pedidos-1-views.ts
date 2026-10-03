@@ -557,6 +557,35 @@ function _mkTblMenu(btn: HTMLElement, id: string) {
 }
 window._mkTblMenu = _mkTblMenu;
 
+// Reutiliza filas y celdas: un abono remoto no reemplaza los botones de otros pedidos.
+function posTablaActualizarFilas(tbody: HTMLElement, nuevas: HTMLElement[]) {
+    const previas = Array.from(tbody.children) as HTMLElement[];
+    const porId = new Map(previas.map(row => [row.dataset.tableOpen, row]));
+    const ids = new Set(nuevas.map(row => row.dataset.tableOpen));
+    const focused = document.activeElement as HTMLElement|null;
+    const focusRow = focused?.closest?.('[data-table-open]') as HTMLElement|null;
+    const focusId = focusRow?.dataset.tableOpen;
+    const action = focused?.dataset.action, arg = focused?.dataset.arg;
+    for (const [index, nueva] of nuevas.entries()) {
+        const previa = porId.get(nueva.dataset.tableOpen);
+        const row = previa || nueva;
+        if (previa) {
+            previa.className = nueva.className;
+            Array.from(nueva.children).forEach((cell, i) => {
+                if (previa.children[i].innerHTML !== cell.innerHTML) previa.children[i].innerHTML = cell.innerHTML;
+            });
+        }
+        if (tbody.children[index] !== row) tbody.insertBefore(row, tbody.children[index] || null);
+    }
+    for (const row of previas) if (!ids.has(row.dataset.tableOpen)) row.remove();
+    if (focusId && action && focused && !focused.isConnected) {
+        const row = (Array.from(tbody.children) as HTMLElement[]).find(r => r.dataset.tableOpen === focusId);
+        const button = row && (Array.from(row.querySelectorAll('[data-action]')) as HTMLElement[]).find(el => el.dataset.action === action && el.dataset.arg === arg);
+        button?.focus({preventScroll:true});
+    }
+}
+window.posTablaActualizarFilas = posTablaActualizarFilas;
+
 function renderTablaPedidos() {
     _inyectarBuscadorTabla();
     const tbody = document.getElementById('pedidosTable');
@@ -567,7 +596,7 @@ function renderTablaPedidos() {
     const _qHash = ((document.getElementById('tablaPedidosBuscar') as HTMLInputElement|null)?.value || '') + ((document.getElementById('tablaFiltroPago') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('tablaFiltroUrgencia') as HTMLSelectElement|null)?.value || '') + ((document.getElementById('pedidoFechaDesde') as HTMLInputElement|null)?.value || '') + ((document.getElementById('pedidoFechaHasta') as HTMLInputElement|null)?.value || '');
     const filterHash = JSON.stringify([_qHash,_pedidoFiltroActivo||'']);
     if ((tbody as any)._filterHash !== filterHash) { _pedidosTablePage=1; (tbody as any)._filterHash=filterHash; }
-    const _tHash = JSON.stringify((window.pedidos||[]).map(p=>[p.id,p.folio,p.cliente,p.concepto,p.entrega,p.fechaPedido,p.fecha,p.status,p.total,p.anticipo,p.resta,p.pagos,p.telefono,p.lugarEntrega,p.posDetalle])) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash + '_' + String(window.posTablaSelectedId||'') + '_' + _pedidosTablePage;
+    const _tHash = JSON.stringify((window.pedidos||[]).map(p=>[p.id,p.folio,p.cliente,p.concepto,p.entrega,p.fechaPedido,p.fecha,p.status,p.total,p.anticipo,p.resta,p.pagos,p.telefono,p.whatsapp,p.redes,p.facebook,p.lugarEntrega,p.posDetalle])) + '_' + (_pedidoFiltroActivo||'') + '_' + (_pedidoVistaActual||'') + '_' + _qHash + '_' + String(window.posTablaSelectedId||'') + '_' + _pedidosTablePage;
     if ((tbody as any)._lastHash === _tHash) return;
     (tbody as any)._lastHash = _tHash;
     const q = ((document.getElementById('tablaPedidosBuscar') || document.getElementById('kanbanBuscar') || {}).value || '').toLowerCase().trim();
@@ -657,7 +686,7 @@ function renderTablaPedidos() {
             </td></tr>`;
         }
     } else {
-    tbody.innerHTML = page.map(p => {
+    const rowsHTML = page.map(p => {
             const fb=String(p.redes||p.facebook||''),fbUrl=fb?(/^https?:\/\//i.test(fb)?fb:'https://facebook.com/'+fb.replace(/^@/,'')):'';
             const id=_et(String(p.id)),saldo=calcSaldoPendiente(p),cobrado=posTotalPagado(p),fecha=posTablaFechaEntrega(p.entrega);
             return `<tr data-table-open="${id}" class="pos-order-row${String(window.posTablaSelectedId)===String(p.id)?' pos-order-selected':''}">
@@ -675,6 +704,12 @@ function renderTablaPedidos() {
               <button class="mk-mini-btn" data-action="_mkTblMenu" data-pass-el="before" data-arg="${id}" aria-label="Más acciones de ${_et(p.folio)}" aria-haspopup="true">Más</button>
             </div></td>
         </tr>`;}).join('');
+    if (!tbody.children?.length || !tbody.querySelector('[data-table-open]')) tbody.innerHTML = rowsHTML;
+    else {
+        const plantilla = document.createElement('tbody');
+        plantilla.innerHTML = rowsHTML;
+        posTablaActualizarFilas(tbody, Array.from(plantilla.children) as HTMLElement[]);
+    }
     } // fin del else (page.length > 0)
     posTablaAplicarColumnas();
     // Render pagination controls
@@ -685,6 +720,8 @@ function renderTablaPedidos() {
         paginador.className = 'flex items-center justify-between px-4 py-3 border-t border-gray-100 text-xs text-gray-500';
         tbody.closest('table')?.parentElement?.appendChild(paginador);
     }
+    if (typeof _mkUpdatePedidosTotals === 'function') setTimeout(_mkUpdatePedidosTotals, 50);
+    _renderFiltrosActivosBadges();
     if (totalPages <= 1) { paginador.innerHTML = `<span>${totalItems} pedido${totalItems!==1?'s':''}</span>`; return; }
     paginador.innerHTML = `
         <span>${totalItems} pedidos · Página ${_pedidosTablePage} de ${totalPages}</span>
@@ -692,11 +729,6 @@ function renderTablaPedidos() {
             <button data-action="_pedidosPrevPage" ${_pedidosTablePage===1?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">‹ Anterior</button>
             <button data-action="_pedidosNextPage" data-arg="${totalPages}" ${_pedidosTablePage===totalPages?'disabled':''} class="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">Siguiente ›</button>
         </div>`;
-    // #11 Totales flotantes
-    if (typeof _mkUpdatePedidosTotals === 'function') setTimeout(_mkUpdatePedidosTotals, 50);
-
-    // N-SEARCH-003 + N-SEARCH-005: Renderizar badges de filtros activos + botón limpiar
-    _renderFiltrosActivosBadges();
 }
 
 function _renderFiltrosActivosBadges() {

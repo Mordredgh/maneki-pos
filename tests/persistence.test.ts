@@ -80,6 +80,7 @@ it('una tabla grande permite recorrer paginas aun con busqueda y fecha activas s
  a.ctx._pedidosNextPage(3);expect(fields.pedidosTablePaginador.innerHTML).toContain('Página 2 de 3');expect(fields.pedidosTable.innerHTML).toContain('>PE-35<');expect(fields.pedidosTable.innerHTML).not.toContain('>PE-60<');
  fields.tablaPedidosBuscar.value='cliente';fields.pedidoFechaDesde.value='2026-10-01';a.ctx.renderTablaPedidos();expect(fields.pedidosTablePaginador.innerHTML).toContain('Página 1 de 3');a.ctx._pedidosNextPage(3);
  expect(fields.pedidosTablePaginador.innerHTML).toContain('Página 2 de 3');expect(fields.pedidosTable.innerHTML).toContain('>PE-35<');a.ctx._pedidosPrevPage();expect(fields.pedidosTable.innerHTML).toContain('>PE-60<');
+ fields.tablaPedidosBuscar.value='cliente 60';a.ctx.renderTablaPedidos();expect(fields.pedidosTable.innerHTML).toContain('>PE-60<');expect(fields.filtrosActivosBadges.innerHTML).toContain('cliente 60');
 });
 
 it('conserva aprobacion, checklist, referencias y costos tras recargar pedidos',async()=>{

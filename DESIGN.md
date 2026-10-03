@@ -32,3 +32,6 @@ Tabla: folio secundario, cliente destacado y descripcion que permite varias line
 Operacion comercial: herramientas secundarias desde tabla/historial; dialogos nativos con bosque/crema, campos relacionados y botones consistentes. Apartados distinguidos con texto; capacidad informativa sin bloquear. Formularios de devolucion muestran diferencia de dinero antes de guardar. Controles tactiles de 44px, tabla de capacidad adaptable y foco visible.
 
 Revision de molestias: selector de mes/resumen/exportacion de Balance se distribuyen en filas en movil, sin recorte. Flechas 44px, texto/superficie por tokens del tema. Botones secundarios y cierre de dialogos comparten estilo en claro/oscuro; controles nativos usan color-scheme oscuro. KPI financieros de Pedidos con separadores de miles. Sin cambios de identidad ni pasos de captura.
+
+
+Fluidez2026-10-03: cliente/acciones fijados en tabla desde1100px, hover/foco suave y seleccion visible. Una accion crear en tabla; cobro mantiene resumen con lista desplegable. Movil densidad/columnas44px en segunda fila. Indicador de carga por tokens de tema, espacio reservado320px y fotos con dimensiones. No nueva identidad ni pasos obligatorios.
